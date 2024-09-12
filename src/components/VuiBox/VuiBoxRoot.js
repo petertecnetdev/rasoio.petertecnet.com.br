@@ -1,15 +1,44 @@
-
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
-import linearGradient from "assets/theme/functions/linearGradient";
+import linearGradient from "assets/theme/functions/linearGradient"; // Usar a função importada diretamente
+import colors from "assets/theme/base/colors"; 
+import pxToRem from "assets/theme/functions/pxToRem";
 
+const { borderCol } = colors;
+
+const borders = {
+  borderColor: {
+    grey: borderCol,
+    white: "rgba(226, 232, 240, 0.3)",
+  },
+
+  borderWidth: {
+    0: 0,
+    1: pxToRem(1),
+    2: pxToRem(2),
+    3: pxToRem(3),
+    4: pxToRem(4),
+    5: pxToRem(5),
+  },
+
+  borderRadius: {
+    xs: pxToRem(2),
+    sm: pxToRem(4),
+    md: pxToRem(8),
+    button: pxToRem(12),
+    lg: pxToRem(15),
+    xl: pxToRem(20),
+    xxl: pxToRem(24),
+    form: pxToRem(24),
+    section: pxToRem(160),
+  },
+};
 
 export default styled(Box)(({ theme, ownerState }) => {
-  const { palette, functions, borders, boxShadows } = theme;
+  const { palette, borders = {}, boxShadows } = theme;
   const { variant, bgColor, color, opacity, borderRadius, shadow } = ownerState;
 
   const { gradients, grey, white } = palette;
-  const { linearGradient } = functions;
   const { borderRadius: radius } = borders;
 
   const greyColors = {
@@ -67,7 +96,7 @@ export default styled(Box)(({ theme, ownerState }) => {
 
   if (variant === "gradient") {
     backgroundValue = validGradients.find((el) => el === bgColor)
-      ? linearGradient(gradients[bgColor].main, gradients[bgColor].state)
+      ? linearGradient(gradients[bgColor].main, gradients[bgColor].state) // Use a função diretamente
       : white.main;
   } else if (validColors.find((el) => el === bgColor)) {
     backgroundValue = palette[bgColor] ? palette[bgColor].main : greyColors[bgColor];
@@ -86,7 +115,7 @@ export default styled(Box)(({ theme, ownerState }) => {
   let borderRadiusValue = borderRadius;
 
   if (validBorderRadius.find((el) => el === borderRadius)) {
-    borderRadiusValue = radius[borderRadius];
+    borderRadiusValue = radius ? radius[borderRadius] : borderRadius; // Add a fallback
   }
 
   // boxShadow value
