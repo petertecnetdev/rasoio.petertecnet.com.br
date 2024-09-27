@@ -1,4 +1,28 @@
 const permissions = {
+    'barbershop_list': {
+        'permission': 'barbershop_list',
+        'category': 'Barbershop',
+        'name': 'Listar barbearias',
+        'description': 'Permite ao usuário listar barbearias.',
+    },
+    'barbershop_store': {
+        'permission': 'barbershop_store',
+        'category': 'Barbershop',
+        'name': 'Criar barbearia',
+        'description': 'Permite ao usuário criar uma nova barbearia.',
+    },
+    'barbershop_update': {
+        'permission': 'barbershop_update',
+        'category': 'Barbershop',
+        'name': 'Atualizar barbearia',
+        'description': 'Permite ao usuário atualizar informações de uma barbearia existente.',
+    },
+    'barbershop_destroy': {
+        'permission': 'barbershop_destroy',
+        'category': 'Barbershop',
+        'name': 'Excluir barbearia',
+        'description': 'Permite ao usuário excluir uma barbearia.',
+    },
     'item_scan': {
         'permission': 'item_scan',
         'category': 'Item',

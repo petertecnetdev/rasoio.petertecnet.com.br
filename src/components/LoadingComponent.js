@@ -1,29 +1,28 @@
+// LoadingIndicator.js
 import React from 'react';
-import { Card } from '@mui/material';
-import VuiBox from 'components/VuiBox';
-import VuiTypography from 'components/VuiTypography';
-import loadingImage from 'assets/images/logo.gif'; // Imagem do logo
+import loadingImage from '../images/logo.gif';
 
 const LoadingComponent = () => {
   return (
-    <VuiBox
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      flexDirection="column"
-      minHeight="100vh"
-      backgroundColor="background.default"
-      sx={{ background: 'linear-gradient(to right, #1f1c2c, #928DAB)' }}
-    >
-        <VuiBox display="flex" flexDirection="column" alignItems="center">
-          <VuiBox mb={3}>
-            <img src={loadingImage} alt="Carregando..." style={{ borderRadius: '50%', width: '150px', height: '150px' }} />
-          </VuiBox>
-          <VuiTypography variant="h6" color="white" fontWeight="bold">
-            Carregando...
-          </VuiTypography>
-        </VuiBox>
-    </VuiBox>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      height: '100vh',
+      padding: '0 20px', // Adiciona padding para evitar que a imagem toque as bordas
+      boxSizing: 'border-box' // Inclui padding nas dimensões totais do container
+    }}>
+      <img 
+        src={loadingImage} 
+        alt="Loading Rosaio" 
+        style={{ 
+          borderRadius: '50%', // Para um efeito de círculo
+          width: '50%', // Tamanho responsivo
+          maxWidth: '200px', // Limita o tamanho máximo
+          height: 'auto' // Mantém a proporção da imagem
+        }} 
+      />
+    </div>
   );
 }
 

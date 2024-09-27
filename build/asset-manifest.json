@@ -1,25 +1,19 @@
 {
   "files": {
-    "main.css": "/static/css/main.a3625b32.css",
-    "main.js": "/static/js/main.40c784b8.js",
-    "static/media/signUpImage.png": "/static/media/signUpImage.6da49baab56d85bb8b83.png",
-    "static/media/signInImage.png": "/static/media/signInImage.684a9acdf8f541431586.png",
+    "main.css": "/static/css/main.77c4e18d.css",
+    "main.js": "/static/js/main.eb88e0cb.js",
+    "static/js/568.e49f4a5e.chunk.js": "/static/js/568.e49f4a5e.chunk.js",
+    "static/media/loadingImage2.gif": "/static/media/loadingImage2.f5612d497c29d7c230b4.gif",
+    "static/media/background.png": "/static/media/background.8f841385e23b7845427b.png",
+    "static/media/background-2.png": "/static/media/background-2.0591a87d5281a141129c.png",
     "static/media/logo.gif": "/static/media/logo.682b4ff07e48ad4ffe88.gif",
-    "static/media/body-background.png": "/static/media/body-background.9e7d96f6af5373ca1771.png",
-    "static/media/avatar2.png": "/static/media/avatar2.b8132c3c3e173e102344.png",
-    "static/media/avatar3.png": "/static/media/avatar3.4d26ce02004a4cd4655b.png",
-    "static/media/avatar1.png": "/static/media/avatar1.1d9e197816db0b5886c1.png",
-    "static/media/avatar4.png": "/static/media/avatar4.2a4ba26ccb999bc77825.png",
-    "static/media/cardimgfree.png": "/static/media/cardimgfree.5771cbbb24b706daa64a.png",
-    "static/media/logo.png": "/static/media/logo.9f0afe98a64bcbf533dc.png",
-    "static/media/team-2.jpg": "/static/media/team-2.5e013d903a52bbb837e8.jpg",
-    "static/media/logo-spotify.svg": "/static/media/logo-spotify.88c0d071630c966aa8887a796bb3114d.svg",
     "index.html": "/index.html",
-    "main.a3625b32.css.map": "/static/css/main.a3625b32.css.map",
-    "main.40c784b8.js.map": "/static/js/main.40c784b8.js.map"
+    "main.77c4e18d.css.map": "/static/css/main.77c4e18d.css.map",
+    "main.eb88e0cb.js.map": "/static/js/main.eb88e0cb.js.map",
+    "568.e49f4a5e.chunk.js.map": "/static/js/568.e49f4a5e.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a3625b32.css",
-    "static/js/main.40c784b8.js"
+    "static/css/main.77c4e18d.css",
+    "static/js/main.eb88e0cb.js"
   ]
 }

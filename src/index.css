@@ -1,0 +1,241 @@
+/* BODY */
+body {
+  background-color: #000000; /* Preto predominante */
+  color: rgb(84, 133, 141);  /* Cor dominante para letras */
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* GENERAL STYLES */
+h1, h2, h3, h4, h5, h6, p, a {
+  color: rgb(84, 133, 141); /* Texto com cor dominante */
+  text-decoration: none;
+}
+
+a:hover {
+  color: #6fa1aa; /* Cor mais clara ao passar o mouse */
+}
+
+/* NAVBAR */
+.navbar {
+  background: linear-gradient(347deg, #000000e6, #54858dcc);
+  padding: 10px 20px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  border-radius: 0 0 10px 10px; /* Bordas arredondadas na parte inferior */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.3s; /* Suaviza a transição do fundo */
+}
+
+.navbar-logo {
+  color: rgb(84, 133, 141); /* Cor dominante da logo */
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-left: 1rem;
+}
+
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; 
+}
+
+.navbar ul li {
+  display: inline-block;
+}
+
+.navbar ul li a {
+  color: rgb(84, 133, 141); /* Cor das letras */
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar ul li a:hover {
+  background-color: rgba(84, 133, 141, 0.2);
+  color: #ffffff; /* Texto branco no hover para contraste */
+}
+
+.menu-toggle {
+  display: none; /* Oculto no desktop */
+  font-size: 1.5rem; /* Tamanho reduzido */
+  color: rgb(84, 133, 141);
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+/* RESPONSIVE MENU */
+@media (max-width: 768px) {
+  .navbar ul {
+    flex-direction: column;
+    position: absolute;
+    top: 60px; /* Ajuste se necessário */
+    right: -100%;
+    width: 100%;
+    background-color: #000000;
+    height: calc(100vh - 60px); /* Ajuste para evitar sobreposição com a navbar */
+    transition: right 0.3s ease;
+    padding-top: 1rem; /* Adiciona padding superior */
+  }
+
+  .navbar ul.active {
+    right: 0;
+  }
+
+  .navbar ul li {
+    display: block;
+    text-align: center;
+    margin: 10px 0; /* Margem reduzida para mais espaço */
+  }
+
+  .menu-toggle {
+    display: block; /* Exibir no mobile */
+  }
+}
+
+/* MAIN CONTENT */
+.main-content {
+  margin-top: 5rem;
+  padding: 2rem;
+  background-color: #f0f0f0; /* Cor secundária clara */
+}
+
+/* BUTTONS */
+button {
+  background-color: rgb(84, 133, 141); /* Cor dominante */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  width: auto; /* Tamanho automático por padrão */
+}
+
+button:hover {
+  background-color: #6fa1aa; /* Cor mais clara ao passar o mouse */
+}
+
+/* CARDS */
+.card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8));
+  color: #f0f0f0; /* Texto claro */
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.card h3 {
+  color: rgb(84, 133, 141); /* Título com cor dominante */
+}
+
+.card p {
+  color: #f0f0f0; /* Texto claro */
+}
+
+/* FORMS */
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid rgb(84, 133, 141); /* Borda da cor dominante */
+  border-radius: 5px;
+  background-color: #f0f0f0; /* Cor secundária clara */
+  color: #333; /* Texto escuro */
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #6fa1aa; /* Borda mais clara ao focar */
+  outline: none;
+}
+
+label {
+  color: rgb(84, 133, 141); /* Cor dominante para labels */
+  font-weight: bold;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+table th {
+  background-color: rgb(84, 133, 141); /* Cor dominante no cabeçalho */
+  color: #fff;
+}
+
+table tr:nth-child(even) {
+  background-color: #f0f0f0; /* Linhas pares com cor clara */
+}
+
+table tr:hover {
+  background-color: rgba(84, 133, 141, 0.1); /* Hover leve nas linhas */
+}
+
+/* FOOTER */
+footer {
+  background-color: #000000; /* Preto predominante */
+  color: rgb(84, 133, 141); /* Cor dominante */
+  text-align: center;
+  padding: 1rem;
+  position: relative; /* Alterado para evitar sobreposição */
+  width: 100%;
+  bottom: 0;
+}
+
+footer p {
+  margin: 0;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .navbar ul {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    margin: 10px 0;
+  }
+
+  button {
+    width: 100%; /* Botões ocupam 100% da largura no mobile */
+  }
+
+  .navbar {
+    padding: 10px; /* Menor padding para dispositivos móveis */
+  }
+
+  .main-content {
+    padding: 1rem; /* Menor padding em dispositivos móveis */
+  }
+}
