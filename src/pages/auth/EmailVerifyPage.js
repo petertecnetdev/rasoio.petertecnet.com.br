@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import authService from "../../services/AuthService";
 import Navlog from "../../components/NavlogComponent";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -13,64 +13,101 @@ import LoadingComponent from "../../components/LoadingComponent";
 
 const EmailVerifyPage = () => {
   const [verificationCode, setVerificationCode] = useState("");
-  const [showAlertState, setShowAlertState] = useState(false);
-  const [alertType, setAlertType] = useState("success");
-  const [alertMessage, setAlertMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingVerify, setLoadingVerify] = useState(false); // Carregamento para verificação de email
+  const [loadingResend, setLoadingResend] = useState(false); // Carregamento para reenviar código
   const [redirect, setRedirect] = useState(false);
 
   const handleVerifyEmail = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingVerify(true); // Inicia o carregamento do botão de verificação
     try {
       const emailVerified = await authService.emailVerify(verificationCode);
       if (emailVerified) {
-        window.location.href = "/dashboard";
-        setRedirect(true);
+        Swal.fire({
+          icon: "success",
+          title: "Sucesso",
+          text: "Email verificado com sucesso. Redirecionando...",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+
+        setTimeout(() => {
+          setRedirect(true);
+        }, 1500); // Aguarda 1.5s antes de redirecionar
       } else {
-        showAlert(
-          "danger",
-          "Erro na verificação de email. Certifique-se de inserir o código corretamente."
-        );
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro na verificação de email. Certifique-se de inserir o código corretamente.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       }
     } catch (error) {
       console.error(error);
-      showAlert(
-        "danger",
-        "Erro na verificação de email. Por favor, tente novamente mais tarde."
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Erro na verificação de email. Por favor, tente novamente mais tarde.",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
     } finally {
-      setLoading(false);
+      setLoadingVerify(false); // Finaliza o carregamento do botão de verificação
     }
   };
 
   const handleResendVerificationCode = async () => {
-    setLoading(true);
+    setLoadingResend(true); // Inicia o carregamento do botão de reenvio
     try {
-  
       const codeResent = await authService.resendCodeEmailVerification();
-  
       if (codeResent) {
-        showAlert("success", "Código de verificação reenviado com sucesso.");
+        Swal.fire({
+          icon: "success",
+          title: "Sucesso",
+          text: "Código de verificação reenviado com sucesso.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } else {
-        showAlert("danger", "Erro ao reenviar o código de verificação.");
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro ao reenviar o código de verificação.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       }
     } catch (error) {
       console.error(error);
-      showAlert(
-        "danger",
-        "Erro ao reenviar o código de verificação. Por favor, tente novamente mais tarde."
-      );
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Erro ao reenviar o código de verificação. Por favor, tente novamente mais tarde.",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
     } finally {
-      setLoading(false);
+      setLoadingResend(false); // Finaliza o carregamento do botão de reenvio
     }
-  };
-  
-
-  const showAlert = (type, message) => {
-    setAlertType(type);
-    setAlertMessage(message);
-    setShowAlertState(true);
   };
 
   if (redirect) {
@@ -86,23 +123,24 @@ const EmailVerifyPage = () => {
             <Card>
               <Card.Body>
                 <div className="text-center">
-                  {" "}
-                  {/* Div para centralizar o conteúdo */}
                   <img
-                    src="/images/loadingimage.gif"
+                    src="/images/logo.png"
                     alt="Logo"
                     className="logo rounded-circle img-thumbnail"
                     style={{ width: "150px", height: "150px" }}
                   />
                 </div>
-
                 <Card.Title className="text-center">Verificar Email</Card.Title>
+                <p className="text-center">
+                  Bem-vindo ao Rasoio! Estamos felizes em tê-lo conosco.
+                  Para garantir a segurança da sua conta e aproveitar ao máximo
+                  nossos serviços, por favor, verifique seu endereço de email
+                  inserindo o código que enviamos para você. Isso permitirá que
+                  você tenha acesso a recursos exclusivos e fique sempre
+                  atualizado sobre suas interações.
+                </p>
                 <Form onSubmit={handleVerifyEmail}>
                   <Form.Group className="mb-3">
-                    <p>
-                      Por favor, digite o código de verificação para confirmar
-                      seu email.
-                    </p>
                     <Form.Label>Código de Verificação</Form.Label>
                     <Form.Control
                       type="text"
@@ -113,8 +151,8 @@ const EmailVerifyPage = () => {
                     />
                   </Form.Group>
                   <div className="d-grid">
-                    <Button type="submit" variant="primary">
-                    {loading ? "Verificando..." : "Verificar email"}
+                    <Button type="submit" variant="primary" disabled={loadingVerify}>
+                      {loadingVerify ? "Verificando..." : "Verificar email"}
                     </Button>
                   </div>
                 </Form>
@@ -122,39 +160,17 @@ const EmailVerifyPage = () => {
                   <Button
                     variant="secondary"
                     onClick={handleResendVerificationCode}
-                    disabled={loading}
+                    disabled={loadingResend}
                   >
-                    
-                    {loading ? "Enviando..." : "Reenviar Código de Verificação"}
+                    {loadingResend ? "Enviando..." : "Reenviar Código de Verificação"}
                   </Button>
                 </div>
-                
               </Card.Body>
             </Card>
           </Col>
         </Row>
-        {showAlertState && (
-                  <Alert
-                    show={showAlertState}
-                    variant={alertType}
-                    onClose={() => setShowAlertState(false)}
-                    dismissible
-                    style={{
-                      position: "fixed",
-                      bottom: "550px",
-                      right: "30px",
-                      zIndex: "1000",
-                    }}
-                  >
-                    <Alert.Heading>
-                      {alertType === "success" ? "Sucesso" : "Erro"}
-                    </Alert.Heading>
-                    <p>{alertMessage}</p>
-                  </Alert>
-                )}
       </Container>
-      {loading && <LoadingComponent />}{" "}
-      {/* Renderiza o componente de carregamento enquanto verifica o e-mail */}
+      {(loadingVerify || loadingResend) && <LoadingComponent />}{" "}
     </div>
   );
 };

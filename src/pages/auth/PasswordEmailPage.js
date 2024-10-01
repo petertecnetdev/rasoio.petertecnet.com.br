@@ -1,72 +1,85 @@
 import React, { Component } from "react";
 import authService from "../../services/AuthService";
-import Alert from "react-bootstrap/Alert";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import gifSpinner from "../../images/loadingImage2.gif";
-
-// Defina o componente CustomSpinner fora da classe PasswordEmailPage
-const CustomSpinner = () => {
-  return (
-    <img
-      src={gifSpinner}
-      alt="Spinner"
-      className="rounded-circle"
-      style={{ width: "20px", height: "20px" }}
-    />
-  );
-};
+import Swal from "sweetalert2";
 
 class PasswordEmailPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       email: "",
-      showAlert: false,
-      alertType: "success",
-      alertMessage: "",
       loading: false,
+      loadingResend: false, // Novo estado para o carregamento do botão de reenviar
       showPasswordResetForm: false,
       code: "",
       newPassword: "",
       confirmPassword: "",
+      redirectToLogin: false,
     };
   }
 
   onChangeEmail = (e) => {
     this.setState({ email: e.target.value });
   };
-
   onSubmitEmail = async (e) => {
     e.preventDefault();
     this.setState({ loading: true });
 
     try {
-      const response = await authService.passwordEmail(this.state.email);
-      this.setState({
-        showAlert: true,
-        alertType: "success",
-        alertMessage: response.data.message,
-        showPasswordResetForm: true,
-        loading: false,
-      });
-      // Configura o temporizador para ocultar o alerta após 5 segundos
-      setTimeout(() => {
-        this.setState({ showAlert: false });
-      }, 5000);
+        // Tenta enviar o email para a API
+        const response = await authService.passwordEmail(this.state.email);
+        
+        this.setState({ loading: false, showPasswordResetForm: true });
+
+        // Exibe a mensagem de sucesso vinda da API
+        Swal.fire({
+            title: 'Sucesso',
+            text: response,  // 'response' já contém a mensagem da API
+            icon: 'success',
+            customClass: {
+                popup: 'custom-swal',
+                title: 'custom-swal-title',
+                content: 'custom-swal-text',
+            },
+            timer: 5000,
+            timerProgressBar: true,
+        });
+
     } catch (error) {
-      console.log(error.data);
-      this.setState({
-        showAlert: true,
-        alertType: "danger",
-        alertMessage: error.data,
-        loading: false,
-      });
-      setTimeout(() => {
-        this.setState({ showAlert: false });
-      }, 5000);
+        this.setState({ loading: false });
+        
+        // Exibe a mensagem de erro da API se disponível
+        if (error.message) {
+            Swal.fire({
+                title: 'Erro',
+                text: error.message, // Exibe a mensagem de erro recebida da API
+                icon: 'error',
+                customClass: {
+                    popup: 'custom-swal',
+                    title: 'custom-swal-title',
+                    content: 'custom-swal-text',
+                },
+                timer: 5000,
+                timerProgressBar: true,
+            });
+        } else {
+            // Exibe uma mensagem genérica para erros inesperados
+            Swal.fire({
+                title: 'Erro',
+                text: "Ocorreu um erro inesperado.",
+                icon: 'error',
+                customClass: {
+                    popup: 'custom-swal',
+                    title: 'custom-swal-title',
+                    content: 'custom-swal-text',
+                },
+                timer: 5000,
+                timerProgressBar: true,
+            });
+        }
     }
-  };
+};
 
   onChangeCode = (e) => {
     this.setState({ code: e.target.value });
@@ -84,6 +97,8 @@ class PasswordEmailPage extends Component {
     e.preventDefault();
     const { code, newPassword, confirmPassword } = this.state;
 
+    this.setState({ loading: true });
+
     try {
       const email = this.state.email;
       const response = await authService.passwordReset(
@@ -92,30 +107,88 @@ class PasswordEmailPage extends Component {
         newPassword,
         confirmPassword
       );
+      Swal.fire({
+        title: 'Sucesso',
+        text: response.data.message,
+        icon: 'success',
+        customClass: {
+          popup: 'custom-swal',
+          title: 'custom-swal-title',
+          content: 'custom-swal-text',
+        },
+      });
       this.setState({
-        showAlert: true,
-        alertType: "success",
-        alertMessage: response.data.message,
+        redirectToLogin: true,
         showPasswordResetForm: false,
         code: "",
         newPassword: "",
         confirmPassword: "",
+        loading: false
       });
     } catch (error) {
-      console.error(error.data);
-      this.setState({
-        showAlert: true,
-        alertType: "danger",
-        alertMessage: error,
+      this.setState({ loading: false });
+      Swal.fire({
+        title: 'Erro',
+        text: error.response?.data || "Ocorreu um erro inesperado.",
+        icon: 'error',
+        customClass: {
+          popup: 'custom-swal-title',
+          content: 'custom-swal-text',
+        },
+      });
+    }
+  };
+
+  // Função para reenviar o código
+  onResendCode = async () => {
+    this.setState({ loadingResend: true });
+
+    try {
+      const response = await authService.passwordEmail(this.state.email);
+      this.setState({ loadingResend: false });
+      Swal.fire({
+        title: 'Sucesso',
+        text: response.data.message,
+        icon: 'success',
+        customClass: {
+          popup: 'custom-swal',
+          title: 'custom-swal-title',
+          content: 'custom-swal-text',
+        },
+        timer: 5000,
+        timerProgressBar: true,
+      });
+    } catch (error) {
+      this.setState({ loadingResend: false });
+      Swal.fire({
+        title: 'Erro',
+        text: error.response?.data || "Ocorreu um erro inesperado.",
+        icon: 'error',
+        customClass: {
+          popup: 'custom-swal-title',
+          content: 'custom-swal-text',
+        },
       });
     }
   };
 
   render() {
+    if (this.state.redirectToLogin) {
+      return <Navigate to="/login" replace />;
+    }
+
     return (
-      <Container>
-        <Row className="justify-content-md-center mt-1">
-          <Col md={6}>
+<Container fluid className="login-container" style={{ height: '100vh' }}>
+        <Row className="vh-100">
+          {/* Coluna única com background e conteúdo centralizado */}
+          <Col
+            md={12}
+            className="d-flex align-items-center justify-content-center position-relative"
+            style={{
+              background: `url('/images/background-2.png') no-repeat center center`,
+              backgroundSize: 'cover',
+            }}
+          >
             <Card>
               <Card.Body>
                 <div className="text-center">
@@ -139,36 +212,41 @@ class PasswordEmailPage extends Component {
                         onChange={this.onChangeEmail}
                         value={this.state.email}
                         required
+                        autoComplete="off" // Impede o preenchimento automático
                       />
                     </Form.Group>
-                    <Button
-                      className="m-3"
-                      variant="primary"
-                      type="submit"
-                      disabled={this.state.loading}
-                    >
-                      {this.state.loading ? <CustomSpinner /> : "Enviar Código"}
-                      {this.state.loading && <>&nbsp;......</>}
+                    <div className="text-center">
+                      <Button
+                        className="m-3"
+                        variant="primary"
+                        type="submit"
+                        disabled={this.state.loading}
+                      >
+                        {this.state.loading ? "Enviando código para o email..." : "Enviar Código"}
+                      </Button>
+                    </div>
 
-                    </Button>
                     <p className="forgot-password text-right">
-                      Já está registrado? <Link to="/login">Entrar</Link>
+                      Já está registrado? <Link to="/login" className="auth-link">Entrar</Link>
                     </p>
                     <p className="forgot-password text-right">
                       Não tem uma conta?{" "}
-                      <Link to="/register">Novo cadastro</Link>
+                      <Link to="/register" className="auth-link">Novo cadastro</Link>
                     </p>
                   </Form>
                 ) : (
                   <Form onSubmit={this.onSubmitResetPassword}>
                     <h3>Redefinir Senha</h3>
+                    <Form.Label>Email: {this.state.email}</Form.Label> 
                     <Form.Group className="mb-3">
                       <Form.Label>Código de Verificação</Form.Label>
                       <Form.Control
                         type="text"
                         placeholder="Insira o código"
                         onChange={this.onChangeCode}
+                        value={this.state.code}
                         required
+                        autoComplete="off" // Impede o preenchimento automático
                       />
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -179,6 +257,7 @@ class PasswordEmailPage extends Component {
                         onChange={this.onChangeNewPassword}
                         value={this.state.newPassword}
                         required
+                        autoComplete="off" // Impede o preenchimento automático
                       />
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -189,6 +268,7 @@ class PasswordEmailPage extends Component {
                         onChange={this.onChangeConfirmPassword}
                         value={this.state.confirmPassword}
                         required
+                        autoComplete="off" // Impede o preenchimento automático
                       />
                     </Form.Group>
                     <Button
@@ -197,36 +277,22 @@ class PasswordEmailPage extends Component {
                       disabled={this.state.loading}
                       style={{ position: "relative" }}
                     >
-                      {this.state.loading ? (
-                        <CustomSpinner />
-                      ) : (
-                        "Redefinir Senha"
-                      )}
-                      {this.state.loading && <>&nbsp;......</>}
-
+                      {this.state.loading ? "Alterando senha..." : "Redefinir Senha"}
                     </Button>
                     <p className="forgot-password text-right">
-                      Não tenho cadastro: <Link to="/register">Cadastro</Link>
+                      Não tenho cadastro: <Link to="/register" className="auth-link">Cadastro</Link>
+                    </p>
+                    <p className="forgot-password text-right text-center mt-3">
+                    Já está registrado? <a href="/login" className="auth-link">Entrar</a>
+                  </p>
+                    <p className="forgot-password text-right">
+                      Não recebi o código.{" "}
+                      <Button   variant="primary"   style={{ position: "relative" }} onClick={this.onResendCode} disabled={this.state.loadingResend}>
+                        {this.state.loadingResend ? "Reenviando..." : "Reenviar código"}
+                      </Button>
                     </p>
                   </Form>
                 )}
-                <Alert
-                  show={this.state.showAlert}
-                  variant={this.state.alertType}
-                  onClose={() => this.setState({ showAlert: false })}
-                  dismissible
-                >
-                  <Alert.Heading>
-                    {this.state.alertType === "success" ? "Sucesso" : "Erro"}
-                  </Alert.Heading>
-                  <p>{this.state.alertMessage}</p>
-                  {!this.state.showPasswordResetForm ? (
-                    <p className="forgot-password text-right">
-                      Se recuperou sua senha. Faça login:{" "}
-                      <Link to="/login">Fazer login</Link>
-                    </p>
-                  ) : null}
-                </Alert>
               </Card.Body>
             </Card>
           </Col>

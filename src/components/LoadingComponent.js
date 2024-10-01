@@ -4,7 +4,11 @@ import loadingImage from '../images/logo.gif';
 
 const LoadingComponent = () => {
   return (
+
+ 
     <div style={{ 
+      background: `url('/images/background-2.png') no-repeat center center`,
+      backgroundSize: 'cover',
       display: 'flex', 
       justifyContent: 'center', 
       alignItems: 'center', 

@@ -1,132 +1,25 @@
-/* BODY */
 body {
-  background-color: #000000; /* Preto predominante */
-  color: rgb(84, 133, 141);  /* Cor dominante para letras */
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-/* GENERAL STYLES */
-h1, h2, h3, h4, h5, h6, p, a {
-  color: rgb(84, 133, 141); /* Texto com cor dominante */
-  text-decoration: none;
-}
-
-a:hover {
-  color: #6fa1aa; /* Cor mais clara ao passar o mouse */
-}
-
-/* NAVBAR */
-.navbar {
-  background: linear-gradient(347deg, #000000e6, #54858dcc);
-  padding: 10px 20px;
-  position: fixed;
-  width: 100%;
-  top: 0;
-  z-index: 1000;
-  border-radius: 0 0 10px 10px; /* Bordas arredondadas na parte inferior */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: background 0.3s; /* Suaviza a transição do fundo */
-}
-
-.navbar-logo {
-  color: rgb(84, 133, 141); /* Cor dominante da logo */
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-left: 1rem;
-}
-
-.navbar ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center; 
-}
-
-.navbar ul li {
-  display: inline-block;
-}
-
-.navbar ul li a {
-  color: rgb(84, 133, 141); /* Cor das letras */
-  padding: 10px 20px;
-  font-size: 1rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.navbar ul li a:hover {
-  background-color: rgba(84, 133, 141, 0.2);
-  color: #ffffff; /* Texto branco no hover para contraste */
-}
-
-.menu-toggle {
-  display: none; /* Oculto no desktop */
-  font-size: 1.5rem; /* Tamanho reduzido */
-  color: rgb(84, 133, 141);
-  cursor: pointer;
-  margin-right: 1rem;
-}
-
-/* RESPONSIVE MENU */
-@media (max-width: 768px) {
-  .navbar ul {
-    flex-direction: column;
-    position: absolute;
-    top: 60px; /* Ajuste se necessário */
-    right: -100%;
-    width: 100%;
-    background-color: #000000;
-    height: calc(100vh - 60px); /* Ajuste para evitar sobreposição com a navbar */
-    transition: right 0.3s ease;
-    padding-top: 1rem; /* Adiciona padding superior */
-  }
-
-  .navbar ul.active {
-    right: 0;
-  }
-
-  .navbar ul li {
-    display: block;
-    text-align: center;
-    margin: 10px 0; /* Margem reduzida para mais espaço */
-  }
-
-  .menu-toggle {
-    display: block; /* Exibir no mobile */
-  }
-}
-
-/* MAIN CONTENT */
-.main-content {
-  margin-top: 5rem;
-  padding: 2rem;
-  background-color: #f0f0f0; /* Cor secundária clara */
-}
-
-/* BUTTONS */
-button {
-  background-color: rgb(84, 133, 141); /* Cor dominante */
+  background-color:rgba(84, 133, 141, 0.8);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
   color: white;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-  width: auto; /* Tamanho automático por padrão */
+  margin: 0;
 }
 
-button:hover {
-  background-color: #6fa1aa; /* Cor mais clara ao passar o mouse */
+
+.labeltitle {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8));
+  padding: 0.3vw;
+  color: white;
+  border-radius: 2vw;
+  margin-top: 1vw;
+  box-shadow: 0.1vw 0.1vw 1vw 0.2vw rgba(255, 255, 255, 0.8);
+  text-align: center;
+  opacity: 0.8;
+  
+  border: 1px solid #FFFFFF;
 }
 
 /* CARDS */
@@ -134,14 +27,24 @@ button:hover {
   background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8));
   color: #f0f0f0; /* Texto claro */
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 20px;
   margin: 20px 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #FFFFFF;
 }
 
+.card-1 {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8));
+  color: #f0f0f0; /* Texto claro */
+  padding: 20px;
+  border-radius: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #FFFFFF;
+}
 .card:hover {
-  transform: translateY(-10px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
 }
 
@@ -152,90 +55,507 @@ button:hover {
 .card p {
   color: #f0f0f0; /* Texto claro */
 }
+/* Navbar Principal */
+.navbar {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(84, 133, 141, 0.8));
+  border-radius: 40px;
+  margin: 30px;
+  margin-top: 10px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  transition: background 0.3s ease;
+}
 
-/* FORMS */
-input, select, textarea {
-  width: 100%;
+/* Links da Navbar */
+.navbar .nav-link {
+  color: #e0e0e0 !important; /* Cor suave para os links */
+  font-family: 'Arial', sans-serif; /* Fonte moderna */
+  font-weight: 500; /* Peso da fonte */
+  transition: color 0.3s ease, transform 0.3s ease; /* Efeitos de transição */
+}
+
+/* Efeito Hover para Links */
+.navbar .nav-link:hover {
+  color: #ffffff !important; /* Cor clara no hover */
+  transform: translateY(-2px); /* Levanta o link levemente */
+}
+
+/* Marca da Navbar */
+.navbar .navbar-brand {
+  color: #ffffff !important; /* Cor da marca */
+  font-family: 'Orbitron', sans-serif; /* Fonte futurista */
+  font-size: 1.5rem; /* Tamanho da fonte */
+}
+
+/* Ícone do Toggler */
+.navbar-toggler-icon {
+  background-color: transparent; /* Cor de fundo transparente */
+  border: 1px solid white; /* Borda branca */
+  border-radius: 5px; /* Bordas arredondadas */
+}
+
+/* Toggler de Menu */
+.navbar-toggler {
+  border: none; /* Sem borda */
+  background-color: transparent; /* Sem fundo */
+  outline: none; /* Sem contorno */
+  transition: transform 0.3s ease, opacity 0.3s ease; /* Transições suaves */
+}
+
+/* Hover no Toggler */
+.navbar-toggler:hover {
+  transform: scale(1.1); /* Aumenta levemente */
+  opacity: 0.8; /* Levemente transparente */
+}
+
+/* Estilo do Menu do Usuário */
+.user-menu .dropdown-toggle {
+  color: #ffffff !important; /* Cor do menu do usuário */
+  font-weight: bold; /* Negrito */
+  transition: color 0.3s ease; /* Efeito de transição suave */
+}
+
+/* Hover no Menu do Usuário */
+.user-menu .dropdown-toggle:hover {
+  color: #ffcc00 !important; /* Cor dourada no hover */
+}
+
+/* Estilos de Dropdown */
+.dropdown-menu {
+  background-color: rgba(30, 30, 30, 0.9); /* Fundo escuro e semi-transparente */
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra do dropdown */
+}
+
+/* Links do Dropdown */
+.dropdown-item {
+  color: #e0e0e0; /* Cor do texto do dropdown */
+  transition: background 0.3s ease; /* Transição suave de fundo */
+}
+
+/* Efeito Hover no Dropdown */
+.dropdown-item:hover {
+  background-color: rgba(255, 204, 0, 0.2); /* Fundo dourado no hover */
+  color: #ffffff; /* Cor do texto ao passar o mouse */
+}
+
+
+@keyframes blink {
+  0% {
+    border: 0.1vw solid rgb(255, 0, 0);
+  }
+  50% {
+    border: 0.1vw solid rgb(255, 255, 255);
+  }
+  100% {
+    border: 0.1vw solid rgb(255, 0, 0);
+  }
+}
+
+.alert-top {
+  padding: 3vw;
+  border-radius: 2vw;
+  border: 0.1vw solid rgb(2, 0, 0);
+  backdrop-filter: blur(0.3vw);
+  animation: blink 3s infinite;
+  margin: 1vw;
+  position: fixed;
+  top: 10vw;
+  right: 1vw;
+  z-index: 1050;
+}
+
+
+.logo{
+  width: "50px";
+  height: "50px";
+}
+
+
+.img-logo-barbershop {
+  position: relative;
+  margin-left: 80%;
+  margin-top: -50%;
+  width: 30%;
+  max-width: 15vw;
+  height: auto;
+  padding: 1.5vw;
+  border: 0.2vw solid white;
+  box-shadow: 1vw 0.1vw 1.5vw 0.2vw rgba(255, 255, 255, 0.9);
+}
+.img-logo-barbershop-show {
+  position: relative;
+  margin-left: 80%;
+  margin-top: -50%;
+  width: 30%;
+  max-width: 15vw;
+  height: auto;
+  padding: 7px;
+  border: 0.2vw solid white;
+  box-shadow: 1vw 0.1vw 1.5vw 0.2vw rgba(255, 255, 255, 0.9);
+}
+
+.img-background-barbershop {
+  border: 0.1vw solid white;
+  backdrop-filter: blur(0.5vw);
+  padding: 7px;
+  border: 1px solid white;
+  
+  
+}
+
+.card-barbershop {
+  background-color: rgba(5, 33, 92, 0.8);
+  color: rgb(255, 255, 255);
+  padding: 1px;
+  backdrop-filter: blur(0.1vw);
+  font-size: 1.5vw;
+  border-radius: 2vw;
+  margin: 1.5vw;
+  border: 0.2vw solid rgb(255, 255, 255);
+}
+.card-barbershop-show {
+  background-color: rgba(5, 33, 92, 0.8);
+  color: rgb(255, 255, 255);
   padding: 10px;
-  margin: 10px 0;
-  border: 1px solid rgb(84, 133, 141); /* Borda da cor dominante */
-  border-radius: 5px;
-  background-color: #f0f0f0; /* Cor secundária clara */
-  color: #333; /* Texto escuro */
+  backdrop-filter: blur(0.1vw);
+  font-size: 1.5vw;
+  border-radius: 2vw;
+  margin: 1.5vw;
+  border: 0.2vw solid rgb(255, 255, 255);
+}
+.card-user {
+  background-image: linear-gradient(to right, #092e35, #010825);
+  color: rgb(199, 232, 241);
+  padding: 1vw;
+  backdrop-filter: blur(0.1vw);
+  font-size: 1.5vw;
+  border-radius: 2vw;
+  margin: 1.5vw;
+  border: 0.1vw solid rgb(255, 255, 255);
 }
 
-input:focus, select:focus, textarea:focus {
-  border-color: #6fa1aa; /* Borda mais clara ao focar */
-  outline: none;
+
+.auth-dropdown {
+  margin-right: 2.5vw;
+  color: white;
 }
 
-label {
-  color: rgb(84, 133, 141); /* Cor dominante para labels */
-  font-weight: bold;
+.auth-dropdown .dropdown-menu {
+  left: -50%;
+  border: none;
+  box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1);
+  background-image: linear-gradient(to right, #96e5f3, #f0f0f0);
 }
 
-/* TABLE */
-table {
+@keyframes fadeIn {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background-color: rgba(7, 9, 133, 0.1);
+  animation: fadeIn 1s ease;
+}
+
+.modal.fade {
+  animation: fadeIn 1s ease;
+}
+
+.modal-content {
+  border-radius: 2vw;
+  border: 1px solid white;
+  color: white;
+  background-color: rgba(7, 9, 133, 0.5);
+}
+
+
+.seguiments {
+  color: white;
+  border: 1px white;
+  padding: 5px;
+  margin: 0 auto; /* Centraliza horizontalmente */
+  font-size: 13px;
+}
+.seguiment-card{
+  border-radius: 80px;
+  background-color: rgb(10, 36, 53);
+  text-align: center; /* Centraliza o texto dentro dos segmentos */
+  text-align: center; /* Centraliza o texto dentro dos segmentos */
+  padding: 1px; /* Centraliza horizontalmente */
+  font-size: 13px;
+  margin: 0 auto; /* Centraliza horizontalmente */
+}
+.background-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(1vw);
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  background-color: #fff;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
 }
 
-table th, table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
+.card-barbershop {
+  position: relative;
+  overflow: hidden;
 }
 
-table th {
-  background-color: rgb(84, 133, 141); /* Cor dominante no cabeçalho */
-  color: #fff;
+.card-event-view {
+  position: relative;
+  overflow: hidden;
 }
 
-table tr:nth-child(even) {
-  background-color: #f0f0f0; /* Linhas pares com cor clara */
-}
-
-table tr:hover {
-  background-color: rgba(84, 133, 141, 0.1); /* Hover leve nas linhas */
-}
-
-/* FOOTER */
-footer {
-  background-color: #000000; /* Preto predominante */
-  color: rgb(84, 133, 141); /* Cor dominante */
-  text-align: center;
-  padding: 1rem;
-  position: relative; /* Alterado para evitar sobreposição */
+.background-image-event {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(5vw);
   width: 100%;
-  bottom: 0;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
 }
 
-footer p {
-  margin: 0;
+.img-event {
+  width: 100%;
+  height: auto;
+  
+  object-fit: cover;
 }
+.event-barbershop-logo{
+  border-radius: 50px;
+  width: 20%;
+  height: 10%;
+  padding: 5px;
+  border: 1px solid white;
+  box-shadow: 0.1vw 0.1vw 1vw 0.2vw rgba(255, 255, 255, 0.8);
+  margin: 2%;
 
-/* RESPONSIVE DESIGN */
-@media (max-width: 768px) {
-  .navbar ul {
-    flex-direction: column;
-    align-items: center;
+}
+@media (max-width: 767px) {
+  body {
+    background-image: url('images/background.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    color: white;
   }
 
   .card {
-    margin: 10px 0;
+    background-color: rgba(7, 9, 133, 0.2);
+    color: white;
+    padding: 5vw;
+    border-radius: 5vw;
+    border: 0.5vw solid rgb(10, 42, 223);
+    backdrop-filter: blur(1vw);
+    margin: 2.5vw;
   }
 
-  button {
-    width: 100%; /* Botões ocupam 100% da largura no mobile */
+
+  .alert {
+    padding: 5vw;
+    border-radius: 4vw;
+    border: 0.5vw solid rgb(2, 0, 0);
+    backdrop-filter: blur(1vw);
+    animation: blink 3s infinite;
+    margin: 2vw;
   }
 
-  .navbar {
-    padding: 10px; /* Menor padding para dispositivos móveis */
+  .img-logo-barbershop {
+    position: relative;
+    margin-left: 50%;
+    margin-top: -10%;
+    width: 30%;
+    max-width: 12vw;
+    height: auto;
+    padding: 5vw;
+    border: 1vw solid white;
+    box-shadow: 2.5vw 0.5vw 5vw 1vw rgba(255, 255, 255, 0.9);
+  }
+  .card-barbershop {
+    background-color: rgba(5, 33, 92, 0.8);
+    color: rgb(255, 255, 255);
+    padding: 10vw;
+    backdrop-filter: blur(2vw);
+    font-size: 3vw;
+    border-radius: 4vw;
+    margin: 2.5vw;
+    border: 0.5vw solid rgb(255, 255, 255);
   }
 
-  .main-content {
-    padding: 1rem; /* Menor padding em dispositivos móveis */
+.img-logo-barbershop2 {
+  position: relative;
+  margin-left: 35% !important;
+  margin-top: 2% !important;
+  width: 30%;
+  max-width: 15vw;
+  height: auto;
+  padding: 1.5vw;
+  border: 0.2vw solid white;
+  box-shadow: 1vw 0.1vw 1.5vw 0.2vw rgba(255, 255, 255, 0.9);
+}
+  .card-user {
+    background-image: linear-gradient(to right, #092e35, #010825);
+    color: rgb(199, 232, 241);
+    padding: 3vw;
+    backdrop-filter: blur(1vw);
+    font-size: 3vw;
+    border-radius: 4vw;
+    margin: 2.5vw;
+    border: 0.5vw solid rgb(255, 255, 255);
   }
+
+  .auth-dropdown {
+    margin-right: 5vw;
+    color: white;
+  }
+
+  .auth-dropdown .dropdown-menu {
+    left: -50%;
+    border: none;
+    box-shadow: 0 0 2vw rgba(0, 0, 0, 0.1);
+    background-image: linear-gradient(to right, #96e5f3, #f0f0f0);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  body {
+    /* Estilos específicos para telas entre 768px e 1023px */
+  }
+}
+
+.sticky-summary {
+  position: -webkit-sticky; /* Para compatibilidade com Safari */
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.8); /* Fundo semi-transparente para melhor visibilidade do texto */
+  border: #010825 10px solid;
+  border-radius: 8px;
+  overflow: hidden; /* Garante que o conteúdo não ultrapasse os limites da coluna */
+  height: 100%; /* Garante que a coluna ocupe toda a altura disponível */
+  display: flex;
+  
+  flex-direction: column;
+  justify-content: center; /* Alinha o conteúdo verticalmente ao centro */
+  position: -webkit-sticky; /* Para suporte ao Safari */
+  position: sticky;
+  top: 130px; /* Necessário para o efeito de desfoque */
+}
+
+.sticky-summary::before {
+  position: sticky;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(58px); /* Ajuste o valor para o nível de desfoque desejado */
+  z-index: -1; /* Coloca o efeito de desfoque atrás do conteúdo */
+}
+
+
+.custom-swal {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgb(85 134 141));
+  color: #f0f0f0; /* Texto claro */
+  padding: 20px;
+  border-radius: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #FFFFFF;
+}
+
+.custom-swal-title {
+  color: white; /* Altera a cor do título para branco */
+}
+
+.custom-swal-text {
+  color: white; /* Altera a cor do texto do conteúdo para branco */
+}
+
+/* Estilo do botão do SweetAlert */
+.custom-swal .swal2-confirm {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8));
+  color: #f0f0f0; /* Texto claro */
+  padding: 10px 20px; /* Ajuste o padding conforme necessário */
+  border-radius: 10px; /* Bordas arredondadas */
+  border: 1px solid #FFFFFF; /* Borda branca */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra do botão */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transições */
+}
+
+/* Efeito de hover para o botão */
+.custom-swal .swal2-confirm:hover {
+  transform: translateY(-2px); /* Levanta o botão ao passar o mouse */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); /* Aumenta a sombra ao passar o mouse */
+}
+
+/* Estilo para o botão de cancelamento, se necessário */
+.custom-swal .swal2-cancel {
+  background: transparent; /* Fundo transparente */
+  color: #f0f0f0; /* Texto claro */
+  border: 1px solid #f0f0f0; /* Borda clara */
+  border-radius: 10px; /* Bordas arredondadas */
+  padding: 10px 20px; /* Ajuste o padding conforme necessário */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transições */
+}
+
+/* Efeito de hover para o botão de cancelamento */
+.custom-swal .swal2-cancel:hover {
+  transform: translateY(-2px); /* Levanta o botão ao passar o mouse */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); /* Aumenta a sombra ao passar o mouse */
+}
+
+
+/* Estilo global para todos os botões */
+button {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 1), rgba(84, 133, 141, 0.8)); /* Gradiente de fundo */
+  color: #f0f0f0; /* Texto claro */
+  padding: 10px 20px; /* Espaçamento interno */
+  border-radius: 40px; /* Bordas arredondadas */
+  border: 1px solid #FFFFFF; /* Borda branca */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra do botão */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transições */
+  cursor: pointer; /* Mão ao passar o mouse */
+}
+
+/* Efeito de hover para todos os botões */
+button:hover {
+  transform: translateY(-2px); /* Levanta o botão ao passar o mouse */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); /* Aumenta a sombra ao passar o mouse */
+}
+
+/* Efeito de foco para acessibilidade */
+button:focus {
+  outline: none; /* Remove contorno padrão */
+  box-shadow: 0 0 0 3px rgba(84, 133, 141, 0.5); /* Sombra para indicar foco */
+}
+.auth-link {
+  color: #f3ebeb; /* Cor azul padrão do Bootstrap */
+  font-weight: bold; /* Deixa o texto em negrito */
+  text-decoration: underline; /* Sublinha o texto para destacar */
+}
+
+.auth-link:hover {
+  color: #ffffff; /* Cor ao passar o mouse */
+  text-decoration: none; /* Remove a sublinha ao passar o mouse */
 }

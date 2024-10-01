@@ -25,7 +25,7 @@ const Navigation = () => {
 
   const renderCorporateMenu = () => (
     <NavDropdown title={<span><i className="fa fa-briefcase" aria-hidden="true"></i> Corporativo</span>} id="corporate-dropdown">
-      <NavDropdown.Item as={Link} to="/barber-shop/list">Minhas Barbearias</NavDropdown.Item>
+      <NavDropdown.Item as={Link} to="/barbershop">Minhas Barbearias</NavDropdown.Item>
       <NavDropdown.Item as={Link} to="/appointments/manage">Gerenciar Agendamentos</NavDropdown.Item>
       <NavDropdown.Item as={Link} to="/service/manage">Gerenciar Serviços</NavDropdown.Item>
       <NavDropdown.Item as={Link} to="/reports">Relatórios</NavDropdown.Item>
@@ -42,7 +42,7 @@ const Navigation = () => {
   );
 
   return (
-    <Navbar expand="lg" sticky="top" bg="dark" variant="dark">
+    <Navbar expand="lg" sticky="top" bg="dark" variant="dark" className="mb-4">
       <Navbar.Brand as={Link} to="/">
         <img
           src="/images/logo.png"

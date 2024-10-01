@@ -4,7 +4,6 @@ import NavlogComponent from "../../components/NavlogComponent";
 import itemService from "../../services/ItemService";
 import { useLocation, Link } from "react-router-dom";
 import LoadingComponent from "../../components/LoadingComponent";
-import eventService from "../../services/EventService";
 import { storageUrl } from "../../config";
 
 const ItemCreatePage = () => {
@@ -31,7 +30,6 @@ const ItemCreatePage = () => {
   const [validated, setValidated] = useState(false);
   const [imageError, setImageError] = useState(null);
   const [imageFile, setImageFile] = useState(null); 
-  const [event, setEvent] = useState(null);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -46,24 +44,7 @@ const ItemCreatePage = () => {
     }
   }, [eventId]);
 
-  useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        const response = await eventService.show(eventId);
-        if (response) {
-          setEvent(response);
-        } else {
-          setError("Não foi possível carregar os dados do evento.");
-        }
-      } catch (err) {
-        setError("Não foi possível carregar os dados do evento.");
-      }
-    };
-
-    if (eventId) {
-      fetchEvent();
-    }
-  }, [eventId]);
+ 
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

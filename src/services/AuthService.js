@@ -6,25 +6,38 @@ const apiServiceUrl = "auth";
 const authService = {
   getToken: () => localStorage.getItem("token"),
   setToken: (token) => localStorage.setItem("token", token),
-
   login: async (email, password) => {
     try {
-      const response = await axios.post(
-        `${apiBaseUrl}/${apiServiceUrl}/login`,
-        { email, password }
-      );
+      const response = await axios.post(`${apiBaseUrl}/${apiServiceUrl}/login`, {
+        email,
+        password,
+      });
 
       if (response.status === 200) {
-        authService.setToken(response.data.access_token);
-        // Redirecionar para a rota dashboard após o login bem-sucedido
+        const { token, user, message } = response.data;
+        
+        // Armazenar o token no localStorage
+        authService.setToken(token.original.access_token);
+        
+        // Mensagem de login bem-sucedido
+        console.log(message);
+        
+        // Redirecionar para o dashboard
         window.location.href = "/dashboard";
-        return true; // Login bem-sucedido
+        
+        return { success: true, user }; // Retornar o status de sucesso e o usuário logado
       } else {
         throw new Error("Credenciais inválidas");
       }
     } catch (error) {
-      console.error(error);
-      throw new Error("Erro no login. Por favor, tente novamente mais tarde.");
+      // Verifica se há uma resposta da API com uma mensagem de erro
+      if (error.response && error.response.data.error) {
+        throw new Error(error.response.data.error); // Lança o erro retornado pela API
+      } else if (error.response && error.response.data.errors) {
+        throw error.response.data.errors; // Para erros de validação
+      } else {
+        throw new Error("Erro durante o login. Por favor, tente novamente.");
+      }
     }
   },
 
@@ -86,6 +99,8 @@ const authService = {
       );
 
       if (response.status === 200) {
+        
+        window.location.href = "/dashboard";
         return true; // Verificação de e-mail bem-sucedida
       }
     } catch (error) {
@@ -142,32 +157,34 @@ const authService = {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return response.data; // Retorna o objeto do usuário se estiver autenticado
     } catch (error) {
+      
+      `${apiBaseUrl}/${apiServiceUrl}/login`,
       console.error(error);
       throw new Error("Erro ao obter os dados do usuário.");
     }
   },
   passwordEmail: async (email) => {
     try {
-      const response = await axios.post(
-        `${apiBaseUrl}/${apiServiceUrl}/password-email`,
-        { email }
-      );
-
-      if (response.status === 200) {
-        return response;
-      } else {
-        throw new Error(
-          "Erro ao enviar a senha para o email. Por favor, tente novamente."
+        const response = await axios.post(
+            `${apiBaseUrl}/${apiServiceUrl}/password-email`,
+            { email }
         );
-      }
+
+        // Se o status for 200, o envio foi bem-sucedido
+        if (response.status === 200) {
+            return response.data.message; // Retorna a mensagem de sucesso do backend
+        }
     } catch (error) {
-      if (error.response && error.response.data.errors) {
-        throw error.response.data.errors;
-      } else {
-        throw new Error("Erro ao enviar o codigo para recuperação de senha. Por favor, tente novamente.");
-      }
+        // Verifica se a resposta contém erros do backend
+        if (error.response && error.response.data && error.response.data.message) {
+            throw new Error(error.response.data.message); // Retorna a mensagem de erro do backend
+        } else {
+            // Mensagem genérica se o erro não for tratado
+            throw new Error("Erro ao enviar o código para recuperação de senha. Por favor, tente novamente.");
+        }
     }
-  },
+},
+
   passwordReset: async (email, resetCode, newPassword, confirmPassword) => {
     try {
       const response = await axios.post(

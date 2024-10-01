@@ -23,34 +23,16 @@ import UserCreatePage from "./pages/admin/user/UserCreatePage";
 import ProfileCreatePage from "./pages/admin/profile/ProfileCreatePage";
 import ProfileListPage from "./pages/admin/profile/ProfileListPage";
 import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
-// Production
-import ProductionListAdminPage from "./pages/admin/production/ProductionListAdminPage";
-
-// Corporativo
-// Production
-import ProductionUpdatePage from "./pages/production/ProductionUpdatePage";
-import ProductionListCorpPage from "./pages/corp/production/ProductionListCorpPage";
-
-// Event
-import EventListCorpPage from "./pages/corp/event/EventListCorpPage";
-
-// Participativo
-// Production
-import ProductionCreatePage from "./pages/production/ProductionCreatePage";
-import ProductionPage from "./pages/production/ProductionPage";
-import ProductionViewPage from "./pages/production/ProductionViewPage";
-
-// Event
-import EventUpdatePage from "./pages/event/EventUpdatePage";
-import EventPage from "./pages/event/EventPage";
-import EventCreatePage from "./pages/event/EventCreatePage";
-import EventViewPage from "./pages/event/EventViewPage";
 
 // Item
 import ItemCreatePage from "./pages/item/ItemCreatePage";
 import ItemUpdatePage from "./pages/item/ItemUpdatePage"; 
 import ItemListPage from "./pages/item/ItemListPage"; 
 import ItemViewPage from "./pages/item/ItemViewPage"; 
+// Barbershop
+import BarbershopCreatePage from "./pages/corp/barbershop/BarbershopCreatePage";
+import BarbershopUpdatePage from "./pages/corp/barbershop/BarbershopUpdatePage"; 
+import BarbershopListPage from "./pages/corp/barbershop/BarbershopListPage"; 
 
 // User
 import UserViewPage from "./pages/user/UserViewPage";
@@ -132,26 +114,16 @@ const App = () => {
         <Route path="/profile/create" element={protectedRoute(<ProfileCreatePage />)} />
         <Route path="/profile/list" element={protectedRoute(<ProfileListPage />)} />
         <Route path="/profile/update/:id" element={protectedRoute(<ProfileUpdatePage />)} />
-        
-        <Route path="/production/admin/list" element={protectedRoute(<ProductionListAdminPage />)} />
        
-        <Route path="/production/create" element={protectedRoute(<ProductionCreatePage />)} />
-        <Route path="/productions" element={protectedRoute(<ProductionPage />)} /> 
-        <Route path="/production/update/:id" element={protectedRoute(<ProductionUpdatePage />)} />
-        <Route path="/production/:slug" element={protectedRoute(<ProductionViewPage />)} />
-        <Route path="/production/corp/list" element={protectedRoute(<ProductionListCorpPage />)} />
-       
-        <Route path="/event" element={protectedRoute(<EventPage />)} />
-        <Route path="/event/create" element={protectedRoute(<EventCreatePage />)} />
-        <Route path="/event/update/:id" element={protectedRoute(<EventUpdatePage />)} />
-        <Route path="/event/corp/list" element={protectedRoute(<EventListCorpPage />)} />
-        <Route path="/event/:slug" element={protectedRoute(<EventViewPage />)} />
-        <Route path="/event/:eventId/items" element={protectedRoute(<ItemListPage />)} />
                
         <Route path="/item" element={protectedRoute(<ItemListPage />)} />
         <Route path="/item/create" element={protectedRoute(<ItemCreatePage />)} />
         <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
         <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
+
+        <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
+        <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
+        <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
     
       </Routes>
     </Router>
