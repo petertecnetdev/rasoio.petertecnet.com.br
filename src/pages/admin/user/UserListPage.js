@@ -153,7 +153,7 @@ const UserListPage = () => {
                       src={
                         user.avatar
                           ? `${storageUrl}/${user.avatar}`
-                          : "/images/loadingimage.gif"
+                          : "/images/user.png"
                       }
                       alt="User Avatar"
                       style={{

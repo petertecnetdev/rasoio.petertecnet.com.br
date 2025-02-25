@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import authService from "../../services/AuthService";
+import axios from "axios";
 import { Button, Card, Col, Container, Row, Form } from "react-bootstrap"; 
 import Swal from "sweetalert2"; // Importando SweetAlert
-import backgroundImage from "../../images/background-2.png";
+import { apiBaseUrl } from "../../config";  // Importando a configuração da URL base da API
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Importando o componente de indicador de processamento
 
 class RegisterPage extends Component {
   constructor(props) {
@@ -34,18 +35,38 @@ class RegisterPage extends Component {
 
   onSubmit = async (e) => {
     e.preventDefault();
-    const { first_name, email, password } = this.state;
+    const { first_name, email, password, confirmPassword } = this.state;
+    
+    // Verificando se a senha e a confirmação de senha coincidem
+    if (password !== confirmPassword) {
+      Swal.fire({
+        title: "Erro!",
+        text: "As senhas não coincidem. Por favor, tente novamente.",
+        icon: "error",
+        confirmButtonText: "Ok",
+        iconColor: '#dc3545', 
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        }, // Vermelho para erro
+      });
+      return;
+    }
+
     this.setState({ loading: true });
 
     try {
       const userObject = {
-        first_name: first_name,
-        email: email,
-        password: password,
+        first_name,
+        email,
+        password,
       };
 
-      const registrationResponse = await authService.register(userObject);
-      const modalMessage = registrationResponse?.data?.message || "Registro bem-sucedido";
+      // Realizando a requisição diretamente à API
+      const response = await axios.post(`${apiBaseUrl}/auth/register`, userObject);
+
+      const modalMessage = response?.data?.message || "Registro bem-sucedido";
 
       Swal.fire({
         title: "Sucesso!",
@@ -58,6 +79,9 @@ class RegisterPage extends Component {
           content: 'custom-swal-text',
         },
         iconColor: '#28a745', // Verde para sucesso
+      }).then(() => {
+        // Redirecionando para a página de login após o clique no "Ok"
+        window.location.href = "/login";
       });
 
       this.setState({ loading: false });
@@ -65,15 +89,16 @@ class RegisterPage extends Component {
       console.log(error);
       let errorMessages = "";
 
-      if (error.email || error.first_name || error.password) {
-        if (error.email) {
-          errorMessages += error.email[0] + " ";
+      if (error.response && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors.email) {
+          errorMessages += errors.email[0] + " ";
         }
-        if (error.first_name) {
-          errorMessages += error.first_name[0] + " ";
+        if (errors.first_name) {
+          errorMessages += errors.first_name[0] + " ";
         }
-        if (error.password) {
-          errorMessages += error.password[0] + " ";
+        if (errors.password) {
+          errorMessages += errors.password[0] + " ";
         }
       } else {
         errorMessages = "Erro desconhecido ao tentar se registrar.";
@@ -98,87 +123,89 @@ class RegisterPage extends Component {
 
   render() {
     const { loading } = this.state;
+
     return (
       <Container fluid>
-        <Row style={{
-            background: `url(${backgroundImage}) no-repeat center center`,
-            backgroundSize: 'cover',
-            height: '100vh'
-          }}>
-          <Col md={6} className="d-flex align-items-center justify-content-center">
-            <Card className="card-1 " >
-              <Card.Body>
-                <Card.Title className="text-center text-lowcase h1 ">RASOIO</Card.Title>
-                <Card.Text className="text-center text-primary">
-                  <p className="text-light">No Rasoio, o registro de usuários é essencial para os barbeiros que desejam otimizar sua rotina de trabalho.</p>
-                  <p>Ao se cadastrar, você terá acesso a uma plataforma projetada para facilitar o gerenciamento de agendamentos e serviços, permitindo que você foque no que faz de melhor: atender seus clientes.</p>
-                  <p>Com o Rasoio, você poderá visualizar suas agendas, interagir com clientes e aprimorar sua performance, tornando o dia a dia na barbearia mais produtivo e organizado.</p>
-                  <p>Cadastre-se hoje mesmo e transforme a sua experiência profissional!</p>
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} className="d-flex align-items-center justify-content-center">
-            <Card >
-              <Card.Body>
-                <div className="text-center">
-                  <img
-                    src="/images/logo.png"
-                    alt="Logo"
-                    className="logo rounded-circle img-thumbnail"
-                    style={{ width: "150px", height: "150px" }}
-                  />
-                </div>
+        {loading && <ProcessingIndicatorComponent messages={['Registrando usuário...', 'Por favor, aguarde...']} />} {/* Exibindo o indicador de processamento */}
 
-                <Card.Title className="text-center mb-2 h2">REGISTRE-SE</Card.Title>
-                <Form onSubmit={this.onSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="text"
-                      placeholder="Nome"
-                      onChange={this.onChangefirst_name}
-                      value={this.state.first_name}
+        {/* Condicional para esconder os elementos enquanto o formulário estiver carregando */}
+        {!loading && (
+          <Row>
+            <Col md={6} className="d-flex align-items-center justify-content-center">
+              <Card>
+                <Card.Body>
+                  <div className="text-center">
+                    <img
+                      src="/images/logo.png"
+                      alt="Logo"
+                      className="logo rounded-circle img-thumbnail"
+                      style={{ width: "150px", height: "150px" }}
                     />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="email"
-                      placeholder="Insira o Email"
-                      onChange={this.onChangeemail}
-                      value={this.state.email}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Insira a Senha"
-                      onChange={this.onChangePassword}
-                      value={this.state.password}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Confirme a Senha"
-                      onChange={this.onChangeConfirmPassword}
-                      value={this.state.confirmPassword}
-                    />
-                  </Form.Group>
+                  </div>
 
-                  <Button type="submit" disabled={loading} className="btn btn-primary w-100">
-                    {loading ? "Registrando..." : "Registrar"}
-                  </Button>
-                  <p className="forgot-password text-right text-center mt-3">
-                    Já está registrado? <a href="/login" className="auth-link">Entrar</a>
-                  </p>
-                  <p className="forgot-password text-right text-center mt-3">
-                    Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
-                  </p>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+                  <Card.Title className="text-center mb-2 h2">REGISTRE-SE</Card.Title>
+                  <Form onSubmit={this.onSubmit}>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="text"
+                        placeholder="Nome"
+                        onChange={this.onChangefirst_name}
+                        value={this.state.first_name}
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="email"
+                        placeholder="Insira o Email"
+                        onChange={this.onChangeemail}
+                        value={this.state.email}
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="password"
+                        placeholder="Insira a Senha"
+                        onChange={this.onChangePassword}
+                        value={this.state.password}
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="password"
+                        placeholder="Confirme a Senha"
+                        onChange={this.onChangeConfirmPassword}
+                        value={this.state.confirmPassword}
+                      />
+                    </Form.Group>
+
+                    <Button type="submit" disabled={loading} className="btn btn-primary w-100">
+                      {loading ? "Registrando..." : "Registrar"}
+                    </Button>
+                    <p className="forgot-password text-right text-center mt-3">
+                      Já está registrado? <a href="/login" className="auth-link">Entrar</a>
+                    </p>
+                    <p className="forgot-password text-right text-center mt-3">
+                      Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
+                    </p>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} className="d-flex align-items-center justify-content-center">
+              <Card className="card-1">
+                <Card.Body>
+                  <Card.Title className="text-center text-lowcase h1">RASOIO</Card.Title>
+                  <Card.Text className="text-center text-primary">
+                    <p className="text-light">No Rasoio, todos têm um lugar! Seja você barbeiro ou cliente, nossa plataforma foi projetada para atender suas necessidades e otimizar a experiência de agendamento e serviços.</p>
+                    <p>Ao se cadastrar, você terá acesso a uma interface intuitiva que facilita o gerenciamento de agendamentos, permitindo que barbeiros se concentrem no que fazem de melhor, enquanto os clientes podem facilmente marcar horários e acompanhar seus históricos de cortes.</p>
+                    <p>Os clientes também poderão receber promoções exclusivas e notificações sobre novos serviços, garantindo que você esteja sempre atualizado sobre as melhores ofertas.</p>
+                    <p>Com o Rasoio, a interação entre barbeiros e clientes é fluida e eficiente, tornando cada visita à barbearia uma experiência agradável e organizada. Cadastre-se hoje mesmo e descubra tudo o que o Rasoio pode fazer por você!</p>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
       </Container>
     );
   }

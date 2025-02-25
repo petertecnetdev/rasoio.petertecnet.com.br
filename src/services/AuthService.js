@@ -6,25 +6,29 @@ const apiServiceUrl = "auth";
 const authService = {
   getToken: () => localStorage.getItem("token"),
   setToken: (token) => localStorage.setItem("token", token),
+
   login: async (email, password) => {
     try {
-      const response = await axios.post(`${apiBaseUrl}/${apiServiceUrl}/login`, {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${apiBaseUrl}/${apiServiceUrl}/login`,
+        {
+          email,
+          password,
+        }
+      );
 
       if (response.status === 200) {
         const { token, user, message } = response.data;
-        
+
         // Armazenar o token no localStorage
         authService.setToken(token.original.access_token);
-        
+
         // Mensagem de login bem-sucedido
         console.log(message);
-        
+
         // Redirecionar para o dashboard
         window.location.href = "/dashboard";
-        
+
         return { success: true, user }; // Retornar o status de sucesso e o usuário logado
       } else {
         throw new Error("Credenciais inválidas");
@@ -99,7 +103,6 @@ const authService = {
       );
 
       if (response.status === 200) {
-        
         window.location.href = "/dashboard";
         return true; // Verificação de e-mail bem-sucedida
       }
@@ -140,78 +143,85 @@ const authService = {
     }
   },
   me: async () => {
-    const token = authService.getToken();
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const token = localStorage.getItem("token");
+    
+    // Simula um pequeno atraso (útil para UX durante testes)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  
+    // Se não houver token, redireciona para a página de login
     if (!token) {
       throw new Error("Usuário não autenticado.");
     }
-
+  
     try {
+      // Configura o cabeçalho de autenticação
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-
-      const response = await axios.get(`${apiBaseUrl}/${apiServiceUrl}/me`, {
-        headers,
-      });
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return response.data; // Retorna o objeto do usuário se estiver autenticado
-    } catch (error) {
+  
+      // Faz a requisição para obter os dados do usuário
+      const response = await axios.get(`${apiBaseUrl}/${apiServiceUrl}/me`, { headers });
       
-      `${apiBaseUrl}/${apiServiceUrl}/login`,
-      console.error(error);
+      // Simula um pequeno atraso após a resposta (útil para UX)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // Retorna os dados do usuário se a requisição foi bem-sucedida
+      return response.data;
+    } catch (error) {
+      // Exibe o erro no console para depuração
+      console.error("Erro ao obter os dados do usuário:", error);
+      
+      window.location.href = "/login";
       throw new Error("Erro ao obter os dados do usuário.");
     }
   },
+  
   passwordEmail: async (email) => {
     try {
-        const response = await axios.post(
-            `${apiBaseUrl}/${apiServiceUrl}/password-email`,
-            { email }
-        );
-
-        // Se o status for 200, o envio foi bem-sucedido
-        if (response.status === 200) {
-            return response.data.message; // Retorna a mensagem de sucesso do backend
-        }
+      const response = await axios.post(
+        `${apiBaseUrl}/${apiServiceUrl}/password-email`,
+        { email }
+      );
+      // Retorna o JSON completo da resposta, independentemente do status
+      return response.data; 
     } catch (error) {
-        // Verifica se a resposta contém erros do backend
-        if (error.response && error.response.data && error.response.data.message) {
-            throw new Error(error.response.data.message); // Retorna a mensagem de erro do backend
-        } else {
-            // Mensagem genérica se o erro não for tratado
-            throw new Error("Erro ao enviar o código para recuperação de senha. Por favor, tente novamente.");
-        }
-    }
-},
+      // Verifica se houve um erro de comunicação
+      if (!error.response) {
+        // Se não houver resposta, é um problema de comunicação
+        throw new Error("Houve uma falha na comunicação com o servidor. Por favor, tente novamente.");
+      }
 
-  passwordReset: async (email, resetCode, newPassword, confirmPassword) => {
+      // Se a API respondeu, mas com erro, retorna a resposta do erro
+      return error.response.data; // Retorna o JSON de erro do backend
+    }
+  },
+  
+  passwordReset: async (email, resetCode, newPassword) => {
     try {
       const response = await axios.post(
-        `${apiBaseUrl}/${apiServiceUrl}/password-update`,
+        `${apiBaseUrl}/${apiServiceUrl}/password-reset`,
         {
           email: email,
           reset_password_code: resetCode,
           password: newPassword,
-          password_confirmation: confirmPassword,
         }
       );
-
-      if (response.status === 200) {
-        return response;
-      } else {
-        throw new Error(
-          "Erro ao enviar a senha para o email. Por favor, tente novamente."
-        );
-      }
+  
+      return response; // Retorna a resposta diretamente para ser utilizada no submit
     } catch (error) {
-      if (error.response && error.response.data.errors) {
-        throw error.response.data.errors;
+      // Verifica se existe uma mensagem de erro na resposta
+      if (error.response) {
+        const message = error.response.data.message || "Erro durante a redefinição de senha.";
+        const status = error.response.status;
+  
+        // Lança uma nova instância de erro com a mensagem e o status
+        throw new Error(`${message} (Status: ${status})`);
       } else {
-        throw new Error("Erro durante o registro. Por favor, tente novamente.");
+        throw new Error("Erro durante a redefinição de senha. Por favor, tente novamente.");
       }
     }
   },
+  
   resendCodeEmailVerification: async () => {
     try {
       const token = authService.getToken();

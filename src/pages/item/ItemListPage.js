@@ -1,200 +1,197 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Modal } from 'react-bootstrap';
-import itemService from '../../services/ItemService'; 
-import { useParams, Link } from 'react-router-dom';
-import { storageUrl } from "../../config"; 
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import axios from "axios";
+import { apiBaseUrl, storageUrl } from "../../config";
+import Swal from "sweetalert2";
+import { Link, useParams } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 
 const ItemListPage = () => {
-  const { eventId } = useParams();
+  const { slug } = useParams();
+  const [barbershop, setBarbershop] = useState(null);
   const [items, setItems] = useState([]);
-  const [event, setEvent] = useState(null); // Novo estado para armazenar os dados do evento
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      setError(null);
+    const fetchBarbershop = async () => {
       try {
-        const response = await itemService.listByEvent(eventId);
-        if (response.error) {
-          setError(response.error);
-        } else {
-          setItems(response.items);
-          setEvent(response.event); // Armazena os dados do evento
-        }
-      } catch (err) {
-        setError('Erro ao conectar com o servidor.');
+        setLoading(true);
+        const response = await axios.get(
+          `${apiBaseUrl}/barbershop/view/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        setBarbershop(response.data.barbershop);
+        setItems(response.data.items);
+        window.scrollTo(0, 0);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text:
+            error.response?.data?.error ||
+            "Erro ao carregar informações da barbearia.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItems();
-  }, [eventId]);
+    fetchBarbershop();
+  }, [slug]);
 
-  const handleDelete = async () => {
-    if (selectedItem) {
-      try {
-        const response = await itemService.delete(selectedItem.id);
-        if (response.success) {
-          setItems(items.filter(item => item.id !== selectedItem.id));
-          setSuccess('Item excluído com sucesso!');
-          setError(null);
-        } else {
-          setError(response.message || 'Erro ao deletar o item.');
-          setSuccess(null);
-        }
-      } catch (err) {
-        setError('Erro ao deletar o item.');
-        setSuccess(null);
-      } finally {
-        setShowModal(false);
-        setSelectedItem(null);
-      }
+  const handleImageError = (e) => {
+    e.target.src = "/images/user.png";
+  };
+
+  const getItemImage = (item) => {
+    if (item.image) {
+      return `${storageUrl}/${item.image}`;
     }
+    if (barbershop?.logo) {
+      return `${storageUrl}/${barbershop.logo}`;
+    }
+    return "/images/user.png";
   };
 
-  const handleShowModal = (item) => {
-    setSelectedItem(item);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedItem(null);
+  const handleDelete = async (id) => {
+    Swal.fire({
+      title: "Tem certeza?",
+      text: "Você realmente deseja excluir este item?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+      customClass: {
+        popup: "custom-swal",
+        title: "custom-swal-title",
+        content: "custom-swal-text",
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(`${apiBaseUrl}/item/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          setItems(items.filter((item) => item.id !== id));
+          Swal.fire("Deletado!", response.data.message, "success");
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Erro!",
+            text:
+              error.response?.data?.error || "Erro ao excluir o item.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+          });
+        }
+      }
+    });
   };
 
   return (
     <>
       <NavlogComponent />
-      <div
-        className="background-image-event"
-        style={{
-          backgroundImage: `url(${
-            event?.image
-              ? `${storageUrl}/${event.image}`
-              : "/images/eventflyer.png"
-          })`,
-        }}
-      />
-      <Container>
-        
-      <div className="text-center mb-4">
-          <p className="labeltitle h-7 bg-primary text-center text-uppercase">
-            Itens do evento
-          </p>
-          {event?.title && (
-            <Link
-              to={`/event/update/${event?.id}`}
-              style={{
-                textDecoration: "none",
-                color: "white",
-                textTransform: "uppercase",
-              }}
-            >
-              <p className="labeltitle h6 text-center text-uppercase">
-                Editar evento 
-              </p>
-            </Link>
-          )}
 
-          <Link
-            to={`/item/create?eventId=${event?.id}`}
-            style={{
-              textDecoration: "none",
-              color: "white",
-              textTransform: "uppercase",
-            }}
-          >
-            <p className="labeltitle h6 text-center bg-success text-uppercase">
-             Novo item
-            </p>
-          </Link>
-        </div>
-        {loading && <Alert variant="info">Carregando itens...</Alert>}
-        {error && (
-          <Alert variant="danger" style={{ position: 'fixed', top: 20, left: 0, right: 0, zIndex: 1050 }} onClose={() => setError(null)} dismissible>
-            {error}
-          </Alert>
-        )}
-        {success && (
-          <Alert variant="success" style={{ position: 'fixed', top: 80, left: 0, right: 0, zIndex: 1050 }} onClose={() => setSuccess(null)} dismissible>
-            {success}
-          </Alert>
-        )}
-        <Row>
-          {items.length > 0 ? (
-            items.map(item => (
-              <Col key={item.id} md={12}>
-                <Card className="mb-4">
-                  <Row>
-                  <Col md={4}>
-                  <Card.Img 
-                    variant="top" 
-                    src={item.image ? `${storageUrl}/${item.image}` : "/images/itemimage.png"} // Usa imagem genérica se não houver imagem associada
+      <Container>
+        <Row className="text-center">
+          
+          <Col md={12}>
+            {barbershop && (
+              <>
+                <p className="labeltitle text-uppercase">{barbershop.name}</p>
+                <Link
+                  to={`/barbershop/view/${barbershop.slug}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <img
+                    src={
+                      barbershop.logo
+                        ? `${storageUrl}/${barbershop.logo}`
+                        : "/images/barbershoplogo.png"
+                    }
+                    alt={barbershop.name}
+                    className="rounded-circle mb-3"
+                    style={{
+                      height: "50px",
+                      width: "50px",
+                      objectFit: "cover",
+                    }}
                   />
-                  </Col>
-                  <Col md={8}>
-                  <Card.Body>
-                    <Card.Title>{item.name}</Card.Title>
-                    <Card.Text>
-                      Tipo: {item.type}<br />
-                      Preço: {typeof item.price === 'number' ? `R$${item.price.toFixed(2)}` : 'Não disponível'}<br />
-                      Estoque: {item.stock}<br />
-                      Categoria: {item.category}<br />
-                      Disponível de: {new Date(item.availability_start).toLocaleDateString()} até {new Date(item.availability_end).toLocaleDateString()}
-                    </Card.Text>
-                    <Button
-                      className='m-2'
-                      variant="warning"
-                      as={Link}
-                      to={`/item/update/${item.id}`}
-                    >
-                      <i className="bi bi-pencil m-2"></i> 
-                    </Button>
-                    <Button
-                      className='m-2'
-                      variant="danger"
-                      onClick={() => handleShowModal(item)}
-                    >
-                      <i className="bi bi-trash m-2"></i> 
-                    </Button>
-                  </Card.Body>
-                  </Col>
-                  </Row>
-                </Card>
-              </Col>
-            ))
-          ) : (
-            <Col>
-              <Card>
-                <Card.Body>
-                  <Card.Text>Não há itens disponíveis para este evento.</Card.Text>
-                </Card.Body>
-              </Card>
-            </Col>
-          )}
+                </Link>
+              </>
+            )}
+          </Col>
         </Row>
 
-        <Modal show={showModal} onHide={handleCloseModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirmar Exclusão</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>Você tem certeza de que deseja excluir o item &quot;{selectedItem?.name}&quot;?</Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Cancelar
-            </Button>
-            <Button variant="danger" onClick={handleDelete}>
-              Excluir
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        {loading ? (
+          <ProcessingIndicatorComponent
+            messages={[
+              "Carregando itens da barbearia...",
+              "Quase pronto! Apenas um momento.",
+            ]}
+          />
+        ) : (
+          <Row>
+            {items.length === 0 ? (
+              <Col xs={12} className="text-center">
+                <p>Nenhum item encontrado.</p>
+              </Col>
+            ) : (
+              items.map((item) => (
+                <Col key={item.id} md={3} sm={6} xs={12} className="mb-4">
+                  <Card className="text-center shadow-sm p-3">
+                    <Link to={`/item/view/${item.slug}`} className="text-dark">
+                      <img
+                        src={getItemImage(item)}
+                        alt={item.name}
+                        className="item-image"
+                        onError={handleImageError}
+                        style={{
+                          maxHeight: "150px",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </Link>
+                    <Card.Body>
+                      <p className="text-white">{item.name}</p>
+                      <p className="text-white">R${item.price}</p>
+                      <div className="d-flex justify-content-between">
+                        <Link to={`/item/update/${item.id}`}>
+                          <Button variant="warning" size="sm">Editar</Button>
+                        </Link>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Deletar
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))
+            )}
+          </Row>
+        )}
       </Container>
     </>
   );

@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import axios from "axios";
 
 // Auth
 import LoginPage from "./pages/auth/LoginPage";
@@ -12,7 +8,10 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import EmailVerifyPage from "./pages/auth/EmailVerifyPage";
 import LogoutPage from "./pages/auth/LogoutPage";
 import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
+import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
+
+
 import DashboardPage from "./pages/DashboardPage";
 
 // Administrativo
@@ -24,22 +23,29 @@ import ProfileCreatePage from "./pages/admin/profile/ProfileCreatePage";
 import ProfileListPage from "./pages/admin/profile/ProfileListPage";
 import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
 
+// Corporativo
 // Item
+import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
-import ItemUpdatePage from "./pages/item/ItemUpdatePage"; 
-import ItemListPage from "./pages/item/ItemListPage"; 
-import ItemViewPage from "./pages/item/ItemViewPage"; 
+import ItemUpdatePage from "./pages/item/ItemUpdatePage";
+import ItemViewPage from "./pages/item/ItemViewPage";
 // Barbershop
 import BarbershopCreatePage from "./pages/corp/barbershop/BarbershopCreatePage";
-import BarbershopUpdatePage from "./pages/corp/barbershop/BarbershopUpdatePage"; 
-import BarbershopListPage from "./pages/corp/barbershop/BarbershopListPage"; 
+import BarbershopViewPage from "./pages/barbershop/BarbershopViewPage";
+import BarbershopUpdatePage from "./pages/corp/barbershop/BarbershopUpdatePage";
+import BarbershopListPage from "./pages/corp/barbershop/BarbershopListPage";
 
-// User
+import BarberViewPage from "./pages/barber/BarberViewPage";
+import BarberIncludePage from "./pages/barber/BarberIncludePage";
+
 import UserViewPage from "./pages/user/UserViewPage";
-import UserEditPage from "./pages/user/UserEditPage";
+import UserUpdatePage from "./pages/user/UserUpdatePage";
 
-import LoadingComponent from "./components/LoadingComponent";
-import authService from "./services/AuthService";
+import SchedulingPage from "./pages/scheduling/SchedulingPage";
+
+import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
+ import { apiBaseUrl } from "./config";
+
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -47,21 +53,40 @@ const App = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const userData = await authService.me();
-        setUser(userData);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setLoading(false);
+      const token = localStorage.getItem("token"); // Obtém o token do localStorage
+     
+      if (token) {
+        try {
+          
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
+          
+          const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers }); 
+          
+          setUser(response.data.user); 
+        } catch (error) {
+          setUser(null);
+          localStorage.removeItem("token"); 
+          return <Navigate to="/login" />;// Remove o token em caso de erro
+        }
+      } else {
+     
+        setUser(null); // Se não houver token, considera o usuário como não autenticado
       }
+      setLoading(false); // Finaliza o carregamento
     };
 
     fetchData();
   }, []);
 
   if (loading) {
-    return <LoadingComponent />;
+    return (
+      <ProcessingIndicatorComponent
+        messages={["Carregando...", "Quase pronto, por favor aguarde..."]}
+        interval={2000}
+      />
+    );
   }
 
   const protectedRoute = (element) => {
@@ -100,31 +125,37 @@ const App = () => {
         <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
         <Route path="/login" element={restrictedRoute(<LoginPage />)} />
         <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
+        <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
         <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
         <Route path="/password" element={protectedRoute(<PasswordPage />)} />
         <Route path="/logout" element={<LogoutPage />} />
         <Route path="/*" element={<Navigate to="/login" />} />
         <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
-        
-        <Route path="/user/edit" element={protectedRoute(<UserEditPage />)} />
+
+        <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
         <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
-        <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} /> 
+        <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
         <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
 
         <Route path="/profile/create" element={protectedRoute(<ProfileCreatePage />)} />
         <Route path="/profile/list" element={protectedRoute(<ProfileListPage />)} />
         <Route path="/profile/update/:id" element={protectedRoute(<ProfileUpdatePage />)} />
-       
-               
-        <Route path="/item" element={protectedRoute(<ItemListPage />)} />
-        <Route path="/item/create" element={protectedRoute(<ItemCreatePage />)} />
+
+        <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
+        <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
         <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
         <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
         <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
         <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
+        <Route path="/barbershop/view/:slug" element={protectedRoute(<BarbershopViewPage />)} />
         <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
-    
+      
+
+        <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
+        <Route path="/barber/include/:slug" element={protectedRoute(< BarberIncludePage  />)} />
+
+        <Route path="/scheduling/:slug" element={protectedRoute(<SchedulingPage />)} /> 
       </Routes>
     </Router>
   );

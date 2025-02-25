@@ -1,167 +1,239 @@
-import React from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer
-} from 'recharts';
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { FaUsers, FaMoneyBillWave, FaCalendarCheck, FaTools, FaStar, FaUserPlus } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import Swal from "sweetalert2";
 import NavlogComponent from "../components/NavlogComponent";
-
-// Dados fictícios para os gráficos
-const barData = [
-  { name: 'Janeiro', vendas: 4000 },
-  { name: 'Fevereiro', vendas: 3000 },
-  { name: 'Março', vendas: 2000 },
-  { name: 'Abril', vendas: 2780 },
-  { name: 'Maio', vendas: 1890 },
-];
-
-const lineData = [
-  { name: 'Janeiro', visitantes: 2400 },
-  { name: 'Fevereiro', visitantes: 2210 },
-  { name: 'Março', visitantes: 2290 },
-  { name: 'Abril', visitantes: 2000 },
-  { name: 'Maio', visitantes: 2181 },
-];
-
-const areaData = [
-  { name: 'Janeiro', lucros: 2400 },
-  { name: 'Fevereiro', lucros: 2210 },
-  { name: 'Março', lucros: 2290 },
-  { name: 'Abril', lucros: 2000 },
-  { name: 'Maio', lucros: 2181 },
-];
-
-const pieData = [
-  { name: 'Grupo A', value: 400 },
-  { name: 'Grupo B', value: 300 },
-  { name: 'Grupo C', value: 300 },
-  { name: 'Grupo D', value: 200 },
-];
-
-const indicatorData = [
-  { title: 'Total de Clientes', value: 120, icon: <FaUsers />, color: '#4CAF50' },
-  { title: 'Faturamento Mensal', value: 'R$ 18,000', icon: <FaMoneyBillWave />, color: '#FF9800' },
-  { title: 'Agendamentos no Mês', value: 80, icon: <FaCalendarCheck />, color: '#2196F3' },
-  { title: 'Serviços Prestados', value: 150, icon: <FaTools />, color: '#9C27B0' },
-  { title: 'Avaliações Positivas', value: '95%', icon: <FaStar />, color: '#FF5722' },
-  { title: 'Novos Clientes', value: 20, icon: <FaUserPlus />, color: '#795548' },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+import ProcessingIndicatorComponent from "../components/ProcessingIndicatorComponent";
+import axios from "axios";
+import { apiBaseUrl, storageUrl } from "../config";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
+  const [barbershops, setBarbershops] = useState([]);
+  const [barbers, setBarbers] = useState([]);
+  const [isLoadingBarbershops, setIsLoadingBarbershops] = useState(true);
+  const [isLoadingBarbers, setIsLoadingBarbers] = useState(true);
+
+  useEffect(() => {
+    const fetchBarbershops = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        };
+        const response = await axios.get(`${apiBaseUrl}/barbershop`, {
+          headers,
+        });
+
+        if (response?.data?.barbershops) {
+          setBarbershops(response.data.barbershops.data);
+        } else {
+          setBarbershops([]);
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro ao carregar barbearias.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+        setBarbershops([]);
+      } finally {
+        setIsLoadingBarbershops(false);
+      }
+    };
+
+    fetchBarbershops();
+  }, []);
+
+  useEffect(() => {
+    const fetchBarbers = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        };
+        const response = await axios.get(`${apiBaseUrl}/barber`, { headers });
+
+        if (response?.data?.barbers) {
+          setBarbers(response.data.barbers.data);
+        } else {
+          setBarbers([]);
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro ao carregar barbeiros.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+        setBarbers([]);
+      } finally {
+        setIsLoadingBarbers(false);
+      }
+    };
+
+    fetchBarbers();
+  }, []);
+
+  const handleBarberAvatarError = (e) => {
+    e.target.src = "images/user.png";
+  };
+
+  const handleBarbershopLogoError = (e) => {
+    e.target.src = "images/logo.png";
+  };
+
   return (
     <>
       <NavlogComponent />
-      <Container fluid className="main-content">
-        {/* Indicadores para o gestor da barbearia */}
-        <Card className="card-custom mb-4">
-          <Row className="justify-content-between">
-            {indicatorData.map((indicator, index) => (
-              <Col xs={12} sm={6} md={4} key={index} className="mb-3">
-                <Card className="card-indicators" style={{ backgroundColor: indicator.color }}>
-                  <Card.Body className="d-flex align-items-center">
-                    <div className="me-3">{indicator.icon}</div>
-                    <div>
-                      <h5>{indicator.title}</h5>
-                      <h3>{indicator.value}</h3>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Card>
-
-        <Row>
-          {/* Card para Gráfico de Barras */}
-          <Col xs={12} md={6} className="mb-4">
-            <Card className="card-custom">
-              <Card.Header>
-                <h2>Vendas por Mês</h2>
-              </Card.Header>
+      <Container >
+        <Row className="justify-content-center mt-4">
+          <Col md={12}>
+            <Card>
+          <p className="labeltitle h6 text-center text-uppercase">
+              Barbearias
+            </p>
               <Card.Body>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={barData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="vendas" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {isLoadingBarbershops ? (
+                  <Col xs={12} className="text-center">
+                    <ProcessingIndicatorComponent
+                      messages={[
+                        "Carregando as barbearias...",
+                        "Estamos buscando as informações.",
+                        "Quase pronto! Apenas um momento.",
+                      ]}
+                    />
+                  </Col>
+                ) : (
+                  <Row>
+                    <>
+                      {barbershops.length > 0 ? (
+                        barbershops.map((barbershop) => (
+                          <Col
+                            md={4}
+                            key={barbershop.id}
+                            className=""
+                          >
+                            <Card className="card-barbershop-show">
+                              <div
+                                className="background-image"
+                                style={{
+                                  backgroundImage: `url('${storageUrl}/${
+                                    barbershop.logo || "images/logo.png"
+                                  }')`,
+                                }}
+                              />
+                              <Link
+                                to={`/barbershop/view/${barbershop.slug}`}
+                                style={{ textDecoration: "none" }}
+                              >
+                                <img
+                                  src={`${storageUrl}/${
+                                    barbershop.logo || "images/logo.png"
+                                  }`}
+                                  className="rounded-circle img-logo-barbershop-show"
+                                  style={{ margin: "0 auto", display: "block" }}
+                                  alt={barbershop.name}
+                                  onError={handleBarbershopLogoError}
+                                />
+                              </Link>
+                              <Card.Body>
+                                <Link
+                                  to={`/barbershop/show/${barbershop.id}`}
+                                  style={{ textDecoration: "none" }}
+                                >
+                               <p className="labellight text-center ">
+                                    {barbershop.name}
+                                  </p>
+                                </Link>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))
+                      ) : (
+                        <Col xs={12} className="text-center">
+                          <p className="text-muted">
+                            Nenhuma barbearia encontrada.
+                          </p>
+                          <Link to="/barbershop/create">
+                            <Button variant="primary">
+                              Adicionar Nova Barbearia
+                            </Button>
+                          </Link>
+                        </Col>
+                      )}
+                    </>
+                  </Row>
+                )}
               </Card.Body>
             </Card>
           </Col>
+        </Row>
 
-          {/* Card para Gráfico de Linhas */}
-          <Col xs={12} md={6} className="mb-4">
-            <Card className="card-custom">
-              <Card.Header>
-                <h2>Visitantes por Mês</h2>
-              </Card.Header>
+        {/* Apenas exibe a seção de barbeiros se houver dados */}
+        <Row className="justify-content-center mt-4">
+          <Col md={12}>
+         
+            <Card>
+            <p className="labeltitle h6 text-center text-uppercase">
+              Barbeiros
+            </p>
               <Card.Body>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={lineData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="visitantes" stroke="#82ca9d" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
+                {isLoadingBarbers ? (
+                  <Col xs={12} className="text-center">
+                    <ProcessingIndicatorComponent
+                      messages={[
+                        "Carregando as barbeiros...",
+                        "Estamos buscando as informações.",
+                        "Quase pronto! Apenas um momento.",
+                      ]}
+                    />
+                  </Col>
+                ) : (
+                  <Row>
+                    <>
+                      {barbers.length > 0 ? (
+                       barbers.map((barber) => (
+                        <Col md={3} key={barber.id}>
+                          <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center">
 
-          {/* Card para Gráfico de Área */}
-          <Col xs={12} md={6} className="mb-4">
-            <Card className="card-custom">
-              <Card.Header>
-                <h2>Lucros por Mês</h2>
-              </Card.Header>
-              <Card.Body>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={areaData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="lucros" stroke="#FFBB28" fillOpacity={0.3} fill="#FFBB28" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          {/* Card para Gráfico de Pizza */}
-          <Col xs={12} md={6} className="mb-4">
-            <Card className="card-custom">
-              <Card.Header>
-                <h2>Distribuição de Grupos</h2>
-              </Card.Header>
-              <Card.Body>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={entry => entry.name}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                            <Card.Body>
+                            <Link
+                                to={`/barber/view/${barber.user.user_name}`}
+                                style={{ textDecoration: "none" }}
+                              >
+                              <img
+                                src={barber.user.avatar ? `${storageUrl}/${barber.user.avatar}` : "/images/user.png"}
+                                alt={barber.user.first_name}
+                                className="rounded-circle img-fluid m-3 img-avatar-user"
+                                onError={handleBarberAvatarError}
+                              />
+                              <p>{barber.user.first_name}</p>
+                              </Link>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      ))
+                      ) : (
+                        <Col xs={12} className="text-center">
+                          <p className="text-muted">
+                            Nenhuma barbeiro encontrado.
+                          </p>
+                        </Col>
+                      )}
+                    </>
+                  </Row>
+                )}
               </Card.Body>
             </Card>
           </Col>

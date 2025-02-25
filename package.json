@@ -1,5 +1,5 @@
 {
-  "name": "laravel-rest-api-and-react-app",
+  "name": "razoio",
   "version": "1.0.0",
   "description": "We are using Laravel 9 for jwt authentication based login and \r signup API. We use react.js on the frontend.",
   "main": "index.js",
@@ -21,6 +21,7 @@
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.4",
     "express": "^4.19.2",
+    "framer-motion": "^12.4.2",
     "jquery": "^3.7.1",
     "prop-types": "^15.8.1",
     "react-bootstrap": "^2.10.2",

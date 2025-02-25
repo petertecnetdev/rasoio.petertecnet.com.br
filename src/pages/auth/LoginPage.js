@@ -1,53 +1,69 @@
 import React, { Component } from "react";
-import authService from "../../services/AuthService";
-import Swal from "sweetalert2";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import './css/Auth.css'; // Estilos adicionais
+import axios from "axios";
+import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
+import Swal from "sweetalert2"; // Importando SweetAlert
+import { apiBaseUrl } from "../../config"; // Importando a configuração da URL base da API
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Indicador de processamento
 
 class LoginPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       email: "",
-      senha: "",
+      password: "",
       loading: false,
     };
   }
 
-  onChangeEmailUsuario = (e) => {
+  // Função para armazenar o token no localStorage
+  setToken = (token) => localStorage.setItem("token", token);
+
+  onChangeEmail = (e) => {
     this.setState({ email: e.target.value });
   };
 
-  onChangeSenha = (e) => {
-    this.setState({ senha: e.target.value });
+  onChangePassword = (e) => {
+    this.setState({ password: e.target.value });
   };
 
   onSubmit = async (e) => {
     e.preventDefault();
+    const { email, password } = this.state;
+
     this.setState({ loading: true });
 
     try {
-      await authService.login(this.state.email, this.state.senha);
-      window.location.href = '/dashboard';
+      const response = await axios.post(`${apiBaseUrl}/auth/login`, { email, password });
+      const token = response?.data?.token.original.access_token;
+
+      // Armazena o token no localStorage
+      if (token) {
+        this.setToken(token);
+      }
+
+      // Redireciona para o dashboard após o login bem-sucedido
+      window.location.href = "/dashboard";
+
     } catch (error) {
-      let errorMessages = error.message || "Erro desconhecido ao tentar fazer login.";
+      console.error(error.response?.data);
+      let errorMessage = "Ocorreu um erro. Por favor, tente novamente.";
+
+      if (error.response) {
+        const { data } = error.response;
+        errorMessage = data.error || data.password || data.email || errorMessage;
+      }
 
       Swal.fire({
         title: "Erro!",
-        text: errorMessages,
+        text: errorMessage,
         icon: "error",
         confirmButtonText: "Ok",
         customClass: {
-          popup: 'custom-swal',
-          title: 'custom-swal-title',
-          content: 'custom-swal-text',
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
-        iconColor: '#dc3545',
+        iconColor: "#dc3545", // Vermelho para erro
       });
     } finally {
       this.setState({ loading: false });
@@ -55,71 +71,71 @@ class LoginPage extends Component {
   };
 
   render() {
-    return (
-      <Container fluid className="login-container" style={{ height: '100vh' }}>
-        <Row className="vh-100">
-          {/* Coluna única com background e conteúdo centralizado */}
-          <Col
-            md={12}
-            className="d-flex align-items-center justify-content-center position-relative"
-            style={{
-              background: `url('/images/background-2.png') no-repeat center center`,
-              backgroundSize: 'cover',
-              height: '100vh',
-            }}
-          >
-            <Card className="login-card">
-              <Card.Body>
-                <div className="text-center mb-4">
-                  <img
-                    src="/images/logo.png"
-                    alt="Logo"
-                    className="logo rounded-circle img-thumbnail"
-                    style={{ width: "120px", height: "120px" }}
-                  />
-                </div>
-                <Card.Title className="text-center mb-4">LOGIN</Card.Title>
-                <Form onSubmit={this.onSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="email"
-                      placeholder="Insira o email"
-                      onChange={this.onChangeEmailUsuario}
-                      value={this.state.email}
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Insira a senha"
-                      onChange={this.onChangeSenha}
-                      value={this.state.senha}
-                      required
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3" controlId="formBasicCheckbox">
-                    <Form.Check
-                      type="checkbox"
-                      label="Lembrar-me"
-                      id="customCheck1"
-                    />
-                  </Form.Group>
-                  <Button type="submit" className="btn btn-primary w-100" disabled={this.state.loading}>
-                    {this.state.loading ? "Efetuando login..." : "Entrar"}
-                  </Button>
+    const { loading, email, password } = this.state;
 
-                  <p className="forgot-password text-center mt-3">
-                    Não tem registro? <a href="/register" className="auth-link">Registrar</a>
-                  </p>
-                  <p className="forgot-password text-center mt-3">
-                    Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
-                  </p>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+    return (
+      <Container fluid>
+        {loading && <ProcessingIndicatorComponent messages={["Autenticando...", "Por favor, aguarde..."]} />}
+
+        {!loading && (
+          <Row>
+            <Col md={6} className="d-flex align-items-center justify-content-center">
+              <Card>
+                <Card.Body>
+                  <div className="text-center">
+                    <img
+                      src="/images/logo.png"
+                      alt="Logo"
+                      className="logo rounded-circle img-thumbnail"
+                      style={{ width: "150px", height: "150px" }}
+                    />
+                  </div>
+                  <Card.Title className="text-center mb-2 h2">ENTRAR</Card.Title>
+                  <Form onSubmit={this.onSubmit}>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="email"
+                        placeholder="Insira o Email"
+                        onChange={this.onChangeEmail}
+                        value={email}
+                      />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                      <Form.Control
+                        type="password"
+                        placeholder="Insira a Senha"
+                        onChange={this.onChangePassword}
+                        value={password}
+                      />
+                    </Form.Group>
+
+                    <Button type="submit" disabled={loading} className="btn btn-primary w-100">
+                      {loading ? "Entrando..." : "Entrar"}
+                    </Button>
+                    <p className="forgot-password text-right text-center mt-3">
+                      Não tem conta? <a href="/register" className="auth-link">Registrar-se</a>
+                    </p>
+                    <p className="forgot-password text-right text-center mt-3">
+                      Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
+                    </p>
+                  </Form>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6} className="d-flex align-items-center justify-content-center">
+              <Card className="card-1">
+                <Card.Body>
+                  <Card.Title className="text-center text-lowercase h1">RASOIO</Card.Title>
+                  <Card.Text className="text-center text-primary">
+                    <p className="text-light">
+                      Com o Rasoio, seu agendamento e gestão de barbearia ficam muito mais fáceis. Entre agora e descubra!
+                    </p>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        )}
       </Container>
     );
   }

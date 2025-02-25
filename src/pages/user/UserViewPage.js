@@ -1,144 +1,109 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
 import { Container, Row, Col, Card } from "react-bootstrap";
+import Swal from "sweetalert2"; // Importa o SweetAlert2
+import authService from "../../services/AuthService";
+import barbershopService from "../../services/BarbershopService"; // Importando o serviço de barbearias
 import NavlogComponent from "../../components/NavlogComponent";
-import userService from "../../services/UserService";
-import LoadingComponent from "../../components/LoadingComponent";
 import { storageUrl } from "../../config";
 import { Link } from "react-router-dom";
 
 const UserViewPage = () => {
-  const { userName } = useParams();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [barbershops, setBarbershops] = useState([]); // Estado para armazenar as barbearias
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
-        if (!userName) {
-          throw new Error("Nome de usuário não fornecido.");
+        const userData = await authService.me();
+        setUser(userData);
+        
+        // Busca as barbearias se existirem IDs
+        if (userData.extra_info && userData.extra_info.barbershop) {
+          const barbershopPromises = userData.extra_info.barbershop.map(id => 
+            barbershopService.show(id) // Faz a chamada para obter as barbearias
+          );
+          const barbershopData = await Promise.all(barbershopPromises);
+          setBarbershops(barbershopData); // Armazena as barbearias no estado
         }
-
-        const response = await userService.view(userName);
-        setUser(response.user);
-        setLoading(false);
       } catch (error) {
-        console.error("Erro ao buscar usuário:", error);
-        setLoading(false);
+        console.error(error);
+        setError("Erro ao carregar os dados do usuário. Por favor, tente novamente.");
       }
     };
 
-    fetchUser();
-  }, [userName]);
-
-  const calculateAge = (birthdate) => {
-    const today = new Date();
-    const birthDate = new Date(birthdate);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  if (loading) {
-    return <LoadingComponent />;
-  }
+    fetchUserData();
+  }, []);
 
   return (
     <>
       <NavlogComponent />
-      <Container>
-        <Row>
+      <Container fluid>
+        <Row className="justify-content-left m-4">
           <Col md={12}>
-            <Row>
-             
-              <Col md={7} >
-                <Card className="card-user">
-                  <Card.Body>
-                    {user && (
-                      <>
-                        <Card.Text>
-                          <p className=" h6 text-center">
-                            <strong> {user.about} </strong>
-                          </p>{" "}
-                          <br />
-                          <strong>Artista Favorito:</strong>{" "}
-                          {user.favorite_artist} <br />
-                          <strong>Gênero Favorito:</strong>{" "}
-                          {user.favorite_genre} <br />
-                        </Card.Text>
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-              <Col md={5}>
-                <Card className="card-user">
-                  <Card.Body>
-                    {user && (
-                      <>
-                        <Card.Text className="mb-2">
-                          <div className="text-center">
-                            <img
-                              src={
-                                user.avatar
-                                  ? `${storageUrl}/${user.avatar}`
-                                  : "/images/loadingimage.gif"
-                              }
-                              alt={`${user.first_name} ${
-                                user.last_name ? user.last_name : ""
-                              }`}
-                              className="rounded-circle "
-                              
-                            style={{ maxWidth: "250px", borderRadius: "250%" }}
-                             
+            <Card>
+              <Card.Body>
+                {error && (
+                  Swal.fire({
+                    title: "Erro",
+                    text: error,
+                    icon: "error",
+                    customClass: {
+                      popup: "custom-swal",
+                      title: "custom-swal-title",
+                      content: "custom-swal-text",
+                    },
+                  }) // Alerta de erro SweetAlert
+                )}
+
+                {user && (
+                  <>
+                    <p className="labeltitle h4 text-center text-uppercase">{user.first_name}</p>
+                    
+                    <Row className="text-center">
+                      <Col xs={12} sm={6} md={4}>
+                        <Card className="card-barbershop-show">
+                          <div
+                            className="background-image"
+                            style={{
+                              backgroundImage: `url('${storageUrl}/${user.avatar}')`,
+                            }}
+                          />
+                          <Link
+                            to={`/user/${user.user_name}`}
+                            style={{ textDecoration: "none" }}
+                          >
+                        
+                          </Link>
+                          <Card.Body>
+                          <img
+                              src={`${storageUrl}/${user.avatar}`}
+                              className="rounded-circle img-logo-barbershop-show"
+                              style={{ margin: '0 auto', display: 'block' }}
+                              alt={user.first_name}
                             />
-                          </div>
-                          <br />
-                          <strong>Nome:</strong> {user.first_name} {user.last_name} <br />
-                       
-                          <strong>Email:</strong> {user.email} <br />
-                       
-                          <strong>CPF:</strong> {user.cpf} <br />
-                          <strong>Endereço:</strong> {user.address} <br />
-                          <strong>Telefone:</strong> {user.phone} <br />
-                          <strong>Cidade:</strong> {user.city} <br />
-                          <strong>UF:</strong> {user.uf} <br />
-                          <strong>Idade:</strong> {calculateAge(user.birthdate)} anos <br />
-                          <strong>Gênero:</strong> {user.gender} <br />
-                          <strong>Estado Civil:</strong> {user.marital_status}{" "}
-                          <br />
-                          <strong>Profissão:</strong> {user.occupation} <br />
-                        </Card.Text>
-                      </>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-            <Row>
-          {user.productions.map((production) => (
-            <Col key={production.id} md={4}>
-              <Link
-                to={`/production/${production.slug}`}
-                style={{ textDecoration: "none" }}
-              >
-                 <Card>
-                <Card.Img
-                  variant="top"
-                  src={`${storageUrl}/${production.logo}`}
-                  className="rounded-circle"
-                />
-                <Card.Body>
-                  <Card.Title>{production.name}</Card.Title>
-                </Card.Body>
-              </Card>
-              </Link>
-            </Col>
-          ))}
-        </Row>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                      <Col xs={12} sm={6} md={8}>
+                        <Card className="card-barbershop-show">
+                          <Card.Body>
+                            <p className="h6">Email: {user.email}</p>
+                            <p className="h6">Telefone: {user.phone}</p>
+                            <ul>
+                {barbershops.map(barbershop => (
+                    <li key={barbershop.id}>{barbershop.name}</li> // Supondo que `name` é um dos campos da barbearia
+                ))}
+            </ul>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    </Row>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </Container>

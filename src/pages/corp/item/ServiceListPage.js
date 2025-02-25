@@ -7,13 +7,13 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../../config";
 
-const BarbershopListPage = () => {
+const ServiceListPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [barbershops, setBarbershops] = useState([]);
+  const [services, setIServices] = useState([]);
 
-  const fetchBarbershops = async () => {
-    setMessages(["Carregando barbearias..."]);
+  const fetchServices = async () => {
+    setMessages(["Carregando serviços..."]);
     try {
       const token = localStorage.getItem("token");
       const headers = {
@@ -21,7 +21,7 @@ const BarbershopListPage = () => {
         "Content-Type": "multipart/form-data",
       };
 
-      const response = await axios.get(`${apiBaseUrl}/barbershop/user`, {
+      const response = await axios.get(`${apiBaseUrl}/item`, {
         headers,
       });
 
@@ -163,7 +163,7 @@ const BarbershopListPage = () => {
                             <Button className="primary m-1 ">Barbeiros</Button>
                           </Link>
                           <Link
-                            to={`/item/list/${barbershop.slug}`}
+                            to={`/item/list/${barbershop.id}`}
                             style={{ textDecoration: "none" }}
                             className=" m-2 w-100"
                           >
