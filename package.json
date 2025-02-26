@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "We are using Laravel 9 for jwt authentication based login and \r signup API. We use react.js on the frontend.",
   "main": "index.js",
+  "homepage": "/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "keywords": [],
   "author": "",
