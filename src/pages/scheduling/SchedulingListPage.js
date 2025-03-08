@@ -15,7 +15,7 @@ const SchedulingListPage = () => {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
 
-  // Busca os dados da barbearia para obter o ID e em seguida os agendamentos
+  // Busca os dados da barbearia para obter o ID e, em seguida, os agendamentos
   useEffect(() => {
     const fetchBarbershop = async () => {
       setMessages(["Carregando informações da barbearia..."]);
@@ -27,7 +27,6 @@ const SchedulingListPage = () => {
         setBarbershop(barbershopData);
         fetchAppointments(barbershopData.id);
       } catch (error) {
-        // Se houver erro de autenticação, redireciona para login
         if (error.response && error.response.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
@@ -47,23 +46,19 @@ const SchedulingListPage = () => {
     const fetchAppointments = async (barbershopId) => {
       try {
         setMessages(["Carregando agendamentos..."]);
-        // Monta o payload conforme o esperado pela API
-        const payload = {
+        // Monta os parâmetros conforme o esperado pela API
+        const params = {
           entity_id: barbershopId,
           entity_name: "barbershop",
         };
 
-        // Utilize axios.post para enviar o payload no corpo da requisição
-        const response = await axios.get(
-          `${apiBaseUrl}/appointment/listbyentity`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // Como o endpoint é GET, os parâmetros são enviados via query string
+        const response = await axios.get(`${apiBaseUrl}/appointment/listbyentity`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          params,
+        });
 
         let appointmentsData = response.data.appointments || [];
         // Ordena os agendamentos em ordem cronológica (mais cedo primeiro)
@@ -73,7 +68,6 @@ const SchedulingListPage = () => {
         setAppointments(appointmentsData);
       } catch (error) {
         if (error.response && error.response.status === 401) {
-          // Token expirado ou inválido; redireciona para login
           localStorage.removeItem("token");
           navigate("/login");
           return;
@@ -125,7 +119,7 @@ const SchedulingListPage = () => {
           ) : (
             <Row>
               {appointments.map((appointment) => (
-                <Col md={4} key={appointment.id} className="mb-4">
+                <Col md={12} key={appointment.id} className="mb-4">
                   <Card>
                     <Card.Body>
                       <Card.Title>
