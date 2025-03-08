@@ -1,0 +1,10 @@
+# Desativa MultiViews para evitar problemas
+Options -MultiViews
+
+RewriteEngine On
+RewriteBase /
+
+# Se o arquivo ou diretório solicitado não existir, redireciona para index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [L]
