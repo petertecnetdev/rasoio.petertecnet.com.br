@@ -116,15 +116,14 @@ body {
 /* Navbar Principal */
 .navbar {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
-  border-radius: 20px;
-  margin: 150px;
-  margin-top: 20px;
-  padding: 10px;
+  border-radius: 0px;
+  margin: 0px;
+  margin-top: 0px;
+  padding: 20px;
   box-shadow: 20px 17px 20px rgba(255, 255, 254, 0.2);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   transition: background 0.3sease;
-  border: 1px solid #FFFFFF;
 }
 
 /* Links da Navbar */
