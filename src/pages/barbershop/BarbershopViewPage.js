@@ -118,7 +118,7 @@ const BarbershopViewPage = () => {
                     </p>
                     <Button
                       variant="primary"
-                      onClick={() => navigate(`/scheduling`)}
+                      onClick={() => navigate(`/scheduling/create/${barbershop.slug}`)}
                     >
                       Realizar agendamento
                     </Button>

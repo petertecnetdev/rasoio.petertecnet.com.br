@@ -179,7 +179,7 @@ const BarbershopListPage = () => {
                             <Button className="primary m-1 ">Itens</Button>
                           </Link>
                           <Link
-                            to={`/scheduling/${barbershop.slug}`}
+                            to={`/scheduling/list/${barbershop.slug}`}
                             style={{ textDecoration: "none" }}
                             className=" m-2 w-100"
                           >

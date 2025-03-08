@@ -40,7 +40,8 @@ import BarberIncludePage from "./pages/barber/BarberIncludePage";
 import UserViewPage from "./pages/user/UserViewPage";
 import UserUpdatePage from "./pages/user/UserUpdatePage";
 
-import SchedulingPage from "./pages/scheduling/SchedulingPage";
+import SchedulingListPage from "./pages/scheduling/SchedulingListPage";
+import SchedulingCreatePage from "./pages/scheduling/SchedulingCreatePage";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { apiBaseUrl } from "./config";
@@ -147,7 +148,8 @@ const App = () => {
         <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
         <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
-        <Route path="/scheduling/:slug" element={protectedRoute(<SchedulingPage />)} />
+        <Route path="/scheduling/list/:slug" element={protectedRoute(<SchedulingListPage />)} />
+        <Route path="/scheduling/create/:slug" element={protectedRoute(<SchedulingCreatePage />)} />
       </Routes>
     </Router>
   );
