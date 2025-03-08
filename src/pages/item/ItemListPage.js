@@ -138,7 +138,7 @@ const ItemListPage = () => {
           <Col>
             {barbershop && (
               <>
-                <p className="labellight text-center">Itens de {barbershop.name}</p>
+                <p className="label-item text-center">Itens de {barbershop.name}</p>
                 <Link to={`/item/create/${barbershop.slug}`}>
                   <Button className="btn btn-primary w-50">Cadastrar novo item</Button>
                 </Link>
@@ -155,12 +155,18 @@ const ItemListPage = () => {
                     {items.map((item) => (
                       <Col md={3}  key={item.id} className="m-4">
                         <Card
-                          className="card-barbershop-show"
+                          className="card-item m-2 p-4 rounded"
                           style={{
                             // Se o período de disponibilidade não incluir a data atual, o card fica amarelo
-                            backgroundColor: isItemAvailable(item) ? "" : "#fff3cd",
+                            backgroundColor: isItemAvailable(item) ? "" : "#fff3cd !important",
                           }}
                         >
+                           <div
+                                                    className="background-image"
+                                                    style={{
+                                                      backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
+                                                    }}
+                                                  />
                           <Link to={`/item/view/${item.slug}`} style={{ textDecoration: "none" }}>
                             <Card.Img
                               variant="top"
@@ -169,21 +175,21 @@ const ItemListPage = () => {
                               style={{ height: "200px", objectFit: "cover" }}
                             />
                           </Link>
-                          <Card.Body className="p-2">
-                          <p className="labellight text-center">{item.name}</p>
-                            <p className="text-white mb-1">
+                          <Card.Body className="p-4 item-info rounded m-2">
+                          <p className="label-item h5 text-center">{item.name}</p>
+                            <p className="text-white m-1 h6 ">
                               <strong>Preço:</strong> R${item.price}
                             </p>
-                            <p className="text-white mb-1">
+                            <p className="text-white m-1 h6 ">
                               <strong>Tipo:</strong> {item.type === "produto" ? "Produto" : "Serviço"}
                             </p>
-                            <p className="text-white mb-1">
+                            <p className="text-white m-1 h6 ">
                               <strong>Categoria:</strong> {item.category} / {item.subcategory}
                             </p>
-                            <p className="text-white mb-1">
+                            <p className="text-white m-1 h6 ">
                               <strong>Marca:</strong> {item.brand}
                             </p>
-                            <p className="text-white mb-1">
+                            <p className="text-white m-1 h6 ">
                               <strong>Disponível:</strong> {formatDate(item.availability_start)} - {formatDate(item.availability_end)}
                             </p>
                             <div className="d-flex justify-content-between mt-2">

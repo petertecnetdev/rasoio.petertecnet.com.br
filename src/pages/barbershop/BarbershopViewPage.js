@@ -81,7 +81,7 @@ const BarbershopViewPage = () => {
               <Card.Body>
                 <Row>
                   <Col md={6} className="text-center">
-                    <p className="labeltitle h7 text-uppercase">
+                    <p className="label-barbershop h7 text-uppercase">
                       {barbershop.name}
                     </p>
                  
@@ -170,7 +170,7 @@ const BarbershopViewPage = () => {
 
           <Card>
             {" "}
-            <p className="labeltitle h6 text-center text-uppercase">
+            <p className="label-barber h5 text-center text-uppercase">
               Barbeiros da {barbershop.name}
             </p>
             <Card.Body>
@@ -182,18 +182,11 @@ const BarbershopViewPage = () => {
                 ) : (
                   barbers.map((barber) => (
                     <Col md={2} key={barber.id}>
-                      <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center">
-                        <div
-                          className="background-image mb-3"
+                       <Card className="card-barber m-2 p-2 text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
+                       <div
+                          className="background-image"
                           style={{
-                            backgroundImage: `url('${storageUrl}/${
-                              barber.avatar || "/images/user.png"
-                            }')`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            height: "150px",
-                            width: "150px",
-                            borderRadius: "50%",
+                            backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
                           }}
                         />
                         <Card.Body>
@@ -216,7 +209,7 @@ const BarbershopViewPage = () => {
                               }}
                               onError={handleBarberAvatarError}
                             />
-                            <p>{barber.first_name}</p>
+                            <p className="label-barber h6  text-center">{barber.first_name}</p>
                           </Link>
                         </Card.Body>
                       </Card>
@@ -230,7 +223,7 @@ const BarbershopViewPage = () => {
 
           <Card>
             {" "}
-            <p className="labeltitle h6 text-center text-uppercase">
+            <p className="label-item h6 text-center text-uppercase">
               Items da {barbershop.name}
             </p>
             <Card.Body>
@@ -242,18 +235,11 @@ const BarbershopViewPage = () => {
                 ) : (
                   items.map((item) => (
                     <Col md={2} key={items.id}>
-                      <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center">
-                        <div
-                          className="background-image mb-3"
+                      <Card className="card-item m-2 p-2 text-center d-flex flex-column justify-content-center align-items-center">
+                      <div
+                          className="background-image"
                           style={{
-                            backgroundImage: `url('${storageUrl}/${
-                              item.image || "/images/user.png"
-                            }')`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            height: "150px",
-                            width: "150px",
-                            borderRadius: "50%",
+                            backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
                           }}
                         />
                         <Card.Body>
@@ -276,7 +262,8 @@ const BarbershopViewPage = () => {
                               }}
                               onError={handleBarberAvatarError}
                             />
-                            <p>{item.name}</p>
+                             <p className="label-item h6 p-2 text-center">{item.name}</p>
+                             <p className="h6 label-price">R$ {item.price}</p>
                           </Link>
                         </Card.Body>
                       </Card>
@@ -289,7 +276,7 @@ const BarbershopViewPage = () => {
 
 
           <Card>
-            <p className="labeltitle h6 text-center text-uppercase">
+            <p className="label-barbershop h6 text-center text-uppercase">
               Outras Barbearias
             </p>
             <Card.Body>
@@ -301,7 +288,7 @@ const BarbershopViewPage = () => {
                 ) : (
                   otherBarbershops.map((otherBarbershop) => (
                     <Col md={3} key={otherBarbershop.id} className="mb-3">
-                      <Card className="card-barbershop-show">
+                      <Card className="card-barbershop m-2 p-2">
                         <div
                           className="background-image"
                           style={{

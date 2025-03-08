@@ -100,7 +100,7 @@ const Dashboard = () => {
         <Row className="justify-content-center mt-4">
           <Col md={12}>
             <Card>
-              <p className="labeltitle h6 text-center text-uppercase">
+              <p className="label-barbershop h5 text-center text-uppercase">
                 Barbearias
               </p>
               <Card.Body>
@@ -121,8 +121,7 @@ const Dashboard = () => {
                         barbershops.map((barbershop) => (
                           <Col md={4} key={barbershop.id} className="m-2 p-2">
                             <Card
-                              className="card-barbershop-show m-2 p-2"
-                              style={{ borderRadius: "10px" }} // Borda arredondada
+                              className="card-barbershop m-2 p-2" // Borda arredondada
                             >
                               <div
                                 className="background-image"
@@ -156,7 +155,7 @@ const Dashboard = () => {
                                   to={`/barbershop/show/${barbershop.id}`}
                                   style={{ textDecoration: "none" }}
                                 >
-                                  <p className="labellight text-center">
+                                  <p className="label-barbershop h6 text-center">
                                     {barbershop.name}
                                   </p>
                                 </Link>
@@ -188,7 +187,7 @@ const Dashboard = () => {
         <Row className="justify-content-center mt-4">
           <Col md={12}>
             <Card>
-              <p className="labeltitle h6 text-center text-uppercase">
+              <p className="label-barber h6 text-center text-uppercase">
                 Barbeiros
               </p>
               <Card.Body>
@@ -208,7 +207,7 @@ const Dashboard = () => {
                       {barbers.length > 0 ? (
                         barbers.map((barber) => (
                           <Col md={3} key={barber.id}>
-                            <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
+                            <Card className="card-barber text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
                               <Card.Body>
                                 <Link
                                   to={`/barber/view/${barber.user.user_name}`}
@@ -230,7 +229,7 @@ const Dashboard = () => {
                                       height: "80px", // Define o tamanho menor para a logo
                                     }}
                                   />
-                                  <p className="labellight text-center">{barber.user.first_name}</p>
+                                  <p className="label-barber h6  text-center">{barber.user.first_name}</p>
                                 </Link>
                               </Card.Body>
                             </Card>

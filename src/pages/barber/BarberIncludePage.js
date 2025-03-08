@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Button } from "react-bootstrap";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 import Swal from "sweetalert2";
@@ -7,27 +7,23 @@ import { Link, useParams } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 
-const BarbershopIncludePage = () => {
+const BarberIncludePage = () => {
   const { slug } = useParams();
   const [barbershop, setBarbershop] = useState(null);
   const [barbers, setBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Carrega os dados da barbearia
+  // Carrega os dados da barbearia e os barbeiros associados
   useEffect(() => {
     const fetchBarbershop = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
+        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setBarbershop(response.data.barbershop);
         setBarbers(response.data.barbers);
         window.scrollTo(0, 0);
@@ -49,7 +45,6 @@ const BarbershopIncludePage = () => {
         setLoading(false);
       }
     };
-
     fetchBarbershop();
   }, [slug]);
 
@@ -76,7 +71,6 @@ const BarbershopIncludePage = () => {
 
       if (result.isConfirmed) {
         setIsProcessing(true);
-
         const requestBody = {
           barber_id: barberId,
           barbershop_id: barbershop.id,
@@ -135,6 +129,7 @@ const BarbershopIncludePage = () => {
     }
   };
 
+  // Função para adicionar um novo barbeiro
   const handleAddBarber = async () => {
     const { value: email } = await Swal.fire({
       title: "Adicionar Barbeiro",
@@ -153,7 +148,6 @@ const BarbershopIncludePage = () => {
 
     if (email) {
       setIsProcessing(true);
-
       const requestBody = {
         barbershop_id: barbershop?.id,
         email,
@@ -177,15 +171,12 @@ const BarbershopIncludePage = () => {
           },
         });
 
-        const response = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
+        // Atualiza a lista de barbeiros
+        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setBarbers(response.data.barbers);
       } catch (error) {
         const errorMessage =
@@ -206,18 +197,15 @@ const BarbershopIncludePage = () => {
     }
   };
 
-  // Renderiza apenas o ProcessingIndicatorComponent durante as ações/processamentos
   if (isProcessing) {
     return (
-      <>
-        <ProcessingIndicatorComponent
-          messages={[
-            "Processando....",
-            "Verificando lista de barbeiros...",
-            "Quase pronto! Apenas um momento.",
-          ]}
-        />
-      </>
+      <ProcessingIndicatorComponent
+        messages={[
+          "Processando...",
+          "Atualizando lista de barbeiros...",
+          "Quase pronto! Apenas um momento.",
+        ]}
+      />
     );
   }
 
@@ -228,17 +216,17 @@ const BarbershopIncludePage = () => {
         <ProcessingIndicatorComponent
           messages={[
             "Carregando dados da barbearia...",
-            "Verificando barbeiros...",
+            "Verificando barbeiros associados...",
           ]}
         />
       ) : (
-        <Container>
+        <Container className="mt-4">
           {barbershop && (
-            <Card>
+            <Card className="m-2 p-2 card-barber">
               <Card.Body>
-                <Row>
-                  <Col md={12} className="text-center">
-                    <p className="labeltitle h7 text-uppercase">
+                <Row className="text-center">
+                  <Col md={12}>
+                    <p className="labeltitle text-uppercase">
                       {barbershop.name}{" "}
                       <img
                         src={
@@ -248,40 +236,22 @@ const BarbershopIncludePage = () => {
                         }
                         alt={barbershop.name}
                         className="rounded-circle"
-                        style={{
-                          height: "50px",
-                          width: "50px",
-                          objectFit: "cover",
-                        }}
+                        style={{ height: "50px", width: "50px", objectFit: "cover" }}
                       />
                     </p>
                   </Col>
                   <Col md={12}>
-                    <p className="labeltitle h4 text-center text-uppercase">
-                      Barbeiros
+                    <p className="label-barber h4 text-center text-uppercase">
+                      Barbeiros Associados
                     </p>
                     {barbers.length === 0 ? (
                       <p className="text-center">Nenhum barbeiro encontrado.</p>
                     ) : (
-                      <Table
-                        striped
-                        bordered
-                        hover
-                        responsive
-                        className="table1"
-                      >
-                        <thead>
-                          <tr>
-                            <th>Avatar</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Ação</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {barbers.map((barber) => (
-                            <tr key={barber.id}>
-                              <td className="text-center">
+                      <Row>
+                        {barbers.map((barber) => (
+                          <Col key={barber.id} xs={12} sm={6} md={4} lg={3} className="mb-3">
+                            <Card className="card-barber h-100">
+                              <Card.Body className="d-flex flex-column align-items-center">
                                 <img
                                   src={
                                     barber.avatar
@@ -289,40 +259,37 @@ const BarbershopIncludePage = () => {
                                       : "/images/user.png"
                                   }
                                   alt={barber.first_name}
-                                  className="rounded-circle"
+                                  className="rounded-circle mb-2"
                                   style={{
-                                    height: "50px",
-                                    width: "50px",
+                                    height: "70px",
+                                    width: "70px",
                                     objectFit: "cover",
                                   }}
                                   onError={handleBarberAvatarError}
                                 />
-                              </td>
-                              <td>
-                                <Link
-                                  to={`/barber/view/${barber.user_name}`}
-                                  style={{ textDecoration: "none" }}
-                                >
-                                  {barber.first_name}
-                                </Link>
-                              </td>
-                              <td>{barber.email}</td>
-                              <td className="text-center">
+                                <h5 className="label-barber mb-1">
+                                  <Link to={`/barber/view/${barber.user_name}`} style={{ textDecoration: "none", color: "inherit" }}>
+                                    {barber.first_name}
+                                  </Link>
+                                </h5>
+                                <p className="mb-2" style={{ fontSize: "0.9rem" }}>
+                                  {barber.email}
+                                </p>
                                 <Button
                                   variant="danger"
                                   size="sm"
                                   onClick={() => handleRemoveBarber(barber.id)}
                                   disabled={isProcessing}
                                 >
-                                  {isProcessing ? "Processando..." : "Excluir"}
+                                  {isProcessing ? "Processando..." : "Remover"}
                                 </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
                     )}
-                    <div className="text-center">
+                    <div className="text-center mt-3">
                       <Button variant="success" onClick={handleAddBarber}>
                         Associar Novo Barbeiro
                       </Button>
@@ -338,4 +305,4 @@ const BarbershopIncludePage = () => {
   );
 };
 
-export default BarbershopIncludePage;
+export default BarberIncludePage;

@@ -170,7 +170,7 @@ const BarbershopBarbersPage = () => {
       <Container>
         <p className="labeltitle h4 text-center text-uppercase">Barbeiros associados</p>
         <Button variant="primary" onClick={handleAddBarber} className="mb-3">
-          Associar novo Barbeiro
+          Associar novo Barbeiro 
         </Button>
         <Row className="justify-content-center mt-4">
           <Col md={12}>

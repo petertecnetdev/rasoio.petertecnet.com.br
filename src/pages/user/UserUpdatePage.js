@@ -32,10 +32,12 @@ const UserUpdatePage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      try {    setIsProcessing(true);
+      try {
+        setIsProcessing(true);
         const response = await axios.get(`${apiBaseUrl}/auth/me`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "multipart/form-data",
           },
         });
         const data = response.data.user;
@@ -65,10 +67,11 @@ const UserUpdatePage = () => {
           title: "Sem dados",
           text: "Não  conseguimos carregar seus dados. Tente novamente",
           icon: "error",
-          confirmButtonText: "OK",    customClass: {
-            popup: 'custom-swal',
-            title: 'custom-swal-title',
-            content: 'custom-swal-text',
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
           },
         });
       } finally {
@@ -112,10 +115,11 @@ const UserUpdatePage = () => {
         title: "Formato Inválido",
         text: "Selecione uma imagem válida.",
         icon: "error",
-        confirmButtonText: "OK",    customClass: {
-          popup: 'custom-swal',
-          title: 'custom-swal-title',
-          content: 'custom-swal-text',
+        confirmButtonText: "OK",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
       });
     }
@@ -148,19 +152,24 @@ const UserUpdatePage = () => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "multipart/form-data",
       };
-      const response = await axios.post(`${apiBaseUrl}/user/${originalData.id}`, formData, {
-        headers,
-      });
+      const response = await axios.post(
+        `${apiBaseUrl}/user/${originalData.id}`,
+        formData,
+        {
+          headers,
+        }
+      );
       console.log(response);
-    
+
       Swal.fire({
         title: "Sucesso!",
         text: "Dados do usuário atualizados com sucesso.",
         icon: "success",
-        confirmButtonText: "OK",    customClass: {
-          popup: 'custom-swal',
-          title: 'custom-swal-title',
-          content: 'custom-swal-text',
+        confirmButtonText: "OK",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
       }).then((result) => {
         if (result.isConfirmed) {
@@ -175,27 +184,27 @@ const UserUpdatePage = () => {
         const errorMessage = Object.entries(validationErrors)
           .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
           .join("\n");
-          Swal.fire({
-            title: "Erro de Validação",
-            text: errorMessage,
-            icon: "error",
-            confirmButtonText: "OK",    customClass: {
-              popup: 'custom-swal',
-              title: 'custom-swal-title',
-              content: 'custom-swal-text',
-            },
-          });
+        Swal.fire({
+          title: "Erro de Validação",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } else {
-      
-
         Swal.fire({
           title: "Erro ",
-          text:  "Não foi possível atualizar os dados do usuário.",
+          text: "Não foi possível atualizar os dados do usuário.",
           icon: "error",
-          confirmButtonText: "OK",    customClass: {
-            popup: 'custom-swal',
-            title: 'custom-swal-title',
-            content: 'custom-swal-text',
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
           },
         });
       }
@@ -204,46 +213,45 @@ const UserUpdatePage = () => {
     }
   };
   const handleAvatarError = (e) => {
-    e.target.src = "images/user.png";
+    if (e.target.src.includes("/images/user.png")) return;
+    e.target.src = "/images/user.png";
   };
   return (
     <>
       <NavlogComponent />
-     
+
       <Container>
         {isProcessing ? (
           <ProcessingIndicatorComponent messages={messages} />
         ) : (
-          
           <Card>
-             <p className="labeltitle h6 text-center text-uppercase">
-        Atualizar meus dados
-      </p>
+            <p className="labeltitle h6 text-center text-uppercase">
+              Atualizar meus dados
+            </p>
             <Card.Body>
               <div className="text-center">
-              <label
-              htmlFor="avatarInput"
-              style={{ cursor: "pointer", display: "block" }}
-            >  
-            
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Preview da avatar"
-                  className="img-fluid rounded-circle avatar"
-                  style={{width: "150px"}}
-                  onError={handleAvatarError}
-                />
-              ) : (
-                <img
-                  src="/images/user.png"
-                  alt="Preview da avatar"
-                  className="img-fluid rounded-circle avatar"
-                  style={{width: "150px"}}
-                  onError={handleAvatarError}
-                />
-              )}
-            </label>
+                <label
+                  htmlFor="avatarInput"
+                  style={{ cursor: "pointer", display: "block" }}
+                >
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Preview da avatar"
+                      className="img-fluid rounded-circle avatar"
+                      style={{ width: "150px" }}
+                      onError={handleAvatarError}
+                    />
+                  ) : (
+                    <img
+                      src="/images/user.png"
+                      alt="Preview da avatar"
+                      className="img-fluid rounded-circle avatar"
+                      style={{ width: "150px" }}
+                      onError={handleAvatarError}
+                    />
+                  )}
+                </label>
                 <Button
                   variant="secondary"
                   className="w-50 m-2"
@@ -316,7 +324,6 @@ const UserUpdatePage = () => {
                         name="cpf"
                         value={userData.cpf}
                         onChange={handleInputChange}
-                        
                       />
                     </Form.Group>
                   </Col>
@@ -328,7 +335,6 @@ const UserUpdatePage = () => {
                         name="birthdate"
                         value={userData.birthdate}
                         onChange={handleInputChange}
-                        
                       />
                     </Form.Group>
                   </Col>
@@ -389,7 +395,6 @@ const UserUpdatePage = () => {
                         name="uf"
                         value={userData.uf}
                         onChange={handleInputChange}
-                        
                       >
                         <option value="">Selecione</option>
                         <option value="AC">AC</option>
