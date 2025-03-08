@@ -553,8 +553,8 @@ body {
   .card {
     background-color: rgba(0, 0, 0, 0.8);
     color: #FFFFFF;
-    padding: 3px;
-    border-radius: 3px;
+    padding: 50px;
+    border-radius: 40px;
     border: 1px solid #0A2ADE;
     backdrop-filter: blur(1px);
     margin: 1px;
@@ -617,7 +617,7 @@ body {
   .card-barbershop {
     background-color: rgba(0, 0, 0, 0.8);
     color: #FFFFFF;
-    padding: 10vw;
+    padding: 10px;
     backdrop-filter: blur(2vw);
     font-size: 3vw;
     border-radius: 4vw;
