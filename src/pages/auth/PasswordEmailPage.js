@@ -95,16 +95,16 @@ const PasswordEmailPage = () => {
             <ProcessingIndicatorComponent messages={['Enviando código...', 'Por favor, aguarde...']} />
           ) : (
             <Card className="login-card">
+                <p className="labeltitle h7 text-uppercase">Recuperar senha</p>
               <Card.Body>
                 <div className="text-center mb-4">
                   <img
                     src="/images/logo.png"
                     alt="Logo"
                     className="logo rounded-circle"
-                    style={{ width: '120px', height: '120px' }}
+                    style={{ width: '80px', height: '80px' }}
                   />
                 </div>
-                <Card.Title className="text-center mb-4">Recuperar Senha</Card.Title>
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Control

@@ -79,15 +79,16 @@ class LoginPage extends Component {
 
         {!loading && (
           <Row>
-            <Col md={6} className="d-flex align-items-center justify-content-center">
+            <Col md={12} className="d-flex align-items-center justify-content-center">
               <Card>
+              <p className="labeltitle h7 text-uppercase">Login</p>
                 <Card.Body>
                   <div className="text-center">
                     <img
                       src="/images/logo.png"
                       alt="Logo"
                       className="logo rounded-circle img-thumbnail"
-                      style={{ width: "150px", height: "150px" }}
+                      style={{ width: "80px", height: "80px" }}
                     />
                   </div>
                   <Card.Title className="text-center mb-2 h2">ENTRAR</Card.Title>
@@ -119,18 +120,6 @@ class LoginPage extends Component {
                       Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
                     </p>
                   </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={6} className="d-flex align-items-center justify-content-center">
-              <Card className="card-1">
-                <Card.Body>
-                  <Card.Title className="text-center text-lowercase h1">RASOIO</Card.Title>
-                  <Card.Text className="text-center text-primary">
-                    <p className="text-light">
-                      Com o Rasoio, seu agendamento e gestão de barbearia ficam muito mais fáceis. Entre agora e descubra!
-                    </p>
-                  </Card.Text>
                 </Card.Body>
               </Card>
             </Col>

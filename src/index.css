@@ -123,44 +123,46 @@ body {
 
 /* Ícone do Toggler */
 .navbar-toggler-icon {
-  background-color: transparent; /* Cor de fundo transparente */
+  background-color: rgba(0, 0, 0, 0.8); 
   border: 1px solid white; /* Borda branca */
   border-radius: 5px; /* Bordas arredondadas */
 }
 
 /* Toggler de Menu */
 .navbar-toggler {
-  border: none; /* Sem borda */
-  background-color: transparent; /* Sem fundo */
-  outline: none; /* Sem contorno */
+  border: none;
+  background-color: rgba(0, 0, 0, 0.8); 
+  outline: none; 
   transition: transform 0.3s ease, opacity 0.3s ease; /* Transições suaves */
 }
-
 /* Hover no Toggler */
 .navbar-toggler:hover {
   transform: scale(1.1); /* Aumenta levemente */
   opacity: 0.8; /* Levemente transparente */
-}.notifications-dropdown .dropdown-menu {
+}
+
+.notifications-dropdown .dropdown-menu {
   margin-right: -90px;
   left: -365px;
   right: 20px;
   width: auto;
   max-width: 505px;
-color:white;
-  background-color: rgba(5, 33, 92);
+  color: white;
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 /* Estilo padrão para telas pequenas (dispositivos móveis) */
 @media (max-width: 576px) {
   .notifications-dropdown .dropdown-menu {
-      left: 0; /* Alinha à esquerda */
-      margin-right: 0; /* Remove margem negativa */
-      right: 0; /* Remove a posição da direita */
-      width: 100%; /* Largura total da tela */
-      max-width: none; /* Remove o limite máximo */
-      border-radius: 0; /* Cantos retos para visualização total */
+    left: 0; /* Alinha à esquerda */
+    margin-right: 0; /* Remove margem negativa */
+    right: 0; /* Remove a posição da direita */
+    width: 100%; /* Largura total da tela */
+    max-width: none; /* Remove o limite máximo */
+    border-radius: 0; /* Cantos retos para visualização total */
   }
 }
+
 /* CSS personalizado para responsividade */
 
 @media (max-width: 576px) {
@@ -200,7 +202,7 @@ color:white;
 
 /* Estilos de Dropdown */
 .dropdown-menu {
-  background-color: rgba(30, 30, 30, 0.9); /* Fundo escuro e semi-transparente */
+  background-color: rgba(0, 0, 0, 0.8);
   border-radius: 10px; /* Bordas arredondadas */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Sombra do dropdown */
 }
@@ -213,7 +215,7 @@ color:white;
 
 /* Efeito Hover no Dropdown */
 .dropdown-item:hover {
-  background-color: rgba(255, 204, 0, 0.2); /* Fundo dourado no hover */
+  background-color: rgba(0, 0, 0, 0.8);
   color: #ffffff; /* Cor do texto ao passar o mouse */
 }
 
@@ -231,7 +233,7 @@ color:white;
 }
 
 
-.logo{
+.logoLoginPage{
   width: "50px";
   height: "50px";
 }
@@ -325,7 +327,7 @@ color:white;
 }
 
 .card-barbershop {
-  background-color: rgba(5, 33, 92, 0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   color: rgb(255, 255, 255);
   padding: 1px;
   backdrop-filter: blur(0.1vw);
@@ -335,7 +337,7 @@ color:white;
   border: 0.2vw solid rgb(255, 255, 255);
 }
 .card-barbershop-show {
-  background-color: rgba(5, 33, 92, 0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   color: rgb(255, 255, 255);
 
   padding: 1px;
@@ -344,7 +346,7 @@ color:white;
   border: 1px solid rgb(255, 255, 255);
 }
 .card-barber-show {
-  background-color: rgba(5, 33, 92, 0.8);
+  background-color: rgba(0, 0, 0, 0.8);
   color: rgb(255, 255, 255);
   padding: 10px;
   backdrop-filter: blur(0.1vw);
@@ -366,7 +368,7 @@ color:white;
 
 
 .card-user {
-  background-image: linear-gradient(to right, #092e35, #010825);
+  background-color: rgba(0, 0, 0, 0.8);
   color: rgb(199, 232, 241);
   padding: 1vw;
   backdrop-filter: blur(0.1vw);
@@ -398,7 +400,7 @@ color:white;
   left: -50%;
   border: none;
   box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1);
-  background-image: linear-gradient(to right, #96e5f3, #f0f0f0);
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 @keyframes fadeIn {
@@ -414,7 +416,7 @@ color:white;
 }
 
 .modal {
-  background-color: rgba(7, 9, 133, 0.1);
+  background-color: rgba(0, 0, 0, 0.8);
   animation: fadeIn 1s ease;
 }
 
@@ -425,8 +427,7 @@ color:white;
 .modal-content {
   border-radius: 2vw;
   border: 1px solid white;
-  color: white;
-  background-color: rgba(7, 9, 133, 0.5);
+  color: white; background-color: rgba(0, 0, 0, 0.8);
 }
 
 
@@ -439,7 +440,7 @@ color:white;
 }
 .seguiment-card{
   border-radius: 80px;
-  background-color: rgb(10, 36, 53);
+  background-color: rgba(0, 0, 0, 0.8);
   text-align: center; /* Centraliza o texto dentro dos segmentos */
   text-align: center; /* Centraliza o texto dentro dos segmentos */
   padding: 1px; /* Centraliza horizontalmente */
@@ -509,7 +510,7 @@ color:white;
   }
 
   .card {
-    background-color: rgba(7, 9, 133, 0.2);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
     padding: 3px;
     border-radius: 3px;
@@ -518,7 +519,7 @@ color:white;
     margin: 1px;
   }
   .card {
-    background-color: rgba(7, 9, 133, 0.2);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
     padding: 3px;
     border-radius: 3px;
@@ -528,7 +529,7 @@ color:white;
   }
   
   .table {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.8); 
     color: white;
     border: 1px solid rgb(10, 42, 223);
     border-radius: 3px;
@@ -536,7 +537,7 @@ color:white;
   }
   
   .table thead {
-    background-color: rgba(10, 42, 223, 0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     text-transform: uppercase;
     font-weight: bold;
   }
@@ -553,7 +554,7 @@ color:white;
   }
   
   .table tbody tr:hover {
-    background-color: rgba(10, 42, 223, 0.2);
+    background-color: rgba(0, 0, 0, 0.8);
   }
   
   .table tbody td {
@@ -581,7 +582,7 @@ color:white;
   box-shadow: 1vw 0.1vw 1.5vw 0.2vw rgba(255, 255, 255, 0.9);
   }
   .card-barbershop {
-    background-color: rgba(5, 33, 92, 0.8);
+    background-color: rgba(0, 0, 0, 0.8);
     color: rgb(255, 255, 255);
     padding: 10vw;
     backdrop-filter: blur(2vw);

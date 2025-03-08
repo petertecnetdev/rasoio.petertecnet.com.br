@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import axios from "axios";
-import { Button, Card, Col, Container, Row, Form } from "react-bootstrap"; 
+import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
 import Swal from "sweetalert2"; // Importando SweetAlert
-import { apiBaseUrl } from "../../config";  // Importando a configuração da URL base da API
+import { apiBaseUrl } from "../../config"; // Importando a configuração da URL base da API
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Importando o componente de indicador de processamento
 
 class RegisterPage extends Component {
@@ -36,7 +36,7 @@ class RegisterPage extends Component {
   onSubmit = async (e) => {
     e.preventDefault();
     const { first_name, email, password, confirmPassword } = this.state;
-    
+
     // Verificando se a senha e a confirmação de senha coincidem
     if (password !== confirmPassword) {
       Swal.fire({
@@ -44,7 +44,7 @@ class RegisterPage extends Component {
         text: "As senhas não coincidem. Por favor, tente novamente.",
         icon: "error",
         confirmButtonText: "Ok",
-        iconColor: '#dc3545', 
+        iconColor: "#dc3545",
         customClass: {
           popup: "custom-swal",
           title: "custom-swal-title",
@@ -64,7 +64,10 @@ class RegisterPage extends Component {
       };
 
       // Realizando a requisição diretamente à API
-      const response = await axios.post(`${apiBaseUrl}/auth/register`, userObject);
+      const response = await axios.post(
+        `${apiBaseUrl}/auth/register`,
+        userObject
+      );
 
       const modalMessage = response?.data?.message || "Registro bem-sucedido";
 
@@ -74,11 +77,11 @@ class RegisterPage extends Component {
         icon: "success",
         confirmButtonText: "Ok",
         customClass: {
-          popup: 'custom-swal',
-          title: 'custom-swal-title',
-          content: 'custom-swal-text',
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
-        iconColor: '#28a745', // Verde para sucesso
+        iconColor: "#28a745", // Verde para sucesso
       }).then(() => {
         // Redirecionando para a página de login após o clique no "Ok"
         window.location.href = "/login";
@@ -110,11 +113,11 @@ class RegisterPage extends Component {
         icon: "error",
         confirmButtonText: "Ok",
         customClass: {
-          popup: 'custom-swal',
-          title: 'custom-swal-title',
-          content: 'custom-swal-text',
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
-        iconColor: '#dc3545', // Vermelho para erro
+        iconColor: "#dc3545", // Vermelho para erro
       });
 
       this.setState({ loading: false });
@@ -126,24 +129,30 @@ class RegisterPage extends Component {
 
     return (
       <Container fluid>
-        {loading && <ProcessingIndicatorComponent messages={['Registrando usuário...', 'Por favor, aguarde...']} />} {/* Exibindo o indicador de processamento */}
-
+        {loading && (
+          <ProcessingIndicatorComponent
+            messages={["Registrando usuário...", "Por favor, aguarde..."]}
+          />
+        )}{" "}
+        {/* Exibindo o indicador de processamento */}
         {/* Condicional para esconder os elementos enquanto o formulário estiver carregando */}
         {!loading && (
           <Row>
-            <Col md={6} className="d-flex align-items-center justify-content-center">
+            <Col
+              md={12}
+              className="d-flex align-items-center justify-content-center"
+            >
               <Card>
+                <p className="labeltitle h7 text-uppercase">Registre-se</p>
                 <Card.Body>
                   <div className="text-center">
                     <img
                       src="/images/logo.png"
                       alt="Logo"
-                      className="logo rounded-circle img-thumbnail"
-                      style={{ width: "150px", height: "150px" }}
+                      className="logo rounded-circle img-thumbnail m-4"
+                      style={{ width: "80px", height: "80px" }}
                     />
                   </div>
-
-                  <Card.Title className="text-center mb-2 h2">REGISTRE-SE</Card.Title>
                   <Form onSubmit={this.onSubmit}>
                     <Form.Group className="mb-3">
                       <Form.Control
@@ -178,29 +187,27 @@ class RegisterPage extends Component {
                       />
                     </Form.Group>
 
-                    <Button type="submit" disabled={loading} className="btn btn-primary w-100">
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="btn btn-primary w-100"
+                    >
                       {loading ? "Registrando..." : "Registrar"}
                     </Button>
                     <p className="forgot-password text-right text-center mt-3">
-                      Já está registrado? <a href="/login" className="auth-link">Entrar</a>
+                      Já está registrado?{" "}
+                      <a href="/login" className="auth-link">
+                        Entrar
+                      </a>
                     </p>
                     <p className="forgot-password text-right text-center mt-3">
-                      Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
+                      Esqueceu a senha?{" "}
+                      <a href="/password-email" className="auth-link">
+                        Recuperar senha
+                      </a>
                     </p>
+                    
                   </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={6} className="d-flex align-items-center justify-content-center">
-              <Card className="card-1">
-                <Card.Body>
-                  <Card.Title className="text-center text-lowcase h1">RASOIO</Card.Title>
-                  <Card.Text className="text-center text-primary">
-                    <p className="text-light">No Rasoio, todos têm um lugar! Seja você barbeiro ou cliente, nossa plataforma foi projetada para atender suas necessidades e otimizar a experiência de agendamento e serviços.</p>
-                    <p>Ao se cadastrar, você terá acesso a uma interface intuitiva que facilita o gerenciamento de agendamentos, permitindo que barbeiros se concentrem no que fazem de melhor, enquanto os clientes podem facilmente marcar horários e acompanhar seus históricos de cortes.</p>
-                    <p>Os clientes também poderão receber promoções exclusivas e notificações sobre novos serviços, garantindo que você esteja sempre atualizado sobre as melhores ofertas.</p>
-                    <p>Com o Rasoio, a interação entre barbeiros e clientes é fluida e eficiente, tornando cada visita à barbearia uma experiência agradável e organizada. Cadastre-se hoje mesmo e descubra tudo o que o Rasoio pode fazer por você!</p>
-                  </Card.Text>
                 </Card.Body>
               </Card>
             </Col>

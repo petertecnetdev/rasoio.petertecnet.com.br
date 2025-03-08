@@ -108,6 +108,9 @@ const BarbershopListPage = () => {
       });
     }
   };
+  const handleBarbershopLogoError = (e) => {
+    e.target.src = "images/logo.png";
+  };
 
   return (
     <>
@@ -148,8 +151,14 @@ const BarbershopListPage = () => {
                                 barbershop.logo || "images/logo.png"
                               }`}
                               className="rounded-circle img-logo-barbershop-show"
-                              style={{ margin: "0 auto", display: "block" }}
+                              style={{
+                                margin: "0 auto",
+                                display: "block",
+                                width: "60px", // Define o tamanho menor para a logo
+                                height: "60px", // Define o tamanho menor para a logo
+                              }}
                               alt={barbershop.name}
+                              onError={handleBarbershopLogoError}
                             />
                           </Link>
                         </Col>

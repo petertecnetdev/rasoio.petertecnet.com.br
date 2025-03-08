@@ -1,53 +1,67 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import axios from "axios";
-import { apiBaseUrl, storageUrl } from "../../config";
-import Swal from "sweetalert2";
 import { Link, useParams } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import { apiBaseUrl, storageUrl } from "../../config";
 
 const ItemListPage = () => {
   const { slug } = useParams();
   const [barbershop, setBarbershop] = useState(null);
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [messages, setMessages] = useState([]);
+
+  // Formata a data para o padrão brasileiro (dd/mm/yyyy)
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR");
+  };
+
+  // Verifica se o item está disponível (se a data atual está entre o início e fim da disponibilidade)
+  const isItemAvailable = (item) => {
+    if (!item.availability_start || !item.availability_end) return true;
+    const now = new Date();
+    const start = new Date(item.availability_start);
+    const end = new Date(item.availability_end);
+    return now >= start && now <= end;
+  };
+
+  const fetchBarbershopAndItems = async () => {
+    setMessages(["Carregando itens da barbearia..."]);
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      };
+
+      const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, { headers });
+      setBarbershop(response.data.barbershop);
+      setItems(response.data.items);
+    } catch (error) {
+      console.error("Erro ao carregar itens:", error.response?.data);
+      Swal.fire({
+        title: "Erro",
+        text: error.response?.data?.error || "Erro ao carregar informações da barbearia.",
+        icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBarbershop = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        setBarbershop(response.data.barbershop);
-        setItems(response.data.items);
-        window.scrollTo(0, 0);
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text:
-            error.response?.data?.error ||
-            "Erro ao carregar informações da barbearia.",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBarbershop();
+    fetchBarbershopAndItems();
   }, [slug]);
 
   const handleImageError = (e) => {
@@ -65,133 +79,131 @@ const ItemListPage = () => {
   };
 
   const handleDelete = async (id) => {
-    Swal.fire({
-      title: "Tem certeza?",
-      text: "Você realmente deseja excluir este item?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sim, excluir!",
-      cancelButtonText: "Cancelar",
-      customClass: {
-        popup: "custom-swal",
-        title: "custom-swal-title",
-        content: "custom-swal-text",
-      },
-    }).then(async (result) => {
+    try {
+      const result = await Swal.fire({
+        title: "Tem certeza?",
+        text: "Você realmente deseja excluir este item?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sim, excluir!",
+        cancelButtonText: "Cancelar",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
+
       if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(`${apiBaseUrl}/item/${id}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          });
-          setItems(items.filter((item) => item.id !== id));
-          Swal.fire("Deletado!", response.data.message, "success");
-        } catch (error) {
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text:
-              error.response?.data?.error || "Erro ao excluir o item.",
-            customClass: {
-              popup: "custom-swal",
-              title: "custom-swal-title",
-              content: "custom-swal-text",
-            },
-          });
-        }
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        await axios.delete(`${apiBaseUrl}/item/${id}`, { headers });
+
+        Swal.fire({
+          title: "Deletado!",
+          text: "O item foi deletado com sucesso.",
+          icon: "success",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+
+        setItems(items.filter((item) => item.id !== id));
       }
-    });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: error.response?.data?.error || "Erro ao excluir o item.",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
+    }
   };
 
   return (
     <>
       <NavlogComponent />
-
       <Container>
-        <Row className="text-center">
-          
-          <Col md={12}>
+        <Row>
+          <Col>
             {barbershop && (
               <>
-                <p className="labeltitle text-uppercase">{barbershop.name}</p>
-                <Link
-                  to={`/barbershop/view/${barbershop.slug}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  <img
-                    src={
-                      barbershop.logo
-                        ? `${storageUrl}/${barbershop.logo}`
-                        : "/images/barbershoplogo.png"
-                    }
-                    alt={barbershop.name}
-                    className="rounded-circle mb-3"
-                    style={{
-                      height: "50px",
-                      width: "50px",
-                      objectFit: "cover",
-                    }}
-                  />
+                <p className="labellight text-center">Itens de {barbershop.name}</p>
+                <Link to={`/item/create/${barbershop.slug}`}>
+                  <Button className="btn btn-primary w-50">Cadastrar novo item</Button>
                 </Link>
+              </>
+            )}
+            {isLoading ? (
+              <ProcessingIndicatorComponent messages={messages} />
+            ) : (
+              <>
+                {items.length === 0 ? (
+                  <p className="text-center">Nenhum item encontrado.</p>
+                ) : (
+                  <Row>
+                    {items.map((item) => (
+                      <Col md={3}  key={item.id} className="m-4">
+                        <Card
+                          className="card-barbershop-show"
+                          style={{
+                            // Se o período de disponibilidade não incluir a data atual, o card fica amarelo
+                            backgroundColor: isItemAvailable(item) ? "" : "#fff3cd",
+                          }}
+                        >
+                          <Link to={`/item/view/${item.slug}`} style={{ textDecoration: "none" }}>
+                            <Card.Img
+                              variant="top"
+                              src={getItemImage(item)}
+                              onError={handleImageError}
+                              style={{ height: "200px", objectFit: "cover" }}
+                            />
+                          </Link>
+                          <Card.Body className="p-2">
+                          <p className="labellight text-center">{item.name}</p>
+                            <p className="text-white mb-1">
+                              <strong>Preço:</strong> R${item.price}
+                            </p>
+                            <p className="text-white mb-1">
+                              <strong>Tipo:</strong> {item.type === "produto" ? "Produto" : "Serviço"}
+                            </p>
+                            <p className="text-white mb-1">
+                              <strong>Categoria:</strong> {item.category} / {item.subcategory}
+                            </p>
+                            <p className="text-white mb-1">
+                              <strong>Marca:</strong> {item.brand}
+                            </p>
+                            <p className="text-white mb-1">
+                              <strong>Disponível:</strong> {formatDate(item.availability_start)} - {formatDate(item.availability_end)}
+                            </p>
+                            <div className="d-flex justify-content-between mt-2">
+                              <Link to={`/item/update/${item.id}`} style={{ textDecoration: "none" }} className="w-50 me-1">
+                                <Button className="primary w-100">Editar</Button>
+                              </Link>
+                              <Link onClick={() => handleDelete(item.id)} style={{ textDecoration: "none" }} className="w-50 ms-1">
+                                <Button className="bg-danger primary w-100">Deletar</Button>
+                              </Link>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                )}
               </>
             )}
           </Col>
         </Row>
-
-        {loading ? (
-          <ProcessingIndicatorComponent
-            messages={[
-              "Carregando itens da barbearia...",
-              "Quase pronto! Apenas um momento.",
-            ]}
-          />
-        ) : (
-          <Row>
-            {items.length === 0 ? (
-              <Col xs={12} className="text-center">
-                <p>Nenhum item encontrado.</p>
-              </Col>
-            ) : (
-              items.map((item) => (
-                <Col key={item.id} md={3} sm={6} xs={12} className="mb-4">
-                  <Card className="text-center shadow-sm p-3">
-                    <Link to={`/item/view/${item.slug}`} className="text-dark">
-                      <img
-                        src={getItemImage(item)}
-                        alt={item.name}
-                        className="item-image"
-                        onError={handleImageError}
-                        style={{
-                          maxHeight: "150px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </Link>
-                    <Card.Body>
-                      <p className="text-white">{item.name}</p>
-                      <p className="text-white">R${item.price}</p>
-                      <div className="d-flex justify-content-between">
-                        <Link to={`/item/update/${item.id}`}>
-                          <Button variant="warning" size="sm">Editar</Button>
-                        </Link>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Deletar
-                        </Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))
-            )}
-          </Row>
-        )}
       </Container>
     </>
   );

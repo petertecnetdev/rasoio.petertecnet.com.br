@@ -11,7 +11,6 @@ import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
 
-
 import DashboardPage from "./pages/DashboardPage";
 
 // Administrativo
@@ -44,8 +43,7 @@ import UserUpdatePage from "./pages/user/UserUpdatePage";
 import SchedulingPage from "./pages/scheduling/SchedulingPage";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
- import { apiBaseUrl } from "./config";
-
+import { apiBaseUrl } from "./config";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -57,21 +55,16 @@ const App = () => {
      
       if (token) {
         try {
-          
           const headers = {
             Authorization: `Bearer ${token}`,
           };
-          
           const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers }); 
-          
           setUser(response.data.user); 
         } catch (error) {
           setUser(null);
           localStorage.removeItem("token"); 
-          return <Navigate to="/login" />;// Remove o token em caso de erro
         }
       } else {
-     
         setUser(null); // Se não houver token, considera o usuário como não autenticado
       }
       setLoading(false); // Finaliza o carregamento
@@ -84,7 +77,7 @@ const App = () => {
     return (
       <ProcessingIndicatorComponent
         messages={["Carregando...", "Quase pronto, por favor aguarde..."]}
-        interval={2000}
+        interval={500}
       />
     );
   }
@@ -150,12 +143,11 @@ const App = () => {
         <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
         <Route path="/barbershop/view/:slug" element={protectedRoute(<BarbershopViewPage />)} />
         <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
-      
 
         <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
-        <Route path="/barber/include/:slug" element={protectedRoute(< BarberIncludePage  />)} />
+        <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
-        <Route path="/scheduling/:slug" element={protectedRoute(<SchedulingPage />)} /> 
+        <Route path="/scheduling/:slug" element={protectedRoute(<SchedulingPage />)} />
       </Routes>
     </Router>
   );

@@ -55,9 +55,14 @@ const BarbershopViewPage = () => {
   }, [slug]);
 
   const handleBarberAvatarError = (e) => {
-    e.target.src = "images/user.png";
+    if (e.target.src.includes("/images/user.png")) return;
+    e.target.src = "/images/user.png";
   };
 
+  const handleBarbershopLogoError = (e) => {
+    if (e.target.src.includes("/images/logo.png")) return;
+    e.target.src = "/images/logo.png";
+  };
   return (
     <>
       <NavlogComponent />
@@ -79,6 +84,8 @@ const BarbershopViewPage = () => {
                     <p className="labeltitle h7 text-uppercase">
                       {barbershop.name}
                     </p>
+                 
+               
                     <img
                       src={
                         barbershop.logo
@@ -87,7 +94,18 @@ const BarbershopViewPage = () => {
                       }
                       alt="Logo da Barbearia"
                       className="img-fluid rounded-circle mx-2 img-logo-barbershop"
+                      onError={handleBarbershopLogoError}
                     />
+                   <p className="m-2"> Gerente: <string>{owner.first_name}</string>     <img
+                      src={
+                        owner.avatar
+                          ? `${storageUrl}/${owner.avatar}`
+                          : "/images/user.png"
+                      }
+                      alt={owner.first_name}
+                      className="rounded-circle m-2 img-avatar-owner"    
+                         onError={handleBarberAvatarError}
+                    /></p>
                     <p className="m-2">
                       {" "}
                       Endereço: <strong>{barbershop.address}</strong>{" "}
@@ -98,9 +116,12 @@ const BarbershopViewPage = () => {
                         {barbershop.city} - {barbershop.state}
                       </strong>{" "}
                     </p>
-                  </Col>
-
-                  <Col md={6}>
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate(`/scheduling`)}
+                    >
+                      Realizar agendamento
+                    </Button>
                     <Button
                       variant="primary w-100 m-2"
                       onClick={() => window.open(barbershop.location, "_blank")}
@@ -131,37 +152,21 @@ const BarbershopViewPage = () => {
                       WhatsApp: {barbershop.phone}
                     </Button>
                   </Col>
-                </Row>
-                <Row className="mt-4">
-                  <Col md={6} className="text-center">
-                    <Button
-                      variant="primary"
-                      onClick={() => navigate(`/scheduling`)}
-                    >
-                      Realizar teste um agendamento
-                    </Button>
-                  </Col>
-                  <Col md={6} className="text-center">
-                    Gerente: <string>{owner.first_name}</string>
-                    <img
-                      src={
-                        owner.avatar
-                          ? `${storageUrl}/${owner.avatar}`
-                          : "/images/user.png"
-                      }
-                      alt={owner.first_name}
-                      className="rounded-circle m-2 img-avatar-owner"
-                    />
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          )}
+
+                  <Col md={6}>
+                  
           <Card className="mt-4">
             <Card.Body>
               <p className="text-center">{barbershop?.description}</p>
             </Card.Body>
           </Card>
+                
+                  </Col>
+                </Row>
+             
+              </Card.Body>
+            </Card>
+          )}
 
           <Card>
             {" "}
@@ -312,6 +317,7 @@ const BarbershopViewPage = () => {
                             className="rounded-circle img-logo-barbershop-show"
                             style={{ margin: "0 auto", display: "block" }}
                             alt={otherBarbershop.name}
+                            onError={handleBarbershopLogoError}
                           />
                         </Link>
                         <Card.Body>

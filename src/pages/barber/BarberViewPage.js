@@ -61,6 +61,12 @@ const BarberViewPage = () => {
     return age;
   };
 
+  
+  const handleBarberAvatarError = (e) => {
+    if (e.target.src.includes("/images/user.png")) return;
+    e.target.src = "/images/user.png";
+  };
+
   return (
     <>
       <NavlogComponent />
@@ -82,6 +88,7 @@ const BarberViewPage = () => {
                                 : "/images/user.png"
                             }
                             className="rounded-circle img-logo-barber-show"
+                            onError={handleBarberAvatarError}
                             style={{ margin: "0 auto", display: "block" }}
                             alt={user.first_name}
                           />   <p className="labeltitle h6 text-center text-uppercase">

@@ -96,13 +96,13 @@ const Dashboard = () => {
   return (
     <>
       <NavlogComponent />
-      <Container >
+      <Container>
         <Row className="justify-content-center mt-4">
           <Col md={12}>
             <Card>
-          <p className="labeltitle h6 text-center text-uppercase">
-              Barbearias
-            </p>
+              <p className="labeltitle h6 text-center text-uppercase">
+                Barbearias
+              </p>
               <Card.Body>
                 {isLoadingBarbershops ? (
                   <Col xs={12} className="text-center">
@@ -119,12 +119,11 @@ const Dashboard = () => {
                     <>
                       {barbershops.length > 0 ? (
                         barbershops.map((barbershop) => (
-                          <Col
-                            md={4}
-                            key={barbershop.id}
-                            className=""
-                          >
-                            <Card className="card-barbershop-show">
+                          <Col md={4} key={barbershop.id} className="m-2 p-2">
+                            <Card
+                              className="card-barbershop-show m-2 p-2"
+                              style={{ borderRadius: "10px" }} // Borda arredondada
+                            >
                               <div
                                 className="background-image"
                                 style={{
@@ -142,7 +141,12 @@ const Dashboard = () => {
                                     barbershop.logo || "images/logo.png"
                                   }`}
                                   className="rounded-circle img-logo-barbershop-show"
-                                  style={{ margin: "0 auto", display: "block" }}
+                                  style={{
+                                    margin: "0 auto",
+                                    display: "block",
+                                    width: "150px", // Define o tamanho menor para a logo
+                                    height: "150px", // Define o tamanho menor para a logo
+                                  }}
                                   alt={barbershop.name}
                                   onError={handleBarbershopLogoError}
                                 />
@@ -152,7 +156,7 @@ const Dashboard = () => {
                                   to={`/barbershop/show/${barbershop.id}`}
                                   style={{ textDecoration: "none" }}
                                 >
-                               <p className="labellight text-center ">
+                                  <p className="labellight text-center">
                                     {barbershop.name}
                                   </p>
                                 </Link>
@@ -183,11 +187,10 @@ const Dashboard = () => {
         {/* Apenas exibe a seção de barbeiros se houver dados */}
         <Row className="justify-content-center mt-4">
           <Col md={12}>
-         
             <Card>
-            <p className="labeltitle h6 text-center text-uppercase">
-              Barbeiros
-            </p>
+              <p className="labeltitle h6 text-center text-uppercase">
+                Barbeiros
+              </p>
               <Card.Body>
                 {isLoadingBarbers ? (
                   <Col xs={12} className="text-center">
@@ -203,27 +206,36 @@ const Dashboard = () => {
                   <Row>
                     <>
                       {barbers.length > 0 ? (
-                       barbers.map((barber) => (
-                        <Col md={3} key={barber.id}>
-                          <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center">
-
-                            <Card.Body>
-                            <Link
-                                to={`/barber/view/${barber.user.user_name}`}
-                                style={{ textDecoration: "none" }}
-                              >
-                              <img
-                                src={barber.user.avatar ? `${storageUrl}/${barber.user.avatar}` : "/images/user.png"}
-                                alt={barber.user.first_name}
-                                className="rounded-circle img-fluid m-3 img-avatar-user"
-                                onError={handleBarberAvatarError}
-                              />
-                              <p>{barber.user.first_name}</p>
-                              </Link>
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                      ))
+                        barbers.map((barber) => (
+                          <Col md={3} key={barber.id}>
+                            <Card className="card-barber-show text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
+                              <Card.Body>
+                                <Link
+                                  to={`/barber/view/${barber.user.user_name}`}
+                                  style={{ textDecoration: "none" }}
+                                >
+                                  <img
+                                    src={
+                                      barber.user.avatar
+                                        ? `${storageUrl}/${barber.user.avatar}`
+                                        : "/images/user.png"
+                                    }
+                                    alt={barber.user.first_name}
+                                    className="rounded-circle img-fluid m-3 img-avatar-user"
+                                    onError={handleBarberAvatarError}
+                                    style={{
+                                      margin: "0 auto",
+                                      display: "block",
+                                      width: "80px", // Define o tamanho menor para a logo
+                                      height: "80px", // Define o tamanho menor para a logo
+                                    }}
+                                  />
+                                  <p className="labellight text-center">{barber.user.first_name}</p>
+                                </Link>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        ))
                       ) : (
                         <Col xs={12} className="text-center">
                           <p className="text-muted">
