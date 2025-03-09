@@ -1,6 +1,4 @@
-/*********************************************************
-  Global Styles & Animations
-*********************************************************/
+
 body {
   font-family: "Roboto", sans-serif;
   margin: 0;
@@ -522,4 +520,131 @@ body {
   color: #fff;
   text-align: center;
   animation: pulseText 1.5s infinite;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.barbershop-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-card {
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.barbershop-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.barbershop-info {
+  text-align: center;
+}
+
+.barbershop-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.barbershop-logo {
+  max-width: 150px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.barbershop-manager {
+  font-size: 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.owner-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.barbershop-address {
+  font-size: 16px;
+  color: gray;
+}
+
+.barbershop-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.barbershop-actions button {
+  width: 100%;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.barbershop-actions button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #444 100%);
+  color: white;
+}
+
+.barbershop-description-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.barbershop-description-card {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-description {
+  font-size: 16px;
+  text-align: justify;
+  color: white;
+}
+
+
+.barber-avatar {
+  display: block;
+  margin: 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }

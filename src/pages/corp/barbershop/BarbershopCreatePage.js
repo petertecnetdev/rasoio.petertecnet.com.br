@@ -6,33 +6,38 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl } from "../../../config";
 
-const BarberCreatePage = () => {
+const BarbershopCreatePage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [barberData, setBarberData] = useState({
-    avatar: null,
-    first_name: "",
-    last_name: "",
+  const [barbershopData, setBarbershopData] = useState({
+    logo: null,
+    name: "",
     email: "",
-    phone: "",
+    address: "",
+    city: "",
     description: "",
+    phone: "",
+    state: "",
+    zipcode: "",
+    website: "",
     facebook: "",
     instagram: "",
+    location: "",
   });
 
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
 
-  // Função para lidar com mudança de valor nos inputs de texto
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setBarberData((prevData) => ({
+    setBarbershopData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
 
-  // Função genérica para redimensionar a imagem e exibir preview
   const handleImageChange = (file, setPreview, width, height) => {
+    const reader = new FileReader();
+
     if (!file || !file.type.startsWith("image/")) {
       Swal.fire({
         title: "Formato de imagem inválido",
@@ -43,7 +48,6 @@ const BarberCreatePage = () => {
       return;
     }
 
-    const reader = new FileReader();
     reader.onloadend = () => {
       const img = new Image();
       img.src = reader.result;
@@ -57,69 +61,72 @@ const BarberCreatePage = () => {
         setPreview(resizedDataURL);
       };
     };
+
     reader.readAsDataURL(file);
   };
 
-  // Função para lidar com a escolha de avatar
-  const handleAvatarChange = (e) => {
+  const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    handleImageChange(file, setAvatarPreview, 150, 150);
-    setBarberData((prevData) => ({
+    handleImageChange(file, setLogoPreview, 150, 150);
+    setBarbershopData((prevData) => ({
       ...prevData,
-      avatar: file,
+      logo: file,
     }));
   };
 
-  // Função para submeter o formulário
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsProcessing(true);
-    setMessages(["Aguarde enquanto cadastramos seu barbeiro..."]);
+    setMessages(["Aguarde enquanto cadastramos sua barbearia..."]);
 
     const formData = new FormData();
-    // Adicionando avatar se existir
-    if (barberData.avatar) {
-      formData.append("avatar", barberData.avatar);
+
+    if (logoPreview) {
+      try {
+        const logoBlob = await fetch(logoPreview).then((res) => res.blob());
+        formData.append("logo", logoBlob, "logo.png");
+      } catch (err) {
+        console.error("Erro ao converter a imagem da logo:", err);
+      }
     }
 
-    // Adicionando demais campos de texto
-    Object.keys(barberData).forEach((key) => {
-      if (key !== "avatar") {
-        formData.append(key, barberData[key]);
+    Object.keys(barbershopData).forEach((key) => {
+      if (key !== "logo") {
+        formData.append(key, barbershopData[key]);
       }
     });
 
     try {
-      setMessages(["Enviando dados"]);
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "multipart/form-data",
       };
 
-      await axios.post(`${apiBaseUrl}/barber`, formData, { headers });
+      await axios.post(`${apiBaseUrl}/barbershop`, formData, { headers });
+
       Swal.fire({
         title: "Sucesso!",
-        text: "Barbeiro criado com sucesso!",
+        text: "Barbearia criada com sucesso!",
         icon: "success",
         confirmButtonText: "OK",
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.href = "/barber";
+          window.location.href = "/barbershop";
         }
       });
     } catch (error) {
-      console.error("Erro ao criar barbeiro:", error);
+      console.error("Erro ao criar barbearia:", error);
 
       if (error.response && error.response.status === 422) {
         const validationErrors = error.response.data.errors;
-        let errorMessage = "";
+        let errorMessage = "Os seguintes campos têm erros:\n";
 
         for (const field in validationErrors) {
-          errorMessage += `${validationErrors[field].join(", ")}\n`;
+          errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
         }
 
         Swal.fire({
-          title: "Ups",
+          title: "Validação Falhou",
           text: errorMessage,
           icon: "error",
           confirmButtonText: "OK",
@@ -127,7 +134,7 @@ const BarberCreatePage = () => {
       } else {
         Swal.fire({
           title: "Erro",
-          text: "Ocorreu um erro ao tentar criar o barbeiro. Tente novamente mais tarde.",
+          text: "Ocorreu um erro ao tentar criar a barbearia. Tente novamente mais tarde.",
           icon: "error",
           confirmButtonText: "OK",
         });
@@ -140,151 +147,222 @@ const BarberCreatePage = () => {
   return (
     <>
       <NavlogComponent />
+      <p className="section-title text-center">Criar Barbearia</p>
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
             <Card className="card-component shadow-sm">
-              <p className="section-title text-center">Criar Barbeiro</p>
               <Card.Body className="card-body">
                 {isProcessing ? (
                   <Col xs={12} className="loading-section">
                     <ProcessingIndicatorComponent messages={messages} />
                   </Col>
                 ) : (
-                  <>
-                    {/* Avatar Preview e Upload */}
-                    <div className="text-center mb-4">
-                      <label htmlFor="avatarInput" style={{ cursor: "pointer" }}>
-                        {avatarPreview ? (
-                          <img
-                            src={avatarPreview}
-                            alt="Preview do Avatar"
-                            className="img-component"
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col xs={12} className="mb-4 text-center">
+                        <div>
+                          <label htmlFor="logoInput" style={{ cursor: "pointer" }}>
+                            {logoPreview ? (
+                              <img src={logoPreview} alt="Preview da Logo" className="img-component" />
+                            ) : (
+                              <img src="/images/barbershoplogo.png" alt="Preview da Logo" className="img-component" />
+                            )}
+                          </label>
+                          <div className="mt-3">
+                            <Button
+                              variant="secondary"
+                              className="action-button"
+                              onClick={() => document.getElementById("logoInput").click()}
+                            >
+                              Adicionar logo
+                            </Button>
+                          </div>
+                          <Form.Control
+                            id="logoInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            style={{ display: "none" }}
                           />
-                        ) : (
-                          <img
-                            src="/images/user.png"
-                            alt="Preview do Avatar"
-                            className="img-component"
-                          />
-                        )}
-                      </label>
-                      <div className="mt-3">
-                        <Button
-                          variant="secondary"
-                          className="action-button"
-                          onClick={() => document.getElementById("avatarInput").click()}
-                        >
-                          Adicionar Avatar
-                        </Button>
-                      </div>
-                      <Form.Control
-                        id="avatarInput"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarChange}
-                        style={{ display: "none" }}
-                      />
+                        </div>
+                      </Col>
+
+                      {/* Campos de entrada seguindo o padrão da UpdatePage */}
+                     
+                                           {/* Nome */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formName">
+                                               <Form.Label>Nome</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="name"
+                                                 value={barbershopData.name || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Email */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formEmail">
+                                               <Form.Label>Email</Form.Label>
+                                               <Form.Control
+                                                 type="email"
+                                                 name="email"
+                                                 value={barbershopData.email || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Telefone */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formPhone">
+                                               <Form.Label>Telefone</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="phone"
+                                                 value={barbershopData.phone || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Cidade */}
+                                           <Col md={3} className="mb-3">
+                                             <Form.Group controlId="formCity">
+                                               <Form.Label>Cidade</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="city"
+                                                 value={barbershopData.city || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col> {/* UF */}
+                                           <Col md={2} className="mb-3">
+                                             <Form.Group controlId="formState">
+                                               <Form.Label>UF</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="state"
+                                                 value={barbershopData.state || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                     
+                                           {/* Endereço */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formAddress">
+                                               <Form.Label>Endereço</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="address"
+                                                 value={barbershopData.address || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* CEP */}
+                                           <Col md={3} className="mb-3">
+                                             <Form.Group controlId="formZipcode">
+                                               <Form.Label>CEP</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="zipcode"
+                                                 value={barbershopData.zipcode || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                          
+                                           {/* URL Google Maps */}
+                                           <Col md={12} className="mb-3">
+                                             <Form.Group controlId="formLocation">
+                                               <Form.Label>URL Google Maps</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="location"
+                                                 value={barbershopData.location || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Website */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formWebsite">
+                                               <Form.Label>Website</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="website"
+                                                 value={barbershopData.website || ""}
+                                                 onChange={handleInputChange}
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Facebook */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formFacebook">
+                                               <Form.Label>Facebook</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="facebook"
+                                                 value={barbershopData.facebook || ""}
+                                                 onChange={handleInputChange}
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Instagram */}
+                                           <Col md={4} className="mb-3">
+                                             <Form.Group controlId="formInstagram">
+                                               <Form.Label>Instagram</Form.Label>
+                                               <Form.Control
+                                                 type="text"
+                                                 name="instagram"
+                                                 value={barbershopData.instagram || ""}
+                                                 onChange={handleInputChange}
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                     
+                                           {/* Descrição */}
+                                           <Col md={12} className="mb-3">
+                                             <Form.Group controlId="formDescription">
+                                               <Form.Label>Descrição</Form.Label>
+                                               <Form.Control
+                                                 as="textarea"
+                                                 rows={3}
+                                                 name="description"
+                                                 value={barbershopData.description || ""}
+                                                 onChange={handleInputChange}
+                                                 required
+                                               />
+                                             </Form.Group>
+                                           </Col>
+                    </Row>
+
+                    <div className="text-center">
+                      <Button variant="primary" type="submit" className="action-button">
+                        Incluir nova Barbearia
+                      </Button>
                     </div>
-
-                    <Form onSubmit={handleSubmit}>
-                      <Row>
-                        <Col md={6} className="mb-3">
-                          <Form.Group controlId="formFirstName">
-                            <Form.Label>Primeiro Nome</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="first_name"
-                              value={barberData.first_name}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6} className="mb-3">
-                          <Form.Group controlId="formLastName">
-                            <Form.Label>Último Nome</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="last_name"
-                              value={barberData.last_name}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-
-                      <Row>
-                        <Col md={4} className="mb-3">
-                          <Form.Group controlId="formEmail">
-                            <Form.Label>Email</Form.Label>
-                            <Form.Control
-                              type="email"
-                              name="email"
-                              value={barberData.email}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4} className="mb-3">
-                          <Form.Group controlId="formPhone">
-                            <Form.Label>Telefone</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="phone"
-                              value={barberData.phone}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4} className="mb-3">
-                          <Form.Group controlId="formDescription">
-                            <Form.Label>Descrição</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="description"
-                              value={barberData.description}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-
-                      <Row>
-                        <Col md={6} className="mb-3">
-                          <Form.Group controlId="formFacebook">
-                            <Form.Label>Facebook</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="facebook"
-                              value={barberData.facebook}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={6} className="mb-3">
-                          <Form.Group controlId="formInstagram">
-                            <Form.Label>Instagram</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="instagram"
-                              value={barberData.instagram}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-
-                      <div className="text-center">
-                        <Button variant="primary" type="submit" className="action-button">
-                          Incluir novo Barbeiro
-                        </Button>
-                      </div>
-                    </Form>
-                  </>
+                  </Form>
                 )}
               </Card.Body>
             </Card>
@@ -295,4 +373,4 @@ const BarberCreatePage = () => {
   );
 };
 
-export default BarberCreatePage;
+export default BarbershopCreatePage;
