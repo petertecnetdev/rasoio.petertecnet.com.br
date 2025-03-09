@@ -21,10 +21,7 @@ const Dashboard = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         };
-        const response = await axios.get(`${apiBaseUrl}/barbershop`, {
-          headers,
-        });
-
+        const response = await axios.get(`${apiBaseUrl}/barbershop`, { headers });
         if (response?.data?.barbershops) {
           setBarbershops(response.data.barbershops.data);
         } else {
@@ -59,7 +56,6 @@ const Dashboard = () => {
           "Content-Type": "multipart/form-data",
         };
         const response = await axios.get(`${apiBaseUrl}/barber`, { headers });
-
         if (response?.data?.barbers) {
           setBarbers(response.data.barbers.data);
         } else {
@@ -96,16 +92,15 @@ const Dashboard = () => {
   return (
     <>
       <NavlogComponent />
-      <Container>
-        <Row className="justify-content-center mt-4">
-          <Col md={12}>
-            <Card>
-              <p className="label-barbershop h5 text-center text-uppercase">
-                Barbearias
-              </p>
-              <Card.Body>
+      <Container className="main-container" fluid>
+        {/* Seção de Barbearias */}
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">Barbearias</p>
+              <Card.Body className="card-body">
                 {isLoadingBarbershops ? (
-                  <Col xs={12} className="text-center">
+                  <Col xs={12} className="loading-section">
                     <ProcessingIndicatorComponent
                       messages={[
                         "Carregando as barbearias...",
@@ -115,103 +110,82 @@ const Dashboard = () => {
                     />
                   </Col>
                 ) : (
-                  <Row>
-                    <>
-                      {barbershops.length > 0 ? (
-                        barbershops.map((barbershop) => (
-                          <Col md={4} key={barbershop.id} className="m-2 p-2">
-                            <Card
-                              className="card-barbershop m-2 p-2" // Borda arredondada
-                            >
+                  <>
+                    {barbershops.length > 0 ? (
+                      <Row className="inner-row">
+                        {barbershops.map((barbershop) => (
+                          <Col key={barbershop.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                            <Card className="inner-card h-100">
+                              {/* Background with logo and blur */}
                               <div
-                                className="background-image"
+                                className="card-bg"
                                 style={{
-                                  backgroundImage: `url('${storageUrl}/${
-                                    barbershop.logo || "images/logo.png"
-                                  }')`,
+                                  backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`
                                 }}
                               />
-                              <Link
-                                to={`/barbershop/view/${barbershop.slug}`}
-                                style={{ textDecoration: "none" }}
-                              >
-                                <img
-                                  src={`${storageUrl}/${
-                                    barbershop.logo || "images/logo.png"
-                                  }`}
-                                  className="rounded-circle img-logo-barbershop-show"
-                                  style={{
-                                    margin: "0 auto",
-                                    display: "block",
-                                    width: "150px", // Define o tamanho menor para a logo
-                                    height: "150px", // Define o tamanho menor para a logo
-                                  }}
-                                  alt={barbershop.name}
-                                  onError={handleBarbershopLogoError}
-                                />
-                              </Link>
-                              <Card.Body>
+                              {/* Card content overlay */}
+                              <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
                                 <Link
-                                  to={`/barbershop/show/${barbershop.id}`}
-                                  style={{ textDecoration: "none" }}
+                                  to={`/barbershop/view/${barbershop.slug}`}
+                                  className="link-component text-center"
                                 >
-                                  <p className="label-barbershop h6 text-center">
-                                    {barbershop.name}
-                                  </p>
+                                  <img
+                                    src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
+                                    className="img-component mb-3"
+                                    alt={barbershop.name}
+                                    onError={handleBarbershopLogoError}
+                                  />
+                                  <p className="item-title">{barbershop.name}</p>
                                 </Link>
                               </Card.Body>
                             </Card>
                           </Col>
-                        ))
-                      ) : (
-                        <Col xs={12} className="text-center">
-                          <p className="text-muted">
-                            Nenhuma barbearia encontrada.
-                          </p>
-                          <Link to="/barbershop/create">
-                            <Button variant="primary">
-                              Adicionar Nova Barbearia
-                            </Button>
-                          </Link>
-                        </Col>
-                      )}
-                    </>
-                  </Row>
+                        ))}
+                      </Row>
+                    ) : (
+                      <Col xs={12} className="empty-section text-center">
+                        <p className="empty-text">Nenhuma barbearia encontrada.</p>
+                        <Link to="/barbershop/create" className="link-component">
+                          <Button variant="primary" className="action-button">
+                            Adicionar Nova Barbearia
+                          </Button>
+                        </Link>
+                      </Col>
+                    )}
+                  </>
                 )}
               </Card.Body>
             </Card>
           </Col>
         </Row>
 
-        {/* Apenas exibe a seção de barbeiros se houver dados */}
-        <Row className="justify-content-center mt-4">
-          <Col md={12}>
-            <Card>
-              <p className="label-barber h6 text-center text-uppercase">
-                Barbeiros
-              </p>
-              <Card.Body>
+        {/* Seção de Barbeiros */}
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">Barbeiros</p>
+              <Card.Body className="card-body">
                 {isLoadingBarbers ? (
-                  <Col xs={12} className="text-center">
+                  <Col xs={12} className="loading-section">
                     <ProcessingIndicatorComponent
                       messages={[
-                        "Carregando as barbeiros...",
+                        "Carregando os barbeiros...",
                         "Estamos buscando as informações.",
                         "Quase pronto! Apenas um momento.",
                       ]}
                     />
                   </Col>
                 ) : (
-                  <Row>
-                    <>
-                      {barbers.length > 0 ? (
-                        barbers.map((barber) => (
-                          <Col md={3} key={barber.id}>
-                            <Card className="card-barber text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
-                              <Card.Body>
+                  <>
+                    {barbers.length > 0 ? (
+                      <Row className="inner-row">
+                        {barbers.map((barber) => (
+                          <Col key={barber.id} xs={12} sm={6} md={4} lg={3} className="inner-col mb-4">
+                            <Card className="inner-card h-100">
+                              <Card.Body className="inner-card-body d-flex flex-column justify-content-center">
                                 <Link
                                   to={`/barber/view/${barber.user.user_name}`}
-                                  style={{ textDecoration: "none" }}
+                                  className="link-component text-center"
                                 >
                                   <img
                                     src={
@@ -220,30 +194,22 @@ const Dashboard = () => {
                                         : "/images/user.png"
                                     }
                                     alt={barber.user.first_name}
-                                    className="rounded-circle img-fluid m-3 img-avatar-user"
+                                    className="img-component mb-3"
                                     onError={handleBarberAvatarError}
-                                    style={{
-                                      margin: "0 auto",
-                                      display: "block",
-                                      width: "80px", // Define o tamanho menor para a logo
-                                      height: "80px", // Define o tamanho menor para a logo
-                                    }}
                                   />
-                                  <p className="label-barber h6  text-center">{barber.user.first_name}</p>
+                                  <p className="item-title">{barber.user.first_name}</p>
                                 </Link>
                               </Card.Body>
                             </Card>
                           </Col>
-                        ))
-                      ) : (
-                        <Col xs={12} className="text-center">
-                          <p className="text-muted">
-                            Nenhuma barbeiro encontrado.
-                          </p>
-                        </Col>
-                      )}
-                    </>
-                  </Row>
+                        ))}
+                      </Row>
+                    ) : (
+                      <Col xs={12} className="empty-section text-center">
+                        <p className="empty-text">Nenhum barbeiro encontrado.</p>
+                      </Col>
+                    )}
+                  </>
                 )}
               </Card.Body>
             </Card>

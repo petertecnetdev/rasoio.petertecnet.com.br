@@ -3,23 +3,18 @@ import { Navigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import authService from "../../services/AuthService";
 import Navlog from "../../components/NavlogComponent";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
+import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import LoadingComponent from "../../components/LoadingComponent";
 
 const EmailVerifyPage = () => {
   const [verificationCode, setVerificationCode] = useState("");
-  const [loadingVerify, setLoadingVerify] = useState(false); // Carregamento para verificação de email
-  const [loadingResend, setLoadingResend] = useState(false); // Carregamento para reenviar código
+  const [loadingVerify, setLoadingVerify] = useState(false);
+  const [loadingResend, setLoadingResend] = useState(false);
   const [redirect, setRedirect] = useState(false);
 
   const handleVerifyEmail = async (e) => {
     e.preventDefault();
-    setLoadingVerify(true); // Inicia o carregamento do botão de verificação
+    setLoadingVerify(true);
     try {
       const emailVerified = await authService.emailVerify(verificationCode);
       if (emailVerified) {
@@ -33,10 +28,9 @@ const EmailVerifyPage = () => {
             content: "custom-swal-text",
           },
         });
-
         setTimeout(() => {
           setRedirect(true);
-        }, 1500); // Aguarda 1.5s antes de redirecionar
+        }, 1500);
       } else {
         Swal.fire({
           icon: "error",
@@ -62,12 +56,12 @@ const EmailVerifyPage = () => {
         },
       });
     } finally {
-      setLoadingVerify(false); // Finaliza o carregamento do botão de verificação
+      setLoadingVerify(false);
     }
   };
 
   const handleResendVerificationCode = async () => {
-    setLoadingResend(true); // Inicia o carregamento do botão de reenvio
+    setLoadingResend(true);
     try {
       const codeResent = await authService.resendCodeEmailVerification();
       if (codeResent) {
@@ -106,41 +100,32 @@ const EmailVerifyPage = () => {
         },
       });
     } finally {
-      setLoadingResend(false); // Finaliza o carregamento do botão de reenvio
+      setLoadingResend(false);
     }
   };
 
   if (redirect) {
-    return <Navigate to="/dashboard" />; // Redireciona o usuário para o dashboard após a verificação do e-mail
+    return <Navigate to="/dashboard" />;
   }
 
   return (
-    <div className="App">
+    <div className="page-container">
       <Navlog />
       <Container>
-        <Row className="justify-content-center mt-5">
-          <Col md={6} className="mt-5">
-            <Card>
-              <Card.Body>
-                <div className="text-center">
-                  <img
-                    src="/images/logo.png"
-                    alt="Logo"
-                    className="logo rounded-circle img-thumbnail"
-                    style={{ width: "150px", height: "150px" }}
-                  />
+        <Row className="page-row">
+          <Col md={6} className="page-col">
+            <Card className="card-container">
+              <p className="page-header">Verificar Email</p>
+              <Card.Body className="card-body">
+                <div className="logo-container">
+                  <img src="/images/logo.png" alt="Logo" className="logo-image" />
                 </div>
-                <Card.Title className="text-center">Verificar Email</Card.Title>
-                <p className="text-center">
-                  Bem-vindo ao Rasoio! Estamos felizes em tê-lo conosco.
-                  Para garantir a segurança da sua conta e aproveitar ao máximo
-                  nossos serviços, por favor, verifique seu endereço de email
-                  inserindo o código que enviamos para você. Isso permitirá que
-                  você tenha acesso a recursos exclusivos e fique sempre
-                  atualizado sobre suas interações.
+                <Card.Title className="card-title">Verificar Email</Card.Title>
+                <p className="footer-text">
+                  Bem-vindo ao Rasoio! Para garantir a segurança da sua conta, insira o código que enviamos para seu e-mail.
                 </p>
-                <Form onSubmit={handleVerifyEmail}>
-                  <Form.Group className="mb-3">
+                <Form onSubmit={handleVerifyEmail} className="form-container">
+                  <Form.Group className="form-group">
                     <Form.Label>Código de Verificação</Form.Label>
                     <Form.Control
                       type="text"
@@ -148,29 +133,22 @@ const EmailVerifyPage = () => {
                       value={verificationCode}
                       onChange={(e) => setVerificationCode(e.target.value)}
                       required
+                      className="input-email"
                     />
                   </Form.Group>
-                  <div className="d-grid">
-                    <Button type="submit" variant="primary" disabled={loadingVerify}>
-                      {loadingVerify ? "Verificando..." : "Verificar email"}
-                    </Button>
-                  </div>
-                </Form>
-                <div className="text-center mt-3">
-                  <Button
-                    variant="secondary"
-                    onClick={handleResendVerificationCode}
-                    disabled={loadingResend}
-                  >
-                    {loadingResend ? "Enviando..." : "Reenviar Código de Verificação"}
+                  <Button type="submit" variant="primary" disabled={loadingVerify} className="submit-btn">
+                    {loadingVerify ? "Verificando..." : "Verificar email"}
                   </Button>
-                </div>
+                </Form>
+                <Button variant="secondary" onClick={handleResendVerificationCode} disabled={loadingResend} className="submit-btn" style={{ marginTop: "15px" }}>
+                  {loadingResend ? "Enviando..." : "Reenviar Código de Verificação"}
+                </Button>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Container>
-      {(loadingVerify || loadingResend) && <LoadingComponent />}{" "}
+      {(loadingVerify || loadingResend) && <LoadingComponent />}
     </div>
   );
 };

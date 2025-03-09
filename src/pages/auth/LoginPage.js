@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import axios from "axios";
 import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
-import Swal from "sweetalert2"; // Importando SweetAlert
-import { apiBaseUrl } from "../../config"; // Importando a configuração da URL base da API
-import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Indicador de processamento
+import Swal from "sweetalert2"; 
+import { apiBaseUrl } from "../../config"; 
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; 
 
 class LoginPage extends Component {
   constructor(props) {
@@ -14,8 +14,7 @@ class LoginPage extends Component {
       loading: false,
     };
   }
-
-  // Função para armazenar o token no localStorage
+  
   setToken = (token) => localStorage.setItem("token", token);
 
   onChangeEmail = (e) => {
@@ -36,12 +35,9 @@ class LoginPage extends Component {
       const response = await axios.post(`${apiBaseUrl}/auth/login`, { email, password });
       const token = response?.data?.token.original.access_token;
 
-      // Armazena o token no localStorage
       if (token) {
         this.setToken(token);
       }
-
-      // Redireciona para o dashboard após o login bem-sucedido
       window.location.href = "/dashboard";
 
     } catch (error) {
@@ -63,7 +59,6 @@ class LoginPage extends Component {
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
-        iconColor: "#dc3545", // Vermelho para erro
       });
     } finally {
       this.setState({ loading: false });
@@ -74,50 +69,52 @@ class LoginPage extends Component {
     const { loading, email, password } = this.state;
 
     return (
-      <Container fluid>
-        {loading && <ProcessingIndicatorComponent messages={["Autenticando...", "Por favor, aguarde..."]} />}
+      <Container fluid className="page-container">
+        {loading && (
+          <ProcessingIndicatorComponent messages={["Autenticando...", "Por favor, aguarde..."]} />
+        )}
 
         {!loading && (
-          <Row>
-            <Col md={12} className="d-flex align-items-center justify-content-center">
-              <Card>
-              <p className="labeltitle h7 text-uppercase">Login</p>
-                <Card.Body>
-                  <div className="text-center">
+          <Row className="page-row">
+            <Col md={12} className="page-col">
+              <Card className="card-container">
+                <p className="page-header text-uppercase">Rasoio</p>
+                <Card.Body className="card-body">
+                  <div className="logo-container">
                     <img
                       src="/images/logo.png"
                       alt="Logo"
-                      className="logo rounded-circle img-thumbnail"
-                      style={{ width: "80px", height: "80px" }}
+                      className="logo-image"
                     />
                   </div>
-                  <Card.Title className="text-center mb-2 h2">ENTRAR</Card.Title>
-                  <Form onSubmit={this.onSubmit}>
-                    <Form.Group className="mb-3">
+                  <Form onSubmit={this.onSubmit} className="form-container">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="email"
                         placeholder="Insira o Email"
                         onChange={this.onChangeEmail}
                         value={email}
+                        className="input-email"
                       />
                     </Form.Group>
-                    <Form.Group className="mb-3">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="password"
                         placeholder="Insira a Senha"
                         onChange={this.onChangePassword}
                         value={password}
+                        className="input-password"
                       />
                     </Form.Group>
 
-                    <Button type="submit" disabled={loading} className="btn btn-primary w-100">
+                    <Button type="submit" disabled={loading} className="submit-btn">
                       {loading ? "Entrando..." : "Entrar"}
                     </Button>
-                    <p className="forgot-password text-right text-center mt-3">
-                      Não tem conta? <a href="/register" className="auth-link">Registrar-se</a>
+                    <p className="footer-text">
+                      Não tem conta? <a href="/register" className="footer-link">Registrar-se</a>
                     </p>
-                    <p className="forgot-password text-right text-center mt-3">
-                      Esqueceu a senha? <a href="/password-email" className="auth-link">Recuperar senha</a>
+                    <p className="footer-text">
+                      Esqueceu a senha? <a href="/password-email" className="footer-link">Recuperar senha</a>
                     </p>
                   </Form>
                 </Card.Body>

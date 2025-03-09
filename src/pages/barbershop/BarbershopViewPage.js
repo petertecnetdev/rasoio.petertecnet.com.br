@@ -29,8 +29,7 @@ const BarbershopViewPage = () => {
             },
           }
         );
-
-        console.log("API Response:", response.data); // Verificar a resposta
+        console.log("API Response:", response.data);
         setBarbershop(response.data.barbershop);
         setBarbers(response.data.barbers);
         setItems(response.data.items);
@@ -63,6 +62,16 @@ const BarbershopViewPage = () => {
     if (e.target.src.includes("/images/logo.png")) return;
     e.target.src = "/images/logo.png";
   };
+
+  // Helper to inject dynamic background CSS without using inline styles.
+  const renderBackgroundStyle = (className, imageUrl) => (
+    <style>{`
+      .${className} {
+        background-image: url('${imageUrl}');
+      }
+    `}</style>
+  );
+
   return (
     <>
       <NavlogComponent />
@@ -75,124 +84,129 @@ const BarbershopViewPage = () => {
           ]}
         />
       ) : (
-        <Container>
+        <Container className="barbershop-view-container">
           {barbershop && (
-            <Card>
-              <Card.Body>
-                <Row>
-                  <Col md={6} className="text-center">
-                    <p className="label-barbershop h7 text-uppercase">
-                      {barbershop.name}
-                    </p>
-                 
-               
-                    <img
-                      src={
-                        barbershop.logo
-                          ? `${storageUrl}/${barbershop.logo}`
-                          : "/images/barbershoplogo.png"
-                      }
-                      alt="Logo da Barbearia"
-                      className="img-fluid rounded-circle mx-2 img-logo-barbershop"
-                      onError={handleBarbershopLogoError}
-                    />
-                   <p className="m-2"> Gerente: <string>{owner.first_name}</string>     <img
-                      src={
-                        owner.avatar
-                          ? `${storageUrl}/${owner.avatar}`
-                          : "/images/user.png"
-                      }
-                      alt={owner.first_name}
-                      className="rounded-circle m-2 img-avatar-owner"    
-                         onError={handleBarberAvatarError}
-                    /></p>
-                    <p className="m-2">
-                      {" "}
-                      Endereço: <strong>{barbershop.address}</strong>{" "}
-                    </p>
-                    <p className="m-2">
-                      {" "}
-                      <strong>
-                        {barbershop.city} - {barbershop.state}
-                      </strong>{" "}
-                    </p>
-                    <Button
-                      variant="primary"
-                      onClick={() => navigate(`/scheduling/create/${barbershop.slug}`)}
-                    >
-                      Realizar agendamento
-                    </Button>
-                    <Button
-                      variant="primary w-100 m-2"
-                      onClick={() => window.open(barbershop.location, "_blank")}
-                    >
-                      Localização
-                    </Button>
-
-                    <Button
-                      variant="primary w-100 m-2"
-                      onClick={() =>
-                        window.open(barbershop.instagram, "_blank")
-                      }
-                    >
-                      Instagram
-                    </Button>
-
-                    <Button
-                      variant="primary w-100 m-2"
-                      onClick={() => {
-                        const whatsappURL = `https://wa.me/${
-                          barbershop.phone
-                        }?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20os%20serviços%20da%20${encodeURIComponent(
-                          barbershop.name
-                        )}.`;
-                        window.open(whatsappURL, "_blank");
-                      }}
-                    >
-                      WhatsApp: {barbershop.phone}
-                    </Button>
-                  </Col>
-
-                  <Col md={6}>
-                  
-          <Card className="mt-4">
-            <Card.Body>
-              <p className="text-center">{barbershop?.description}</p>
-            </Card.Body>
-          </Card>
-                
-                  </Col>
-                </Row>
-             
-              </Card.Body>
-            </Card>
+            <>
+              {renderBackgroundStyle(
+                `barbershop-view-bg-${barbershop.id}`,
+                barbershop.logo
+                  ? `${storageUrl}/${barbershop.logo}`
+                  : "/images/barbershoplogo.png"
+              )}
+              <Card className="barbershop-view-card">
+                <Card.Body className="barbershop-view-card-body">
+                  <Row className="barbershop-view-row">
+                    <Col md={6} className="barbershop-info-col">
+                      <p className="barbershop-name">{barbershop.name}</p>
+                      <img
+                        src={
+                          barbershop.logo
+                            ? `${storageUrl}/${barbershop.logo}`
+                            : "/images/barbershoplogo.png"
+                        }
+                        alt="Logo da Barbearia"
+                        className="barbershop-logo"
+                        onError={handleBarbershopLogoError}
+                      />
+                      <p className="barbershop-manager">
+                        Gerente: <strong>{owner.first_name}</strong>{" "}
+                        <img
+                          src={
+                            owner.avatar
+                              ? `${storageUrl}/${owner.avatar}`
+                              : "/images/user.png"
+                          }
+                          alt={owner.first_name}
+                          className="barbershop-manager-avatar"
+                          onError={handleBarberAvatarError}
+                        />
+                      </p>
+                      <p className="barbershop-address">
+                        Endereço: <strong>{barbershop.address}</strong>
+                      </p>
+                      <p className="barbershop-location">
+                        <strong>
+                          {barbershop.city} - {barbershop.state}
+                        </strong>
+                      </p>
+                      <Button
+                        variant="primary"
+                        className="schedule-button"
+                        onClick={() =>
+                          navigate(`/scheduling/create/${barbershop.slug}`)
+                        }
+                      >
+                        Realizar agendamento
+                      </Button>
+                      <Button
+                        variant="primary"
+                        className="location-button w-100 m-2"
+                        onClick={() => window.open(barbershop.location, "_blank")}
+                      >
+                        Localização
+                      </Button>
+                      <Button
+                        variant="primary"
+                        className="instagram-button w-100 m-2"
+                        onClick={() =>
+                          window.open(barbershop.instagram, "_blank")
+                        }
+                      >
+                        Instagram
+                      </Button>
+                      <Button
+                        variant="primary"
+                        className="whatsapp-button w-100 m-2"
+                        onClick={() => {
+                          const whatsappURL = `https://wa.me/${
+                            barbershop.phone
+                          }?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20os%20serviços%20da%20${encodeURIComponent(
+                            barbershop.name
+                          )}.`;
+                          window.open(whatsappURL, "_blank");
+                        }}
+                      >
+                        WhatsApp: {barbershop.phone}
+                      </Button>
+                    </Col>
+                    <Col md={6} className="barbershop-description-col">
+                      <Card className="barbershop-description-card">
+                        <Card.Body className="barbershop-description-card-body">
+                          <p className="barbershop-description">
+                            {barbershop?.description}
+                          </p>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </>
           )}
 
-          <Card>
-            {" "}
-            <p className="label-barber h5 text-center text-uppercase">
+          <Card className="barbershop-barbers-card">
+            <p className="barbershop-barbers-title">
               Barbeiros da {barbershop.name}
             </p>
-            <Card.Body>
-              <Row>
+            <Card.Body className="barbershop-barbers-card-body">
+              <Row className="barbershop-barbers-row">
                 {barbers.length === 0 ? (
-                  <Col xs={12} className="text-center mb-3">
+                  <Col xs={12} className="barbershop-no-barbers-col">
                     <p>Nenhum barbeiro encontrado.</p>
                   </Col>
                 ) : (
                   barbers.map((barber) => (
-                    <Col md={2} key={barber.id}>
-                       <Card className="card-barber m-2 p-2 text-center d-flex flex-column justify-content-center align-items-center m-4 p-4">
-                       <div
-                          className="background-image"
-                          style={{
-                            backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
-                          }}
-                        />
-                        <Card.Body>
+                    <Col md={2} key={barber.id} className="barber-col">
+                      <Card className="barber-card">
+                        {renderBackgroundStyle(
+                          `barber-card-bg-${barber.id}`,
+                          `${storageUrl}/${barbershop.logo}`
+                        )}
+                        <div className={`barber-card-bg barber-card-bg-${barber.id}`}></div>
+                        <Card.Body className="barber-card-body">
                           <Link
                             to={`/barber/view/${barber.user_name}`}
-                            style={{ textDecoration: "none" }}
+                            className="barber-link"
                           >
                             <img
                               src={
@@ -201,15 +215,10 @@ const BarbershopViewPage = () => {
                                   : "/images/user.png"
                               }
                               alt={barber.first_name}
-                              className="rounded-circle m-2 img-avatar-user"
-                              style={{
-                                height: "100px",
-                                width: "100px",
-                                objectFit: "cover",
-                              }}
+                              className="barber-avatar"
                               onError={handleBarberAvatarError}
                             />
-                            <p className="label-barber h6  text-center">{barber.first_name}</p>
+                            <p className="barber-name">{barber.first_name}</p>
                           </Link>
                         </Card.Body>
                       </Card>
@@ -220,33 +229,22 @@ const BarbershopViewPage = () => {
             </Card.Body>
           </Card>
 
-
-          <Card>
-            {" "}
-            <p className="label-item h6 text-center text-uppercase">
+          <Card className="barbershop-items-card">
+            <p className="barbershop-items-title">
               Items da {barbershop.name}
             </p>
-            <Card.Body>
-              <Row>
+            <Card.Body className="barbershop-items-card-body">
+              <Row className="barbershop-items-row">
                 {items.length === 0 ? (
-                  <Col xs={12} className="text-center mb-3">
+                  <Col xs={12} className="barbershop-no-items-col">
                     <p>Nenhum item encontrado.</p>
                   </Col>
                 ) : (
                   items.map((item) => (
-                    <Col md={2} key={items.id}>
-                      <Card className="card-item m-2 p-2 text-center d-flex flex-column justify-content-center align-items-center">
-                      <div
-                          className="background-image"
-                          style={{
-                            backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
-                          }}
-                        />
-                        <Card.Body>
-                          <Link
-                            to={`/item/view/${item.slug}`}
-                            style={{ textDecoration: "none" }}
-                          >
+                    <Col md={2} key={item.id} className="item-col">
+                      <Card className="item-card">
+                        <Card.Body className="item-card-body">
+                          <Link to={`/item/view/${item.slug}`} className="item-link">
                             <img
                               src={
                                 item.image
@@ -254,16 +252,11 @@ const BarbershopViewPage = () => {
                                   : "/images/user.png"
                               }
                               alt={item.name}
-                              className="rounded-circle m-2 img-avatar-user"
-                              style={{
-                                height: "100px",
-                                width: "100px",
-                                objectFit: "cover",
-                              }}
+                              className="item-image"
                               onError={handleBarberAvatarError}
                             />
-                             <p className="label-item h6 p-2 text-center">{item.name}</p>
-                             <p className="h6 label-price">R$ {item.price}</p>
+                            <p className="item-name">{item.name}</p>
+                            <p className="item-price">R$ {item.price}</p>
                           </Link>
                         </Card.Body>
                       </Card>
@@ -274,47 +267,40 @@ const BarbershopViewPage = () => {
             </Card.Body>
           </Card>
 
-
-          <Card>
-            <p className="label-barbershop h6 text-center text-uppercase">
-              Outras Barbearias
-            </p>
-            <Card.Body>
-              <Row>
+          <Card className="other-barbershops-card">
+            <p className="other-barbershops-title">Outras Barbearias</p>
+            <Card.Body className="other-barbershops-card-body">
+              <Row className="other-barbershops-row">
                 {otherBarbershops.length === 0 ? (
-                  <Col xs={12} className="text-center mb-3">
+                  <Col xs={12} className="other-no-barbershops-col">
                     <p>Nenhuma outra barbearia encontrada.</p>
                   </Col>
                 ) : (
                   otherBarbershops.map((otherBarbershop) => (
-                    <Col md={3} key={otherBarbershop.id} className="mb-3">
-                      <Card className="card-barbershop m-2 p-2">
-                        <div
-                          className="background-image"
-                          style={{
-                            backgroundImage: `url('${storageUrl}/${otherBarbershop.logo}')`,
-                          }}
-                        />
+                    <Col md={3} key={otherBarbershop.id} className="other-barbershop-col">
+                      <Card className="other-barbershop-card">
+                        {renderBackgroundStyle(
+                          `other-barbershop-card-bg-${otherBarbershop.id}`,
+                          `${storageUrl}/${otherBarbershop.logo}`
+                        )}
+                        <div className={`other-barbershop-card-bg other-barbershop-card-bg-${otherBarbershop.id}`}></div>
                         <Link
                           to={`/barbershop/view/${otherBarbershop.slug}`}
-                          style={{ textDecoration: "none" }}
+                          className="other-barbershop-link"
                         >
                           <img
                             src={`${storageUrl}/${otherBarbershop.logo}`}
-                            className="rounded-circle img-logo-barbershop-show"
-                            style={{ margin: "0 auto", display: "block" }}
+                            className="other-barbershop-logo"
                             alt={otherBarbershop.name}
                             onError={handleBarbershopLogoError}
                           />
                         </Link>
-                        <Card.Body>
+                        <Card.Body className="other-barbershop-card-body">
                           <Link
                             to={`/barbershop/show/${otherBarbershop.id}`}
-                            style={{ textDecoration: "none" }}
+                            className="other-barbershop-show-link"
                           >
-                            <p className="labeltitle h6 text-center text-uppercase">
-                              {otherBarbershop.name}
-                            </p>
+                            <p className="other-barbershop-name">{otherBarbershop.name}</p>
                           </Link>
                         </Card.Body>
                       </Card>

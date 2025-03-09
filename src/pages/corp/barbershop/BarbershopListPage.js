@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 import NavlogComponent from "../../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../../components/ProcessingIndicatorComponent";
-import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../../config";
+import { Link } from "react-router-dom";
 
 const BarbershopListPage = () => {
+  const [barbershops, setBarbershops] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState([]);
-  const [barbershops, setBarbershops] = useState([]);
 
   const fetchBarbershops = async () => {
     setMessages(["Carregando barbearias..."]);
@@ -21,16 +21,14 @@ const BarbershopListPage = () => {
         "Content-Type": "multipart/form-data",
       };
 
-      const response = await axios.get(`${apiBaseUrl}/barbershop/user`, {
-        headers,
-      });
-
-      setBarbershops(response.data.barbershops.data);
+      const response = await axios.get(`${apiBaseUrl}/barbershop/user`, { headers });
+      if (response?.data?.barbershops) {
+        setBarbershops(response.data.barbershops.data);
+      } else {
+        setBarbershops([]);
+      }
     } catch (error) {
       console.error("Erro ao carregar barbearias:", error.response?.data);
-      setMessages([
-        "Ocorreu um erro ao carregar as barbearias. Tente novamente mais tarde.",
-      ]);
       Swal.fire({
         title: "Erro",
         text:
@@ -44,6 +42,7 @@ const BarbershopListPage = () => {
           content: "custom-swal-text",
         },
       });
+      setBarbershops([]);
     } finally {
       setIsLoading(false);
     }
@@ -76,7 +75,6 @@ const BarbershopListPage = () => {
           "Content-Type": "application/json",
         };
 
-        // Requisição de deleção para a API
         await axios.delete(`${apiBaseUrl}/barbershop/${id}`, { headers });
 
         Swal.fire({
@@ -90,10 +88,7 @@ const BarbershopListPage = () => {
           },
         });
 
-        // Atualiza a lista de barbearias removendo a barbearia deletada
-        setBarbershops(
-          barbershops.filter((barbershop) => barbershop.id !== id)
-        );
+        setBarbershops(barbershops.filter((barbershop) => barbershop.id !== id));
       }
     } catch (err) {
       Swal.fire({
@@ -108,6 +103,7 @@ const BarbershopListPage = () => {
       });
     }
   };
+
   const handleBarbershopLogoError = (e) => {
     e.target.src = "images/logo.png";
   };
@@ -115,102 +111,94 @@ const BarbershopListPage = () => {
   return (
     <>
       <NavlogComponent />
-      <Container>
-        <Row className="">
-          <Col>
-            <p className="labellight text-center ">Minhas barbearias</p>
-            {isLoading ? (
-              <ProcessingIndicatorComponent messages={messages} />
-            ) : (
-              <>
-                <Link to={`/barbershop/create`}>
-                  <Button className="btn btn-primary w-50">
-                    Cadastrar nova barbearia
-                  </Button>
-                </Link>
-
-                {barbershops.map((barbershop) => (
-                  <Col md={12} key={barbershop.id} className="">
-                    <Card className="card-barbershop-show p-4">
-                      <Row>
-                        <Col md={4} className="">
-                          <div
-                            className="background-image"
-                            style={{
-                              backgroundImage: `url('${storageUrl}/${
-                                barbershop.logo || "images/logo.png"
-                              }')`,
-                            }}
-                          />
-                          <Link
-                            to={`/barbershop/view/${barbershop.slug}`}
-                            style={{ textDecoration: "none" }}
-                          >
-                            <img
-                              src={`${storageUrl}/${
-                                barbershop.logo || "images/logo.png"
-                              }`}
-                              className="rounded-circle img-logo-barbershop-show"
-                              style={{
-                                margin: "0 auto",
-                                display: "block",
-                                width: "60px", // Define o tamanho menor para a logo
-                                height: "60px", // Define o tamanho menor para a logo
-                              }}
-                              alt={barbershop.name}
-                              onError={handleBarbershopLogoError}
-                            />
-                          </Link>
-                        </Col>
-
-                        <Col md={6} className="">
-                          <Link
-                            to={`/barber/include/${barbershop.slug}`}
-                            style={{ textDecoration: "none" }}
-                            className=" m-2 w-100"
-                          >
-                            <Button className="primary m-1 ">Barbeiros</Button>
-                          </Link>
-                          <Link
-                            to={`/item/list/${barbershop.slug}`}
-                            style={{ textDecoration: "none" }}
-                            className=" m-2 w-100"
-                          >
-                            <Button className="primary m-1 ">Itens</Button>
-                          </Link>
-                          <Link
-                            to={`/scheduling/list/${barbershop.slug}`}
-                            style={{ textDecoration: "none" }}
-                            className=" m-2 w-100"
-                          >
-                            <Button className="primary m-1 ">
-                              Agendamentos
-                            </Button>
-                          </Link>{" "}
-                          <Link
-                            to={`/barbershop/update/${barbershop.id}`}
-                            style={{ textDecoration: "none" }}
-                            className=" m-2 w-100"
-                          >
-                            <Button className="primary m-1 ">Editar</Button>
-                          </Link>{" "}
-                          <Link
-                            onClick={() => handleDelete(barbershop.id)}
-                            style={{ textDecoration: "none" }}
-                            className=" m-2 w-100 "
-                          >
-                            <Button className="bg-danger primary m-1 ">
-                              {" "}
-                              Deletar{" "}
-                            </Button>
-                          </Link>
-                        </Col>
-                      </Row>
-                    </Card>
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">Minhas Barbearias</p>
+              <Card.Body className="card-body">
+                <div className="mb-3 text-center">
+                  <Link to="/barbershop/create" className="link-component">
+                    <Button variant="primary" className="action-button">
+                      Cadastrar Nova Barbearia
+                    </Button>
+                  </Link>
+                </div>
+                {isLoading ? (
+                  <Col xs={12} className="loading-section">
+                    <ProcessingIndicatorComponent messages={messages} />
                   </Col>
-                ))}
-              </>
-            )}
+                ) : (
+                  <>
+                    {barbershops.length > 0 ? (
+                      <Row className="inner-row">
+                        {barbershops.map((barbershop) => {
+                          const bgImage = `${storageUrl}/${barbershop.logo || "images/logo.png"}`;
+                          return (
+                            <Col key={barbershop.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                              <Card className="inner-card h-100">
+                                {/* Background Image with Blur Effect */}
+                                <div
+                                  className="card-bg"
+                                  style={{ backgroundImage: `url('${bgImage}')` }}
+                                />
+                                {/* Card Content Overlay */}
+                                <Card.Body className="inner-card-body d-flex flex-column justify-content-between">
+                                  <div className="text-center">
+                                    <Link to={`/barbershop/view/${barbershop.slug}`} className="link-component">
+                                      <img
+                                        src={bgImage}
+                                        className="img-component mb-3"
+                                        alt={barbershop.name}
+                                        onError={handleBarbershopLogoError}
+                                      />
+                                      <p className="item-title">{barbershop.name}</p>
+                                    </Link>
+                                  </div>
+                                  <div className="d-flex flex-wrap justify-content-center">
+                                    <Link to={`/barber/include/${barbershop.slug}`} className="link-component m-1">
+                                      <Button variant="secondary" className="action-button">
+                                        Barbeiros
+                                      </Button>
+                                    </Link>
+                                    <Link to={`/item/list/${barbershop.slug}`} className="link-component m-1">
+                                      <Button variant="secondary" className="action-button">
+                                        Itens
+                                      </Button>
+                                    </Link>
+                                    <Link to={`/scheduling/list/${barbershop.slug}`} className="link-component m-1">
+                                      <Button variant="secondary" className="action-button">
+                                        Agendamentos
+                                      </Button>
+                                    </Link>
+                                    <Link to={`/barbershop/update/${barbershop.id}`} className="link-component m-1" style={{ textDecoration: "none" }}>
+                                      <Button variant="secondary" className="action-button">
+                                        Editar
+                                      </Button>
+                                    </Link>
+                                    <Button
+                                      variant="danger"
+                                      className="action-button m-1"
+                                      onClick={() => handleDelete(barbershop.id)}
+                                    >
+                                      Deletar
+                                    </Button>
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Col>
+                          );
+                        })}
+                      </Row>
+                    ) : (
+                      <Col xs={12} className="empty-section text-center">
+                        <p className="empty-text">Nenhuma barbearia encontrada.</p>
+                      </Col>
+                    )}
+                  </>
+                )}
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </Container>

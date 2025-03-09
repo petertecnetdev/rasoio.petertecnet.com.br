@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button, Form, Container, Row, Col, Card } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-import { apiBaseUrl } from "../../config"; // Importando o apiBaseUrl
-import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Importando o componente de indicador de processamento
-import './css/Auth.css'; 
+import { apiBaseUrl } from "../../config";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import './css/Auth.css';
 
 const PasswordEmailPage = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +14,7 @@ const PasswordEmailPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setShowProcessing(true); // Exibe o indicador de processamento
+    setShowProcessing(true);
 
     try {
       const response = await axios.post(`${apiBaseUrl}/auth/password-email`, { email });
@@ -23,7 +23,7 @@ const PasswordEmailPage = () => {
         title: 'Sucesso!',
         text: response.data.message || 'Código enviado para o e-mail com sucesso! Verifique seu email.',
         icon: 'success',
-        showCancelButton: true, // Habilita o botão de cancelar
+        showCancelButton: true,
         confirmButtonText: 'Recebi o Código',
         cancelButtonText: 'Não recebi o Código',
         customClass: {
@@ -33,19 +33,17 @@ const PasswordEmailPage = () => {
         },
       }).then((result) => {
         if (result.isConfirmed) {
-          // O usuário confirmou que recebeu o código
-          window.location.href = '/password-reset'; // Redireciona para a página de redefinição de senha
+          window.location.href = '/password-reset';
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          // O usuário não recebeu o código
           Swal.fire({
             title: 'Reenviar Código',
             text: 'Por favor, digite seu e-mail novamente para reenviar o código.',
             input: 'email',
             inputPlaceholder: 'Digite seu e-mail',
-            inputValue: email, // Manter o email previamente preenchido
+            inputValue: email,
             showCancelButton: true,
             confirmButtonText: 'Reenviar Código',
-            cancelButtonText: 'Cancelar', 
+            cancelButtonText: 'Cancelar',
             customClass: {
               popup: 'custom-swal',
               title: 'custom-swal-title',
@@ -53,9 +51,8 @@ const PasswordEmailPage = () => {
             },
           }).then((resendResult) => {
             if (resendResult.isConfirmed) {
-              // Envia o código novamente
               setEmail(resendResult.value);
-              handleSubmit(e); // Chama o envio do código novamente
+              handleSubmit(e);
             }
           });
         }
@@ -74,58 +71,43 @@ const PasswordEmailPage = () => {
       });
     } finally {
       setLoading(false);
-      setShowProcessing(false); // Esconde o indicador de processamento
+      setShowProcessing(false);
     }
   };
 
   return (
-    <Container fluid className="login-container" style={{ height: '100vh' }}>
-      <Row className="vh-100">
-        <Col
-          md={12}
-          className="d-flex align-items-center justify-content-center position-relative"
-          style={{
-            background: `url('/images/background-2.png') no-repeat center center`,
-            backgroundSize: 'cover',
-            height: '100vh',
-          }}
-        >
-          {/* Exibe o indicador de processamento se showProcessing for true */}
+    <Container fluid className="page-container">
+      <Row className="page-row">
+        <Col md={12} className="page-col">
           {showProcessing ? (
             <ProcessingIndicatorComponent messages={['Enviando código...', 'Por favor, aguarde...']} />
           ) : (
-            <Card className="login-card">
-                <p className="labeltitle h7 text-uppercase">Recuperar senha</p>
-              <Card.Body>
-                <div className="text-center mb-4">
+            <Card className="card-container">
+              <p className="page-header text-uppercase">Recuperar Senha</p>
+              <Card.Body className="card-body">
+                <div className="logo-container">
                   <img
                     src="/images/logo.png"
                     alt="Logo"
-                    className="logo rounded-circle"
-                    style={{ width: '80px', height: '80px' }}
+                    className="logo-image"
                   />
                 </div>
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
+                <Form onSubmit={handleSubmit} className="form-container">
+                  <Form.Group className="form-group">
                     <Form.Control
                       type="email"
                       placeholder="Digite seu e-mail"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      className="input-email"
                     />
                   </Form.Group>
-                  
-                  <Button
-                    type="submit"
-                    className="btn btn-primary w-100"
-                    disabled={loading}
-                  >
+                  <Button type="submit" className="submit-btn" disabled={loading}>
                     {loading ? 'Enviando...' : 'Enviar Código'}
                   </Button>
-
-                  <p className="forgot-password text-center mt-3">
-                    Voltar para <a href="/login" className="auth-link">Login</a>
+                  <p className="footer-text">
+                    Voltar para <a href="/login" className="footer-link">Login</a>
                   </p>
                 </Form>
               </Card.Body>

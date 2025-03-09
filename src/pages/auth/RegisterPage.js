@@ -17,11 +17,11 @@ class RegisterPage extends Component {
     };
   }
 
-  onChangefirst_name = (e) => {
+  onChangeFirstName = (e) => {
     this.setState({ first_name: e.target.value });
   };
 
-  onChangeemail = (e) => {
+  onChangeEmail = (e) => {
     this.setState({ email: e.target.value });
   };
 
@@ -49,7 +49,7 @@ class RegisterPage extends Component {
           popup: "custom-swal",
           title: "custom-swal-title",
           content: "custom-swal-text",
-        }, // Vermelho para erro
+        },
       });
       return;
     }
@@ -63,11 +63,8 @@ class RegisterPage extends Component {
         password,
       };
 
-      // Realizando a requisição diretamente à API
-      const response = await axios.post(
-        `${apiBaseUrl}/auth/register`,
-        userObject
-      );
+      // Requisição para registrar o usuário
+      const response = await axios.post(`${apiBaseUrl}/auth/register`, userObject);
 
       const modalMessage = response?.data?.message || "Registro bem-sucedido";
 
@@ -81,9 +78,8 @@ class RegisterPage extends Component {
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
-        iconColor: "#28a745", // Verde para sucesso
+        iconColor: "#28a745",
       }).then(() => {
-        // Redirecionando para a página de login após o clique no "Ok"
         window.location.href = "/login";
       });
 
@@ -117,7 +113,7 @@ class RegisterPage extends Component {
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
-        iconColor: "#dc3545", // Vermelho para erro
+        iconColor: "#dc3545",
       });
 
       this.setState({ loading: false });
@@ -128,85 +124,70 @@ class RegisterPage extends Component {
     const { loading } = this.state;
 
     return (
-      <Container fluid>
+      <Container fluid className="page-container">
         {loading && (
-          <ProcessingIndicatorComponent
-            messages={["Registrando usuário...", "Por favor, aguarde..."]}
-          />
-        )}{" "}
-        {/* Exibindo o indicador de processamento */}
-        {/* Condicional para esconder os elementos enquanto o formulário estiver carregando */}
+          <ProcessingIndicatorComponent messages={["Registrando usuário...", "Por favor, aguarde..."]} />
+        )}
         {!loading && (
-          <Row>
-            <Col
-              md={12}
-              className="d-flex align-items-center justify-content-center"
-            >
-              <Card>
-                <p className="labeltitle h7 text-uppercase">Registre-se</p>
-                <Card.Body>
-                  <div className="text-center">
+          <Row className="page-row">
+            <Col md={12} className="page-col">
+              <Card className="card-container">
+                <p className="page-header text-uppercase">Registre-se</p>
+                <Card.Body className="card-body">
+                  <div className="logo-container">
                     <img
                       src="/images/logo.png"
                       alt="Logo"
-                      className="logo rounded-circle img-thumbnail m-4"
+                      className="logo-image"
                       style={{ width: "80px", height: "80px" }}
                     />
                   </div>
-                  <Form onSubmit={this.onSubmit}>
-                    <Form.Group className="mb-3">
+                  <Form onSubmit={this.onSubmit} className="form-container">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="text"
                         placeholder="Nome"
-                        onChange={this.onChangefirst_name}
+                        onChange={this.onChangeFirstName}
                         value={this.state.first_name}
+                        className="input-text"
                       />
                     </Form.Group>
-                    <Form.Group className="mb-3">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="email"
                         placeholder="Insira o Email"
-                        onChange={this.onChangeemail}
+                        onChange={this.onChangeEmail}
                         value={this.state.email}
+                        className="input-email"
                       />
                     </Form.Group>
-                    <Form.Group className="mb-3">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="password"
                         placeholder="Insira a Senha"
                         onChange={this.onChangePassword}
                         value={this.state.password}
+                        className="input-password"
                       />
                     </Form.Group>
-                    <Form.Group className="mb-3">
+                    <Form.Group className="form-group">
                       <Form.Control
                         type="password"
                         placeholder="Confirme a Senha"
                         onChange={this.onChangeConfirmPassword}
                         value={this.state.confirmPassword}
+                        className="input-password-confirm"
                       />
                     </Form.Group>
-
-                    <Button
-                      type="submit"
-                      disabled={loading}
-                      className="btn btn-primary w-100"
-                    >
+                    <Button type="submit" disabled={loading} className="submit-btn">
                       {loading ? "Registrando..." : "Registrar"}
                     </Button>
-                    <p className="forgot-password text-right text-center mt-3">
-                      Já está registrado?{" "}
-                      <a href="/login" className="auth-link">
-                        Entrar
-                      </a>
+                    <p className="footer-text">
+                      Já está registrado? <a href="/login" className="footer-link">Entrar</a>
                     </p>
-                    <p className="forgot-password text-right text-center mt-3">
-                      Esqueceu a senha?{" "}
-                      <a href="/password-email" className="auth-link">
-                        Recuperar senha
-                      </a>
+                    <p className="footer-text">
+                      Esqueceu a senha? <a href="/password-email" className="footer-link">Recuperar senha</a>
                     </p>
-                    
                   </Form>
                 </Card.Body>
               </Card>

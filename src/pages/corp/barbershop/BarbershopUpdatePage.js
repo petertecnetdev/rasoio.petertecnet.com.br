@@ -4,8 +4,7 @@ import NavlogComponent from "../../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../../components/ProcessingIndicatorComponent";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { apiBaseUrl } from "../../../config";
-import { storageUrl } from "../../../config";
+import { apiBaseUrl, storageUrl } from "../../../config";
 import { useParams } from "react-router-dom";
 
 const BarbershopUpdatePage = () => {
@@ -30,34 +29,35 @@ const BarbershopUpdatePage = () => {
 
   const [originalData, setOriginalData] = useState({});
   const [logoPreview, setLogoPreview] = useState(null);
+
   useEffect(() => {
     const fetchBarbershopData = async () => {
       try {
-        const response = await axios.get(
-          `${apiBaseUrl}/barbershop/show/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setBarbershopData({
-          logo: response.data.barbershop.logo || null,
-          name: response.data.barbershop.name || "",
-          email: response.data.barbershop.email || "",
-          address: response.data.barbershop.address || "",
-          city: response.data.barbershop.city || "",
-          description: response.data.barbershop.description || "",
-          phone: response.data.barbershop.phone || "",
-          state: response.data.barbershop.state || "",
-          zipcode: response.data.barbershop.zipcode || "",
-          website: response.data.barbershop.website || "",
-          facebook: response.data.barbershop.facebook || "",
-          instagram: response.data.barbershop.instagram || "",
-          location: response.data.barbershop.location || "",
+        const response = await axios.get(`${apiBaseUrl}/barbershop/show/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
-        setOriginalData(response.data.barbershop);
-        setLogoPreview(storageUrl + "/" + response.data.barbershop.logo);
+        const { barbershop } = response.data;
+        setBarbershopData({
+          logo: barbershop.logo || null,
+          name: barbershop.name || "",
+          email: barbershop.email || "",
+          address: barbershop.address || "",
+          city: barbershop.city || "",
+          description: barbershop.description || "",
+          phone: barbershop.phone || "",
+          state: barbershop.state || "",
+          zipcode: barbershop.zipcode || "",
+          website: barbershop.website || "",
+          facebook: barbershop.facebook || "",
+          instagram: barbershop.instagram || "",
+          location: barbershop.location || "",
+        });
+        setOriginalData(barbershop);
+        if (barbershop.logo) {
+          setLogoPreview(`${storageUrl}/${barbershop.logo}`);
+        }
       } catch (error) {
         console.error("Erro ao buscar dados da barbearia:", error);
         Swal.fire({
@@ -130,17 +130,14 @@ const BarbershopUpdatePage = () => {
     }));
   };
 
-  // No trecho da função handleSubmit, remova a definição manual do header "Content-Type".
-  // Assim, altere os headers para:
-
   const handleSubmit = async (event) => {
+    event.preventDefault();
     setIsProcessing(true);
     setMessages(["Aguarde enquanto atualizamos sua barbearia..."]);
-    event.preventDefault();
 
     const formData = new FormData();
 
-    // Adicionando a logo ao formData
+    // Se houver logoPreview, convertemos em Blob para envio
     if (logoPreview) {
       try {
         const logoBlob = await fetch(logoPreview).then((res) => res.blob());
@@ -150,7 +147,7 @@ const BarbershopUpdatePage = () => {
       }
     }
 
-    // Adicionando os outros campos ao formData
+    // Adicionando os outros campos ao formData somente se mudarem em relação ao original
     Object.keys(barbershopData).forEach((key) => {
       if (key !== "logo" && barbershopData[key] !== originalData[key]) {
         formData.append(key, barbershopData[key]);
@@ -163,11 +160,7 @@ const BarbershopUpdatePage = () => {
         "Content-Type": "multipart/form-data",
       };
 
-      const response = await axios.post(
-        `${apiBaseUrl}/barbershop/${id}`,
-        formData,
-        { headers }
-      );
+      const response = await axios.post(`${apiBaseUrl}/barbershop/${id}`, formData, { headers });
       console.log("Response:", response.data);
 
       Swal.fire({
@@ -233,227 +226,236 @@ const BarbershopUpdatePage = () => {
   return (
     <>
       <NavlogComponent />
-      <p className="labeltitle h2 text-center text-uppercase">
-        Atualizar Barbearia
-      </p>
-      <Container>
-        {isProcessing ? (
-          <ProcessingIndicatorComponent messages={messages} />
-        ) : (
-          <Card>
-            <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Row>
-                  <Col md={12}>
-                    <Col md={12}>
-                      {" "}
-                      <div className="text-center">
-                        <label
-                          htmlFor="logoInput"
-                          style={{ cursor: "pointer", display: "block" }}
-                        >
-                          {logoPreview ? (
-                            <img
-                              src={logoPreview}
-                              alt="Preview da Logo"
-                              className="img-fluid rounded-circle img-user-avatar"
-                              onError={handleimageerror}
-                              style={{
-                                margin: "0 auto",
-                                display: "block",
-                                width: "150px", // Define o tamanho menor para a logo
-                                height: "150px", // Define o tamanho menor para a logo
-                              }}
-                            />
-                          ) : (
-                            <img
-                              src="/images/barbershoplogo.png"
-                              alt={barbershopData.name}
-                              onError={handleimageerror}
-                              className="img-fluid rounded-circle img-logo-barbershop"
-                              style={{
-                                margin: "0 auto",
-                                display: "block",
-                                width: "150px", // Define o tamanho menor para a logo
-                                height: "150px", // Define o tamanho menor para a logo
-                              }}
-                            />
-                          )}
-                        </label>
-                        <Button
-                          variant="secondary"
-                          className="w-50 m-2"
-                          onClick={() =>
-                            document.getElementById("logoInput").click()
-                          }
-                        >
-                          Adicionar logo
-                        </Button>
-                        <Form.Control
-                          id="logoInput"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoChange}
-                          style={{ display: "none" }}
-                          required
-                        />
-                      </div>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formName">
-                        <Form.Label>Nome</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="name"
-                          value={barbershopData.name || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formEmail">
-                        <Form.Label>Email</Form.Label>
-                        <Form.Control
-                          type="email"
-                          name="email"
-                          value={barbershopData.email || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formPhone">
-                        <Form.Label>Telefone</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="phone"
-                          value={barbershopData.phone || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId="formCity">
-                        <Form.Label>Cidade</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="city"
-                          value={barbershopData.city || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group controlId="formAddress">
-                        <Form.Label>Endereço</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="address"
-                          value={barbershopData.address || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId="formZipcode">
-                        <Form.Label>CEP</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="zipcode"
-                          value={barbershopData.zipcode || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId="formState">
-                        <Form.Label>UF</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="state"
-                          value={barbershopData.state || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={12}>
-                      <Form.Group controlId="formState">
-                        <Form.Label>URL Google Maps</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="location"
-                          value={barbershopData.location || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formWebsite">
-                        <Form.Label>Website</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="website"
-                          value={barbershopData.website || ""}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formFacebook">
-                        <Form.Label>Facebook</Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="facebook"
-                          value={barbershopData.facebook || ""}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId="formInstagram">
-                        <Form.Label>Instagram</Form.Label>
-
-                        <Form.Control
-                          type="text"
-                          name="instagram"
-                          value={barbershopData.instagram || ""}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col>
-                      <Form.Group controlId="formDescription">
-                        <Form.Label>Descrição</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={3}
-                          name="description"
-                          value={barbershopData.description || ""}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">Atualizar Barbearia</p>
+              <Card.Body className="card-body">
+                {isProcessing ? (
+                  <Col xs={12} className="loading-section">
+                    <ProcessingIndicatorComponent messages={messages} />
                   </Col>
-                </Row>
-                <div className="text-center">
-                  <Button variant="primary m-2" type="submit">
-                    Atualizar Barbearia
-                  </Button>
-                </div>
-              </Form>
-            </Card.Body>
-          </Card>
-        )}
+                ) : (
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      {/* Logo Preview e Upload */}
+                      <Col xs={12} className="mb-4 text-center">
+                        <div>
+                          <label htmlFor="logoInput" style={{ cursor: "pointer" }}>
+                            {logoPreview ? (
+                              <img
+                                src={logoPreview}
+                                alt="Preview da Logo"
+                                className="img-component"
+                                onError={handleimageerror}
+                              />
+                            ) : (
+                              <img
+                                src="/images/barbershoplogo.png"
+                                alt={barbershopData.name}
+                                onError={handleimageerror}
+                                className="img-component"
+                              />
+                            )}
+                          </label>
+                          <div className="mt-3">
+                            <Button
+                              variant="secondary"
+                              className="action-button"
+                              onClick={() => document.getElementById("logoInput").click()}
+                            >
+                              Adicionar logo
+                            </Button>
+                          </div>
+                          <Form.Control
+                            id="logoInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            style={{ display: "none" }}
+                          />
+                        </div>
+                      </Col>
+
+                      {/* Nome */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formName">
+                          <Form.Label>Nome</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={barbershopData.name || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Email */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formEmail">
+                          <Form.Label>Email</Form.Label>
+                          <Form.Control
+                            type="email"
+                            name="email"
+                            value={barbershopData.email || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Telefone */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formPhone">
+                          <Form.Label>Telefone</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="phone"
+                            value={barbershopData.phone || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Cidade */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="formCity">
+                          <Form.Label>Cidade</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="city"
+                            value={barbershopData.city || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col> {/* UF */}
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="formState">
+                          <Form.Label>UF</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="state"
+                            value={barbershopData.state || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+
+                      {/* Endereço */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formAddress">
+                          <Form.Label>Endereço</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="address"
+                            value={barbershopData.address || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* CEP */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="formZipcode">
+                          <Form.Label>CEP</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="zipcode"
+                            value={barbershopData.zipcode || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                     
+                      {/* URL Google Maps */}
+                      <Col md={12} className="mb-3">
+                        <Form.Group controlId="formLocation">
+                          <Form.Label>URL Google Maps</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="location"
+                            value={barbershopData.location || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Website */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formWebsite">
+                          <Form.Label>Website</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="website"
+                            value={barbershopData.website || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Facebook */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formFacebook">
+                          <Form.Label>Facebook</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="facebook"
+                            value={barbershopData.facebook || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Instagram */}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formInstagram">
+                          <Form.Label>Instagram</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="instagram"
+                            value={barbershopData.instagram || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Descrição */}
+                      <Col md={12} className="mb-3">
+                        <Form.Group controlId="formDescription">
+                          <Form.Label>Descrição</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="description"
+                            value={barbershopData.description || ""}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <div className="text-center">
+                      <Button variant="primary" type="submit" className="action-button">
+                        Atualizar Barbearia
+                      </Button>
+                    </div>
+                  </Form>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     </>
   );
