@@ -15,7 +15,7 @@ const ItemListPage = () => {
   const [messages, setMessages] = useState([]);
 
   const handleImageError = (e) => {
-    e.target.src = "/images/user.png";
+    e.target.src = "images/logo.png";
   };
 
   const fetchBarbershopAndItems = async () => {
@@ -27,7 +27,10 @@ const ItemListPage = () => {
         "Content-Type": "multipart/form-data",
       };
 
-      const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, { headers });
+      const response = await axios.get(
+        `${apiBaseUrl}/barbershop/view/${slug}`,
+        { headers }
+      );
       setBarbershop(response.data.barbershop);
       setItems(response.data.items);
     } catch (error) {
@@ -39,7 +42,8 @@ const ItemListPage = () => {
         });
         Swal.fire({
           title: "Erro",
-          text: errorMessage.trim() || "Erro ao carregar informações da barbearia.",
+          text:
+            errorMessage.trim() || "Erro ao carregar informações da barbearia.",
           icon: "error",
           confirmButtonText: "OK",
           customClass: {
@@ -51,7 +55,9 @@ const ItemListPage = () => {
       } else {
         Swal.fire({
           title: "Erro",
-          text: error.response?.data?.error || "Erro ao carregar informações da barbearia.",
+          text:
+            error.response?.data?.error ||
+            "Erro ao carregar informações da barbearia.",
           icon: "error",
           confirmButtonText: "OK",
           customClass: {
@@ -143,17 +149,21 @@ const ItemListPage = () => {
   return (
     <>
       <NavlogComponent />
+      <p className="section-title text-center">
+        {barbershop ? `Itens de ${barbershop.name}` : "Itens da Barbearia"}
+      </p>
+
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
             <Card className="card-component shadow-sm">
-              <p className="section-title text-center">
-                {barbershop ? `Itens de ${barbershop.name}` : "Itens da Barbearia"}
-              </p>
               <Card.Body className="card-body">
                 <div className="mb-3 text-center">
                   {barbershop && (
-                    <Link to={`/item/create/${barbershop.slug}`} className="link-component">
+                    <Link
+                      to={`/item/create/${barbershop.slug}`}
+                      className="link-component"
+                    >
                       <Button variant="primary" className="action-button">
                         Cadastrar Novo Item
                       </Button>
@@ -172,20 +182,31 @@ const ItemListPage = () => {
                         {items.map((item) => {
                           const bgImage = item.image
                             ? `${storageUrl}/${item.image}`
-                            : "/images/user.png";
+                            : "/images/logo.png";
                           return (
-                            <Col key={item.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                            <Col
+                              key={item.id}
+                              xs={12}
+                              md={6}
+                              lg={4}
+                              className="inner-col mb-4"
+                            >
                               <Card className="inner-card h-100">
                                 <div
                                   className="card-bg"
-                                  style={{ backgroundImage: `url('${bgImage}')` }}
+                                  style={{
+                                    backgroundImage: `url('${bgImage}')`,
+                                  }}
                                 />
                                 <Card.Body className="inner-card-body d-flex flex-column justify-content-between">
                                   <div className="text-center">
-                                    <Link to={`/item/view/${item.slug}`} className="link-component">
+                                    <Link
+                                      to={`/item/view/${item.slug}`}
+                                      className="link-component"
+                                    >
                                       <img
                                         src={bgImage}
-                                        className="img-component mb-3"
+                                        className="img-item-component m-4"
                                         alt={item.name}
                                         onError={handleImageError}
                                       />
@@ -199,29 +220,20 @@ const ItemListPage = () => {
                                     </p>
                                     <p>
                                       <strong>Tipo:</strong>{" "}
-                                      {item.type === "produto" ? "Produto" : "Serviço"}
+                                      {item.type === "produto"
+                                        ? "Produto"
+                                        : "Serviço"}
                                     </p>
-                                    <p>
-                                      <strong>Subcategoria:</strong> {item.subcategory}
-                                    </p>
-                                    <p>
-                                      <strong>Marca:</strong> {item.brand}
-                                    </p>
-                                    {item.availability_start && item.availability_end && (
-                                      <p>
-                                        <strong>Disponibilidade:</strong>{" "}
-                                        {new Date(item.availability_start).toLocaleDateString("pt-BR")}{" "}
-                                        até{" "}
-                                        {new Date(item.availability_end).toLocaleDateString("pt-BR")}
-                                      </p>
-                                    )}
                                   </div>
                                   <div className="d-flex flex-wrap justify-content-center">
                                     <Link
                                       to={`/item/update/${item.id}`}
                                       className="link-component m-1"
                                     >
-                                      <Button variant="secondary" className="action-button">
+                                      <Button
+                                        variant="secondary"
+                                        className="action-button"
+                                      >
                                         Editar
                                       </Button>
                                     </Link>

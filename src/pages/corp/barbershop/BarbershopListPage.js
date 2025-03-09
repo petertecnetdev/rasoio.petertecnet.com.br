@@ -111,11 +111,11 @@ const BarbershopListPage = () => {
   return (
     <>
       <NavlogComponent />
+      <p className="section-title text-center">Minhas Barbearias</p>
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
             <Card className="card-component shadow-sm">
-              <p className="section-title text-center">Minhas Barbearias</p>
               <Card.Body className="card-body">
                 <div className="mb-3 text-center">
                   <Link to="/barbershop/create" className="link-component">

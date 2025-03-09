@@ -278,7 +278,7 @@ const ItemCreatePage = () => {
     <>
       <NavlogComponent />
       {/* Título seguindo o padrão do BarbershopCreatePage */}
-      <p className="section-title text-center">Criar Item</p>
+      <p className="section-title text-center">Novo Item</p>
 
       {/* Container e Row seguindo o mesmo layout do BarbershopCreatePage */}
       <Container className="main-container" fluid>

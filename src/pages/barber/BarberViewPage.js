@@ -31,8 +31,8 @@ const BarberViewPage = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-
         const { barber, user } = response.data;
+
         setBarber(barber || {});
         setUser(user || {});
         setBarbershops(barber?.barbershops || []);
@@ -45,9 +45,11 @@ const BarberViewPage = () => {
         });
       }
     };
+
     fetchBarberData();
   }, [username]);
 
+  // Calcula a idade do barbeiro
   const calculateAge = (birthdate) => {
     if (!birthdate) return "Não disponível";
     const today = new Date();
@@ -60,22 +62,27 @@ const BarberViewPage = () => {
     return age;
   };
 
+  // Fallback para o avatar do barbeiro
   const handleBarberAvatarError = (e) => {
     if (e.target.src.includes("/images/user.png")) return;
     e.target.src = "/images/user.png";
   };
+
+  // Fallback para o logo da barbearia
   const handleBarbershopLogoError = (e) => {
-    e.target.src = "images/logo.png";
+    if (e.target.src.includes("/images/logo.png")) return;
+    e.target.src = "/images/logo.png";
   };
 
   return (
     <>
       <NavlogComponent />
- <Container className="main-container" fluid>
+      <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
             {barber && user ? (
               <>
+                {/* Informações do barbeiro */}
                 <Row className="barber-info-row">
                   <Col md={12} className="barber-info-col">
                     <Card className="card-component barber-info-card shadow-sm">
@@ -123,6 +130,7 @@ const BarberViewPage = () => {
                     </Card>
                   </Col>
 
+                  {/* Descrição do barbeiro, se houver */}
                   {barber.description && (
                     <Col md={6} className="barber-description-col mt-4">
                       <Card className="card-component barber-description-card shadow-sm">
@@ -136,6 +144,7 @@ const BarberViewPage = () => {
                   )}
                 </Row>
 
+                {/* Lista de barbearias associadas ao barbeiro */}
                 <Row className="barbershops-row mt-4">
                   <Col md={12} className="barbershops-col">
                     <Card className="card-component barbershops-card shadow-sm">
@@ -151,27 +160,37 @@ const BarberViewPage = () => {
                               key={barbershop.id}
                               className="barbershop-card-col mt-3"
                             >
-                              <Card className="barbershop-card shadow-sm">
-                                <Link to={`/barbershop/view/${barbershop.slug}`}>
-                                
-                                </Link>
-                             <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
-                                                             <Link
-                                                               to={`/barbershop/view/${barbershop.slug}`}
-                                                               className="link-component"
-                                                             >
-                                                               {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
-                                                               <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
-                                                                <img
-                                                                                                     src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
-                                                                                                     className="img-component"
-                                                                                                     alt={barbershop.name}
-                                                                                                     onError={handleBarbershopLogoError}
-                                                                                                   />
-                                                                 <p className="item-title mt-2 mt-sm-0 ms-sm-2">{barbershop.name}</p>
-                                                               </div>
-                                                             </Link>
-                                                           </Card.Body>
+                              {/* Usando o card conforme solicitado */}
+                              <Card className="inner-card h-100">
+                                <div
+                                  className="card-bg"
+                                  style={{
+                                    backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`,
+                                  }}
+                                />
+                                <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
+                                  <Link
+                                    to={`/barbershop/view/${barbershop.slug}`}
+                                    className="link-component"
+                                  >
+                                    {/* Disposição responsiva do logo e nome */}
+                                    <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
+                                      <img
+                                        src={
+                                          barbershop.logo
+                                            ? `${storageUrl}/${barbershop.logo}`
+                                            : "/images/logo.png"
+                                        }
+                                        className="img-component"
+                                        alt={barbershop.name}
+                                        onError={handleBarbershopLogoError}
+                                      />
+                                      <p className="item-title mt-2 mt-sm-0 ms-sm-2">
+                                        {barbershop.name}
+                                      </p>
+                                    </div>
+                                  </Link>
+                                </Card.Body>
                               </Card>
                             </Col>
                           ))}
@@ -182,6 +201,7 @@ const BarberViewPage = () => {
                 </Row>
               </>
             ) : (
+              // Exibe indicador de processamento se dados ainda não estiverem disponíveis
               <ProcessingIndicatorComponent
                 messages={[
                   "Carregando os dados do barbeiro...",

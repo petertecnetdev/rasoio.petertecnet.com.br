@@ -1,3 +1,4 @@
+// SchedulingCreatePage.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,39 +9,36 @@ import axios from "axios";
 import { apiBaseUrl } from "../../config";
 
 const SchedulingCreatePage = () => {
-  const { slug } = useParams(); // O slug da barbearia é passado na URL
+  const { slug } = useParams();
   const navigate = useNavigate();
 
   const [barbershop, setBarbershop] = useState(null);
   const [barbers, setBarbers] = useState([]);
   const [items, setItems] = useState([]);
   const [barbershopId, setBarbershopId] = useState(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
 
-  // Dados do agendamento visíveis para o usuário
-  // Os campos do formulário são:
-  // - Data e Hora do Agendamento
-  // - Seleção de Barbeiro
-  // - Tipo do Agendamento (select)
-  // - Observações
-  // - Seleção dos Serviços
+  // Dados do agendamento
   const [schedulingData, setSchedulingData] = useState({
     scheduled_at: "",
     provider_id: "",
     appointment_type: "",
     notes: "",
-    service_ids: []
+    service_ids: [],
   });
 
-  // Busca os dados da barbearia, barbeiros e serviços
   useEffect(() => {
     const fetchBarbershop = async () => {
       setMessages(["Carregando informações da barbearia e serviços..."]);
       try {
         const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
+
         const barbershopData = response.data.barbershop || response.data;
         setBarbershop(barbershopData);
         setBarbershopId(barbershopData.id);
@@ -49,8 +47,7 @@ const SchedulingCreatePage = () => {
         window.scrollTo(0, 0);
       } catch (error) {
         const errorMessage =
-          error.response?.data?.message ||
-          "Erro ao carregar informações da barbearia.";
+          error.response?.data?.message || "Erro ao carregar informações da barbearia.";
         Swal.fire({
           icon: "error",
           title: "Erro!",
@@ -71,13 +68,12 @@ const SchedulingCreatePage = () => {
     }
   }, [slug]);
 
-  // Atualiza os campos do formulário
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSchedulingData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // Atualiza os serviços selecionados
+  // Atualiza serviços selecionados
   const handleServiceSelection = (e, itemId) => {
     const checked = e.target.checked;
     setSchedulingData((prevData) => {
@@ -91,7 +87,7 @@ const SchedulingCreatePage = () => {
     });
   };
 
-  // Valida os campos obrigatórios
+  // Validação dos campos
   const validateFields = () => {
     const errors = [];
     if (!schedulingData.scheduled_at) {
@@ -124,7 +120,6 @@ const SchedulingCreatePage = () => {
     return true;
   };
 
-  // Submete o formulário para criar o agendamento
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validateFields()) return;
@@ -142,15 +137,15 @@ const SchedulingCreatePage = () => {
     setIsProcessing(true);
     setMessages(["Aguarde enquanto criamos o agendamento..."]);
 
-    // Cada serviço tem uma duração média de 25 minutos
+    // Cada serviço dura ~25 minutos
     const BASE_DURATION = 25; // minutos
     const totalDuration = schedulingData.service_ids.length * BASE_DURATION;
 
-    // Calcula o expected_end_time baseado na data de agendamento e na duração total
+    // Calcula expected_end_time
     const scheduledAtDate = new Date(schedulingData.scheduled_at);
     const expectedEndTimeDate = new Date(scheduledAtDate.getTime() + totalDuration * 60000);
 
-    // Recupera os dados do usuário autenticado para obter o client_id
+    // Tenta obter o client_id a partir de /auth/me
     let clientId = localStorage.getItem("client_id");
     try {
       const authResponse = await axios.get(`${apiBaseUrl}/auth/me`, {
@@ -158,11 +153,9 @@ const SchedulingCreatePage = () => {
       });
       clientId = authResponse.data.user.id;
     } catch (error) {
-      // Se não conseguir obter o usuário, usa o valor padrão ou exibe um erro
       clientId = localStorage.getItem("client_id") || 1;
     }
 
-    // Monta o payload de envio conforme a model do Appointment
     const payload = {
       app_id: 1,
       entity_name: "barbershop",
@@ -171,11 +164,11 @@ const SchedulingCreatePage = () => {
       service_ids: schedulingData.service_ids,
       expected_end_time: expectedEndTimeDate.toISOString(),
       provider_id: schedulingData.provider_id,
-      description: "", // Não exibido no formulário; pode ser preenchido depois
+      description: "",
       client_id: clientId,
       registered_by: clientId,
       status: "pendente",
-      location: "", // Permite campo nulo
+      location: "",
       duration: totalDuration,
       notes: schedulingData.notes,
       payment_status: "pendente",
@@ -243,127 +236,142 @@ const SchedulingCreatePage = () => {
   };
 
   return (
-    <Container>
+    <>
       <NavlogComponent />
-      <Row className="justify-content-center">
-        <Col md={12}>
-          {isProcessing ? (
-            <ProcessingIndicatorComponent messages={messages} />
-          ) : (
-            <Card>
-              <Card.Body>
-                <p className="labeltitle h4 text-center text-uppercase">
-                  Agendar
-                </p>
-                {barbershop && (
-                  <p className="text-center mb-3">
-                    Agendamento em: <strong>{barbershop.name}</strong>
-                  </p>
-                )}
-                <Form onSubmit={handleSubmit}>
-                  <Row>
-                    <Col md={12}>
-                      <p className="h6 text-uppercase">
-                        Selecione os Serviços que deseja agendar
-                      </p>
-                      <Row className="m-4">
-                        {items.length === 0 ? (
-                          <Col xs={12} className="text-center">
-                            <p>Nenhum serviço disponível.</p>
-                          </Col>
-                        ) : (
-                          items.map((item) => (
-                            <Col md={4} key={item.id} className="m-1">
-                              <Form.Check
-                                type="checkbox"
-                                id={`service-${item.id}`}
-                                label={item.name}
-                                onChange={(e) => handleServiceSelection(e, item.id)}
-                              />
-                            </Col>
-                          ))
-                        )}
-                      </Row>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId="scheduled_at">
-                        <Form.Label>Data e Hora</Form.Label>
-                        <Form.Control
-                          type="datetime-local"
-                          name="scheduled_at"
-                          value={schedulingData.scheduled_at}
-                          onChange={handleInputChange}
-                          required
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId="provider_id">
-                        <Form.Label>Barbeiro</Form.Label>
-                        <Form.Control
-                          as="select"
-                          name="provider_id"
-                          value={schedulingData.provider_id}
-                          onChange={handleInputChange}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          {barbers.map((barber) => (
-                            <option key={barber.user_id} value={barber.user_id}>
-                              {barber.first_name}
-                            </option>
-                          ))}
-                        </Form.Control>
-                      </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                      <Form.Group controlId="appointment_type">
-                        <Form.Label>Tipo</Form.Label>
-                        <Form.Control
-                          as="select"
-                          name="appointment_type"
-                          value={schedulingData.appointment_type}
-                          onChange={handleInputChange}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="presencial">Presencial</option>
-                          <option value="domiciliar">Domiciliar</option>
-                          <option value="online">Online</option>
-                        </Form.Control>
-                      </Form.Group>
-                    </Col>
-                    <Col md={12} className="mt-3">
-                      <Form.Group controlId="notes">
-                        <Form.Label>Observações</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          name="notes"
-                          value={schedulingData.notes}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                  <Button variant="primary" type="submit" disabled={isProcessing} className="mt-3">
-                    {isProcessing ? "Criando..." : "Criar Agendamento"}
-                  </Button>
-                  {messages.length > 0 && (
-                    <div className="mt-3">
-                      {messages.map((message, index) => (
-                        <div key={index} className="alert alert-info">
-                          {message}
-                        </div>
-                      ))}
-                    </div>
+
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            {isProcessing ? (
+              <div className="loading-section">
+                <ProcessingIndicatorComponent messages={messages} />
+              </div>
+            ) : (
+              <Card className="card-component scheduling-create-card shadow-sm">
+                <Card.Body className="card-body scheduling-create-card-body">
+                  <p className="section-title text-center">Criar Agendamento</p>
+                  {barbershop && (
+                    <p className="mb-3 text-center">
+                      Agendamento em: <strong>{barbershop.name}</strong>
+                    </p>
                   )}
-                </Form>
-              </Card.Body>
-            </Card>
-          )}
-        </Col>
-      </Row>
-    </Container>
+
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      {/* Selecionar serviços */}
+                      <Col md={12} className="mb-4">
+                        <p className="mb-2">Selecione os Serviços</p>
+                        <Row>
+                          {items.length === 0 ? (
+                            <Col xs={12}>
+                              <p>Nenhum serviço disponível.</p>
+                            </Col>
+                          ) : (
+                            items.map((item) => (
+                              <Col md={4} key={item.id}>
+                                <Form.Check
+                                  type="checkbox"
+                                  id={`service-${item.id}`}
+                                  label={item.name}
+                                  onChange={(e) => handleServiceSelection(e, item.id)}
+                                />
+                              </Col>
+                            ))
+                          )}
+                        </Row>
+                      </Col>
+
+                      {/* Data/hora */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="scheduled_at">
+                          <Form.Label>Data e Hora</Form.Label>
+                          <Form.Control
+                            type="datetime-local"
+                            name="scheduled_at"
+                            value={schedulingData.scheduled_at}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Barbeiro */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="provider_id">
+                          <Form.Label>Barbeiro</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="provider_id"
+                            value={schedulingData.provider_id}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            {barbers.map((barber) => (
+                              <option key={barber.user_id} value={barber.user_id}>
+                                {barber.first_name}
+                              </option>
+                            ))}
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Tipo de agendamento */}
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="appointment_type">
+                          <Form.Label>Tipo</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="appointment_type"
+                            value={schedulingData.appointment_type}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="presencial">Presencial</option>
+                            <option value="domiciliar">Domiciliar</option>
+                            <option value="online">Online</option>
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Observações */}
+                      <Col md={12} className="mb-3">
+                        <Form.Group controlId="notes">
+                          <Form.Label>Observações</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="notes"
+                            value={schedulingData.notes}
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <div className="text-center">
+                      <Button variant="primary" type="submit" className="action-button">
+                        {isProcessing ? "Criando..." : "Criar Agendamento"}
+                      </Button>
+                    </div>
+
+                    {/* Exibe mensagens, se existirem */}
+                    {messages.length > 0 && (
+                      <div className="mt-3">
+                        {messages.map((message, index) => (
+                          <div key={index}>{message}</div>
+                        ))}
+                      </div>
+                    )}
+                  </Form>
+                </Card.Body>
+              </Card>
+            )}
+          </Col>
+        </Row>
+      </Container>
+    </>
   );
 };
 
