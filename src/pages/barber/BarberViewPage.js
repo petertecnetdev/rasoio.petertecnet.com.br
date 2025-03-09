@@ -1,3 +1,4 @@
+// BarberViewPage.jsx
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import Swal from "sweetalert2";
@@ -32,10 +33,9 @@ const BarberViewPage = () => {
         });
 
         const { barber, user } = response.data;
-
         setBarber(barber || {});
         setUser(user || {});
-        setBarbershops(barber.barbershops || []);
+        setBarbershops(barber?.barbershops || []);
       } catch (error) {
         console.error(error.response?.data);
         Swal.fire({
@@ -45,7 +45,6 @@ const BarberViewPage = () => {
         });
       }
     };
-
     fetchBarberData();
   }, [username]);
 
@@ -61,111 +60,118 @@ const BarberViewPage = () => {
     return age;
   };
 
-  
   const handleBarberAvatarError = (e) => {
     if (e.target.src.includes("/images/user.png")) return;
     e.target.src = "/images/user.png";
+  };
+  const handleBarbershopLogoError = (e) => {
+    e.target.src = "images/logo.png";
   };
 
   return (
     <>
       <NavlogComponent />
-      <Container>
-        <Col md={12}>
-          {barber && user ? (
-            <>
-              <Row className="text-center">
-                <Col xs={12} sm={12} md={12}>
-                  <Card>
-                    <Card.Body>
-                      <Row>
-                        <Col md={3}>
-                     
-                          <img
-                            src={
-                              user.avatar
-                                ? `${storageUrl}/${user.avatar}`
-                                : "/images/user.png"
-                            }
-                            className="rounded-circle img-logo-barber-show"
-                            onError={handleBarberAvatarError}
-                            style={{ margin: "0 auto", display: "block" }}
-                            alt={user.first_name}
-                          />   <p className="labeltitle h6 text-center text-uppercase">
-                          {user.first_name}
-                        </p>  <p className=" h6 mt-4 text-center text-uppercase">
-                          {user.city} -  {user.uf}
-                          </p>  
-                        </Col>
-                        <Col md={3}></Col>
-                        <Col md={3}>
-                          <Button
-                            variant="primary w-100 m-2"
-                            onClick={() => {
-                              const whatsappURL = `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços%20.`;
-                              window.open(whatsappURL, "_blank");
-                            }}
-                          >
-                            WhatsApp: {user.phone}
-                          </Button>
-                          <p className="h7 labellight">Idade: {calculateAge(user.birthdate)}</p>
-                          <p className="h7 labellight">Email: {user.email}</p>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Col>
+ <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            {barber && user ? (
+              <>
+                <Row className="barber-info-row">
+                  <Col md={12} className="barber-info-col">
+                    <Card className="card-component barber-info-card shadow-sm">
+                      <Card.Body className="card-body barber-info-card-body">
+                        <Row className="barber-details-row">
+                          <Col md={3} className="barber-avatar-col text-center">
+                            <img
+                              src={
+                                user.avatar
+                                  ? `${storageUrl}/${user.avatar}`
+                                  : "/images/user.png"
+                              }
+                              alt={user.first_name || "Avatar"}
+                              className="img-component barber-avatar"
+                              onError={handleBarberAvatarError}
+                            />
+                            <p className="barber-name mt-2">
+                              {user.first_name}
+                            </p>
+                            <p className="barber-location">
+                              {user.city} - {user.uf}
+                            </p>
+                          </Col>
 
-                {barber.description && (
-                  <Col xs={12} sm={6} md={6}>
-                    <p className="h6">{barber.description}</p>
+                          <Col md={3} />
+
+                          <Col md={3} className="barber-contact-col">
+                            <Button
+                              variant="primary"
+                              className="action-button w-100 mt-2"
+                              onClick={() => {
+                                const whatsappURL = `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços%20.`;
+                                window.open(whatsappURL, "_blank");
+                              }}
+                            >
+                              WhatsApp: {user.phone}
+                            </Button>
+                            <p className="barber-age mt-2">
+                              Idade: {calculateAge(user.birthdate)}
+                            </p>
+                            <p className="barber-email">Email: {user.email}</p>
+                          </Col>
+                        </Row>
+                      </Card.Body>
+                    </Card>
                   </Col>
-                )}
-              </Row>
 
-              <Row>
-                <Row className="justify-content-center mt-4">
-                  <Col md={12}>
-                  
-                    <Card>  <p className="labeltitle h6 text-center text-uppercase">
-                      Barbearias que{" "}
-                      {user.first_name || "Nome não disponível"} está associado
-                    </p>
-                      <Card.Body>
-                        <Row>
+                  {barber.description && (
+                    <Col md={6} className="barber-description-col mt-4">
+                      <Card className="card-component barber-description-card shadow-sm">
+                        <Card.Body className="card-body barber-description-card-body">
+                          <p className="barber-description-text">
+                            {barber.description}
+                          </p>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+
+                <Row className="barbershops-row mt-4">
+                  <Col md={12} className="barbershops-col">
+                    <Card className="card-component barbershops-card shadow-sm">
+                      <Card.Body className="card-body barbershops-card-body">
+                        <p className="barbershops-title">
+                          Barbearias que {user.first_name || "N/D"} está
+                          associado
+                        </p>
+                        <Row className="barbershops-list-row">
                           {barbershops.map((barbershop) => (
-                            <Col md={3} key={barbershop.id} className="mb-3">
-                              <Card className="card-barbershop-show">
-                                <div
-                                  className="background-image"
-                                  style={{
-                                    backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
-                                  }}
-                                />
-                                <Link
-                                  to={`/barbershop/view/${barbershop.slug}`}
-                                  style={{ textDecoration: "none" }}
-                                >
-                                  <img
-                                    src={`${storageUrl}/${barbershop.logo}`}
-                                    className="rounded-circle img-logo-barbershop-show"
-                                    style={{
-                                      margin: "0 auto",
-                                      display: "block",
-                                    }}
-                                    alt={barbershop.name}
-                                  />
+                            <Col
+                              md={3}
+                              key={barbershop.id}
+                              className="barbershop-card-col mt-3"
+                            >
+                              <Card className="barbershop-card shadow-sm">
+                                <Link to={`/barbershop/view/${barbershop.slug}`}>
+                                
                                 </Link>
-                                <Card.Body>
-                                  <Link
-                                    to={`/barbershop/show/${barbershop.id}`}
-                                    style={{ textDecoration: "none" }}
-                                  >
-                                    <p className="labeltitle h6 text-center text-uppercase">
-                                      {barbershop.name}
-                                    </p>
-                                  </Link>
-                                </Card.Body>
+                             <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
+                                                             <Link
+                                                               to={`/barbershop/view/${barbershop.slug}`}
+                                                               className="link-component"
+                                                             >
+                                                               {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
+                                                               <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
+                                                                <img
+                                                                                                     src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
+                                                                                                     className="img-component"
+                                                                                                     alt={barbershop.name}
+                                                                                                     onError={handleBarbershopLogoError}
+                                                                                                   />
+                                                                 <p className="item-title mt-2 mt-sm-0 ms-sm-2">{barbershop.name}</p>
+                                                               </div>
+                                                             </Link>
+                                                           </Card.Body>
                               </Card>
                             </Col>
                           ))}
@@ -174,18 +180,18 @@ const BarberViewPage = () => {
                     </Card>
                   </Col>
                 </Row>
-              </Row>
-            </>
-          ) : (
-            <ProcessingIndicatorComponent
-              messages={[
-                "Carregando os dados do barbeiro...",
-                "Organizando as informações.",
-                "Quase finalizando! Espere só um pouco.",
-              ]}
-            />
-          )}
-        </Col>
+              </>
+            ) : (
+              <ProcessingIndicatorComponent
+                messages={[
+                  "Carregando os dados do barbeiro...",
+                  "Organizando as informações.",
+                  "Quase finalizando! Espere só um pouco.",
+                ]}
+              />
+            )}
+          </Col>
+        </Row>
       </Container>
     </>
   );

@@ -1069,3 +1069,111 @@ body {
   width: 100%;
   text-align: center;
 }
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Contêiner principal da página de visualização do barbeiro */
+.barber-view-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Ajuste geral para o container que envolve toda a página */
+.main-container {
+  min-height: 100vh;
+  background: url('images/background.png') no-repeat center center;
+  background-size: cover;
+  padding: 20px;
+}
+
+/* Linhas e colunas de seção (estrutura de layout) */
+.section-row {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+.section-col {
+  width: 100%;
+}
+
+/* Card base para estilizar componentes de cartão */
+.card-component {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid #fff;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Ajuste para remover padding extra no Card Body e manter estilo coerente */
+.card-body {
+  padding: 20px;
+}
+
+/* ------------------------------
+   Barber Info Section
+------------------------------ */
+
+.barber-info-row {
+  margin-bottom: 20px;
+}
+
+.barber-info-col {
+  margin-bottom: 20px;
+}
+
+.barber-info-card {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.barber-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.barber-info-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.barber-details-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Coluna onde fica o avatar do barbeiro */
+.barber-avatar-col {
+  margin-bottom: 10px;
+}
+
+.img-component {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.barber-avatar {
+  width: 120px;
+  height: 120px;
+}
+
+/* Nome e local do barbeiro */
+.barber-name {
+  font-size: 1;
+}
