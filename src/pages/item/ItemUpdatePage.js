@@ -1,3 +1,4 @@
+// ItemUpdatePage.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,10 +9,13 @@ import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 
 const ItemUpdatePage = () => {
-  const { id } = useParams(); // Obtém o ID do item da URL
-  const navigate = useNavigate(); // Hook para navegação
+  const { id } = useParams(); 
+  const navigate = useNavigate();
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [originalData, setOriginalData] = useState({});
+  const [imagePreview, setImagePreview] = useState(null);
   const [itemData, setItemData] = useState({
     image: null,
     name: "",
@@ -28,10 +32,8 @@ const ItemUpdatePage = () => {
     brand: "",
     is_featured: false,
     limited_by_user: 0,
-    notes: ""
+    notes: "",
   });
-  const [originalData, setOriginalData] = useState({});
-  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     const fetchItemData = async () => {
@@ -41,8 +43,8 @@ const ItemUpdatePage = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        // Os dados do item já vêm em response.data
         const data = response.data;
+        setOriginalData(data);
         setItemData({
           image: data.image || null,
           name: data.name || "",
@@ -59,11 +61,10 @@ const ItemUpdatePage = () => {
           brand: data.brand || "",
           is_featured: data.is_featured || false,
           limited_by_user: data.limited_by_user || 0,
-          notes: data.notes || ""
+          notes: data.notes || "",
         });
-        setOriginalData(data);
         if (data.image) {
-          setImagePreview(storageUrl + "/" + data.image);
+          setImagePreview(`${storageUrl}/${data.image}`);
         }
       } catch (error) {
         console.error("Erro ao buscar dados do item:", error);
@@ -80,21 +81,20 @@ const ItemUpdatePage = () => {
         });
       }
     };
-
     fetchItemData();
   }, [id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setItemData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setItemData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Função para redimensionar a imagem e atualizar a pré-visualização
+  const handleImageError = (e) => {
+    if (e.target.src.includes("/images/itemdefault.png")) return;
+    e.target.src = "/images/itemdefault.png";
+  };
+
   const handleImageResize = (file, setPreview, width, height) => {
-    const reader = new FileReader();
     if (!file || !file.type.startsWith("image/")) {
       Swal.fire({
         title: "Formato de imagem inválido",
@@ -109,6 +109,7 @@ const ItemUpdatePage = () => {
       });
       return;
     }
+    const reader = new FileReader();
     reader.onloadend = () => {
       const img = new Image();
       img.src = reader.result;
@@ -134,39 +135,24 @@ const ItemUpdatePage = () => {
     }));
   };
 
-  const handleImageError = (e) => {
-    // Define imagem padrão caso ocorra erro
-    if (e.target.src.includes("/images/itemdefault.png")) return;
-    e.target.src = "/images/itemdefault.png";
-  };
-
-  // Validações antes do submit (exceto as de data, que serão tratadas no backend)
+  // Validação básica antes do envio
   const validateFields = () => {
     const errors = [];
-
-    // Valida preço (valor monetário)
     const price = parseFloat(itemData.price);
     if (isNaN(price) || price < 0) {
       errors.push("O preço deve ser um valor monetário válido.");
     }
-
-    // Valida estoque (número inteiro)
     const stock = parseInt(itemData.stock, 10);
     if (isNaN(stock) || stock < 0) {
       errors.push("O estoque deve ser um número inteiro válido.");
     }
-
-    // Valida desconto (valor monetário)
     const discount = parseFloat(itemData.discount);
     if (isNaN(discount) || discount < 0) {
       errors.push("O desconto deve ser um valor monetário válido.");
     }
-
-    // Valida tipo de item
     if (itemData.type !== "Produto" && itemData.type !== "Serviço") {
       errors.push("O tipo de item deve ser 'Produto' ou 'Serviço'.");
     }
-
     if (errors.length > 0) {
       Swal.fire({
         title: "Erro de validação",
@@ -184,19 +170,15 @@ const ItemUpdatePage = () => {
     return true;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!validateFields()) {
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateFields()) return;
 
     setIsProcessing(true);
     setMessages(["Aguarde enquanto atualizamos o item..."]);
 
     const formData = new FormData();
-
-    // Adiciona a imagem caso haja nova imagem selecionada
+    // Se houver nova imagem, converte e adiciona
     if (imagePreview && itemData.image && typeof itemData.image !== "string") {
       try {
         const imageBlob = await fetch(imagePreview).then((res) => res.blob());
@@ -205,11 +187,9 @@ const ItemUpdatePage = () => {
         console.error("Erro ao converter a imagem:", err);
       }
     }
-
-    // Adiciona os demais campos somente se foram alterados
+    // Adiciona apenas campos que foram alterados
     Object.keys(itemData).forEach((key) => {
       if (key !== "image" && itemData[key] !== originalData[key]) {
-        // Converte o booleano is_featured para inteiro (0 ou 1)
         if (key === "is_featured") {
           formData.append(key, itemData[key] ? 1 : 0);
         } else {
@@ -223,9 +203,8 @@ const ItemUpdatePage = () => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "multipart/form-data",
       };
-
       await axios.post(`${apiBaseUrl}/item/${id}`, formData, { headers });
-      
+
       Swal.fire({
         title: "Sucesso!",
         text: "Item atualizado com sucesso!",
@@ -238,7 +217,6 @@ const ItemUpdatePage = () => {
         },
       }).then((result) => {
         if (result.isConfirmed) {
-          // Volta para a página anterior
           navigate(-1);
         }
       });
@@ -282,219 +260,292 @@ const ItemUpdatePage = () => {
   return (
     <>
       <NavlogComponent />
-      <p className="labeltitle h2 text-center text-uppercase">Atualizar Item</p>
-      <Container>
-        {isProcessing ? (
-          <ProcessingIndicatorComponent messages={messages} />
-        ) : (
-          <Card>
-            <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Row>
-                  <Col md={12}>
+      <p className="section-title text-center">Atualizar Item</p>
+
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            {isProcessing ? (
+              <div className="loading-section">
+                <ProcessingIndicatorComponent messages={messages} />
+              </div>
+            ) : (
+              <Card className="card-component shadow-sm">
+                <Card.Body className="card-body">
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col xs={12} className="mb-4 text-center">
+                        <div>
+                          <label
+                            htmlFor="imageInput"
+                            style={{ cursor: "pointer" }}
+                          >
+                            {imagePreview ? (
+                              <img
+                                src={imagePreview}
+                                alt="Preview da Imagem"
+                                className="img-component"
+                                onError={handleImageError}
+                              />
+                            ) : (
+                              <img
+                                src="/images/logo.png"
+                                alt="Imagem Padrão"
+                                className="img-component"
+                                onError={handleImageError}
+                              />
+                            )}
+                          </label>
+                          <div className="mt-3">
+                            <Button
+                              variant="secondary"
+                              className="action-button"
+                              onClick={() =>
+                                document.getElementById("imageInput").click()
+                              }
+                            >
+                              Adicionar imagem
+                            </Button>
+                          </div>
+                          <Form.Control
+                            id="imageInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleItemImageChange}
+                            style={{ display: "none" }}
+                          />
+                        </div>
+                      </Col>
+
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="formName" className="form-group">
+                          <Form.Label>Nome</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={itemData.name || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="formType" className="form-group">
+                          <Form.Label>Tipo</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="type"
+                            value={itemData.type || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          >
+                            <option value="">Selecione</option>
+                            <option value="Produto">Produto</option>
+                            <option value="Serviço">Serviço</option>
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="formPrice" className="form-group">
+                          <Form.Label>Preço</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.01"
+                            name="price"
+                            value={itemData.price || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="formStock" className="form-group">
+                          <Form.Label>Estoque</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="stock"
+                            value={itemData.stock || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formDiscount"
+                          className="form-group"
+                        >
+                          <Form.Label>Desconto</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.01"
+                            name="discount"
+                            value={itemData.discount || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formAvailabilityStart"
+                          className="form-group"
+                        >
+                          <Form.Label>Início</Form.Label>
+                          <Form.Control
+                            type="date"
+                            name="availability_start"
+                            value={itemData.availability_start || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formAvailabilityEnd"
+                          className="form-group"
+                        >
+                          <Form.Label>Término</Form.Label>
+                          <Form.Control
+                            type="date"
+                            name="availability_end"
+                            value={itemData.availability_end || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formExpirationDate"
+                          className="form-group"
+                        >
+                          <Form.Label>Expiração</Form.Label>
+                          <Form.Control
+                            type="date"
+                            name="expiration_date"
+                            value={itemData.expiration_date || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formCategory"
+                          className="form-group"
+                        >
+                          <Form.Label>Categoria</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="category"
+                            value={itemData.category || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formSubcategory"
+                          className="form-group"
+                        >
+                          <Form.Label>Subcategoria</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="subcategory"
+                            value={itemData.subcategory || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group controlId="formBrand" className="form-group">
+                          <Form.Label>Marca</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="brand"
+                            value={itemData.brand || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={12} className="mb-3">
+                        <Form.Group
+                          controlId="formDescription"
+                          className="form-group"
+                        >
+                          <Form.Label>Descrição</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="description"
+                            value={itemData.description || ""}
+                            onChange={handleInputChange}
+                            required
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={12} className="mb-3">
+                        <Form.Group controlId="formNotes" className="form-group">
+                          <Form.Label>Notas</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={2}
+                            name="notes"
+                            value={itemData.notes || ""}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
                     <div className="text-center">
-                      <label htmlFor="imageInput" style={{ cursor: "pointer", display: "block" }}>
-                        {imagePreview ? (
-                          <img
-                            src={imagePreview}
-                            alt="Preview da Imagem"
-                            className="img-fluid rounded"
-                            onError={handleImageError}
-                            style={{ margin: "0 auto", display: "block", width: "150px", height: "150px" }}
-                          />
-                        ) : (
-                          <img
-                            src="/images/logo.png"
-                            alt="Imagem Padrão"
-                            className="img-fluid rounded"
-                            onError={handleImageError}
-                            style={{ margin: "0 auto", display: "block", width: "150px", height: "150px" }}
-                          />
-                        )}
-                      </label>
                       <Button
-                        variant="secondary"
-                        className="w-50 m-2"
-                        onClick={() => document.getElementById("imageInput").click()}
+                        variant="primary"
+                        type="submit"
+                        className="action-button"
                       >
-                        Adicionar imagem
+                        Atualizar Item
                       </Button>
-                      <Form.Control
-                        id="imageInput"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleItemImageChange}
-                        style={{ display: "none" }}
-                      />
                     </div>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group controlId="formName">
-                      <Form.Label>Nome</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="name"
-                        value={itemData.name || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formType">
-                      <Form.Label>Tipo</Form.Label>
-                      <Form.Control
-                        as="select"
-                        name="type"
-                        value={itemData.type || ""}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="">Selecione</option>
-                        <option value="Produto">Produto</option>
-                        <option value="Serviço">Serviço</option>
-                      </Form.Control>
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formPrice">
-                      <Form.Label>Preço</Form.Label>
-                      <Form.Control
-                        type="number"
-                        step="0.01"
-                        name="price"
-                        value={itemData.price || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formStock">
-                      <Form.Label>Estoque</Form.Label>
-                      <Form.Control
-                        type="number"
-                        name="stock"
-                        value={itemData.stock || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formDiscount">
-                      <Form.Label>Desconto</Form.Label>
-                      <Form.Control
-                        type="number"
-                        step="0.01"
-                        name="discount"
-                        value={itemData.discount || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formAvailabilityStart">
-                      <Form.Label>Início</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="availability_start"
-                        value={itemData.availability_start || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formAvailabilityEnd">
-                      <Form.Label>Término</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="availability_end"
-                        value={itemData.availability_end || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formExpirationDate">
-                      <Form.Label>Expiração</Form.Label>
-                      <Form.Control
-                        type="date"
-                        name="expiration_date"
-                        value={itemData.expiration_date || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formCategory">
-                      <Form.Label>Categoria</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="category"
-                        value={itemData.category || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formSubcategory">
-                      <Form.Label>Subcategoria</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="subcategory"
-                        value={itemData.subcategory || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={2}>
-                    <Form.Group controlId="formBrand">
-                      <Form.Label>Marca</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="brand"
-                        value={itemData.brand || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={12}>
-                    <Form.Group controlId="formDescription">
-                      <Form.Label>Descrição</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={3}
-                        name="description"
-                        value={itemData.description || ""}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={12}>
-                    <Form.Group controlId="formNotes">
-                      <Form.Label>Notas</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={2}
-                        name="notes"
-                        value={itemData.notes || ""}
-                        onChange={handleInputChange}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-                <div className="text-center">
-                  <Button variant="primary m-2" type="submit">
-                    Atualizar Item
-                  </Button>
-                </div>
-              </Form>
-            </Card.Body>
-          </Card>
-        )}
+
+                    {/* Mensagens de processamento, se existirem */}
+                    {messages.length > 0 && (
+                      <div className="mt-3">
+                        {messages.map((message, index) => (
+                          <div key={index}>{message}</div>
+                        ))}
+                      </div>
+                    )}
+                  </Form>
+                </Card.Body>
+              </Card>
+            )}
+          </Col>
+        </Row>
       </Container>
     </>
   );

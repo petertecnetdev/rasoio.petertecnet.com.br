@@ -648,3 +648,424 @@ body {
   object-fit: cover;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+/* Contêiner principal da página */
+.barber-include-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Card geral */
+.barber-include-card {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out;
+}
+.barber-include-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Corpo do card */
+.barber-include-card-body {
+  padding: 15px;
+}
+
+/* Linha principal dentro do card */
+.barber-include-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Coluna que mostra informações da barbearia */
+.barbershop-info-col {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Nome da barbearia */
+.barbershop-name-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+/* Logo da barbearia */
+.barbershop-logo {
+  width: 50px;
+  height: 50px;
+  margin-left: 10px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Coluna que lista os barbeiros */
+.barbers-associated-col {
+  margin-top: 20px;
+}
+
+/* Título da seção de barbeiros */
+.barbers-associated-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* Texto exibido quando não há barbeiros */
+.no-barbers-text {
+  color: #999;
+  font-style: italic;
+}
+
+/* Linha de cards dos barbeiros */
+.barbers-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* Coluna de cada card do barbeiro */
+.barber-card-col {
+  margin-bottom: 20px;
+}
+
+/* Card individual do barbeiro */
+.barber-card {
+  background-color: #1c1c1c;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.barber-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Corpo do card do barbeiro */
+.barber-card-body {
+  text-align: center;
+  padding: 15px;
+}
+
+/* Avatar do barbeiro */
+.barber-avatar {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.barber-name-title {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+/* Remove sublinhado do link e mantém a cor herdada */
+.barber-name-title a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Email do barbeiro */
+.barber-email {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+/* Botão para remover barbeiro */
+.remove-barber-button {
+  margin-top: 5px;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+.remove-barber-button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #444 100%);
+  color: #fff;
+  transform: scale(1.02);
+}
+
+/* Contêiner do botão de adicionar barbeiro */
+.add-barber-button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Botão para adicionar novo barbeiro */
+.add-barber-button {
+  font-weight: bold;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+.add-barber-button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #444 100%);
+  color: #fff;
+  transform: scale(1.02);
+}
+/* Items Container */
+.items-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+/* Individual Item Column */
+.item-col {
+  padding: 10px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Card do item */
+.item-card {
+  background-color: #1c1c1c;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+.item-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Imagem do item */
+.item-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #fff;
+}
+
+/* Corpo do card do item */
+.item-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+/* Nome do item */
+.item-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #000 0%, #1c1c1c 100%);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+/* Preço, tipo, subcategoria, marca e disponibilidade */
+.item-price,
+.item-type,
+.item-subcategory,
+.item-brand,
+.item-availability {
+  color: #ccc;
+  margin: 5px 0;
+}
+
+/* Ações do item (botões de editar/deletar) */
+.item-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.inner-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+/* 
+  .inner-col é cada coluna individual dentro de .inner-row,
+  com a mesma animação fadeInUp usada nos demais elementos.
+*/
+.inner-col {
+  padding: 10px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* .inner-card é o card interno (semelhante aos já existentes),
+   com estilo escuro, cantos arredondados e efeito de hover.
+*/
+.inner-card {
+  background-color: #1c1c1c;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+.inner-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* .card-bg é um plano de fundo desfocado dentro do card,
+   usado para dar um efeito de profundidade na imagem de fundo.
+*/
+.card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(4px);
+  z-index: 1;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* .inner-card-body mantém o conteúdo em cima do plano de fundo desfocado */
+.inner-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+.item-create-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Card que envolve o formulário de criação de itens */
+.item-create-card {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out;
+}
+.item-create-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Corpo do card */
+.item-create-card-body {
+  padding: 15px;
+}
+
+/* Título do card */
+.item-create-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Área que envolve a imagem e o botão de upload */
+.item-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Label que envolve a pré-visualização da imagem */
+.item-image-label {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Imagem do item (preview) */
+.item-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Formulário de criação */
+.item-create-form {
+  margin-top: 10px;
+}
+
+/* Input genérico do formulário */
+.input-field {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+/* Botão principal (Criar Item) */
+.create-item-button {
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Mensagens de processamento ou status */
+.item-create-messages {
+  margin-top: 20px;
+}
+.item-create-message {
+  color: #ccc;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* Botão para adicionar imagem do item */
+.add-image-button {
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}

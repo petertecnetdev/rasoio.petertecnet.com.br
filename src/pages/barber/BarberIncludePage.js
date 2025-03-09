@@ -220,13 +220,13 @@ const BarberIncludePage = () => {
           ]}
         />
       ) : (
-        <Container className="mt-4">
+         <Container className="main-container" fluid>
           {barbershop && (
-            <Card className="m-2 p-2 card-barber">
-              <Card.Body>
-                <Row className="text-center">
-                  <Col md={12}>
-                    <p className="labeltitle text-uppercase">
+            <Card className="barber-include-card">
+              <Card.Body className="barber-include-card-body">
+                <Row className="barber-include-row">
+                  <Col md={12} className="barbershop-info-col">
+                    <p className="barbershop-name-text">
                       {barbershop.name}{" "}
                       <img
                         src={
@@ -235,23 +235,26 @@ const BarberIncludePage = () => {
                             : "/images/barbershoplogo.png"
                         }
                         alt={barbershop.name}
-                        className="rounded-circle"
-                        style={{ height: "50px", width: "50px", objectFit: "cover" }}
+                        className="barbershop-logo"
                       />
                     </p>
                   </Col>
-                  <Col md={12}>
-                    <p className="label-barber h4 text-center text-uppercase">
+                  <Col md={12} className="barbers-associated-col">
+                    <p className="barbers-associated-title">
                       Barbeiros Associados
                     </p>
                     {barbers.length === 0 ? (
-                      <p className="text-center">Nenhum barbeiro encontrado.</p>
+                      <p className="no-barbers-text">Nenhum barbeiro encontrado.</p>
                     ) : (
-                      <Row>
+                      <Row className="barbers-list-row">
                         {barbers.map((barber) => (
-                          <Col key={barber.id} xs={12} sm={6} md={4} lg={3} className="mb-3">
-                            <Card className="card-barber h-100">
-                              <Card.Body className="d-flex flex-column align-items-center">
+                          <Col
+                            key={barber.id}
+                            md={4}
+                            className="barber-card-col"
+                          >
+                            <Card className="barber-card">
+                              <Card.Body className="barber-card-body">
                                 <img
                                   src={
                                     barber.avatar
@@ -259,27 +262,25 @@ const BarberIncludePage = () => {
                                       : "/images/user.png"
                                   }
                                   alt={barber.first_name}
-                                  className="rounded-circle mb-2"
-                                  style={{
-                                    height: "70px",
-                                    width: "70px",
-                                    objectFit: "cover",
-                                  }}
+                                  className="barber-avatar"
                                   onError={handleBarberAvatarError}
                                 />
-                                <h5 className="label-barber mb-1">
-                                  <Link to={`/barber/view/${barber.user_name}`} style={{ textDecoration: "none", color: "inherit" }}>
-                                    {barber.first_name}
-                                  </Link>
-                                </h5>
-                                <p className="mb-2" style={{ fontSize: "0.9rem" }}>
-                                  {barber.email}
+                                <p className="barber-name-title">
+                                <Link
+  to={`/barber/view/${barber.user_name}`}
+  style={{ textDecoration: "none", color: "inherit", textTransform: "capitalize" }}
+>
+  {barber.first_name}
+</Link>
+
                                 </p>
+                                <p className="barber-email">{barber.email}</p>
                                 <Button
                                   variant="danger"
                                   size="sm"
                                   onClick={() => handleRemoveBarber(barber.id)}
                                   disabled={isProcessing}
+                                  className="remove-barber-button"
                                 >
                                   {isProcessing ? "Processando..." : "Remover"}
                                 </Button>
@@ -289,8 +290,12 @@ const BarberIncludePage = () => {
                         ))}
                       </Row>
                     )}
-                    <div className="text-center mt-3">
-                      <Button variant="success" onClick={handleAddBarber}>
+                    <div className="add-barber-button-container">
+                      <Button
+                        variant="success"
+                        onClick={handleAddBarber}
+                        className="add-barber-button"
+                      >
                         Associar Novo Barbeiro
                       </Button>
                     </div>

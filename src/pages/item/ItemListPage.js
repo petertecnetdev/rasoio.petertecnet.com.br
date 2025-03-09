@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 
 const ItemListPage = () => {
@@ -14,20 +14,8 @@ const ItemListPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState([]);
 
-  // Formata a data para o padrão brasileiro (dd/mm/yyyy)
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR");
-  };
-
-  // Verifica se o item está disponível (se a data atual está entre o início e fim da disponibilidade)
-  const isItemAvailable = (item) => {
-    if (!item.availability_start || !item.availability_end) return true;
-    const now = new Date();
-    const start = new Date(item.availability_start);
-    const end = new Date(item.availability_end);
-    return now >= start && now <= end;
+  const handleImageError = (e) => {
+    e.target.src = "/images/user.png";
   };
 
   const fetchBarbershopAndItems = async () => {
@@ -39,27 +27,40 @@ const ItemListPage = () => {
         "Content-Type": "multipart/form-data",
       };
 
-      const response = await axios.get(
-        `${apiBaseUrl}/barbershop/view/${slug}`,
-        { headers }
-      );
+      const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, { headers });
       setBarbershop(response.data.barbershop);
       setItems(response.data.items);
     } catch (error) {
-      console.error("Erro ao carregar itens:", error.response?.data);
-      Swal.fire({
-        title: "Erro",
-        text:
-          error.response?.data?.error ||
-          "Erro ao carregar informações da barbearia.",
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
+      const errors = error?.response?.data?.errors;
+      if (errors) {
+        let errorMessage = "";
+        Object.entries(errors).forEach(([field, messages]) => {
+          errorMessage += `\n${field}: ${messages.join(" / ")}`;
+        });
+        Swal.fire({
+          title: "Erro",
+          text: errorMessage.trim() || "Erro ao carregar informações da barbearia.",
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          title: "Erro",
+          text: error.response?.data?.error || "Erro ao carregar informações da barbearia.",
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -69,28 +70,14 @@ const ItemListPage = () => {
     fetchBarbershopAndItems();
   }, [slug]);
 
-  const handleImageError = (e) => {
-    e.target.src = "/images/user.png";
-  };
-
-  const getItemImage = (item) => {
-    if (item.image) {
-      return `${storageUrl}/${item.image}`;
-    }
-    if (barbershop?.logo) {
-      return `${storageUrl}/${barbershop.logo}`;
-    }
-    return "/images/user.png";
-  };
-
   const handleDelete = async (id) => {
     try {
       const result = await Swal.fire({
-        title: "Tem certeza?",
-        text: "Você realmente deseja excluir este item?",
+        title: "Você tem certeza?",
+        text: "Esta ação não pode ser desfeita!",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Sim, excluir!",
+        confirmButtonText: "Sim, deletar!",
         cancelButtonText: "Cancelar",
         customClass: {
           popup: "custom-swal",
@@ -122,130 +109,145 @@ const ItemListPage = () => {
         setItems(items.filter((item) => item.id !== id));
       }
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: error.response?.data?.error || "Erro ao excluir o item.",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
+      const errors = error?.response?.data?.errors;
+      if (errors) {
+        let errorMessage = "";
+        Object.entries(errors).forEach(([field, messages]) => {
+          errorMessage += `\n${field}: ${messages.join(" / ")}`;
+        });
+        Swal.fire({
+          title: "Erro",
+          text: errorMessage.trim() || "Erro ao excluir o item.",
+          icon: "error",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: error.response?.data?.error || "Erro ao excluir o item.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
     }
   };
 
   return (
     <>
       <NavlogComponent />
-      <Container>
-        <Row>
-          <Col>
-            {barbershop && (
-              <>
-                <p className="label-item text-center">
-                  Itens de {barbershop.name}
-                </p>
-                <Link to={`/item/create/${barbershop.slug}`}>
-                  <Button className="btn btn-primary w-50">
-                    Cadastrar novo item
-                  </Button>
-                </Link>
-              </>
-            )}
-            {isLoading ? (
-              <ProcessingIndicatorComponent messages={messages} />
-            ) : (
-              <>
-                {items.length === 0 ? (
-                  <p className="text-center">Nenhum item encontrado.</p>
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">
+                {barbershop ? `Itens de ${barbershop.name}` : "Itens da Barbearia"}
+              </p>
+              <Card.Body className="card-body">
+                <div className="mb-3 text-center">
+                  {barbershop && (
+                    <Link to={`/item/create/${barbershop.slug}`} className="link-component">
+                      <Button variant="primary" className="action-button">
+                        Cadastrar Novo Item
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+
+                {isLoading ? (
+                  <Col xs={12} className="loading-section">
+                    <ProcessingIndicatorComponent messages={messages} />
+                  </Col>
                 ) : (
-                  <Row>
-                    {items.map((item) => (
-                      <Col md={3} key={item.id} className="">
-                        <Card
-                          className="card-item m-2 p-4 rounded"
-                          style={{
-                            backgroundColor: isItemAvailable(item)
-                              ? ""
-                              : "#fff3cd !important",
-                          }}
-                        >
-                          <div
-                            className="background-image"
-                            style={{
-                              backgroundImage: `url('${storageUrl}/${barbershop.logo}')`,
-                            }}
-                          />
-                          <Link
-                            to={`/item/view/${item.slug}`}
-                            style={{ textDecoration: "none" }}
-                          >
-                            <Card.Img
-                              variant="top"
-                              src={getItemImage(item)}
-                              onError={handleImageError}
-                              style={{
-                                display: "block",
-                                margin: "0 auto",
-                                height: "150px",
-                                width: "150px",
-                                borderRadius: "10px", // Todos os cantos arredondados
-                                objectFit: "cover",
-                              }}
-                            />
-                          </Link>
-                          <Card.Body className="p-4 item-info rounded m-2">
-                            <p className="label-item h5 text-center">
-                              {item.name}
-                            </p>
-                            <p className="text-white m-1 h6">
-                             R${item.price}
-                            </p>
-                            <p className="text-white m-1 h6">
-                            
-                              {item.type === "produto" ? "Produto" : "Serviço"}
-                            </p>
-                            <p className="text-white m-1 h6">
-                          
-                              {item.subcategory}
-                            </p>
-                            <p className="text-white m-1 h6">
-                              {item.brand}
-                            </p>
-                            <p className="text-white m-1 h6">
-                              <strong>Disponibilidade:</strong>{" "}
-                              {formatDate(item.availability_start)} Até{" "}
-                              {formatDate(item.availability_end)}
-                            </p>
-                            <div className="d-flex justify-content-between mt-2">
-                              <Link
-                                to={`/item/update/${item.id}`}
-                                style={{ textDecoration: "none" }}
-                                className="w-50 me-1"
-                              >
-                                <Button className="primary w-100">
-                                  Editar
-                                </Button>
-                              </Link>
-                              <Link
-                                onClick={() => handleDelete(item.id)}
-                                style={{ textDecoration: "none" }}
-                                className="w-50 ms-1"
-                              >
-                                <Button className="bg-danger primary w-100">
-                                  Deletar
-                                </Button>
-                              </Link>
-                            </div>
-                          </Card.Body>
-                        </Card>
+                  <>
+                    {items.length > 0 ? (
+                      <Row className="inner-row">
+                        {items.map((item) => {
+                          const bgImage = item.image
+                            ? `${storageUrl}/${item.image}`
+                            : "/images/user.png";
+                          return (
+                            <Col key={item.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                              <Card className="inner-card h-100">
+                                <div
+                                  className="card-bg"
+                                  style={{ backgroundImage: `url('${bgImage}')` }}
+                                />
+                                <Card.Body className="inner-card-body d-flex flex-column justify-content-between">
+                                  <div className="text-center">
+                                    <Link to={`/item/view/${item.slug}`} className="link-component">
+                                      <img
+                                        src={bgImage}
+                                        className="img-component mb-3"
+                                        alt={item.name}
+                                        onError={handleImageError}
+                                      />
+                                      <p className="item-title">{item.name}</p>
+                                    </Link>
+                                  </div>
+                                  {/* Exemplo de exibição de informações adicionais do item */}
+                                  <div>
+                                    <p>
+                                      <strong>Preço:</strong> R${item.price}
+                                    </p>
+                                    <p>
+                                      <strong>Tipo:</strong>{" "}
+                                      {item.type === "produto" ? "Produto" : "Serviço"}
+                                    </p>
+                                    <p>
+                                      <strong>Subcategoria:</strong> {item.subcategory}
+                                    </p>
+                                    <p>
+                                      <strong>Marca:</strong> {item.brand}
+                                    </p>
+                                    {item.availability_start && item.availability_end && (
+                                      <p>
+                                        <strong>Disponibilidade:</strong>{" "}
+                                        {new Date(item.availability_start).toLocaleDateString("pt-BR")}{" "}
+                                        até{" "}
+                                        {new Date(item.availability_end).toLocaleDateString("pt-BR")}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="d-flex flex-wrap justify-content-center">
+                                    <Link
+                                      to={`/item/update/${item.id}`}
+                                      className="link-component m-1"
+                                    >
+                                      <Button variant="secondary" className="action-button">
+                                        Editar
+                                      </Button>
+                                    </Link>
+                                    <Button
+                                      variant="danger"
+                                      className="action-button m-1"
+                                      onClick={() => handleDelete(item.id)}
+                                    >
+                                      Deletar
+                                    </Button>
+                                  </div>
+                                </Card.Body>
+                              </Card>
+                            </Col>
+                          );
+                        })}
+                      </Row>
+                    ) : (
+                      <Col xs={12} className="empty-section text-center">
+                        <p className="empty-text">Nenhum item encontrado.</p>
                       </Col>
-                    ))}
-                  </Row>
+                    )}
+                  </>
                 )}
-              </>
-            )}
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </Container>

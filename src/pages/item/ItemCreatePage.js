@@ -1,3 +1,4 @@
+// ItemCreatePage.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,12 +9,10 @@ import axios from "axios";
 import { apiBaseUrl } from "../../config";
 
 const ItemCreatePage = () => {
-  const { slug } = useParams(); // O slug da barbearia é passado na URL
+  const { slug } = useParams();
   const navigate = useNavigate();
 
-  // Estado para armazenar o id da barbearia (entity_id)
   const [barbershopId, setBarbershopId] = useState(null);
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
   const [itemData, setItemData] = useState({
@@ -21,7 +20,7 @@ const ItemCreatePage = () => {
     name: "",
     type: "",
     price: "",
-    status: "", // status será selecionado: "1" para ativo e "0" para inativo
+    status: "",
     stock: "",
     availability_start: "",
     availability_end: "",
@@ -33,11 +32,10 @@ const ItemCreatePage = () => {
     brand: "",
     is_featured: false,
     limited_by_user: 0,
-    notes: ""
+    notes: "",
   });
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Busca os dados da barbearia pelo slug para obter o entity_id
   useEffect(() => {
     const fetchBarbershop = async () => {
       try {
@@ -46,7 +44,6 @@ const ItemCreatePage = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        // Supondo que o response.data contenha o objeto da barbearia
         const barbershop = response.data.barbershop || response.data;
         if (barbershop && barbershop.id) {
           setBarbershopId(barbershop.id);
@@ -92,7 +89,6 @@ const ItemCreatePage = () => {
     }));
   };
 
-  // Redimensiona a imagem para resolução 150x150
   const handleImageResize = (file, setPreview) => {
     const reader = new FileReader();
     if (!file || !file.type.startsWith("image/")) {
@@ -139,14 +135,12 @@ const ItemCreatePage = () => {
     e.target.src = "/images/itemdefault.png";
   };
 
-  // Validações básicas (exceto datas, que serão tratadas no backend)
   const validateFields = () => {
     const errors = [];
     const price = parseFloat(itemData.price);
     if (isNaN(price) || price < 0) {
       errors.push("O preço deve ser um valor monetário válido.");
     }
-    // Status é um select com opções: "1" para ativo e "0" para inativo
     if (itemData.status !== "1" && itemData.status !== "0") {
       errors.push("O status deve ser 'Ativo' ou 'Inativo'.");
     }
@@ -205,9 +199,9 @@ const ItemCreatePage = () => {
         console.error("Erro ao converter a imagem:", err);
       }
     }
+
     Object.keys(itemData).forEach((key) => {
       if (key !== "image") {
-        // Converte o booleano is_featured para 1 ou 0
         if (key === "is_featured") {
           formData.append(key, itemData[key] ? 1 : 0);
         } else {
@@ -216,7 +210,6 @@ const ItemCreatePage = () => {
       }
     });
 
-    // Adiciona os campos obrigatórios da entidade
     formData.append("entity_id", barbershopId);
     formData.append("entity_name", "barbershop");
     formData.append("app_id", 1);
@@ -228,7 +221,7 @@ const ItemCreatePage = () => {
       };
 
       await axios.post(`${apiBaseUrl}/item`, formData, { headers });
-      
+
       Swal.fire({
         title: "Sucesso!",
         text: "Item criado com sucesso!",
@@ -282,224 +275,245 @@ const ItemCreatePage = () => {
   };
 
   return (
-    <Container>
+    <>
       <NavlogComponent />
-      <Row className="justify-content-center">
-        <Col md={12}>
-          {isProcessing ? (
-            <ProcessingIndicatorComponent messages={messages} />
-          ) : (
-            <Card>
-              <Card.Body>
-                <p className="labeltitle h2 text-center text-uppercase">Criar Item</p>
-                <div className="text-center">
-                  <label htmlFor="imageInput" style={{ cursor: "pointer", display: "block" }}>
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview da Imagem do Item"
-                        className="img-fluid rounded"
-                        onError={handleImageError}
-                        style={{ margin: "0 auto", display: "block", width: "150px", height: "150px" }}
-                      />
-                    ) : (
-                      <img
-                        src="/images/logo.png"
-                        alt="Imagem Padrão"
-                        className="img-fluid rounded"
-                        onError={handleImageError}
-                        style={{ margin: "0 auto", display: "block", width: "150px", height: "150px" }}
-                      />
-                    )}
-                  </label>
-                  <Button
-                    variant="secondary"
-                    className="w-50 m-2"
-                    onClick={() => document.getElementById("imageInput").click()}
-                  >
-                    Adicionar imagem do item
-                  </Button>
-                  <Form.Control
-                    id="imageInput"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleItemImageChange}
-                    style={{ display: "none" }}
-                    required
-                  />
-                </div>
-                <Form onSubmit={handleSubmit}>
-                  <Row>
-                    <Col md={12}>
-                      <Row>
-                        <Col md={4}>
-                          <Form.Group controlId="name">
-                            <Form.Label>Nome</Form.Label>
-                            <Form.Control
-                              type="text"
-                              name="name"
-                              value={itemData.name}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={2}>
-                          <Form.Group controlId="price">
-                            <Form.Label>Preço</Form.Label>
-                            <Form.Control
-                              type="number"
-                              step="0.01"
-                              name="price"
-                              value={itemData.price}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={2}>
-                          <Form.Group controlId="type">
-                            <Form.Label>Tipo</Form.Label>
-                            <Form.Control
-                              as="select"
-                              name="type"
-                              value={itemData.type}
-                              onChange={handleInputChange}
-                              required
+      {/* Título seguindo o padrão do BarbershopCreatePage */}
+      <p className="section-title text-center">Criar Item</p>
+
+      {/* Container e Row seguindo o mesmo layout do BarbershopCreatePage */}
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
+            <Card className="card-component shadow-sm">
+              <Card.Body className="card-body">
+                {isProcessing ? (
+                  <Col xs={12} className="loading-section">
+                    <ProcessingIndicatorComponent messages={messages} />
+                  </Col>
+                ) : (
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col xs={12} className="mb-4 text-center">
+                        <div>
+                          <label
+                            htmlFor="imageInput"
+                            style={{ cursor: "pointer" }}
+                          >
+                            {imagePreview ? (
+                              <img
+                                src={imagePreview}
+                                alt="Preview da Imagem do Item"
+                                className="img-component"
+                                onError={handleImageError}
+                              />
+                            ) : (
+                              <img
+                                src="/images/logo.png"
+                                alt="Imagem Padrão"
+                                className="img-component"
+                                onError={handleImageError}
+                              />
+                            )}
+                          </label>
+                          <div className="mt-3">
+                            <Button
+                              variant="secondary"
+                              className="action-button"
+                              onClick={() =>
+                                document.getElementById("imageInput").click()
+                              }
                             >
-                              <option value="">Selecione</option>
-                              <option value="Produto">Produto</option>
-                              <option value="Serviço">Serviço</option>
-                            </Form.Control>
-                          </Form.Group>
-                        </Col>
-                        <Col md={2}>
-                          <Form.Group controlId="status">
-                            <Form.Label>Status</Form.Label>
-                            <Form.Control
-                              as="select"
-                              name="status"
-                              value={itemData.status}
-                              onChange={handleInputChange}
-                              required
-                            >
-                              <option value="">Selecione</option>
-                              <option value="1">Ativo</option>
-                              <option value="0">Inativo</option>
-                            </Form.Control>
-                          </Form.Group>
-                        </Col>
-                        <Col md={2}>
-                          <Form.Group controlId="stock">
-                            <Form.Label>Estoque</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="stock"
-                              value={itemData.stock}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={2}>
-                          <Form.Group controlId="discount">
-                            <Form.Label>Desconto</Form.Label>
-                            <Form.Control
-                              type="number"
-                              step="0.01"
-                              name="discount"
-                              value={itemData.discount}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group controlId="availability_start">
-                            <Form.Label>Data de Início</Form.Label>
-                            <Form.Control
-                              type="datetime-local"
-                              name="availability_start"
-                              value={itemData.availability_start}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group controlId="availability_end">
-                            <Form.Label>Data de Término</Form.Label>
-                            <Form.Control
-                              type="datetime-local"
-                              name="availability_end"
-                              value={itemData.availability_end}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                          <Form.Group controlId="expiration_date">
-                            <Form.Label>Data de Expiração</Form.Label>
-                            <Form.Control
-                              type="datetime-local"
-                              name="expiration_date"
-                              value={itemData.expiration_date}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={12}>
-                          <Form.Group controlId="description">
-                            <Form.Label>Descrição</Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              name="description"
-                              value={itemData.description}
-                              onChange={handleInputChange}
-                              required
-                            />
-                          </Form.Group>
-                        </Col>
-                        <Col md={12}>
-                          <Form.Group controlId="notes">
-                            <Form.Label>Notas</Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              name="notes"
-                              value={itemData.notes || ""}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                      </Row>
-                    </Col>
-                  </Row>
-                  <Button
-                    variant="primary"
-                    type="submit"
-                    disabled={isProcessing}
-                    className="mt-3"
-                  >
-                    {isProcessing ? "Criando..." : "Criar Item"}
-                  </Button>
-                  {messages.length > 0 && (
-                    <div className="mt-3">
-                      {messages.map((message, index) => (
-                        <div key={index} className="alert alert-info">
-                          {message}
+                              Adicionar imagem do item
+                            </Button>
+                          </div>
+                          <Form.Control
+                            id="imageInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleItemImageChange}
+                            required
+                            style={{ display: "none" }}
+                          />
                         </div>
-                      ))}
+                      </Col>
+
+                      {/* Nome */}
+                      <Col md={4} className="">
+                        <Form.Group controlId="name">
+                          <Form.Label>Nome</Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            value={itemData.name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Preço */}
+                      <Col md={2} className="">
+                        <Form.Group controlId="price">
+                          <Form.Label>Preço</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.01"
+                            name="price"
+                            value={itemData.price}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Tipo */}
+                      <Col md={2} className="">
+                        <Form.Group controlId="type">
+                          <Form.Label>Tipo</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="type"
+                            value={itemData.type}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="Produto">Produto</option>
+                            <option value="Serviço">Serviço</option>
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Status */}
+                      <Col md={2} className="">
+                        <Form.Group controlId="status">
+                          <Form.Label>Status</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="status"
+                            value={itemData.status}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="1">Ativo</option>
+                            <option value="0">Inativo</option>
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Estoque */}
+                      <Col md={2} className="">
+                        <Form.Group controlId="stock">
+                          <Form.Label>Estoque</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="stock"
+                            value={itemData.stock}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Desconto */}
+                      <Col md={2} className="">
+                        <Form.Group controlId="discount">
+                          <Form.Label>Desconto</Form.Label>
+                          <Form.Control
+                            type="number"
+                            step="0.01"
+                            name="discount"
+                            value={itemData.discount}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Data de Início */}
+                      <Col md={3} className="">
+                        <Form.Group controlId="availability_start">
+                          <Form.Label>Data de Início</Form.Label>
+                          <Form.Control
+                            type="datetime-local"
+                            name="availability_start"
+                            value={itemData.availability_start}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Data de Término */}
+                      <Col md={3} className="">
+                        <Form.Group controlId="availability_end">
+                          <Form.Label>Data de Término</Form.Label>
+                          <Form.Control
+                            type="datetime-local"
+                            name="availability_end"
+                            value={itemData.availability_end}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      {/* Descrição */}
+                      <Col md={12} className="">
+                        <Form.Group controlId="description">
+                          <Form.Label>Descrição</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="description"
+                            value={itemData.description}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      {/* Notas */}
+                      <Col md={12} className="">
+                        <Form.Group controlId="notes">
+                          <Form.Label>Notas</Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="notes"
+                            value={itemData.notes || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <div className="text-center">
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        className="action-button"
+                      >
+                        {isProcessing ? "Criando..." : "Criar Item"}
+                      </Button>
                     </div>
-                  )}
-                </Form>
+
+                    {/* Exibe mensagens de processamento, se existirem */}
+                    {messages.length > 0 && (
+                      <div className="mt-3">
+                        {messages.map((message, index) => (
+                          <div key={index}>{message}</div>
+                        ))}
+                      </div>
+                    )}
+                  </Form>
+                )}
               </Card.Body>
             </Card>
-          )}
-        </Col>
-      </Row>
-    </Container>
+          </Col>
+        </Row>
+      </Container>
+    </>
   );
 };
 

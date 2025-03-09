@@ -120,22 +120,25 @@ const Dashboard = () => {
                               <div
                                 className="card-bg"
                                 style={{
-                                  backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`
+                                  backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`,
                                 }}
                               />
                               {/* Card content overlay */}
                               <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
                                 <Link
                                   to={`/barbershop/view/${barbershop.slug}`}
-                                  className="link-component text-center"
+                                  className="link-component"
                                 >
-                                  <img
-                                    src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
-                                    className="img-component mb-3"
-                                    alt={barbershop.name}
-                                    onError={handleBarbershopLogoError}
-                                  />
-                                  <p className="item-title">{barbershop.name}</p>
+                                  {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
+                                  <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
+                                    <img
+                                      src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
+                                      className="img-component"
+                                      alt={barbershop.name}
+                                      onError={handleBarbershopLogoError}
+                                    />
+                                    <p className="item-title mt-2 mt-sm-0 ms-sm-2">{barbershop.name}</p>
+                                  </div>
                                 </Link>
                               </Card.Body>
                             </Card>
@@ -185,19 +188,24 @@ const Dashboard = () => {
                               <Card.Body className="inner-card-body d-flex flex-column justify-content-center">
                                 <Link
                                   to={`/barber/view/${barber.user.user_name}`}
-                                  className="link-component text-center"
+                                  className="link-component"
                                 >
-                                  <img
-                                    src={
-                                      barber.user.avatar
-                                        ? `${storageUrl}/${barber.user.avatar}`
-                                        : "/images/user.png"
-                                    }
-                                    alt={barber.user.first_name}
-                                    className="img-component mb-3"
-                                    onError={handleBarberAvatarError}
-                                  />
-                                  <p className="item-title">{barber.user.first_name}</p>
+                                  {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
+                                  <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
+                                    <img
+                                      src={
+                                        barber.user.avatar
+                                          ? `${storageUrl}/${barber.user.avatar}`
+                                          : "/images/user.png"
+                                      }
+                                      alt={barber.user.first_name}
+                                      className="img-component"
+                                      onError={handleBarberAvatarError}
+                                    />
+                                    <p className="item-title mt-2 mt-sm-0 ms-sm-2">
+                                      {barber.user.first_name}
+                                    </p>
+                                  </div>
                                 </Link>
                               </Card.Body>
                             </Card>
