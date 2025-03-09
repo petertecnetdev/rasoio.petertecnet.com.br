@@ -239,6 +239,7 @@ const SchedulingCreatePage = () => {
     <>
       <NavlogComponent />
 
+      <p className="section-title text-center">Agendar</p>
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
@@ -249,7 +250,6 @@ const SchedulingCreatePage = () => {
             ) : (
               <Card className="card-component scheduling-create-card shadow-sm">
                 <Card.Body className="card-body scheduling-create-card-body">
-                  <p className="section-title text-center">Criar Agendamento</p>
                   {barbershop && (
                     <p className="mb-3 text-center">
                       Agendamento em: <strong>{barbershop.name}</strong>
@@ -352,7 +352,7 @@ const SchedulingCreatePage = () => {
 
                     <div className="text-center">
                       <Button variant="primary" type="submit" className="action-button">
-                        {isProcessing ? "Criando..." : "Criar Agendamento"}
+                        {isProcessing ? "Agendando..." : "Agendar"}
                       </Button>
                     </div>
 

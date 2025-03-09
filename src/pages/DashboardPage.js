@@ -95,7 +95,7 @@ const Dashboard = () => {
       <Container className="main-container" fluid>
         {/* Seção de Barbearias */}
         <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="section-col">
+          <Col xs={12} lg={10} className="m-2">
             <Card className="card-component shadow-sm">
               <p className="section-title text-center">Barbearias</p>
               <Card.Body className="card-body">
@@ -164,7 +164,7 @@ const Dashboard = () => {
 
         {/* Seção de Barbeiros */}
         <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="section-col">
+          <Col xs={12} lg={10} className="m-2">
             <Card className="card-component shadow-sm">
               <p className="section-title text-center">Barbeiros</p>
               <Card.Body className="card-body">
