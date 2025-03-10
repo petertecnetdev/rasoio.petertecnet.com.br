@@ -65,7 +65,7 @@ const UserUpdatePage = () => {
         console.error("Erro ao buscar dados do usuário:", error);
         Swal.fire({
           title: "Sem dados",
-          text: "Não  conseguimos carregar seus dados. Tente novamente",
+          text: "Não conseguimos carregar seus dados. Tente novamente",
           icon: "error",
           confirmButtonText: "OK",
           customClass: {
@@ -155,9 +155,7 @@ const UserUpdatePage = () => {
       const response = await axios.post(
         `${apiBaseUrl}/user/${originalData.id}`,
         formData,
-        {
-          headers,
-        }
+        { headers }
       );
       console.log(response);
 
@@ -178,7 +176,6 @@ const UserUpdatePage = () => {
       });
     } catch (error) {
       console.error("Erro ao atualizar dados do usuário:", error);
-
       if (error.response && error.response.status === 422) {
         const validationErrors = error.response.data.errors;
         const errorMessage = Object.entries(validationErrors)
@@ -197,7 +194,7 @@ const UserUpdatePage = () => {
         });
       } else {
         Swal.fire({
-          title: "Erro ",
+          title: "Erro",
           text: "Não foi possível atualizar os dados do usuário.",
           icon: "error",
           confirmButtonText: "OK",
@@ -212,49 +209,45 @@ const UserUpdatePage = () => {
       setIsProcessing(false);
     }
   };
+
   const handleAvatarError = (e) => {
     if (e.target.src.includes("/images/user.png")) return;
     e.target.src = "/images/user.png";
   };
+
   return (
     <>
       <NavlogComponent />
-
-      <Container>
+      
+      <p className="section-title text-center">Atualizar meu perfil</p>
+          <Container className="main-container" fluid>
         {isProcessing ? (
           <ProcessingIndicatorComponent messages={messages} />
         ) : (
-          <Card>
-            <p className="labeltitle h6 text-center text-uppercase">
-              Atualizar meus dados
-            </p>
-            <Card.Body>
-              <div className="text-center">
-                <label
-                  htmlFor="avatarInput"
-                  style={{ cursor: "pointer", display: "block" }}
-                >
+          <Card className="card-container">
+            <p className="page-header">Atualizar meus dados</p>
+            <Card.Body className="card-body">
+              <div className="avatar-container">
+                <label htmlFor="avatarInput">
                   {avatarPreview ? (
                     <img
                       src={avatarPreview}
                       alt="Preview da avatar"
-                      className="img-fluid rounded-circle avatar"
-                      style={{ width: "150px" }}
+                      className="avatar-preview"
                       onError={handleAvatarError}
                     />
                   ) : (
                     <img
                       src="/images/user.png"
                       alt="Preview da avatar"
-                      className="img-fluid rounded-circle avatar"
-                      style={{ width: "150px" }}
+                      className="avatar-preview"
                       onError={handleAvatarError}
                     />
                   )}
                 </label>
                 <Button
                   variant="secondary"
-                  className="w-50 m-2"
+                  className="change-avatar-btn"
                   onClick={() => document.getElementById("avatarInput").click()}
                 >
                   Alterar Avatar
@@ -267,10 +260,10 @@ const UserUpdatePage = () => {
                   style={{ display: "none" }}
                 />
               </div>
-              <Form onSubmit={handleSubmit}>
+              <Form className="form-container" onSubmit={handleSubmit}>
                 <Row>
                   <Col md={2}>
-                    <Form.Group controlId="first_name">
+                    <Form.Group controlId="first_name" className="form-group">
                       <Form.Label>Primeiro Nome</Form.Label>
                       <Form.Control
                         type="text"
@@ -278,84 +271,79 @@ const UserUpdatePage = () => {
                         value={userData.first_name}
                         onChange={handleInputChange}
                         required
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="last_name">
+                    <Form.Group controlId="last_name" className="form-group">
                       <Form.Label>Sobrenome</Form.Label>
                       <Form.Control
                         type="text"
                         name="last_name"
                         value={userData.last_name}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="user_name">
+                    <Form.Group controlId="user_name" className="form-group">
                       <Form.Label>Nome de Usuário</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="user_name"
-                        value={userData.user_name}
-                        onChange={handleInputChange}
-                        disabled
-                      />
+                     <p className="text-white">{userData.user_name}</p> 
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="email">
+                    <Form.Group controlId="email" className="form-group">
                       <Form.Label>Email</Form.Label>
-                      <Form.Control
-                        type="email"
-                        name="email"
-                        value={userData.email}
-                        onChange={handleInputChange}
-                        disabled
-                      />
+                     
+                      <p className="text-white">{userData.email}</p> 
                     </Form.Group>
                   </Col>
                   <Col md={2}>
-                    <Form.Group controlId="cpf">
+                    <Form.Group controlId="cpf" className="form-group">
                       <Form.Label>CPF</Form.Label>
                       <Form.Control
                         type="text"
                         name="cpf"
                         value={userData.cpf}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="birthdate">
+                    <Form.Group controlId="birthdate" className="form-group">
                       <Form.Label>Data de Nascimento</Form.Label>
                       <Form.Control
                         type="date"
                         name="birthdate"
                         value={userData.birthdate}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="phone">
-                      <Form.Label>Telefone(whatsapp)</Form.Label>
+                    <Form.Group controlId="phone" className="form-group">
+                      <Form.Label>Telefone (whatsapp)</Form.Label>
                       <Form.Control
                         type="text"
                         name="phone"
                         value={userData.phone}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={2}>
-                    <Form.Group controlId="gender">
+                    <Form.Group controlId="gender" className="form-group">
                       <Form.Label>Gênero</Form.Label>
                       <Form.Select
                         name="gender"
                         value={userData.gender}
                         onChange={handleInputChange}
+                        className="input-field"
                       >
                         <option value="">Selecione</option>
                         <option value="male">Masculino</option>
@@ -367,34 +355,37 @@ const UserUpdatePage = () => {
                 </Row>
                 <Row>
                   <Col md={4}>
-                    <Form.Group controlId="address">
+                    <Form.Group controlId="address" className="form-group">
                       <Form.Label>Endereço</Form.Label>
                       <Form.Control
                         type="text"
                         name="address"
                         value={userData.address}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={3}>
-                    <Form.Group controlId="city">
+                    <Form.Group controlId="city" className="form-group">
                       <Form.Label>Cidade</Form.Label>
                       <Form.Control
                         type="text"
                         name="city"
                         value={userData.city}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={2}>
-                    <Form.Group controlId="uf">
+                    <Form.Group controlId="uf" className="form-group">
                       <Form.Label>Estado (UF)</Form.Label>
                       <Form.Select
                         name="uf"
                         value={userData.uf}
                         onChange={handleInputChange}
+                        className="input-field"
                       >
                         <option value="">Selecione</option>
                         <option value="AC">AC</option>
@@ -427,35 +418,36 @@ const UserUpdatePage = () => {
                       </Form.Select>
                     </Form.Group>
                   </Col>
-
                   <Col md={3}>
-                    <Form.Group controlId="postal_code">
+                    <Form.Group controlId="postal_code" className="form-group">
                       <Form.Label>CEP</Form.Label>
                       <Form.Control
                         type="text"
                         name="postal_code"
                         value={userData.postal_code}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
                 <Row>
                   <Col md={6}>
-                    <Form.Group controlId="occupation">
+                    <Form.Group controlId="occupation" className="form-group">
                       <Form.Label>Ocupação</Form.Label>
                       <Form.Control
                         type="text"
                         name="occupation"
                         value={userData.occupation}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
                 <Row>
                   <Col>
-                    <Form.Group controlId="about">
+                    <Form.Group controlId="about" className="form-group">
                       <Form.Label>Fale sobre você</Form.Label>
                       <Form.Control
                         as="textarea"
@@ -463,12 +455,13 @@ const UserUpdatePage = () => {
                         name="about"
                         value={userData.about}
                         onChange={handleInputChange}
+                        className="input-field"
                       />
                     </Form.Group>
                   </Col>
                 </Row>
-                <div className="d-flex justify-content-center">
-                  <Button variant="primary" type="submit" className="w-50 mt-3">
+                <div className="center text-center">
+                  <Button variant="primary" type="submit" className="submit-btn">
                     Atualizar
                   </Button>
                 </div>
