@@ -114,6 +114,11 @@ const AppointmentListPage = () => {
           Swal.fire({
             title: "Cancelado",
             text: "Agendamento cancelado com sucesso.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
             icon: "success",
           });
           // Atualiza a lista alterando o status do agendamento para "cancelled"
@@ -130,6 +135,11 @@ const AppointmentListPage = () => {
             text:
               error.response?.data?.error ||
               "Erro ao cancelar o agendamento. Tente novamente.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
             icon: "error",
           });
         }
@@ -184,7 +194,16 @@ const AppointmentListPage = () => {
         }
         const errorMessage =
           error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({ icon: "error", title: "Erro!", text: errorMessage });
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: errorMessage,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } finally {
         setMessages([]);
         setLoading(false);
@@ -229,7 +248,16 @@ const AppointmentListPage = () => {
         }
         const errorMessage =
           error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({ icon: "error", title: "Erro!", text: errorMessage });
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: errorMessage,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } finally {
         setMessages([]);
         setLoading(false);
@@ -257,7 +285,16 @@ const AppointmentListPage = () => {
         }
         const errorMessage =
           error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({ icon: "error", title: "Erro!", text: errorMessage });
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: errorMessage,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } finally {
         setMessages([]);
         setLoading(false);
@@ -296,7 +333,7 @@ const AppointmentListPage = () => {
               {appointments.length === 0 ? (
                 <Row>
                   <Col className="text-center">
-                    <p>Nenhum agendamento encontrado.</p>
+                    <p className="text-white">Nenhum agendamento encontrado.</p>
                     <Button
                       variant="primary"
                       className="action-button"
