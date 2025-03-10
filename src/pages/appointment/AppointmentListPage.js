@@ -161,6 +161,7 @@ const AppointmentListPage = () => {
     };
 
     // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
+    // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
     const fetchBarbershopAppointments = async () => {
       setMessages(["Carregando informações da barbearia..."]);
       try {
@@ -192,8 +193,8 @@ const AppointmentListPage = () => {
           navigate("/login");
           return;
         }
-        // Se o status for 404, significa que não há agendamentos,
-        // então apenas define a lista como vazia sem exibir um alerta de erro.
+        // Se não houver agendamentos cadastrados (ex.: status 404),
+        // apenas define a lista como vazia sem exibir alerta.
         if (error.response && error.response.status === 404) {
           setAppointments([]);
         } else {
