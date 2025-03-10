@@ -137,7 +137,7 @@ const Dashboard = () => {
                                       alt={barbershop.name}
                                       onError={handleBarbershopLogoError}
                                     />
-                                    <p className="item-title mt-2 mt-sm-0 ms-sm-2">{barbershop.name}</p>
+                                    <p className="label-name-bg  m-2">{barbershop.name}</p>
                                   </div>
                                 </Link>
                               </Card.Body>
@@ -184,31 +184,28 @@ const Dashboard = () => {
                       <Row className="inner-row">
                         {barbers.map((barber) => (
                           <Col key={barber.id} xs={12} sm={6} md={4} lg={3} className="inner-col mb-4">
-                            <Card className="inner-card h-100">
-                              <Card.Body className="inner-card-body d-flex flex-column justify-content-center">
-                                <Link
-                                  to={`/barber/view/${barber.user.user_name}`}
-                                  className="link-component"
-                                >
-                                  {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
-                                  <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
-                                    <img
-                                      src={
-                                        barber.user.avatar
-                                          ? `${storageUrl}/${barber.user.avatar}`
-                                          : "/images/user.png"
-                                      }
-                                      alt={barber.user.first_name}
-                                      className="img-component"
-                                      onError={handleBarberAvatarError}
-                                    />
-                                    <p className="item-title mt-2 mt-sm-0 ms-sm-2">
-                                      {barber.user.first_name}
-                                    </p>
-                                  </div>
-                                </Link>
-                              </Card.Body>
-                            </Card>
+                          <Card className="barber-card">
+                 
+                                                       <Card.Body className="barber-card-body">
+                                                         <img
+                                                           src={
+                                                             barber.avatar
+                                                               ? `${storageUrl}/${barber.avatar}`
+                                                               : "/images/user.png"
+                                                           }
+                                                           alt={barber.first_name}
+                                                           className="barber-avatar"
+                                                           onError={handleBarberAvatarError}
+                                                         />
+                                                         <p className="barber-name-title">
+                                                           <Link
+                                                             to={`/barber/view/${barber.user_name}`}                                   
+                                                           >
+                                                           </Link>
+                                                         </p>
+                                                         <p className="label-name">{barber.user.first_name}</p>
+                                                       </Card.Body>
+                                                     </Card>
                           </Col>
                         ))}
                       </Row>

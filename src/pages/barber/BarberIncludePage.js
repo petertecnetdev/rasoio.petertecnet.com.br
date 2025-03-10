@@ -19,11 +19,14 @@ const BarberIncludePage = () => {
     const fetchBarbershop = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiBaseUrl}/barbershop/view/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setBarbershop(response.data.barbershop);
         setBarbers(response.data.barbers);
         window.scrollTo(0, 0);
@@ -172,11 +175,14 @@ const BarberIncludePage = () => {
         });
 
         // Atualiza a lista de barbeiros
-        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiBaseUrl}/barbershop/view/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         setBarbers(response.data.barbers);
       } catch (error) {
         const errorMessage =
@@ -220,7 +226,7 @@ const BarberIncludePage = () => {
           ]}
         />
       ) : (
-         <Container className="main-container" fluid>
+        <Container className="main-container" fluid>
           {barbershop && (
             <Card className="barber-include-card">
               <Card.Body className="barber-include-card-body">
@@ -244,7 +250,9 @@ const BarberIncludePage = () => {
                       Barbeiros Associados
                     </p>
                     {barbers.length === 0 ? (
-                      <p className="no-barbers-text">Nenhum barbeiro encontrado.</p>
+                      <p className="no-barbers-text">
+                        Nenhum barbeiro encontrado.
+                      </p>
                     ) : (
                       <Row className="barbers-list-row">
                         {barbers.map((barber) => (
@@ -266,13 +274,11 @@ const BarberIncludePage = () => {
                                   onError={handleBarberAvatarError}
                                 />
                                 <p className="barber-name-title">
-                                <Link
-  to={`/barber/view/${barber.user_name}`}
-  style={{ textDecoration: "none", color: "inherit", textTransform: "capitalize" }}
->
-  {barber.first_name}
-</Link>
-
+                                  <Link
+                                    to={`/barber/view/${barber.user_name}`}                                   
+                                  >
+                                    {barber.first_name}
+                                  </Link>
                                 </p>
                                 <p className="barber-email">{barber.email}</p>
                                 <Button

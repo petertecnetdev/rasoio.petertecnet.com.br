@@ -883,6 +883,25 @@ body {
   color: #ccc;
 }
 
+
+/* Email do barbeiro */
+.label-name {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+
+/* Email do barbeiro */
+.label-name-bg {
+  background-color: #000;
+  border-radius: 10px;
+  border: 1px solid #FFF;
+
+  padding: 10px;
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
 /* Botão para remover barbeiro */
 .remove-barber-button {
   margin-top: 5px;
