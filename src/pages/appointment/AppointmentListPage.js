@@ -192,18 +192,24 @@ const AppointmentListPage = () => {
           navigate("/login");
           return;
         }
-        const errorMessage =
-          error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text: errorMessage,
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        // Se o status for 404, significa que não há agendamentos,
+        // então apenas define a lista como vazia sem exibir um alerta de erro.
+        if (error.response && error.response.status === 404) {
+          setAppointments([]);
+        } else {
+          const errorMessage =
+            error.response?.data?.message || "Erro ao carregar agendamentos.";
+          Swal.fire({
+            icon: "error",
+            title: "Erro!",
+            text: errorMessage,
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+          });
+        }
       } finally {
         setMessages([]);
         setLoading(false);
