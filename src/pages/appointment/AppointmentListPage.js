@@ -146,6 +146,18 @@ const AppointmentListPage = () => {
     });
   };
 
+  // Função para identificar se o erro é referente à ausência de agendamentos
+  const isNoAppointmentsError = (error) => {
+    const status = error.response?.status;
+    const errorMsg = (error.response?.data?.error || "").toLowerCase();
+    const messageMsg = (error.response?.data?.message || "").toLowerCase();
+    return (
+      status === 404 ||
+      errorMsg.includes("nenhum agendamento") ||
+      messageMsg.includes("nenhum agendamento")
+    );
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -156,17 +168,6 @@ const AppointmentListPage = () => {
     const sortAppointments = (data) => {
       return data.sort(
         (a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at)
-      );
-    };
-
-    // Função auxiliar para tratar erros de agendamentos vazios
-    const isNoAppointmentsError = (error) => {
-      return (
-        (error.response && error.response.status === 404) ||
-        (error.response &&
-          error.response.data &&
-          error.response.data.error &&
-          error.response.data.error.toLowerCase().includes("nenhum agendamento"))
       );
     };
 
