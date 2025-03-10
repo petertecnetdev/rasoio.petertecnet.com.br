@@ -51,7 +51,7 @@ const AppointmentListPage = () => {
           enrichedAppointment.client_first_name = "Não identificado";
         }
 
-        // Nome do provider (barbeiro): Usar o endpoint /user/show, pois provider_id é o id do usuário associado
+        // Nome do provider (barbeiro)
         if (appointment.provider_id) {
           try {
             const providerRes = await axios.get(
@@ -159,6 +159,17 @@ const AppointmentListPage = () => {
       );
     };
 
+    // Função auxiliar para tratar erros de agendamentos vazios
+    const isNoAppointmentsError = (error) => {
+      return (
+        (error.response && error.response.status === 404) ||
+        (error.response &&
+          error.response.data &&
+          error.response.data.error &&
+          error.response.data.error.toLowerCase().includes("nenhum agendamento"))
+      );
+    };
+
     // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
     const fetchBarbershopAppointments = async () => {
       setMessages(["Carregando informações da barbearia..."]);
@@ -186,13 +197,7 @@ const AppointmentListPage = () => {
         const enriched = await enrichAppointments(sorted);
         setAppointments(enriched);
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
-        }
-        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
-        if (error.response && error.response.status === 404) {
+        if (isNoAppointmentsError(error)) {
           setAppointments([]);
         } else {
           const errorMessage =
@@ -225,15 +230,14 @@ const AppointmentListPage = () => {
         const barberData = resBarber.data.barbershop
           ? resBarber.data
           : resBarber.data;
-        // Para a listagem, precisamos dos dados do usuário associado ao barbeiro.
         setHeaderInfo(barberData);
 
         setMessages(["Carregando agendamentos..."]);
         const params = {
-          provider_id: barberData.user_id, // Usar o id do usuário associado ao barbeiro
-          app_id: 1, // Ajuste conforme necessário
+          provider_id: barberData.user_id,
+          app_id: 1,
           entity_name: "barbershop",
-          entity_id: barberData.barbershops[0]?.id, // Assumindo que há pelo menos uma barbearia
+          entity_id: barberData.barbershops[0]?.id,
         };
         const resAppointments = await axios.get(
           `${apiBaseUrl}/appointment/listbyprovider`,
@@ -245,13 +249,7 @@ const AppointmentListPage = () => {
         const enriched = await enrichAppointments(sorted);
         setAppointments(enriched);
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
-        }
-        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
-        if (error.response && error.response.status === 404) {
+        if (isNoAppointmentsError(error)) {
           setAppointments([]);
         } else {
           const errorMessage =
@@ -287,13 +285,7 @@ const AppointmentListPage = () => {
         const enriched = await enrichAppointments(sorted);
         setAppointments(enriched);
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
-        }
-        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
-        if (error.response && error.response.status === 404) {
+        if (isNoAppointmentsError(error)) {
           setAppointments([]);
         } else {
           const errorMessage =
@@ -478,7 +470,6 @@ const AppointmentListPage = () => {
                             </>
                           )}
                           <div className="d-flex gap-2">
-                            {/* Só exibe o botão de cancelar se o status não for 'cancelled' */}
                             {appointment.status.toLowerCase() !== "cancelled" && (
                               <Button
                                 variant="danger"
