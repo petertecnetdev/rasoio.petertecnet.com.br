@@ -202,7 +202,7 @@ const AppointmentListPage = () => {
           setAppointments([]);
         } else {
           const errorMessage =
-            error.response?.data?.message || "Erro ao carregar agendamentos.";
+            error.response?.data?.message || "Erro ao carregar agendamentos ou ainda não existe agendamentos para esta barbearia.";
           Swal.fire({
             icon: "error",
             title: "Erro!",
