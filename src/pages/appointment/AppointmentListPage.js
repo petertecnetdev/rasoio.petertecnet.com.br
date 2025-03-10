@@ -90,7 +90,6 @@ const AppointmentListPage = () => {
   };
 
   // Função para cancelar um agendamento (muda o status para "cancelled")
-  // Função para cancelar um agendamento (muda o status para "cancelled")
   const cancelAppointment = async (id) => {
     const token = localStorage.getItem("token");
     Swal.fire({
@@ -161,7 +160,6 @@ const AppointmentListPage = () => {
     };
 
     // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
-    // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
     const fetchBarbershopAppointments = async () => {
       setMessages(["Carregando informações da barbearia..."]);
       try {
@@ -193,8 +191,7 @@ const AppointmentListPage = () => {
           navigate("/login");
           return;
         }
-        // Se não houver agendamentos cadastrados (ex.: status 404),
-        // apenas define a lista como vazia sem exibir alerta.
+        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
         if (error.response && error.response.status === 404) {
           setAppointments([]);
         } else {
@@ -253,18 +250,23 @@ const AppointmentListPage = () => {
           navigate("/login");
           return;
         }
-        const errorMessage =
-          error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text: errorMessage,
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
+        if (error.response && error.response.status === 404) {
+          setAppointments([]);
+        } else {
+          const errorMessage =
+            error.response?.data?.message || "Erro ao carregar agendamentos.";
+          Swal.fire({
+            icon: "error",
+            title: "Erro!",
+            text: errorMessage,
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+          });
+        }
       } finally {
         setMessages([]);
         setLoading(false);
@@ -290,18 +292,23 @@ const AppointmentListPage = () => {
           navigate("/login");
           return;
         }
-        const errorMessage =
-          error.response?.data?.message || "Erro ao carregar agendamentos.";
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text: errorMessage,
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        // Se não houver agendamentos cadastrados, apenas define a lista como vazia sem exibir alerta.
+        if (error.response && error.response.status === 404) {
+          setAppointments([]);
+        } else {
+          const errorMessage =
+            error.response?.data?.message || "Erro ao carregar agendamentos.";
+          Swal.fire({
+            icon: "error",
+            title: "Erro!",
+            text: errorMessage,
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+          });
+        }
       } finally {
         setMessages([]);
         setLoading(false);
@@ -472,8 +479,7 @@ const AppointmentListPage = () => {
                           )}
                           <div className="d-flex gap-2">
                             {/* Só exibe o botão de cancelar se o status não for 'cancelled' */}
-                            {appointment.status.toLowerCase() !==
-                              "cancelled" && (
+                            {appointment.status.toLowerCase() !== "cancelled" && (
                               <Button
                                 variant="danger"
                                 className="action-button"
