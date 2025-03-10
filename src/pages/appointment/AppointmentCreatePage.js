@@ -1,4 +1,3 @@
-// SchedulingCreatePage.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,7 +7,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl } from "../../config";
 
-const SchedulingCreatePage = () => {
+const AppointmentCreatePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -21,10 +20,9 @@ const SchedulingCreatePage = () => {
   const [messages, setMessages] = useState([]);
 
   // Dados do agendamento
-  const [schedulingData, setSchedulingData] = useState({
+  const [appointmentData, setappointmentData] = useState({
     scheduled_at: "",
     provider_id: "",
-    appointment_type: "",
     notes: "",
     service_ids: [],
   });
@@ -70,13 +68,15 @@ const SchedulingCreatePage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSchedulingData((prevData) => ({ ...prevData, [name]: value }));
+    setappointmentData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // Atualiza serviços selecionados
-  const handleServiceSelection = (e, itemId) => {
+  // Atualiza a lista de serviços selecionados
+  const handleServiceSelection = (e) => {
+    const itemId = parseInt(e.target.value);
     const checked = e.target.checked;
-    setSchedulingData((prevData) => {
+
+    setappointmentData((prevData) => {
       let updatedServices = [...prevData.service_ids];
       if (checked) {
         updatedServices.push(itemId);
@@ -90,16 +90,13 @@ const SchedulingCreatePage = () => {
   // Validação dos campos
   const validateFields = () => {
     const errors = [];
-    if (!schedulingData.scheduled_at) {
+    if (!appointmentData.scheduled_at) {
       errors.push("A data e hora do agendamento é obrigatória.");
     }
-    if (!schedulingData.appointment_type) {
-      errors.push("O tipo do agendamento é obrigatório.");
-    }
-    if (!schedulingData.provider_id) {
+    if (!appointmentData.provider_id) {
       errors.push("Selecione um barbeiro para ser o prestador.");
     }
-    if (schedulingData.service_ids.length === 0) {
+    if (appointmentData.service_ids.length === 0) {
       errors.push("Selecione ao menos um serviço.");
     }
 
@@ -135,14 +132,14 @@ const SchedulingCreatePage = () => {
     }
 
     setIsProcessing(true);
-    setMessages(["Aguarde enquanto criamos o agendamento..."]);
+    setMessages(["Aguarde enquanto realizamos seu agendamento..."]);
 
     // Cada serviço dura ~25 minutos
     const BASE_DURATION = 25; // minutos
-    const totalDuration = schedulingData.service_ids.length * BASE_DURATION;
+    const totalDuration = appointmentData.service_ids.length * BASE_DURATION;
 
     // Calcula expected_end_time
-    const scheduledAtDate = new Date(schedulingData.scheduled_at);
+    const scheduledAtDate = new Date(appointmentData.scheduled_at);
     const expectedEndTimeDate = new Date(scheduledAtDate.getTime() + totalDuration * 60000);
 
     // Tenta obter o client_id a partir de /auth/me
@@ -160,19 +157,19 @@ const SchedulingCreatePage = () => {
       app_id: 1,
       entity_name: "barbershop",
       entity_id: barbershopId,
-      scheduled_at: schedulingData.scheduled_at,
-      service_ids: schedulingData.service_ids,
+      scheduled_at: appointmentData.scheduled_at,
+      service_ids: appointmentData.service_ids, // Array de serviços selecionados
       expected_end_time: expectedEndTimeDate.toISOString(),
-      provider_id: schedulingData.provider_id,
+      provider_id: appointmentData.provider_id,
       description: "",
       client_id: clientId,
       registered_by: clientId,
-      status: "pendente",
+      status: "pending",
       location: "",
       duration: totalDuration,
-      notes: schedulingData.notes,
-      payment_status: "pendente",
-      appointment_type: schedulingData.appointment_type,
+      notes: appointmentData.notes,
+      payment_status: "pending",
+      appointment_type: "presencial",
     };
 
     try {
@@ -248,8 +245,8 @@ const SchedulingCreatePage = () => {
                 <ProcessingIndicatorComponent messages={messages} />
               </div>
             ) : (
-              <Card className="card-component scheduling-create-card shadow-sm">
-                <Card.Body className="card-body scheduling-create-card-body">
+              <Card className="card-component appointment-create-card shadow-sm">
+                <Card.Body className="card-body appointment-create-card-body">
                   {barbershop && (
                     <p className="mb-3 text-center">
                       Agendamento em: <strong>{barbershop.name}</strong>
@@ -273,7 +270,10 @@ const SchedulingCreatePage = () => {
                                   type="checkbox"
                                   id={`service-${item.id}`}
                                   label={item.name}
-                                  onChange={(e) => handleServiceSelection(e, item.id)}
+                                  // Adicionamos value e checked para garantir controle total via state
+                                  value={item.id}
+                                  checked={appointmentData.service_ids.includes(item.id)}
+                                  onChange={handleServiceSelection}
                                 />
                               </Col>
                             ))
@@ -288,7 +288,7 @@ const SchedulingCreatePage = () => {
                           <Form.Control
                             type="datetime-local"
                             name="scheduled_at"
-                            value={schedulingData.scheduled_at}
+                            value={appointmentData.scheduled_at}
                             onChange={handleInputChange}
                             required
                           />
@@ -302,7 +302,7 @@ const SchedulingCreatePage = () => {
                           <Form.Control
                             as="select"
                             name="provider_id"
-                            value={schedulingData.provider_id}
+                            value={appointmentData.provider_id}
                             onChange={handleInputChange}
                             required
                           >
@@ -316,25 +316,6 @@ const SchedulingCreatePage = () => {
                         </Form.Group>
                       </Col>
 
-                      {/* Tipo de agendamento */}
-                      <Col md={2} className="mb-3">
-                        <Form.Group controlId="appointment_type">
-                          <Form.Label>Tipo</Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="appointment_type"
-                            value={schedulingData.appointment_type}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione</option>
-                            <option value="presencial">Presencial</option>
-                            <option value="domiciliar">Domiciliar</option>
-                            <option value="online">Online</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
-
                       {/* Observações */}
                       <Col md={12} className="mb-3">
                         <Form.Group controlId="notes">
@@ -343,7 +324,7 @@ const SchedulingCreatePage = () => {
                             as="textarea"
                             rows={3}
                             name="notes"
-                            value={schedulingData.notes}
+                            value={appointmentData.notes}
                             onChange={handleInputChange}
                           />
                         </Form.Group>
@@ -375,4 +356,4 @@ const SchedulingCreatePage = () => {
   );
 };
 
-export default SchedulingCreatePage;
+export default AppointmentCreatePage;

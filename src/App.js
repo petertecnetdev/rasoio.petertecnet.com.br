@@ -40,8 +40,8 @@ import BarberIncludePage from "./pages/barber/BarberIncludePage";
 import UserViewPage from "./pages/user/UserViewPage";
 import UserUpdatePage from "./pages/user/UserUpdatePage";
 
-import SchedulingListPage from "./pages/scheduling/SchedulingListPage";
-import SchedulingCreatePage from "./pages/scheduling/SchedulingCreatePage";
+import AppointmentListPage from "./pages/appointment/AppointmentListPage";
+import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { apiBaseUrl } from "./config";
@@ -53,17 +53,17 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("token"); // Obtém o token do localStorage
-     
+      
       if (token) {
         try {
           const headers = {
             Authorization: `Bearer ${token}`,
           };
-          const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers }); 
-          setUser(response.data.user); 
+          const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
+          setUser(response.data.user);
         } catch (error) {
           setUser(null);
-          localStorage.removeItem("token"); 
+          localStorage.removeItem("token");
         }
       } else {
         setUser(null); // Se não houver token, considera o usuário como não autenticado
@@ -148,8 +148,11 @@ const App = () => {
         <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
         <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
-        <Route path="/scheduling/list/:slug" element={protectedRoute(<SchedulingListPage />)} />
-        <Route path="/scheduling/create/:slug" element={protectedRoute(<SchedulingCreatePage />)} />
+        {/* Rotas de agendamentos */}
+        <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
+        <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
+        <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
+        <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
       </Routes>
     </Router>
   );

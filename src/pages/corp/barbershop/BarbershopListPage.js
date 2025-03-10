@@ -135,7 +135,7 @@ const BarbershopListPage = () => {
                         {barbershops.map((barbershop) => {
                           const bgImage = `${storageUrl}/${barbershop.logo || "images/logo.png"}`;
                           return (
-                            <Col key={barbershop.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                            <Col key={barbershop.id}  md={12} className="inner-col m-4">
                               <Card className="inner-card h-100">
                                 {/* Background Image with Blur Effect */}
                                 <div
@@ -166,7 +166,7 @@ const BarbershopListPage = () => {
                                         Itens
                                       </Button>
                                     </Link>
-                                    <Link to={`/scheduling/list/${barbershop.slug}`} className="link-component m-1">
+                                    <Link to={`/appointment/barbershop/${barbershop.slug}`} className="link-component m-1">
                                       <Button variant="secondary" className="action-button">
                                         Agendamentos
                                       </Button>

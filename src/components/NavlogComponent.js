@@ -219,6 +219,10 @@ const Navigation = () => {
                     <NavDropdown.Item as={Link} to={`/user/update`} className="nav-dropdown-item" onClick={() => setShowMobileMenu(false)}>
                       Gerenciar conta
                     </NavDropdown.Item>
+
+                    <NavDropdown.Item as={Link} to={`/appointment/my`} className="nav-dropdown-item" onClick={() => setShowMobileMenu(false)}>
+                      Meus agendamentos
+                    </NavDropdown.Item>
                     <NavDropdown.Item as={Link} to="/logout" className="nav-dropdown-item" onClick={() => setShowMobileMenu(false)}>
                       Sair
                     </NavDropdown.Item>

@@ -1291,3 +1291,82 @@ body {
   white-space: nowrap;
   font-weight: 600;
 }
+/* Botão Cancelar - Design com gradiente, borda arredondada e efeito hover */
+.cancel {
+  background: linear-gradient(135deg, #a30b0b, #690404);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cancel:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Botão Confirmar - Design com borda sólida, fundo suave e transição para hover */
+.confirm {
+  background-color: #f0fff0;
+  border: 2px solid #28a745;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #28a745;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.confirm:hover {
+  background-color: #28a745;
+  color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estado Pendente - Design com borda tracejada, fundo discreto e efeito hover */
+.pendent {
+  background-color: #fff8e1;
+  border: 2px dashed #ff9800;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #ff9800;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pendent:hover {
+  border-color: #ff5722;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estado Aguardando - Design com gradiente suave e borda destacada */
+.awaiting {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 3px solid #2196f3;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #0d47a1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.awaiting:hover {
+  border-color: #1976d2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+  .cancel, .confirm, .pendent, .awaiting {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+.awaiting {
+  border: 5px solid blue;
+}
