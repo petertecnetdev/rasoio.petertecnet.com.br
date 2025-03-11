@@ -43,6 +43,11 @@ import UserUpdatePage from "./pages/user/UserUpdatePage";
 import AppointmentListPage from "./pages/appointment/AppointmentListPage";
 import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
 
+// ServiceRecord
+import ServiceRecordListPage from "./pages/serviceRecord/ServiceRecordListPage";
+import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePage";
+import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
+
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { apiBaseUrl } from "./config";
 
@@ -66,9 +71,9 @@ const App = () => {
           localStorage.removeItem("token");
         }
       } else {
-        setUser(null); // Se não houver token, considera o usuário como não autenticado
+        setUser(null);
       }
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     };
 
     fetchData();
@@ -148,11 +153,23 @@ const App = () => {
         <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
         <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
+        <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
+        <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
+        <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
+        <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
+
         {/* Rotas de agendamentos */}
         <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
         <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
         <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
         <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
+
+        {/* Rotas de atendimentos (ServiceRecord) */}
+        <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />
+        <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
+        <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />   
+        <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
+        <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
       </Routes>
     </Router>
   );

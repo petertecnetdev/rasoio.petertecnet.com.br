@@ -156,6 +156,11 @@ const BarbershopListPage = () => {
                                     </Link>
                                   </div>
                                   <div className="d-flex flex-wrap justify-content-center">
+                                    <Link to={`/service-record/barbershop/${barbershop.slug}`} className="link-component m-1">
+                                      <Button variant="secondary" className="action-button">
+                                        Atendimentos
+                                      </Button>
+                                    </Link>
                                     <Link to={`/barber/include/${barbershop.slug}`} className="link-component m-1">
                                       <Button variant="secondary" className="action-button">
                                         Barbeiros

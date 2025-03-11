@@ -38,7 +38,6 @@ const BarbershopViewPage = () => {
 
         window.scrollTo(0, 0);
       } catch (error) {
-        // Caso venham erros de validação da API, exibimos o campo e mensagem no SweetAlert
         if (error.response?.data?.errors) {
           const errorMessages = Object.entries(error.response.data.errors)
             .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
@@ -53,7 +52,8 @@ const BarbershopViewPage = () => {
             icon: "error",
             title: "Erro!",
             text:
-              error.response?.data?.message || "Erro ao carregar a barbearia.",
+              error.response?.data?.message ||
+              "Erro ao carregar a barbearia.",
           });
         }
       } finally {
@@ -96,11 +96,38 @@ const BarbershopViewPage = () => {
       ) : (
         <Container className="main-container" fluid>
           {barbershop && (
-            <Card className="barbershop-card">
-              <Card.Body className="barbershop-body">
+            <Card
+              className="barbershop-card"
+              style={{ position: "relative", overflow: "hidden" }}
+            >
+              {/* Background image com blur */}
+              <div
+                className="card-bg"
+                style={{
+                  backgroundImage: `url('${
+                    barbershop.logo
+                      ? `${storageUrl}/${barbershop.logo}`
+                      : "/images/logo.png"
+                  }')`,
+                  filter: "blur(8px)",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  zIndex: 1,
+                }}
+              />
+              {/* Conteúdo do card */}
+              <Card.Body
+                className="barbershop-body"
+                style={{ position: "relative", zIndex: 2 }}
+              >
                 <Row className="barbershop-row">
                   <Col md={6} className="barbershop-info">
-                    <p className="barbershop-name">{barbershop.name}</p>
+                    <p className="barbershop-name label-name-bg">{barbershop.name}</p>
                     <img
                       src={
                         barbershop.logo
@@ -227,13 +254,13 @@ const BarbershopViewPage = () => {
                   {barbers.length > 0 ? (
                     <Row>
                       {barbers.map((barber) => (
-                        <Col key={barber.id} md={6} className="">
+                        <Col key={barber.id} md={6}>
                           <Link
                             to={`/barber/view/${barber.user_name}`}
                             className="link-component"
                           >
-                            <div className="">
-                              <p className="barber-name barber-label text-center ">
+                            <div>
+                              <p className="barber-name barber-label text-center">
                                 {barber.first_name}
                               </p>
                             </div>
