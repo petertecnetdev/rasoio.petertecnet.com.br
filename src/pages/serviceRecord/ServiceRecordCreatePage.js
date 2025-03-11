@@ -267,7 +267,7 @@ const ServiceRecordCreatePage = () => {
                       {/* Seleção do Prestador */}
                       <Col md={4} className="mb-3">
                         <Form.Group controlId="provider_id">
-                          <Form.Label>Prestador</Form.Label>
+                          <Form.Label>Barbeiro</Form.Label>
                           <Form.Control
                             as="select"
                             name="provider_id"
