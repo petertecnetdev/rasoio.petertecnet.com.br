@@ -7,7 +7,7 @@ import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import { apiBaseUrl } from "../../config";
 
-// Função que retorna a classe CSS baseada no status (enum: 'pending', 'confirmed', 'cancelled', 'completed')
+// Retorna a classe CSS baseada no status
 const getStatusClass = (status) => {
   if (!status) return "";
   const s = status.toLowerCase();
@@ -18,24 +18,48 @@ const getStatusClass = (status) => {
   return "";
 };
 
+// Retorna o nome do status para exibição no card-title
+const getStatusName = (status) => {
+  if (!status) return "";
+  const s = status.toLowerCase();
+  if (s === "pending") return "Pendente";
+  if (s === "confirmed") return "Confirmado";
+  if (s === "cancelled") return "Cancelado";
+  if (s === "completed") return "Finalizado";
+  return "";
+};
+
+// Retorna o texto do status em português para os filtros
+const getStatusText = (status) => {
+  if (!status) return "";
+  const s = status.toLowerCase();
+  if (s === "pending") return "Pendentes";
+  if (s === "confirmed") return "Confirmados";
+  if (s === "cancelled") return "Cancelados";
+  if (s === "completed") return "Finalizados";
+  return status;
+};
+
 const AppointmentListPage = () => {
-  // Pode vir "slug" (barbershop), "username" (barbeiro) ou nenhum (meus agendamentos)
+  // Pode vir "slug" (barbearia), "username" (barbeiro) ou nenhum (meus agendamentos)
   const { slug, username } = useParams();
   const navigate = useNavigate();
 
-  const [headerInfo, setHeaderInfo] = useState(null); // Dados da barbearia ou do barbeiro
+  const [headerInfo, setHeaderInfo] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
+  // Estado para filtro de status; por padrão, mostra "confirmed"
+  const [filterStatus, setFilterStatus] = useState("confirmed");
 
-  // Função para enriquecer cada agendamento com os nomes dos envolvidos
+  // Enriquecer agendamentos com nomes dos envolvidos
   const enrichAppointments = async (appointmentsData) => {
     const token = localStorage.getItem("token");
     const enriched = await Promise.all(
       appointmentsData.map(async (appointment) => {
         let enrichedAppointment = { ...appointment };
 
-        // Nome do cliente
+        // Cliente
         if (appointment.client_id) {
           try {
             const clientRes = await axios.get(
@@ -51,7 +75,7 @@ const AppointmentListPage = () => {
           enrichedAppointment.client_first_name = "Não identificado";
         }
 
-        // Nome do provider (barbeiro)
+        // Barbeiro (provider)
         if (appointment.provider_id) {
           try {
             const providerRes = await axios.get(
@@ -67,7 +91,7 @@ const AppointmentListPage = () => {
           enrichedAppointment.provider_first_name = "Não identificado";
         }
 
-        // Nome de quem registrou o agendamento
+        // Quem registrou o agendamento
         if (appointment.registered_by) {
           try {
             const registeredRes = await axios.get(
@@ -89,7 +113,7 @@ const AppointmentListPage = () => {
     return enriched;
   };
 
-  // Função para cancelar um agendamento (muda o status para "cancelled")
+  // Cancelar agendamento
   const cancelAppointment = async (id) => {
     const token = localStorage.getItem("token");
     Swal.fire({
@@ -120,7 +144,7 @@ const AppointmentListPage = () => {
             },
             icon: "success",
           });
-          // Atualiza a lista alterando o status do agendamento para "cancelled"
+          // Atualiza o status para "cancelled"
           setAppointments((prev) =>
             prev.map((appointment) =>
               appointment.id === id
@@ -146,7 +170,7 @@ const AppointmentListPage = () => {
     });
   };
 
-  // Função para identificar se o erro é referente à ausência de agendamentos
+  // Verifica se o erro indica ausência de agendamentos
   const isNoAppointmentsError = (error) => {
     const status = error.response?.status;
     const errorMsg = (error.response?.data?.error || "").toLowerCase();
@@ -171,7 +195,7 @@ const AppointmentListPage = () => {
       );
     };
 
-    // Rota: Agendamentos da barbearia (/appointment/barbershop/:slug)
+    // Agendamentos da barbearia
     const fetchBarbershopAppointments = async () => {
       setMessages(["Carregando informações da barbearia..."]);
       try {
@@ -202,7 +226,8 @@ const AppointmentListPage = () => {
           setAppointments([]);
         } else {
           const errorMessage =
-            error.response?.data?.message || "Erro ao carregar agendamentos ou ainda não existe agendamentos para esta barbearia.";
+            error.response?.data?.message ||
+            "Erro ao carregar agendamentos ou ainda não existe agendamentos para esta barbearia.";
           Swal.fire({
             icon: "error",
             title: "Erro!",
@@ -220,7 +245,7 @@ const AppointmentListPage = () => {
       }
     };
 
-    // Rota: Agendamentos do barbeiro (/appointment/barber/:username)
+    // Agendamentos do barbeiro
     const fetchBarberAppointments = async () => {
       setMessages(["Carregando informações do barbeiro..."]);
       try {
@@ -272,7 +297,7 @@ const AppointmentListPage = () => {
       }
     };
 
-    // Rota: Meus agendamentos (/appointment/my)
+    // Meus agendamentos
     const fetchMyAppointments = async () => {
       setMessages(["Carregando seus agendamentos..."]);
       try {
@@ -317,7 +342,7 @@ const AppointmentListPage = () => {
     }
   }, [slug, username, navigate]);
 
-  // Define o título do cabeçalho com base na rota
+  // Define o título do cabeçalho
   let headerTitle = "";
   if (slug && headerInfo) {
     headerTitle = `Agendamentos da ${headerInfo.name}`;
@@ -327,20 +352,76 @@ const AppointmentListPage = () => {
     headerTitle = "Meus Agendamentos";
   }
 
+  // Filtra os agendamentos de acordo com o status selecionado
+  const filteredAppointments = appointments.filter(
+    (appointment) =>
+      appointment.status &&
+      appointment.status.toLowerCase() === filterStatus.toLowerCase()
+  );
+
   return (
     <>
       <NavlogComponent />
       <p className="section-title text-center">{headerTitle}</p>
-      {loading ? (
-        <ProcessingIndicatorComponent messages={messages} />
-      ) : (
-        <Container className="main-container" fluid>
+      <Container className="main-container" fluid>
+        {/* Botões de filtro de status */}
+        <Row className="mb-3 justify-content-center">
+          <Col xs="auto">
+            <Button
+              variant={
+                filterStatus === "confirmed" ? "primary" : "outline-primary"
+              }
+              onClick={() => setFilterStatus("confirmed")}
+              className="action-button br-confirmed"
+            >
+              Confirmados
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button
+              variant={
+                filterStatus === "pending" ? "primary" : "outline-primary"
+              }
+              onClick={() => setFilterStatus("pending")}
+              className="action-button br-pending"
+            >
+              Pendentes
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button
+              variant={
+                filterStatus === "completed" ? "primary" : "outline-primary"
+              }
+              onClick={() => setFilterStatus("completed")}
+              className="action-button br-completed"
+            >
+              Finalizados
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button
+              variant={
+                filterStatus === "cancelled" ? "primary" : "outline-primary"
+              }
+              onClick={() => setFilterStatus("cancelled")}
+              className="action-button br-cancelled"
+            >
+              Cancelados
+            </Button>
+          </Col>
+        </Row>
+        {loading ? (
+          <ProcessingIndicatorComponent messages={messages} />
+        ) : (
           <Row className="section-row justify-content-center">
             <Col xs={12} lg={10} className="section-col">
-              {appointments.length === 0 ? (
+              {filteredAppointments.length === 0 ? (
                 <Row>
                   <Col className="text-center">
-                    <p className="text-white">Nenhum agendamento encontrado.</p>
+                    <p className="text-white">
+                      Nenhum agendamento encontrado para o status selecionado.
+                    </p>
                     <Button
                       variant="primary"
                       className="action-button"
@@ -352,22 +433,22 @@ const AppointmentListPage = () => {
                 </Row>
               ) : (
                 <Row className="inner-row">
-                  {appointments.map((appointment) => (
-                    <Col
-                      md={12}
-                      key={appointment.id}
-                      className={`inner-col mb-3 ${getStatusClass(
-                        appointment.status
-                      )}`}
-                    >
+                  {filteredAppointments.map((appointment) => (
+                    <Col md={4} key={appointment.id} className="inner-col mb-3">
                       <Card
                         className={`card-component shadow-sm h-100 ${getStatusClass(
                           appointment.status
                         )}`}
                       >
+                        <p
+  className={`text-center  br-${appointment.status}`}
+>
+  {getStatusName(appointment.status)}
+</p>
+
+
                         <Card.Body>
                           {/* Renderização condicional com base na rota */}
-                          {/* Meus agendamentos */}
                           {!slug && !username && (
                             <>
                               <Card.Title className="mb-2">
@@ -400,7 +481,6 @@ const AppointmentListPage = () => {
                               </Card.Text>
                             </>
                           )}
-                          {/* Agendamentos da barbearia */}
                           {slug && (
                             <>
                               <Card.Title className="mb-2">
@@ -417,7 +497,7 @@ const AppointmentListPage = () => {
                                 {appointment.provider_first_name}
                                 <br />
                                 <strong>Status: </strong>
-                                {appointment.status}{" "}
+                                {getStatusText(appointment.status)}{" "}
                                 {appointment.payment_status &&
                                   `(${appointment.payment_status})`}
                                 <br />
@@ -432,7 +512,6 @@ const AppointmentListPage = () => {
                               </Card.Text>
                             </>
                           )}
-                          {/* Agendamentos do barbeiro */}
                           {username && (
                             <>
                               <Card.Title className="mb-2">
@@ -461,7 +540,7 @@ const AppointmentListPage = () => {
                                 </Link>
                                 <br />
                                 <strong>Status: </strong>
-                                {appointment.status}{" "}
+                                {getStatusText(appointment.status)}{" "}
                                 {appointment.payment_status &&
                                   `(${appointment.payment_status})`}
                                 <br />
@@ -471,7 +550,8 @@ const AppointmentListPage = () => {
                             </>
                           )}
                           <div className="d-flex gap-2">
-                            {appointment.status.toLowerCase() !== "cancelled" && (
+                            {appointment.status.toLowerCase() !==
+                              "cancelled" && (
                               <Button
                                 variant="danger"
                                 className="action-button"
@@ -499,8 +579,8 @@ const AppointmentListPage = () => {
               )}
             </Col>
           </Row>
-        </Container>
-      )}
+        )}
+      </Container>
     </>
   );
 };

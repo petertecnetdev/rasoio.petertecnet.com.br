@@ -566,6 +566,18 @@ body {
   transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
 }
 
+.card-tinfo{
+  background: linear-gradient(135deg, #666666 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 5px 24px;
+  font-size: 14px;
+  font-weight: 100;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
 .action-button:hover,
 .submit-btn:hover {
   background: linear-gradient(135deg, #ffffff 0%, #666666 100%);
@@ -1432,3 +1444,53 @@ body {
   margin-bottom: 20px;
 }
 
+
+/* Estilos aprimorados para os status de agendamento, com background que facilita a leitura */
+
+/* Completed: Success */
+.br-completed {
+  border: 3px solid #28a745 !important;
+  background-color: #d4edda; /* Fundo verde claro */
+  color: #155724; /* Texto em verde escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Cancelled: Danger */
+.br-cancelled {
+  border: 3px solid #ff0000 !important;
+  background-color: #f8d7da; /* Fundo vermelho claro */
+  color: #721c24; /* Texto em vermelho escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Pending: Warning */
+.br-pending {
+  border: 3px solid #ffa602 !important;
+  background-color: #fff3cd; /* Fundo amarelo claro */
+  color: #856404; /* Texto em amarelo escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Confirmed: Info */
+.br-confirmed {
+  border: 3px solid #00d9ff !important;
+  background-color: #d1ecf1; /* Fundo azul claro */
+  color: #0c5460; /* Texto em azul escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Efeito hover para feedback visual */
+.br-completed:hover,
+.br-cancelled:hover,
+.br-pending:hover,
+.br-confirmed:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
