@@ -78,7 +78,7 @@ const BarbershopViewPage = () => {
 
   // Filtra apenas os itens que são do tipo "Serviço"
   const services = items.filter(
-    (item) => item.type?.toLowerCase() === "serviço"
+    (item) => item.type === "service"
   );
 
   return (
@@ -218,7 +218,7 @@ const BarbershopViewPage = () => {
                 <Card className="card-component service-banner shadow-sm mb-4">
                   <Card.Body className="service-banner-body text-center">
                     <p className="service-banner-title">
-                      Tabela de Preços (Serviços)
+                      Tabela de Preços 
                     </p>
                     <p className="empty-text">Nenhum serviço encontrado.</p>
                   </Card.Body>
