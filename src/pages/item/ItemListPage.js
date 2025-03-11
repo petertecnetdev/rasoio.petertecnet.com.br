@@ -186,10 +186,8 @@ const ItemListPage = () => {
                           return (
                             <Col
                               key={item.id}
-                              xs={12}
                               md={6}
-                              lg={4}
-                              className="inner-col mb-4"
+                              className="inner-col m-4"
                             >
                               <Card className="inner-card h-100">
                                 <div
