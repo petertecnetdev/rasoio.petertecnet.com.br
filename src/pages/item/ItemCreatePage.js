@@ -1,4 +1,3 @@
-// ItemCreatePage.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -146,11 +145,11 @@ const ItemCreatePage = () => {
     }
     const stock = parseInt(itemData.stock, 10);
     if (isNaN(stock) || stock < 0) {
-      errors.push("O estoque deve ser um número inteiro válido.");
+      errors.push("O estoque deve ser um número inteiro válido. Use o valor zero caso não queria gerenciar o estoque.");
     }
     const discount = parseFloat(itemData.discount);
     if (isNaN(discount) || discount < 0) {
-      errors.push("O desconto deve ser um valor monetário válido.");
+      errors.push("O desconto deve ser um valor monetário válido. Use o valor zero caso não queria ofertar desconto para este item.");
     }
     if (itemData.type !== "Produto" && itemData.type !== "Serviço") {
       errors.push("O tipo de item deve ser 'Produto' ou 'Serviço'.");
@@ -277,10 +276,7 @@ const ItemCreatePage = () => {
   return (
     <>
       <NavlogComponent />
-      {/* Título seguindo o padrão do BarbershopCreatePage */}
       <p className="section-title text-center">Novo Item</p>
-
-      {/* Container e Row seguindo o mesmo layout do BarbershopCreatePage */}
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
@@ -323,7 +319,7 @@ const ItemCreatePage = () => {
                                 document.getElementById("imageInput").click()
                               }
                             >
-                              Adicionar imagem do item
+                              Adicionar imagem do item (opcional)
                             </Button>
                           </div>
                           <Form.Control
@@ -331,7 +327,6 @@ const ItemCreatePage = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleItemImageChange}
-                            required
                             style={{ display: "none" }}
                           />
                         </div>
@@ -411,7 +406,7 @@ const ItemCreatePage = () => {
                             name="stock"
                             value={itemData.stock}
                             onChange={handleInputChange}
-                            required
+                            
                           />
                         </Form.Group>
                       </Col>
@@ -426,7 +421,6 @@ const ItemCreatePage = () => {
                             name="discount"
                             value={itemData.discount}
                             onChange={handleInputChange}
-                            required
                           />
                         </Form.Group>
                       </Col>
@@ -440,7 +434,6 @@ const ItemCreatePage = () => {
                             name="availability_start"
                             value={itemData.availability_start}
                             onChange={handleInputChange}
-                            required
                           />
                         </Form.Group>
                       </Col>
@@ -454,10 +447,10 @@ const ItemCreatePage = () => {
                             name="availability_end"
                             value={itemData.availability_end}
                             onChange={handleInputChange}
-                            required
                           />
                         </Form.Group>
                       </Col>
+
                       {/* Descrição */}
                       <Col md={12} className="">
                         <Form.Group controlId="description">
@@ -468,7 +461,6 @@ const ItemCreatePage = () => {
                             name="description"
                             value={itemData.description}
                             onChange={handleInputChange}
-                            required
                           />
                         </Form.Group>
                       </Col>
@@ -489,16 +481,11 @@ const ItemCreatePage = () => {
                     </Row>
 
                     <div className="text-center">
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        className="action-button"
-                      >
+                      <Button variant="primary" type="submit" className="action-button">
                         {isProcessing ? "Criando..." : "Criar Item"}
                       </Button>
                     </div>
 
-                    {/* Exibe mensagens de processamento, se existirem */}
                     {messages.length > 0 && (
                       <div className="mt-3">
                         {messages.map((message, index) => (

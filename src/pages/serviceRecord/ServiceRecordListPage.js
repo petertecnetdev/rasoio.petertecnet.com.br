@@ -36,10 +36,14 @@ const ServiceRecordListPage = () => {
         // Nome do cliente
         if (record.client_id) {
           try {
-            const clientRes = await axios.get(`${apiBaseUrl}/user/show/${record.client_id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            enrichedRecord.client_first_name = clientRes.data.user.first_name || "Não identificado";
+            const clientRes = await axios.get(
+              `${apiBaseUrl}/user/show/${record.client_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            enrichedRecord.client_first_name =
+              clientRes.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.client_first_name = "Não identificado";
           }
@@ -50,10 +54,14 @@ const ServiceRecordListPage = () => {
         // Nome do prestador
         if (record.provider_id) {
           try {
-            const providerRes = await axios.get(`${apiBaseUrl}/user/show/${record.provider_id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            enrichedRecord.provider_first_name = providerRes.data.user.first_name || "Não identificado";
+            const providerRes = await axios.get(
+              `${apiBaseUrl}/user/show/${record.provider_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            enrichedRecord.provider_first_name =
+              providerRes.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.provider_first_name = "Não identificado";
           }
@@ -64,10 +72,14 @@ const ServiceRecordListPage = () => {
         // Nome de quem registrou o atendimento
         if (record.registered_by) {
           try {
-            const registeredRes = await axios.get(`${apiBaseUrl}/user/show/${record.registered_by}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            enrichedRecord.registered_by_first_name = registeredRes.data.user.first_name || "Não identificado";
+            const registeredRes = await axios.get(
+              `${apiBaseUrl}/user/show/${record.registered_by}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            enrichedRecord.registered_by_first_name =
+              registeredRes.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.registered_by_first_name = "Não identificado";
           }
@@ -77,9 +89,10 @@ const ServiceRecordListPage = () => {
 
         // Enriquecer com os nomes dos serviços
         if (record.service_ids) {
-          const serviceIds = typeof record.service_ids === "string"
-            ? JSON.parse(record.service_ids)
-            : record.service_ids;
+          const serviceIds =
+            typeof record.service_ids === "string"
+              ? JSON.parse(record.service_ids)
+              : record.service_ids;
           if (Array.isArray(serviceIds)) {
             const serviceNames = await Promise.all(
               serviceIds.map(async (id) => {
@@ -93,7 +106,9 @@ const ServiceRecordListPage = () => {
                 }
               })
             );
-            enrichedRecord.service_names = serviceNames.filter((name) => name !== "");
+            enrichedRecord.service_names = serviceNames.filter(
+              (name) => name !== ""
+            );
           } else {
             enrichedRecord.service_names = [];
           }
@@ -350,13 +365,14 @@ const ServiceRecordListPage = () => {
                 <Row>
                   <Col className="text-center">
                     <p className="text-white">Nenhum atendimento encontrado.</p>
-                    <Button
-                      variant="primary"
-                      className="action-button"
-                      onClick={() => navigate(-1)}
+                    <Link
+                      to={`/service-record/create/${slug}`}
+                      className="link-component m-1"
                     >
-                      Voltar
-                    </Button>
+                      <Button variant="secondary" className="action-button">
+                        Novo atendimento
+                      </Button>
+                    </Link>
                   </Col>
                 </Row>
               ) : (
@@ -365,7 +381,9 @@ const ServiceRecordListPage = () => {
                     <Col
                       md={12}
                       key={record.id}
-                      className={`inner-col mb-3 ${getStatusClass(record.status)}`}
+                      className={`inner-col mb-3 ${getStatusClass(
+                        record.status
+                      )}`}
                     >
                       <Card
                         className={`card-component shadow-sm h-100 ${getStatusClass(
@@ -379,11 +397,14 @@ const ServiceRecordListPage = () => {
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
+                                {new Date(record.created_at).toLocaleString(
+                                  "pt-BR"
+                                )}
                               </Card.Title>
                               <Card.Text>
                                 <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
+                                {record.service_names &&
+                                record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />
@@ -397,7 +418,8 @@ const ServiceRecordListPage = () => {
                                 {record.registered_by_first_name}
                                 <br />
                                 <strong>Pagamento: </strong>
-                                {record.payment_method} - R$ {record.total_price}
+                                {record.payment_method} - R${" "}
+                                {record.total_price}
                                 <br />
                                 <strong>Desconto: </strong>
                                 {record.discount}
@@ -409,7 +431,9 @@ const ServiceRecordListPage = () => {
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
+                                {new Date(record.created_at).toLocaleString(
+                                  "pt-BR"
+                                )}
                               </Card.Title>
                               <Card.Text>
                                 <strong>Cliente: </strong>
@@ -422,7 +446,8 @@ const ServiceRecordListPage = () => {
                                 {record.status}
                                 <br />
                                 <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
+                                {record.service_names &&
+                                record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />
@@ -436,19 +461,24 @@ const ServiceRecordListPage = () => {
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
+                                {new Date(record.created_at).toLocaleString(
+                                  "pt-BR"
+                                )}
                               </Card.Title>
                               <Card.Text>
                                 <strong>Cliente: </strong>
                                 {record.client_first_name}
                                 <br />
                                 <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
+                                {record.service_names &&
+                                record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />
                                 <strong>Barbearia: </strong>
-                                <Link to={`/barbershop/view/${record.entity_id}`}>
+                                <Link
+                                  to={`/barbershop/view/${record.entity_id}`}
+                                >
                                   {record.entity_name === "barbershop"
                                     ? "Ver barbearia"
                                     : "Não identificado"}
@@ -477,7 +507,9 @@ const ServiceRecordListPage = () => {
                         <Card.Footer>
                           <small className="text-muted">
                             Criado em:{" "}
-                            {new Date(record.created_at).toLocaleString("pt-BR")}
+                            {new Date(record.created_at).toLocaleString(
+                              "pt-BR"
+                            )}
                           </small>
                         </Card.Footer>
                       </Card>
