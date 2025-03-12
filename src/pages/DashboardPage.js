@@ -183,25 +183,29 @@ const Dashboard = () => {
                     {barbers.length > 0 ? (
                       <Row className="inner-row">
                         {barbers.map((barber) => (
-                          <Col key={barber.id} xs={12} sm={6} md={4} lg={3} className="inner-col mb-4">
-                          <Card className="barber-card">
-                 
+                         <Col
+                                                  key={barber.id}
+                                                  md={4}
+                                                  className="barber-card-col"
+                                                >     <Card className="barber-card">
+          
                                                        <Card.Body className="barber-card-body">
-                                                         <img
+                                                       <Link
+                                                             to={`/barber/view/${barber.user.user_name}`}                                   
+                                                           >
+                                                            <img
                                                            src={
-                                                             barber.avatar
-                                                               ? `${storageUrl}/${barber.avatar}`
-                                                               : "/images/user.png"
+                                                             barber.user.avatar
+                                                               ? `${storageUrl}/${barber.user.avatar}`
+                                                               : "/images/barber.png"
                                                            }
                                                            alt={barber.first_name}
                                                            className="barber-avatar"
                                                            onError={handleBarberAvatarError}
                                                          />
+                                                         </Link>
                                                          <p className="barber-name-title">
-                                                           <Link
-                                                             to={`/barber/view/${barber.user_name}`}                                   
-                                                           >
-                                                           </Link>
+                                                         
                                                          </p>
                                                          <p className="label-name">{barber.user.first_name}</p>
                                                        </Card.Body>

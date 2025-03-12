@@ -89,7 +89,7 @@ const ServiceRecordCreatePage = () => {
   const validateFields = () => {
     const errors = [];
     if (!serviceRecordData.provider_id) {
-      errors.push("Selecione um prestador para o atendimento.");
+      errors.push("Selecione um barbeiro para o atendimento.");
     }
     if (serviceRecordData.service_ids.length === 0) {
       errors.push("Selecione ao menos um serviço.");

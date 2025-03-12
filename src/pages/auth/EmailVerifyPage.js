@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import authService from "../../services/AuthService";
-import Navlog from "../../components/NavlogComponent";
+import NavlogComponent from "../../components/NavlogComponent";
 import { Form, Button, Container, Row, Col, Card } from "react-bootstrap";
 import LoadingComponent from "../../components/LoadingComponent";
 
@@ -45,16 +45,33 @@ const EmailVerifyPage = () => {
       }
     } catch (error) {
       console.error(error);
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: "Erro na verificação de email. Por favor, tente novamente mais tarde.",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
+      if (error.response && error.response.data && error.response.data.errors) {
+        let errorMessages = "";
+        Object.keys(error.response.data.errors).forEach((field) => {
+          errorMessages += `${field}: ${error.response.data.errors[field].join(", ")}\n`;
+        });
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: errorMessages,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro na verificação de email. Por favor, tente novamente mais tarde.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
     } finally {
       setLoadingVerify(false);
     }
@@ -89,16 +106,33 @@ const EmailVerifyPage = () => {
       }
     } catch (error) {
       console.error(error);
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: "Erro ao reenviar o código de verificação. Por favor, tente novamente mais tarde.",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
+      if (error.response && error.response.data && error.response.data.errors) {
+        let errorMessages = "";
+        Object.keys(error.response.data.errors).forEach((field) => {
+          errorMessages += `${field}: ${error.response.data.errors[field].join(", ")}\n`;
+        });
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: errorMessages,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Erro ao reenviar o código de verificação. Por favor, tente novamente mais tarde.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
     } finally {
       setLoadingResend(false);
     }
@@ -109,19 +143,19 @@ const EmailVerifyPage = () => {
   }
 
   return (
-    <div className="page-container">
-      <Navlog />
-      <Container>
-        <Row className="page-row">
-          <Col md={6} className="page-col">
-            <Card className="card-container">
-              <p className="page-header">Verificar Email</p>
+    <>
+      <NavlogComponent />
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} md={6} className="m-2">
+            <Card className="card-component shadow-sm">
+              <p className="section-title text-center">Verificar Email</p>
               <Card.Body className="card-body">
-                <div className="logo-container">
+                <div className="logo-container text-center">
                   <img src="/images/logo.png" alt="Logo" className="logo-image" />
                 </div>
-                <Card.Title className="card-title">Verificar Email</Card.Title>
-                <p className="footer-text">
+                <Card.Title className="card-title text-center">Verificar Email</Card.Title>
+                <p className="footer-text text-center">
                   Bem-vindo ao Rasoio! Para garantir a segurança da sua conta, insira o código que enviamos para seu e-mail.
                 </p>
                 <Form onSubmit={handleVerifyEmail} className="form-container">
@@ -137,10 +171,16 @@ const EmailVerifyPage = () => {
                     />
                   </Form.Group>
                   <Button type="submit" variant="primary" disabled={loadingVerify} className="submit-btn">
-                    {loadingVerify ? "Verificando..." : "Verificar email"}
+                    {loadingVerify ? "Verificando..." : "Verificar Email"}
                   </Button>
                 </Form>
-                <Button variant="secondary" onClick={handleResendVerificationCode} disabled={loadingResend} className="submit-btn" style={{ marginTop: "15px" }}>
+                <Button
+                  variant="secondary"
+                  onClick={handleResendVerificationCode}
+                  disabled={loadingResend}
+                  className="submit-btn"
+                  style={{ marginTop: "15px" }}
+                >
                   {loadingResend ? "Enviando..." : "Reenviar Código de Verificação"}
                 </Button>
               </Card.Body>
@@ -149,7 +189,7 @@ const EmailVerifyPage = () => {
         </Row>
       </Container>
       {(loadingVerify || loadingResend) && <LoadingComponent />}
-    </div>
+    </>
   );
 };
 

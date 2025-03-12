@@ -151,7 +151,7 @@ const ItemCreatePage = () => {
     if (isNaN(discount) || discount < 0) {
       errors.push("O desconto deve ser um valor monetário válido. Use o valor zero caso não queria ofertar desconto para este item.");
     }
-    if (itemData.type !== "Produto" && itemData.type !== "Serviço") {
+    if (itemData.type !== "product" && itemData.type !== "service") {
       errors.push("O tipo de item deve ser 'Produto' ou 'Serviço'.");
     }
 

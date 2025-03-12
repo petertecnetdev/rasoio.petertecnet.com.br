@@ -113,7 +113,7 @@ const AppointmentListPage = () => {
     return enriched;
   };
 
-  // Cancelar agendamento
+  // Atualiza status para "cancelled" (cancelamento)
   const cancelAppointment = async (id) => {
     const token = localStorage.getItem("token");
     Swal.fire({
@@ -158,6 +158,128 @@ const AppointmentListPage = () => {
             text:
               error.response?.data?.error ||
               "Erro ao cancelar o agendamento. Tente novamente.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+            icon: "error",
+          });
+        }
+      }
+    });
+  };
+
+  // Atualiza status de agendamento de pendente para confirmado
+  const confirmPendingAppointment = async (id) => {
+    const token = localStorage.getItem("token");
+    Swal.fire({
+      title: "Confirmar agendamento",
+      text: "Deseja confirmar este agendamento?",
+      icon: "question",
+      showCancelButton: true,
+      customClass: {
+        popup: "custom-swal",
+        title: "custom-swal-title",
+        content: "custom-swal-text",
+      },
+      confirmButtonText: "Sim, confirmar",
+      cancelButtonText: "Não, cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.patch(
+            `${apiBaseUrl}/appointment/${id}/status`,
+            { status: "confirmed" },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          Swal.fire({
+            title: "Confirmado",
+            text: "Agendamento confirmado com sucesso.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+            icon: "success",
+          });
+          setAppointments((prev) =>
+            prev.map((appointment) =>
+              appointment.id === id
+                ? { ...appointment, status: "confirmed" }
+                : appointment
+            )
+          );
+        } catch (error) {
+          Swal.fire({
+            title: "Erro",
+            text:
+              error.response?.data?.error ||
+              "Erro ao confirmar o agendamento. Tente novamente.",
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+            icon: "error",
+          });
+        }
+      }
+    });
+  };
+
+  // Atualiza o attendance_status e finaliza o agendamento (status: completed)
+  const updateAttendanceStatus = async (id, attendance) => {
+    const token = localStorage.getItem("token");
+    const attendanceText =
+      attendance === "attended" ? "Atendido" : "Não Atendido";
+    Swal.fire({
+      title: "Finalizar agendamento",
+      text: `Deseja finalizar este agendamento como ${attendanceText}?`,
+      icon: "question",
+      showCancelButton: true,
+      customClass: {
+        popup: "custom-swal",
+        title: "custom-swal-title",
+        content: "custom-swal-text",
+      },
+      confirmButtonText: "Sim, finalizar",
+      cancelButtonText: "Não, manter",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.patch(
+            `${apiBaseUrl}/appointment/${id}/status`,
+            { status: "completed", attendance_status: attendance },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          Swal.fire({
+            title: "Finalizado",
+            text: `Agendamento finalizado como ${attendanceText}.`,
+            customClass: {
+              popup: "custom-swal",
+              title: "custom-swal-title",
+              content: "custom-swal-text",
+            },
+            icon: "success",
+          });
+          setAppointments((prev) =>
+            prev.map((appointment) =>
+              appointment.id === id
+                ? {
+                    ...appointment,
+                    status: "completed",
+                    attendance_status: attendance,
+                  }
+                : appointment
+            )
+          );
+        } catch (error) {
+          Swal.fire({
+            title: "Erro",
+            text:
+              error.response?.data?.error ||
+              "Erro ao finalizar o agendamento. Tente novamente.",
             customClass: {
               popup: "custom-swal",
               title: "custom-swal-title",
@@ -342,7 +464,6 @@ const AppointmentListPage = () => {
     }
   }, [slug, username, navigate]);
 
-  // Define o título do cabeçalho
   let headerTitle = "";
   if (slug && headerInfo) {
     headerTitle = `Agendamentos da ${headerInfo.name}`;
@@ -352,7 +473,23 @@ const AppointmentListPage = () => {
     headerTitle = "Meus Agendamentos";
   }
 
-  // Filtra os agendamentos de acordo com o status selecionado
+  const confirmedCount = appointments.filter(
+    (appointment) =>
+      appointment.status && appointment.status.toLowerCase() === "confirmed"
+  ).length;
+  const pendingCount = appointments.filter(
+    (appointment) =>
+      appointment.status && appointment.status.toLowerCase() === "pending"
+  ).length;
+  const completedCount = appointments.filter(
+    (appointment) =>
+      appointment.status && appointment.status.toLowerCase() === "completed"
+  ).length;
+  const cancelledCount = appointments.filter(
+    (appointment) =>
+      appointment.status && appointment.status.toLowerCase() === "cancelled"
+  ).length;
+
   const filteredAppointments = appointments.filter(
     (appointment) =>
       appointment.status &&
@@ -364,7 +501,7 @@ const AppointmentListPage = () => {
       <NavlogComponent />
       <p className="section-title text-center">{headerTitle}</p>
       <Container className="main-container" fluid>
-        {/* Botões de filtro de status */}
+        {/* Botões de filtro de status com contagem */}
         <Row className="mb-3 justify-content-center">
           <Col xs="auto">
             <Button
@@ -374,7 +511,7 @@ const AppointmentListPage = () => {
               onClick={() => setFilterStatus("confirmed")}
               className="action-button br-confirmed"
             >
-              Confirmados
+              Confirmados ({confirmedCount})
             </Button>
           </Col>
           <Col xs="auto">
@@ -385,7 +522,7 @@ const AppointmentListPage = () => {
               onClick={() => setFilterStatus("pending")}
               className="action-button br-pending"
             >
-              Pendentes
+              Pendentes ({pendingCount})
             </Button>
           </Col>
           <Col xs="auto">
@@ -396,7 +533,7 @@ const AppointmentListPage = () => {
               onClick={() => setFilterStatus("completed")}
               className="action-button br-completed"
             >
-              Finalizados
+              Finalizados ({completedCount})
             </Button>
           </Col>
           <Col xs="auto">
@@ -407,7 +544,7 @@ const AppointmentListPage = () => {
               onClick={() => setFilterStatus("cancelled")}
               className="action-button br-cancelled"
             >
-              Cancelados
+              Cancelados ({cancelledCount})
             </Button>
           </Col>
         </Row>
@@ -440,13 +577,9 @@ const AppointmentListPage = () => {
                           appointment.status
                         )}`}
                       >
-                        <p
-  className={`text-center  br-${appointment.status}`}
->
-  {getStatusName(appointment.status)}
-</p>
-
-
+                        <p className={`text-center br-${appointment.status}`}>
+                          {getStatusName(appointment.status)}
+                        </p>
                         <Card.Body>
                           {/* Renderização condicional com base na rota */}
                           {!slug && !username && (
@@ -550,22 +683,81 @@ const AppointmentListPage = () => {
                             </>
                           )}
                           <div className="d-flex gap-2">
-                            {appointment.status.toLowerCase() !==
-                              "cancelled" && (
-                              <Button
-                                variant="danger"
-                                className="action-button"
-                                onClick={() =>
-                                  cancelAppointment(appointment.id)
-                                }
-                              >
-                                Cancelar
-                              </Button>
+                            {appointment.status.toLowerCase() === "pending" && (
+                              <>
+                                <Button
+                                  variant="success"
+                                  className="action-button"
+                                  onClick={() =>
+                                    confirmPendingAppointment(appointment.id)
+                                  }
+                                >
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  variant="danger"
+                                  className="action-button"
+                                  onClick={() =>
+                                    cancelAppointment(appointment.id)
+                                  }
+                                >
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                            {appointment.status.toLowerCase() ===
+                              "confirmed" && (
+                              <>
+                                <Button
+                                  variant="success"
+                                  className="action-button"
+                                  onClick={() =>
+                                    updateAttendanceStatus(
+                                      appointment.id,
+                                      "attended"
+                                    )
+                                  }
+                                >
+                                  Atendido
+                                </Button>
+                                <Button
+                                  variant="warning"
+                                  className="action-button"
+                                  onClick={() =>
+                                    updateAttendanceStatus(
+                                      appointment.id,
+                                      "not_attended"
+                                    )
+                                  }
+                                >
+                                  Não Atendido
+                                </Button>
+                              </>
                             )}
                           </div>
+                          {appointment.status.toLowerCase() === "completed" && (
+                            <p
+                              className={`mt-2 ${
+                                appointment.attendance_status === "attended"
+                                  ? "text-success"
+                                  : appointment.attendance_status ===
+                                    "not_attended"
+                                  ? "text-danger"
+                                  : "text-muted"
+                              }`}
+                            >
+                              Agendamento finalizado como 
+                              {appointment.attendance_status === "attended"
+                                ? " atendido"
+                                : appointment.attendance_status ===
+                                  "not_attended"
+                                ? " não atendido"
+                                : "não informado"}
+                            </p>
+                          )}
                         </Card.Body>
                         <Card.Footer>
-                          <small className="text-muted">
+                          <small className="text-primary">
                             Criado em:{" "}
                             {new Date(appointment.created_at).toLocaleString(
                               "pt-BR"

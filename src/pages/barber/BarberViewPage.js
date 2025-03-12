@@ -49,19 +49,6 @@ const BarberViewPage = () => {
     fetchBarberData();
   }, [username]);
 
-  // Calcula a idade do barbeiro
-  const calculateAge = (birthdate) => {
-    if (!birthdate) return "Não disponível";
-    const today = new Date();
-    const birthDate = new Date(birthdate);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   // Fallback para o avatar do barbeiro
   const handleBarberAvatarError = (e) => {
     if (e.target.src.includes("/images/user.png")) return;
@@ -99,8 +86,11 @@ const BarberViewPage = () => {
                               className="img-component barber-avatar"
                               onError={handleBarberAvatarError}
                             />
-                            <p className="barber-name mt-2">
+                            <p className="barber-name mt-2 h4">
                               {user.first_name}
+                            </p>
+                            <p className="barber-name m-2 text-warning h6">
+                              {user.user_name}
                             </p>
                             <p className="barber-location">
                               {user.city} - {user.uf}
@@ -113,16 +103,19 @@ const BarberViewPage = () => {
                             <Button
                               variant="primary"
                               className="action-button w-100 mt-2"
+                              disabled={!user.phone}
                               onClick={() => {
-                                const whatsappURL = `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços%20.`;
-                                window.open(whatsappURL, "_blank");
+                                if (user.phone) {
+                                  const whatsappURL = `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços%20.`;
+                                  window.open(whatsappURL, "_blank");
+                                }
                               }}
                             >
-                              WhatsApp: {user.phone}
+                              {user.phone
+                                ? `WhatsApp: ${user.phone}`
+                                : "WhatsApp não cadastrado"}
                             </Button>
-                            <p className="barber-age mt-2">
-                              Idade: {calculateAge(user.birthdate)}
-                            </p>
+
                             <p className="barber-email">Email: {user.email}</p>
                           </Col>
                         </Row>
@@ -156,16 +149,18 @@ const BarberViewPage = () => {
                         <Row className="barbershops-list-row">
                           {barbershops.map((barbershop) => (
                             <Col
-                              md={3}
+                              md={12}
                               key={barbershop.id}
-                              className="barbershop-card-col mt-3"
+                              className="barbershop-card-col m-2"
                             >
                               {/* Usando o card conforme solicitado */}
-                              <Card className="inner-card h-100">
+                              <Card className="inner-card ">
                                 <div
                                   className="card-bg"
                                   style={{
-                                    backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`,
+                                    backgroundImage: `url('${storageUrl}/${
+                                      barbershop.logo || "images/logo.png"
+                                    }')`,
                                   }}
                                 />
                                 <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">

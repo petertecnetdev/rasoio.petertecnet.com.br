@@ -21,23 +21,64 @@ const ServiceRecordListPage = () => {
   const { slug, username } = useParams();
   const navigate = useNavigate();
 
-  const [headerInfo, setHeaderInfo] = useState(null); // Dados da entidade ou do prestador
+  const [headerInfo, setHeaderInfo] = useState(null);
   const [serviceRecords, setServiceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
 
   // Estados para filtros
-  const [filterBarber, setFilterBarber] = useState(""); // Filtra pelo provider_id
+  const [filterBarber, setFilterBarber] = useState("");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("");
-  const [filterStartDate, setFilterStartDate] = useState("");
-  const [filterEndDate, setFilterEndDate] = useState("");
+  // Ao carregar a página, a data inicial é hoje às 00:00 e a data final é hoje às 23:59
+  const today = new Date();
+  const defaultStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    0,
+    0
+  )
+    .toISOString()
+    .slice(0, 16);
+  const defaultEnd = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59
+  )
+    .toISOString()
+    .slice(0, 16);
+  const [filterStartDateTime, setFilterStartDateTime] = useState(defaultStart);
+  const [filterEndDateTime, setFilterEndDateTime] = useState(defaultEnd);
   const [filterServiceIds, setFilterServiceIds] = useState([]);
 
   // Estados para dados auxiliares dos filtros
   const [availableBarbers, setAvailableBarbers] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
 
-  // Função para enriquecer cada atendimento com os nomes dos envolvidos e dos serviços
+  // Estado para mensagem de erro do intervalo de data/hora
+  const [dateIntervalError, setDateIntervalError] = useState("");
+
+  // Validação do intervalo: data inicial não pode ser maior que data final e data final não pode ser posterior à data atual
+  useEffect(() => {
+    const start = new Date(filterStartDateTime);
+    const end = new Date(filterEndDateTime);
+    const now = new Date();
+    if (start > end) {
+      setDateIntervalError(
+        "A data/hora inicial não pode ser maior que a data/hora final."
+      );
+    } else if (end > now) {
+      setDateIntervalError(
+        "A data/hora final não pode ser posterior à data/hora atual."
+      );
+    } else {
+      setDateIntervalError("");
+    }
+  }, [filterStartDateTime, filterEndDateTime]);
+
+  // Função para enriquecer os registros com nomes dos envolvidos e dos serviços
   const enrichServiceRecords = async (recordsData) => {
     const token = localStorage.getItem("token");
     const enriched = await Promise.all(
@@ -60,7 +101,7 @@ const ServiceRecordListPage = () => {
           enrichedRecord.client_first_name = "Não identificado";
         }
 
-        // Nome do prestador
+        // Nome do prestador (barbeiro)
         if (record.provider_id) {
           try {
             const providerRes = await axios.get(
@@ -127,7 +168,7 @@ const ServiceRecordListPage = () => {
     return enriched;
   };
 
-  // Função para cancelar um atendimento (muda o status para "cancelled")
+  // Função para cancelar um atendimento
   const cancelServiceRecord = async (id) => {
     const token = localStorage.getItem("token");
     Swal.fire({
@@ -149,7 +190,7 @@ const ServiceRecordListPage = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           Swal.fire({
-            title: "Cancelado",
+            title: "Inativado",
             text: "Atendimento inativado com sucesso.",
             icon: "success",
             customClass: {
@@ -181,7 +222,7 @@ const ServiceRecordListPage = () => {
     });
   };
 
-  // Função para identificar se o erro é referente à ausência de atendimentos
+  // Verificar se há erro na busca dos atendimentos
   const isNoServiceRecordsError = (error) => {
     const status = error.response?.status;
     const errorMsg = (error.response?.data?.error || "").toLowerCase();
@@ -193,7 +234,7 @@ const ServiceRecordListPage = () => {
     );
   };
 
-  // Buscar os registros de atendimento
+  // Buscar registros de atendimento
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -207,7 +248,7 @@ const ServiceRecordListPage = () => {
       );
     };
 
-    // Rota: Atendimentos da barbearia (/service-record/listbyentity)
+    // Rota: Atendimentos da barbearia
     const fetchBarbershopRecords = async () => {
       setMessages(["Carregando informações da barbearia..."]);
       try {
@@ -219,7 +260,7 @@ const ServiceRecordListPage = () => {
           resBarbershop.data.barbershop || resBarbershop.data;
         setHeaderInfo(barbershopData);
 
-        // Se a barbearia retornar os barbeiros disponíveis, atualiza o select
+        // Atualiza o select de barbeiros se disponíveis
         if (barbershopData.barbers && Array.isArray(barbershopData.barbers)) {
           setAvailableBarbers(barbershopData.barbers);
         }
@@ -260,12 +301,12 @@ const ServiceRecordListPage = () => {
       }
     };
 
-    // Rota: Atendimentos do barbeiro (/service-record/listbyprovider)
+    // Rota: Atendimentos do barbeiro
     const fetchBarberRecords = async () => {
       setMessages(["Carregando informações do barbeiro..."]);
       try {
         const resBarber = await axios.get(
-          `${apiBaseUrl}/barber/view/${username}`,
+          `${apiBaseUrl}/user/view/${username}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const barberData = resBarber.data.barbershop
@@ -312,7 +353,7 @@ const ServiceRecordListPage = () => {
       }
     };
 
-    // Rota: Meus atendimentos (/service-record/listmy)
+    // Rota: Meus atendimentos
     const fetchMyRecords = async () => {
       setMessages(["Carregando seus atendimentos..."]);
       try {
@@ -355,7 +396,7 @@ const ServiceRecordListPage = () => {
     }
   }, [slug, username, navigate]);
 
-  // Buscar lista de serviços disponíveis para filtro (assumindo endpoint /item/list)
+  // Buscar lista de serviços disponíveis para filtro (endpoint /item/list)
   useEffect(() => {
     const fetchAvailableServices = async () => {
       const token = localStorage.getItem("token");
@@ -363,7 +404,6 @@ const ServiceRecordListPage = () => {
         const res = await axios.get(`${apiBaseUrl}/item/list`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Supondo que o endpoint retorne um array de itens em res.data.items
         setAvailableServices(res.data.items || []);
       } catch (error) {
         console.error("Erro ao buscar serviços disponíveis", error);
@@ -372,8 +412,20 @@ const ServiceRecordListPage = () => {
     fetchAvailableServices();
   }, []);
 
-  // Filtro: Filtrar por provider_id, payment method, intervalo de datas e serviços
+  // Filtro: Filtrar por provider_id, método de pagamento, intervalo de data/hora e serviços
   const filteredServiceRecords = serviceRecords.filter((record) => {
+    // Se houver erro no intervalo, não retorna nenhum registro
+    if (dateIntervalError) return false;
+
+    // Ajusta o intervalo: se a data/hora final estiver em T00:00, considera o final do dia
+    const start = new Date(filterStartDateTime);
+    let end = new Date(filterEndDateTime);
+    if (filterEndDateTime.endsWith("T00:00")) {
+      end.setHours(23, 59, 59, 999);
+    }
+    const recordDate = new Date(record.created_at);
+    if (recordDate < start || recordDate > end) return false;
+
     // Filtrar por barbeiro (provider_id)
     if (filterBarber && String(record.provider_id) !== filterBarber) {
       return false;
@@ -386,25 +438,12 @@ const ServiceRecordListPage = () => {
     ) {
       return false;
     }
-    // Filtrar por data inicial
-    if (filterStartDate) {
-      const recordDate = new Date(record.created_at);
-      const startDate = new Date(filterStartDate);
-      if (recordDate < startDate) return false;
-    }
-    // Filtrar por data final
-    if (filterEndDate) {
-      const recordDate = new Date(record.created_at);
-      const endDate = new Date(filterEndDate);
-      if (recordDate > endDate) return false;
-    }
     // Filtrar por serviços (service_ids)
     if (filterServiceIds.length > 0) {
       const recordServiceIds =
         typeof record.service_ids === "string"
           ? JSON.parse(record.service_ids)
           : record.service_ids || [];
-      // Verifica se ao menos um dos serviços filtrados está presente no atendimento
       if (
         !filterServiceIds.some((selectedId) =>
           recordServiceIds.includes(Number(selectedId))
@@ -435,21 +474,35 @@ const ServiceRecordListPage = () => {
     }
   };
 
+  // Inline style para inputs dos filtros (fundo escuro com texto claro)
+  const filterInputStyle = { backgroundColor: "#343a40", color: "#fff" };
+
   return (
     <>
       <NavlogComponent />
       <p className="section-title text-center">{headerTitle}</p>
       <Container className="main-container" fluid>
+        {/* Botão para cadastrar novo atendimento */}
+        <Row className="mb-3">
+          <Col className="text-right">
+            <Link to={`/service-record/create/${slug || ""}`} className="link-component">
+              <Button variant="primary" className="action-button">
+                Novo atendimento
+              </Button>
+            </Link>
+          </Col>
+        </Row>
         {/* Filtros */}
         <Row className="mb-3">
           {/* Filtro por Barbeiro */}
           <Col md={3}>
             <Form.Group controlId="filterBarber">
-              <Form.Label>Barbeiro</Form.Label>
+              <Form.Label style={filterInputStyle}>Barbeiro</Form.Label>
               <Form.Control
                 as="select"
                 value={filterBarber}
                 onChange={(e) => setFilterBarber(e.target.value)}
+                style={filterInputStyle}
               >
                 <option value="">Todos</option>
                 {availableBarbers.map((barber) => (
@@ -463,11 +516,12 @@ const ServiceRecordListPage = () => {
           {/* Filtro por Método de Pagamento */}
           <Col md={3}>
             <Form.Group controlId="filterPaymentMethod">
-              <Form.Label>Método de Pagamento</Form.Label>
+              <Form.Label style={filterInputStyle}>Método de Pagamento</Form.Label>
               <Form.Control
                 as="select"
                 value={filterPaymentMethod}
                 onChange={(e) => setFilterPaymentMethod(e.target.value)}
+                style={filterInputStyle}
               >
                 <option value="">Todos</option>
                 <option value="Pix">Pix</option>
@@ -476,43 +530,53 @@ const ServiceRecordListPage = () => {
                 <option value="Dinheiro">Dinheiro</option>
                 <option value="Fiado">Fiado</option>
                 <option value="Cortesia">Cortesia</option>
-                <option value="Transferência bancária">
-                  Transferência bancária
-                </option>
+                <option value="Transferência bancária">Transferência bancária</option>
                 <option value="Vale-refeição">Vale-refeição</option>
                 <option value="Cheque">Cheque</option>
                 <option value="PayPal">PayPal</option>
               </Form.Control>
             </Form.Group>
           </Col>
-          {/* Filtro por Data Inicial */}
+          {/* Filtro por Data/Hora Inicial */}
           <Col md={3}>
-            <Form.Group controlId="filterStartDate">
-              <Form.Label>Data Inicial</Form.Label>
+            <Form.Group controlId="filterStartDateTime">
+              <Form.Label style={filterInputStyle}>Data/Hora Inicial</Form.Label>
               <Form.Control
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
+                type="datetime-local"
+                value={filterStartDateTime}
+                onChange={(e) => setFilterStartDateTime(e.target.value)}
+                style={filterInputStyle}
               />
             </Form.Group>
           </Col>
-          {/* Filtro por Data Final */}
+          {/* Filtro por Data/Hora Final */}
           <Col md={3}>
-            <Form.Group controlId="filterEndDate">
-              <Form.Label>Data Final</Form.Label>
+            <Form.Group controlId="filterEndDateTime">
+              <Form.Label style={filterInputStyle}>Data/Hora Final</Form.Label>
               <Form.Control
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
+                type="datetime-local"
+                value={filterEndDateTime}
+                onChange={(e) => setFilterEndDateTime(e.target.value)}
+                style={filterInputStyle}
               />
             </Form.Group>
           </Col>
         </Row>
+        {/* Exibe mensagem de erro do intervalo, se houver */}
+        {dateIntervalError && (
+          <Row className="mb-3">
+            <Col>
+              <p style={{ color: "#ff4d4f", backgroundColor: "#343a40", padding: "5px", borderRadius: "4px" }}>
+                {dateIntervalError}
+              </p>
+            </Col>
+          </Row>
+        )}
         {/* Filtro por Serviços (checkboxes) */}
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="filterServiceIds">
-              <Form.Label>Serviços</Form.Label>
+              <Form.Label style={filterInputStyle}>Serviços</Form.Label>
               <Row>
                 {availableServices.map((service) => (
                   <Col key={service.id} xs={6} md={4}>
@@ -523,6 +587,7 @@ const ServiceRecordListPage = () => {
                       value={service.id}
                       checked={filterServiceIds.includes(String(service.id))}
                       onChange={handleServiceCheckboxChange}
+                      style={filterInputStyle}
                     />
                   </Col>
                 ))}
@@ -538,13 +603,8 @@ const ServiceRecordListPage = () => {
               {filteredServiceRecords.length === 0 ? (
                 <Row>
                   <Col className="text-center">
-                    <p className="text-white">
-                      Nenhum atendimento encontrado.
-                    </p>
-                    <Link
-                      to={`/service-record/create/${slug}`}
-                      className="link-component m-1"
-                    >
+                    <p className="text-white">Nenhum atendimento encontrado.</p>
+                    <Link to={`/service-record/create/${slug || ""}`} className="link-component m-1">
                       <Button variant="secondary" className="action-button">
                         Novo atendimento
                       </Button>
@@ -559,25 +619,17 @@ const ServiceRecordListPage = () => {
                       key={record.id}
                       className={`inner-col mb-3 ${getStatusClass(record.status)}`}
                     >
-                      <Card
-                        className={`card-component shadow-sm h-100 ${getStatusClass(
-                          record.status
-                        )}`}
-                      >
+                      <Card className={`card-component shadow-sm h-100 ${getStatusClass(record.status)}`}>
                         <Card.Body>
-                          {/* Renderização condicional com base na rota */}
                           {!slug && !username && (
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString(
-                                  "pt-BR"
-                                )}
+                                {new Date(record.created_at).toLocaleString("pt-BR")}
                               </Card.Title>
                               <Card.Text className="text-white">
                                 <strong>Serviços: </strong>
-                                {record.service_names &&
-                                record.service_names.length > 0
+                                {record.service_names && record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />
@@ -602,9 +654,7 @@ const ServiceRecordListPage = () => {
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString(
-                                  "pt-BR"
-                                )}
+                                {new Date(record.created_at).toLocaleString("pt-BR")}
                               </Card.Title>
                               <Card.Text>
                                 <strong>Cliente: </strong>
@@ -617,8 +667,7 @@ const ServiceRecordListPage = () => {
                                 {record.status}
                                 <br />
                                 <strong>Serviços: </strong>
-                                {record.service_names &&
-                                record.service_names.length > 0
+                                {record.service_names && record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />
@@ -634,17 +683,14 @@ const ServiceRecordListPage = () => {
                             <>
                               <Card.Title className="mb-2">
                                 Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString(
-                                  "pt-BR"
-                                )}
+                                {new Date(record.created_at).toLocaleString("pt-BR")}
                               </Card.Title>
                               <Card.Text>
                                 <strong>Cliente: </strong>
                                 {record.client_first_name}
                                 <br />
                                 <strong>Serviços: </strong>
-                                {record.service_names &&
-                                record.service_names.length > 0
+                                {record.service_names && record.service_names.length > 0
                                   ? record.service_names.join(", ")
                                   : "Não informado"}
                                 <br />

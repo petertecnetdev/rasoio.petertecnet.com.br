@@ -94,10 +94,10 @@ const BarbershopViewPage = () => {
           ]}
         />
       ) : (
-        <Container className="main-container" fluid>
+        <Container className="main-container " fluid>
           {barbershop && (
             <Card
-              className="barbershop-card"
+              className="barbershop-card "
               style={{ position: "relative", overflow: "hidden" }}
             >
               {/* Background image com blur */}
@@ -108,21 +108,12 @@ const BarbershopViewPage = () => {
                     barbershop.logo
                       ? `${storageUrl}/${barbershop.logo}`
                       : "/images/logo.png"
-                  }')`,
-                  filter: "blur(8px)",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  zIndex: 1,
+                  }')`
                 }}
               />
               {/* Conteúdo do card */}
               <Card.Body
-                className="barbershop-body"
+                className="barbershop-body "
                 style={{ position: "relative", zIndex: 2 }}
               >
                 <Row className="barbershop-row">
@@ -154,7 +145,7 @@ const BarbershopViewPage = () => {
                         />
                       </strong>
                     </p>
-                    <p className="barbershop-address">
+                    <p className="barbershop-address bg-dark text-white rounded p-2 w-50 ">
                       {barbershop.address}, {barbershop.city} -{" "}
                       {barbershop.state}
                     </p>

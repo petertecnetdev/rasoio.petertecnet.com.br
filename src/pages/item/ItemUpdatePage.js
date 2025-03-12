@@ -150,7 +150,7 @@ const ItemUpdatePage = () => {
     if (isNaN(discount) || discount < 0) {
       errors.push("O desconto deve ser um valor monetário válido.");
     }
-    if (itemData.type !== "Produto" && itemData.type !== "Serviço") {
+    if (itemData.type !== "product" && itemData.type !== "service") {
       errors.push("O tipo de item deve ser 'Produto' ou 'Serviço'.");
     }
     if (errors.length > 0) {
@@ -343,8 +343,8 @@ const ItemUpdatePage = () => {
                             className="input-field"
                           >
                             <option value="">Selecione</option>
-                            <option value="Produto">Produto</option>
-                            <option value="Serviço">Serviço</option>
+                            <option value="product">Produto</option>
+                            <option value="service">Serviço</option>
                           </Form.Control>
                         </Form.Group>
                       </Col>
@@ -453,7 +453,7 @@ const ItemUpdatePage = () => {
                             name="category"
                             value={itemData.category || ""}
                             onChange={handleInputChange}
-                            required
+                            
                             className="input-field"
                           />
                         </Form.Group>
@@ -470,7 +470,7 @@ const ItemUpdatePage = () => {
                             name="subcategory"
                             value={itemData.subcategory || ""}
                             onChange={handleInputChange}
-                            required
+                            
                             className="input-field"
                           />
                         </Form.Group>
@@ -501,7 +501,7 @@ const ItemUpdatePage = () => {
                             name="description"
                             value={itemData.description || ""}
                             onChange={handleInputChange}
-                            required
+                            
                             className="input-field"
                           />
                         </Form.Group>
