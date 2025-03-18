@@ -37,7 +37,6 @@ const UserUpdatePage = () => {
         const response = await axios.get(`${apiBaseUrl}/auth/me`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "multipart/form-data",
           },
         });
         const data = response.data.user;
@@ -56,7 +55,7 @@ const UserUpdatePage = () => {
           gender: data.gender || "",
           occupation: data.occupation || "",
           about: data.about || "",
-          is_barber: data.is_barber || false,
+          is_barber: data.is_barber === "1" || data.is_barber === 1 || data.is_barber === true,
           email: data.email || "",
         });
         setOriginalData(data);
@@ -92,22 +91,11 @@ const UserUpdatePage = () => {
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    const reader = new FileReader();
-
     if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
       reader.onloadend = () => {
-        const img = new Image();
-        img.src = reader.result;
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          canvas.width = 150;
-          canvas.height = 150;
-          ctx.drawImage(img, 0, 0, 150, 150);
-          const resizedDataURL = canvas.toDataURL("image/png");
-          setAvatarPreview(resizedDataURL);
-          setUserData((prevData) => ({ ...prevData, avatar: file }));
-        };
+        setAvatarPreview(reader.result);
+        setUserData((prevData) => ({ ...prevData, avatar: file }));
       };
       reader.readAsDataURL(file);
     } else {
@@ -132,26 +120,33 @@ const UserUpdatePage = () => {
 
     const formData = new FormData();
 
-    if (avatarPreview) {
-      try {
-        const avatarBlob = await fetch(avatarPreview).then((res) => res.blob());
-        formData.append("avatar", avatarBlob, "avatar.png");
-      } catch (err) {
-        console.error("Erro ao converter imagem do avatar:", err);
-      }
+    // Se o usuário selecionou um novo avatar, envia o arquivo diretamente
+    if (userData.avatar && userData.avatar instanceof File) {
+      formData.append("avatar", userData.avatar);
     }
 
+    // Lista de campos que são booleanos e precisam ser enviados como "1" ou "0"
+    const booleanFields = ["is_barber"];
+
+    // Adiciona campos alterados
     Object.keys(userData).forEach((key) => {
-      if (key !== "avatar" && userData[key] !== originalData[key]) {
-        formData.append(key, userData[key]);
+      if (key === "avatar") return;
+      // Verifica se houve alteração comparado aos dados originais
+      if (userData[key] !== originalData[key]) {
+        let value = userData[key];
+        if (booleanFields.includes(key)) {
+          // Converte boolean para string "1" ou "0"
+          value = value ? "1" : "0";
+        }
+        formData.append(key, value);
       }
     });
 
     try {
       const headers = {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "multipart/form-data",
       };
+
       const response = await axios.post(
         `${apiBaseUrl}/user/${originalData.id}`,
         formData,
@@ -218,9 +213,8 @@ const UserUpdatePage = () => {
   return (
     <>
       <NavlogComponent />
-      
       <p className="section-title text-center">Atualizar meu perfil</p>
-          <Container className="main-container" fluid>
+      <Container className="main-container" fluid>
         {isProcessing ? (
           <ProcessingIndicatorComponent messages={messages} />
         ) : (
@@ -248,7 +242,9 @@ const UserUpdatePage = () => {
                 <Button
                   variant="secondary"
                   className="change-avatar-btn"
-                  onClick={() => document.getElementById("avatarInput").click()}
+                  onClick={() =>
+                    document.getElementById("avatarInput").click()
+                  }
                 >
                   Alterar Avatar
                 </Button>
@@ -290,14 +286,13 @@ const UserUpdatePage = () => {
                   <Col md={3}>
                     <Form.Group controlId="user_name" className="form-group">
                       <Form.Label>Nome de Usuário</Form.Label>
-                     <p className="text-white">{userData.user_name}</p> 
+                      <p className="text-white">{userData.user_name}</p>
                     </Form.Group>
                   </Col>
                   <Col md={3}>
                     <Form.Group controlId="email" className="form-group">
                       <Form.Label>Email</Form.Label>
-                     
-                      <p className="text-white">{userData.email}</p> 
+                      <p className="text-white">{userData.email}</p>
                     </Form.Group>
                   </Col>
                   <Col md={2}>
