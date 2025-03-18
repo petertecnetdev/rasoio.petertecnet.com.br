@@ -33,11 +33,14 @@ const ServiceRecordCreatePage = () => {
     const fetchBarbershop = async () => {
       setMessages(["Carregando informações da barbearia e serviços..."]);
       try {
-        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiBaseUrl}/barbershop/view/${slug}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         const barbershopData = response.data.barbershop || response.data;
         setBarbershop(barbershopData);
         setBarbershopId(barbershopData.id);
@@ -46,7 +49,8 @@ const ServiceRecordCreatePage = () => {
         window.scrollTo(0, 0);
       } catch (error) {
         const errorMessage =
-          error.response?.data?.message || "Erro ao carregar informações da barbearia.";
+          error.response?.data?.message ||
+          "Erro ao carregar informações da barbearia.";
         Swal.fire({
           icon: "error",
           title: "Erro!",
@@ -234,7 +238,8 @@ const ServiceRecordCreatePage = () => {
                 <Card.Body className="card-body service-record-create-card-body">
                   {barbershop && (
                     <p className="mb-3 text-center">
-                      Registro de atendimento em: <strong>{barbershop.name}</strong>
+                      Registro de atendimento em:{" "}
+                      <strong>{barbershop.name}</strong>
                     </p>
                   )}
                   <Form onSubmit={handleSubmit}>
@@ -255,7 +260,9 @@ const ServiceRecordCreatePage = () => {
                                   id={`service-${service.id}`}
                                   label={service.name}
                                   value={service.id}
-                                  checked={serviceRecordData.service_ids.includes(service.id)}
+                                  checked={serviceRecordData.service_ids.includes(
+                                    service.id
+                                  )}
                                   onChange={handleServiceSelection}
                                 />
                               </Col>
@@ -277,7 +284,10 @@ const ServiceRecordCreatePage = () => {
                           >
                             <option value="">Selecione</option>
                             {barbers.map((barber) => (
-                              <option key={barber.user_id} value={barber.user_id}>
+                              <option
+                                key={barber.user_id}
+                                value={barber.user_id}
+                              >
                                 {barber.first_name}
                               </option>
                             ))}
@@ -303,7 +313,9 @@ const ServiceRecordCreatePage = () => {
                             <option value="Dinheiro">Dinheiro</option>
                             <option value="Fiado">Fiado</option>
                             <option value="Cortesia">Cortesia</option>
-                            <option value="Transferência bancária">Transferência bancária</option>
+                            <option value="Transferência bancária">
+                              Transferência bancária
+                            </option>
                             <option value="Vale-refeição">Vale-refeição</option>
                             <option value="Cheque">Cheque</option>
                             <option value="PayPal">PayPal</option>
@@ -356,8 +368,14 @@ const ServiceRecordCreatePage = () => {
                     </Row>
 
                     <div className="text-center">
-                      <Button variant="primary" type="submit" className="action-button">
-                        {isProcessing ? "Registrando..." : "Registrar Atendimento"}
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        className="action-button"
+                      >
+                        {isProcessing
+                          ? "Registrando..."
+                          : "Registrar Atendimento"}
                       </Button>
                     </div>
 

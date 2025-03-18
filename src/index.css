@@ -553,7 +553,7 @@ body {
 
 .action-button,
 .submit-btn {
-  background: linear-gradient(135deg, #666666 0%, #ffffff 100%);
+  background-color: #ffffff;
   border: none;
   color: #000;
   padding: 12px 24px;
@@ -578,9 +578,9 @@ body {
 
 .action-button:hover,
 .submit-btn:hover {
-  background: linear-gradient(135deg, #ffffff 0%, #666666 100%);
+  background-color: #000;
   color: #fff;
-  transform: scale(1.02);
+  border: 1px solid #fff;
 }
 
 /*********************************************************
@@ -1487,5 +1487,56 @@ body {
 .br-cancelled:hover,
 .br-pending:hover,
 .br-confirmed:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+ 
+}
+/* Card styles for service records */
+.service-record-card-pending {
+  border: 2px solid #ffffff; /* Orange border */
+  background-color: #fffb03;  /* Light yellow background */
+  border-radius: 4px;
+  padding: 1rem; border-radius: 30px;
+  color:#000;
+}
+
+.service-record-card-approved {
+  border: 2px solid #ffffff; /* Green border */
+  background-color: #059900;  /* Light green background */
+  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 30px;
+}
+
+.service-record-card-not-approved {
+  border: 2px solid #ffffff; /* Red border */
+  background-color: #ff0000;  /* Light red background */
+  border-radius: 4px;
+  padding: 1rem; border-radius: 30px;
+  
+  color:#000;
+}
+
+/* Button styles for service record status updates */
+.service-record-btn-approved {
+  background-color: #5cb85c !important; /* Green */
+  border-color: #5cb85c !important;
+  color: #fff !important;
+}
+
+.service-record-btn-pending {
+  background-color: #f0ad4e !important; /* Orange */
+  border-color: #f0ad4e !important;
+  color: #fff !important;
+}
+
+.service-record-btn-not-approved {
+  background-color: #d9534f !important; /* Red */
+  border-color: #d9534f !important;
+  color: #fff !important;
+}
+
+/* Optionally, style the active filter button */
+.action-button.active {
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  font-weight: bold;
 }

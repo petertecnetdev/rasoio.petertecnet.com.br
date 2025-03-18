@@ -1,99 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button, Form } from "react-bootstrap";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { useParams, useNavigate, Link } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import { apiBaseUrl } from "../../config";
 
-// Função que retorna a classe CSS baseada no status (enum: 'pending', 'completed', 'cancelled')
-const getStatusClass = (status) => {
+// Returns a custom CSS class for the card based on the status
+const getCardClass = (status) => {
   if (!status) return "";
   const s = status.toLowerCase();
-  if (s === "pending") return "pending";
-  if (s === "completed") return "completed";
-  if (s === "cancelled") return "cancel";
+  if (s === "pending") return "service-record-card-pending";
+  if (s === "approved") return "service-record-card-approved";
+  if (s === "not-approved") return "service-record-card-not-approved";
+  return "";
+};
+
+// Returns a custom CSS class for the status update button based on the new status
+const getButtonClass = (newStatus) => {
+  if (!newStatus) return "";
+  const s = newStatus.toLowerCase();
+  if (s === "approved") return "service-record-btn-approved";
+  if (s === "not-approved") return "service-record-btn-not-approved";
+  return "";
+};
+
+const getStatusName = (status) => {
+  if (!status) return "";
+  const s = status.toLowerCase();
+  if (s === "pending") return "Pendente";
+  if (s === "approved") return "Aprovado";
+  if (s === "not-approved") return "Não Aprovado";
   return "";
 };
 
 const ServiceRecordListPage = () => {
+  // The route may include "slug" (barbershop) or "username" (barber) or none ("meus atendimentos")
   const { slug, username } = useParams();
   const navigate = useNavigate();
 
   const [headerInfo, setHeaderInfo] = useState(null);
-  const [serviceRecords, setServiceRecords] = useState([]);
+  const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
+  // Default filter status is "approved"
+  const [filterStatus, setFilterStatus] = useState("approved");
 
-  // Estados para filtros
-  const [filterBarber, setFilterBarber] = useState("");
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState("");
-  // Ao carregar a página, a data inicial é hoje às 00:00 e a data final é hoje às 23:59
-  const today = new Date();
-  const defaultStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    0,
-    0
-  )
-    .toISOString()
-    .slice(0, 16);
-  const defaultEnd = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    23,
-    59
-  )
-    .toISOString()
-    .slice(0, 16);
-  const [filterStartDateTime, setFilterStartDateTime] = useState(defaultStart);
-  const [filterEndDateTime, setFilterEndDateTime] = useState(defaultEnd);
-  const [filterServiceIds, setFilterServiceIds] = useState([]);
+  // Determine if the "Registrar Atendimento" (Create Service Record) button should be shown.
+  // This button should be visible only if the route is for a barbershop or a barber.
+  const showCreateButton = Boolean(slug || username);
 
-  // Estados para dados auxiliares dos filtros
-  const [availableBarbers, setAvailableBarbers] = useState([]);
-  const [availableServices, setAvailableServices] = useState([]);
-
-  // Estado para mensagem de erro do intervalo de data/hora
-  const [dateIntervalError, setDateIntervalError] = useState("");
-
-  // Validação do intervalo: data inicial não pode ser maior que data final e data final não pode ser posterior à data atual
-  useEffect(() => {
-    const start = new Date(filterStartDateTime);
-    const end = new Date(filterEndDateTime);
-    const now = new Date();
-    if (start > end) {
-      setDateIntervalError(
-        "A data/hora inicial não pode ser maior que a data/hora final."
-      );
-    } else if (end > now) {
-      setDateIntervalError(
-        "A data/hora final não pode ser posterior à data/hora atual."
-      );
-    } else {
-      setDateIntervalError("");
-    }
-  }, [filterStartDateTime, filterEndDateTime]);
-
-  // Função para enriquecer os registros com nomes dos envolvidos e dos serviços
-  const enrichServiceRecords = async (recordsData) => {
+  // Enrich each service record with details from related users
+  const enrichRecords = async (recordsData) => {
     const token = localStorage.getItem("token");
     const enriched = await Promise.all(
       recordsData.map(async (record) => {
         let enrichedRecord = { ...record };
 
-        // Nome do cliente
+        // Client
         if (record.client_id) {
           try {
-            const clientRes = await axios.get(
-              `${apiBaseUrl}/user/show/${record.client_id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await axios.get(`${apiBaseUrl}/user/show/${record.client_id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             enrichedRecord.client_first_name =
-              clientRes.data.user.first_name || "Não identificado";
+              res.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.client_first_name = "Não identificado";
           }
@@ -101,15 +73,14 @@ const ServiceRecordListPage = () => {
           enrichedRecord.client_first_name = "Não identificado";
         }
 
-        // Nome do prestador (barbeiro)
+        // Provider (barber)
         if (record.provider_id) {
           try {
-            const providerRes = await axios.get(
-              `${apiBaseUrl}/user/show/${record.provider_id}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await axios.get(`${apiBaseUrl}/user/show/${record.provider_id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             enrichedRecord.provider_first_name =
-              providerRes.data.user.first_name || "Não identificado";
+              res.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.provider_first_name = "Não identificado";
           }
@@ -117,49 +88,19 @@ const ServiceRecordListPage = () => {
           enrichedRecord.provider_first_name = "Não identificado";
         }
 
-        // Nome de quem registrou o atendimento
+        // Registered by (the user who registered the record)
         if (record.registered_by) {
           try {
-            const registeredRes = await axios.get(
-              `${apiBaseUrl}/user/show/${record.registered_by}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await axios.get(`${apiBaseUrl}/user/show/${record.registered_by}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             enrichedRecord.registered_by_first_name =
-              registeredRes.data.user.first_name || "Não identificado";
+              res.data.user.first_name || "Não identificado";
           } catch (error) {
             enrichedRecord.registered_by_first_name = "Não identificado";
           }
         } else {
           enrichedRecord.registered_by_first_name = "Não identificado";
-        }
-
-        // Enriquecer com os nomes dos serviços
-        if (record.service_ids) {
-          const serviceIds =
-            typeof record.service_ids === "string"
-              ? JSON.parse(record.service_ids)
-              : record.service_ids;
-          if (Array.isArray(serviceIds)) {
-            const serviceNames = await Promise.all(
-              serviceIds.map(async (id) => {
-                try {
-                  const res = await axios.get(`${apiBaseUrl}/item/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  return res.data.item.name;
-                } catch (err) {
-                  return "";
-                }
-              })
-            );
-            enrichedRecord.service_names = serviceNames.filter(
-              (name) => name !== ""
-            );
-          } else {
-            enrichedRecord.service_names = [];
-          }
-        } else {
-          enrichedRecord.service_names = [];
         }
 
         return enrichedRecord;
@@ -168,16 +109,24 @@ const ServiceRecordListPage = () => {
     return enriched;
   };
 
-  // Função para cancelar um atendimento
-  const cancelServiceRecord = async (id) => {
-    const token = localStorage.getItem("token");
+  // Sort records by creation date
+  const sortRecords = (data) => {
+    return data.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+  };
+
+  // Function to update the status with confirmation via SweetAlert
+  const handleStatusUpdate = (recordId, newStatus) => {
     Swal.fire({
-      title: "Confirmar inativação",
-      text: "Deseja realmente inativar este atendimento?",
-      icon: "warning",
+      title: "Confirmar alteração",
+      text: `Deseja realmente alterar o status para ${
+        newStatus === "approved" ? "Aprovado" : "Não Aprovado"
+      }?`,
+      icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Sim, inativar",
-      cancelButtonText: "Não, manter",
+      confirmButtonText: "Sim, alterar",
+      cancelButtonText: "Cancelar",
       customClass: {
         popup: "custom-swal",
         title: "custom-swal-title",
@@ -186,12 +135,14 @@ const ServiceRecordListPage = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`${apiBaseUrl}/service-record/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await axios.patch(
+            `${apiBaseUrl}/service-record/${recordId}/status`,
+            { status: newStatus },
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          );
           Swal.fire({
-            title: "Inativado",
-            text: "Atendimento inativado com sucesso.",
+            title: "Atualizado",
+            text: "Status do atendimento atualizado com sucesso!",
             icon: "success",
             customClass: {
               popup: "custom-swal",
@@ -199,9 +150,9 @@ const ServiceRecordListPage = () => {
               content: "custom-swal-text",
             },
           });
-          setServiceRecords((prev) =>
+          setRecords((prev) =>
             prev.map((record) =>
-              record.id === id ? { ...record, status: "cancelled" } : record
+              record.id === recordId ? { ...record, status: newStatus } : record
             )
           );
         } catch (error) {
@@ -209,7 +160,7 @@ const ServiceRecordListPage = () => {
             title: "Erro",
             text:
               error.response?.data?.error ||
-              "Erro ao cancelar o atendimento. Tente novamente.",
+              "Erro ao atualizar o status do atendimento. Tente novamente.",
             icon: "error",
             customClass: {
               popup: "custom-swal",
@@ -222,19 +173,6 @@ const ServiceRecordListPage = () => {
     });
   };
 
-  // Verificar se há erro na busca dos atendimentos
-  const isNoServiceRecordsError = (error) => {
-    const status = error.response?.status;
-    const errorMsg = (error.response?.data?.error || "").toLowerCase();
-    const messageMsg = (error.response?.data?.message || "").toLowerCase();
-    return (
-      status === 404 ||
-      errorMsg.includes("nenhum atendimento") ||
-      messageMsg.includes("nenhum atendimento")
-    );
-  };
-
-  // Buscar registros de atendimento
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -242,218 +180,76 @@ const ServiceRecordListPage = () => {
       return;
     }
 
-    const sortRecords = (data) => {
-      return data.sort(
-        (a, b) => new Date(a.created_at) - new Date(b.created_at)
-      );
-    };
-
-    // Rota: Atendimentos da barbearia
-    const fetchBarbershopRecords = async () => {
-      setMessages(["Carregando informações da barbearia..."]);
+    const fetchRecords = async () => {
+      setMessages(["Carregando atendimentos..."]);
       try {
-        const resBarbershop = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const barbershopData =
-          resBarbershop.data.barbershop || resBarbershop.data;
-        setHeaderInfo(barbershopData);
-
-        // Atualiza o select de barbeiros se disponíveis
-        if (barbershopData.barbers && Array.isArray(barbershopData.barbers)) {
-          setAvailableBarbers(barbershopData.barbers);
-        }
-
-        setMessages(["Carregando atendimentos..."]);
-        const params = {
-          entity_id: barbershopData.id,
-          entity_name: "barbershop",
-        };
-        const resRecords = await axios.get(
-          `${apiBaseUrl}/service-record/listbyentity`,
-          { headers: { Authorization: `Bearer ${token}` }, params }
-        );
-        const sorted = sortRecords(resRecords.data.service_records || []);
-        const enriched = await enrichServiceRecords(sorted);
-        setServiceRecords(enriched);
-      } catch (error) {
-        if (isNoServiceRecordsError(error)) {
-          setServiceRecords([]);
+        let res, data;
+        if (slug) {
+          // Fetch service records for a barbershop
+          const resBarbershop = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const barbershopData = resBarbershop.data.barbershop || resBarbershop.data;
+          setHeaderInfo(barbershopData);
+          const params = {
+            entity_id: barbershopData.id,
+            entity_name: "barbershop",
+          };
+          res = await axios.get(`${apiBaseUrl}/service-record/listbyentity`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params,
+          });
+          data = res.data.service_records || [];
+        } else if (username) {
+          // Fetch service records for a barber
+          const resBarber = await axios.get(`${apiBaseUrl}/barber/view/${username}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const barberData = resBarber.data.barbershop ? resBarber.data : resBarber.data;
+          setHeaderInfo(barberData);
+          const params = {
+            provider_id: barberData.user_id,
+            app_id: 1,
+            entity_name: "barbershop",
+            entity_id: barberData.barbershops[0]?.id,
+          };
+          res = await axios.get(`${apiBaseUrl}/service-record/listbyprovider`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params,
+          });
+          data = res.data.service_records || [];
         } else {
-          const errorMessage =
+          // Fetch my service records
+          res = await axios.get(`${apiBaseUrl}/service-record/listmy`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          data = res.data.service_records || [];
+        }
+        const sorted = sortRecords(data);
+        const enriched = await enrichRecords(sorted);
+        setRecords(enriched);
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text:
             error.response?.data?.message ||
-            "Erro ao carregar atendimentos ou não há atendimentos para esta barbearia.";
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text: errorMessage,
-            customClass: {
-              popup: "custom-swal",
-              title: "custom-swal-title",
-              content: "custom-swal-text",
-            },
-          });
-        }
-      } finally {
-        setMessages([]);
-        setLoading(false);
-      }
-    };
-
-    // Rota: Atendimentos do barbeiro
-    const fetchBarberRecords = async () => {
-      setMessages(["Carregando informações do barbeiro..."]);
-      try {
-        const resBarber = await axios.get(
-          `${apiBaseUrl}/user/view/${username}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const barberData = resBarber.data.barbershop
-          ? resBarber.data
-          : resBarber.data;
-        setHeaderInfo(barberData);
-        // Se o barbeiro for único, adiciona no select de filtros
-        setAvailableBarbers([barberData.user]);
-
-        setMessages(["Carregando atendimentos..."]);
-        const params = {
-          provider_id: barberData.user_id,
-          app_id: 1,
-          entity_name: "barbershop",
-          entity_id: barberData.barbershops[0]?.id,
-        };
-        const resRecords = await axios.get(
-          `${apiBaseUrl}/service-record/listbyprovider`,
-          { headers: { Authorization: `Bearer ${token}` }, params }
-        );
-        const sorted = sortRecords(resRecords.data.service_records || []);
-        const enriched = await enrichServiceRecords(sorted);
-        setServiceRecords(enriched);
-      } catch (error) {
-        if (isNoServiceRecordsError(error)) {
-          setServiceRecords([]);
-        } else {
-          const errorMessage =
-            error.response?.data?.message || "Erro ao carregar atendimentos.";
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text: errorMessage,
-            customClass: {
-              popup: "custom-swal",
-              title: "custom-swal-title",
-              content: "custom-swal-text",
-            },
-          });
-        }
-      } finally {
-        setMessages([]);
-        setLoading(false);
-      }
-    };
-
-    // Rota: Meus atendimentos
-    const fetchMyRecords = async () => {
-      setMessages(["Carregando seus atendimentos..."]);
-      try {
-        const resRecords = await axios.get(
-          `${apiBaseUrl}/service-record/listmy`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const sorted = sortRecords(resRecords.data.service_records || []);
-        const enriched = await enrichServiceRecords(sorted);
-        setServiceRecords(enriched);
-      } catch (error) {
-        if (isNoServiceRecordsError(error)) {
-          setServiceRecords([]);
-        } else {
-          const errorMessage =
-            error.response?.data?.message || "Erro ao carregar atendimentos.";
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text: errorMessage,
-            customClass: {
-              popup: "custom-swal",
-              title: "custom-swal-title",
-              content: "custom-swal-text",
-            },
-          });
-        }
-      } finally {
-        setMessages([]);
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchBarbershopRecords();
-    } else if (username) {
-      fetchBarberRecords();
-    } else {
-      fetchMyRecords();
-    }
-  }, [slug, username, navigate]);
-
-  // Buscar lista de serviços disponíveis para filtro (endpoint /item/list)
-  useEffect(() => {
-    const fetchAvailableServices = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const res = await axios.get(`${apiBaseUrl}/item/list`, {
-          headers: { Authorization: `Bearer ${token}` },
+            "Erro ao carregar os atendimentos.",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
         });
-        setAvailableServices(res.data.items || []);
-      } catch (error) {
-        console.error("Erro ao buscar serviços disponíveis", error);
+        setRecords([]);
+      } finally {
+        setMessages([]);
+        setLoading(false);
       }
     };
-    fetchAvailableServices();
-  }, []);
 
-  // Filtro: Filtrar por provider_id, método de pagamento, intervalo de data/hora e serviços
-  const filteredServiceRecords = serviceRecords.filter((record) => {
-    // Se houver erro no intervalo, não retorna nenhum registro
-    if (dateIntervalError) return false;
-
-    // Ajusta o intervalo: se a data/hora final estiver em T00:00, considera o final do dia
-    const start = new Date(filterStartDateTime);
-    let end = new Date(filterEndDateTime);
-    if (filterEndDateTime.endsWith("T00:00")) {
-      end.setHours(23, 59, 59, 999);
-    }
-    const recordDate = new Date(record.created_at);
-    if (recordDate < start || recordDate > end) return false;
-
-    // Filtrar por barbeiro (provider_id)
-    if (filterBarber && String(record.provider_id) !== filterBarber) {
-      return false;
-    }
-    // Filtrar por método de pagamento
-    if (
-      filterPaymentMethod &&
-      record.payment_method &&
-      record.payment_method.toLowerCase() !== filterPaymentMethod.toLowerCase()
-    ) {
-      return false;
-    }
-    // Filtrar por serviços (service_ids)
-    if (filterServiceIds.length > 0) {
-      const recordServiceIds =
-        typeof record.service_ids === "string"
-          ? JSON.parse(record.service_ids)
-          : record.service_ids || [];
-      if (
-        !filterServiceIds.some((selectedId) =>
-          recordServiceIds.includes(Number(selectedId))
-        )
-      ) {
-        return false;
-      }
-    }
-    return true;
-  });
+    fetchRecords();
+  }, [slug, username, navigate]);
 
   let headerTitle = "";
   if (slug && headerInfo) {
@@ -464,135 +260,66 @@ const ServiceRecordListPage = () => {
     headerTitle = "Meus Atendimentos";
   }
 
-  // Handler para atualizar os checkboxes de serviços
-  const handleServiceCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    if (checked) {
-      setFilterServiceIds((prev) => [...prev, value]);
-    } else {
-      setFilterServiceIds((prev) => prev.filter((id) => id !== value));
-    }
-  };
+  const pendingCount = records.filter(
+    (record) => record.status && record.status.toLowerCase() === "pending"
+  ).length;
+  const approvedCount = records.filter(
+    (record) => record.status && record.status.toLowerCase() === "approved"
+  ).length;
+  const notApprovedCount = records.filter(
+    (record) => record.status && record.status.toLowerCase() === "not-approved"
+  ).length;
 
-  // Inline style para inputs dos filtros (fundo escuro com texto claro)
-  const filterInputStyle = { backgroundColor: "#343a40", color: "#fff" };
+  const filteredRecords = records.filter(
+    (record) =>
+      record.status &&
+      record.status.toLowerCase() === filterStatus.toLowerCase()
+  );
 
   return (
     <>
       <NavlogComponent />
       <p className="section-title text-center">{headerTitle}</p>
       <Container className="main-container" fluid>
-        {/* Botão para cadastrar novo atendimento */}
-        <Row className="mb-3">
-          <Col className="text-right">
-            <Link to={`/service-record/create/${slug || ""}`} className="link-component">
-              <Button variant="primary" className="action-button">
-                Novo atendimento
+        <Row className="mb-3 justify-content-between align-items-center">
+          {showCreateButton && (
+            <Col xs="auto">
+              <Button
+                className="action-button service-record-btn-create"
+                onClick={() =>
+                  navigate(`/service-record/create/${slug ? slug : username ? username : ""}`)
+                }
+              >
+                Registrar Atendimento
               </Button>
-            </Link>
-          </Col>
-        </Row>
-        {/* Filtros */}
-        <Row className="mb-3">
-          {/* Filtro por Barbeiro */}
-          <Col md={3}>
-            <Form.Group controlId="filterBarber">
-              <Form.Label style={filterInputStyle}>Barbeiro</Form.Label>
-              <Form.Control
-                as="select"
-                value={filterBarber}
-                onChange={(e) => setFilterBarber(e.target.value)}
-                style={filterInputStyle}
-              >
-                <option value="">Todos</option>
-                {availableBarbers.map((barber) => (
-                  <option key={barber.id} value={barber.id}>
-                    {barber.first_name}
-                  </option>
-                ))}
-              </Form.Control>
-            </Form.Group>
-          </Col>
-          {/* Filtro por Método de Pagamento */}
-          <Col md={3}>
-            <Form.Group controlId="filterPaymentMethod">
-              <Form.Label style={filterInputStyle}>Método de Pagamento</Form.Label>
-              <Form.Control
-                as="select"
-                value={filterPaymentMethod}
-                onChange={(e) => setFilterPaymentMethod(e.target.value)}
-                style={filterInputStyle}
-              >
-                <option value="">Todos</option>
-                <option value="Pix">Pix</option>
-                <option value="Débito">Débito</option>
-                <option value="Crédito">Crédito</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Fiado">Fiado</option>
-                <option value="Cortesia">Cortesia</option>
-                <option value="Transferência bancária">Transferência bancária</option>
-                <option value="Vale-refeição">Vale-refeição</option>
-                <option value="Cheque">Cheque</option>
-                <option value="PayPal">PayPal</option>
-              </Form.Control>
-            </Form.Group>
-          </Col>
-          {/* Filtro por Data/Hora Inicial */}
-          <Col md={3}>
-            <Form.Group controlId="filterStartDateTime">
-              <Form.Label style={filterInputStyle}>Data/Hora Inicial</Form.Label>
-              <Form.Control
-                type="datetime-local"
-                value={filterStartDateTime}
-                onChange={(e) => setFilterStartDateTime(e.target.value)}
-                style={filterInputStyle}
-              />
-            </Form.Group>
-          </Col>
-          {/* Filtro por Data/Hora Final */}
-          <Col md={3}>
-            <Form.Group controlId="filterEndDateTime">
-              <Form.Label style={filterInputStyle}>Data/Hora Final</Form.Label>
-              <Form.Control
-                type="datetime-local"
-                value={filterEndDateTime}
-                onChange={(e) => setFilterEndDateTime(e.target.value)}
-                style={filterInputStyle}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-        {/* Exibe mensagem de erro do intervalo, se houver */}
-        {dateIntervalError && (
-          <Row className="mb-3">
-            <Col>
-              <p style={{ color: "#ff4d4f", backgroundColor: "#343a40", padding: "5px", borderRadius: "4px" }}>
-                {dateIntervalError}
-              </p>
             </Col>
-          </Row>
-        )}
-        {/* Filtro por Serviços (checkboxes) */}
-        <Row className="mb-3">
-          <Col>
-            <Form.Group controlId="filterServiceIds">
-              <Form.Label style={filterInputStyle}>Serviços</Form.Label>
-              <Row>
-                {availableServices.map((service) => (
-                  <Col key={service.id} xs={6} md={4}>
-                    <Form.Check
-                      type="checkbox"
-                      id={`service-${service.id}`}
-                      label={service.name}
-                      value={service.id}
-                      checked={filterServiceIds.includes(String(service.id))}
-                      onChange={handleServiceCheckboxChange}
-                      style={filterInputStyle}
-                    />
-                  </Col>
-                ))}
-              </Row>
-            </Form.Group>
+          )}
+        </Row>
+        {/* Status filters */}
+        <Row className="mb-3 justify-content-center">
+          <Col xs="auto">
+            <Button
+              className={`action-button service-record-btn-approved ${filterStatus === "approved" ? "active" : ""}`}
+              onClick={() => setFilterStatus("approved")}
+            >
+              Aprovados ({approvedCount})
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button
+              className={`action-button service-record-btn-pending ${filterStatus === "pending" ? "active" : ""}`}
+              onClick={() => setFilterStatus("pending")}
+            >
+              Pendentes ({pendingCount})
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button
+              className={`action-button service-record-btn-not-approved ${filterStatus === "not-approved" ? "active" : ""}`}
+              onClick={() => setFilterStatus("not-approved")}
+            >
+              Não Aprovados ({notApprovedCount})
+            </Button>
           </Col>
         </Row>
         {loading ? (
@@ -600,131 +327,63 @@ const ServiceRecordListPage = () => {
         ) : (
           <Row className="section-row justify-content-center">
             <Col xs={12} lg={10} className="section-col">
-              {filteredServiceRecords.length === 0 ? (
+              {filteredRecords.length === 0 ? (
                 <Row>
                   <Col className="text-center">
-                    <p className="text-white">Nenhum atendimento encontrado.</p>
-                    <Link to={`/service-record/create/${slug || ""}`} className="link-component m-1">
-                      <Button variant="secondary" className="action-button">
-                        Novo atendimento
-                      </Button>
-                    </Link>
+                    <p className="text-white">
+                      Nenhum atendimento encontrado para o status selecionado.
+                    </p>
+                    <Button
+                      className="action-button"
+                      onClick={() => navigate(-1)}
+                    >
+                      Voltar
+                    </Button>
                   </Col>
                 </Row>
               ) : (
                 <Row className="inner-row">
-                  {filteredServiceRecords.map((record) => (
-                    <Col
-                      md={4}
-                      key={record.id}
-                      className={`inner-col mb-3 ${getStatusClass(record.status)}`}
-                    >
-                      <Card className={`card-component shadow-sm h-100 ${getStatusClass(record.status)}`}>
+                  {filteredRecords.map((record) => (
+                    <Col md={4} key={record.id} className="inner-col mb-3">
+                      <Card className={`card-component shadow-sm h-100 ${getCardClass(record.status)}`}>
+                        <p className="text-center">{getStatusName(record.status)}</p>
                         <Card.Body>
-                          {!slug && !username && (
-                            <>
-                              <Card.Title className="mb-2">
-                                Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
-                              </Card.Title>
-                              <Card.Text className="text-white">
-                                <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
-                                  ? record.service_names.join(", ")
-                                  : "Não informado"}
-                                <br />
-                                <strong>Cliente: </strong>
-                                {record.client_first_name}
-                                <br />
-                                <strong>Prestador: </strong>
-                                {record.provider_first_name}
-                                <br />
-                                <strong>Registrado por: </strong>
-                                {record.registered_by_first_name}
-                                <br />
-                                <strong>Pagamento: </strong>
-                                {record.payment_method} - R$ {record.total_price}
-                                <br />
-                                <strong>Desconto: </strong>
-                                {record.discount}
-                              </Card.Text>
-                            </>
-                          )}
-                          {slug && (
-                            <>
-                              <Card.Title className="mb-2">
-                                Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
-                              </Card.Title>
-                              <Card.Text>
-                                <strong>Cliente: </strong>
-                                {record.client_first_name}
-                                <br />
-                                <strong>Prestador: </strong>
-                                {record.provider_first_name}
-                                <br />
-                                <strong>Status: </strong>
-                                {record.status}
-                                <br />
-                                <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
-                                  ? record.service_names.join(", ")
-                                  : "Não informado"}
-                                <br />
-                                <strong>Pagamento: </strong>
-                                {record.payment_method} - R$ {record.total_price}
-                                <br />
-                                <strong>Registrado por: </strong>
-                                {record.registered_by_first_name}
-                              </Card.Text>
-                            </>
-                          )}
-                          {username && (
-                            <>
-                              <Card.Title className="mb-2">
-                                Criado em:{" "}
-                                {new Date(record.created_at).toLocaleString("pt-BR")}
-                              </Card.Title>
-                              <Card.Text>
-                                <strong>Cliente: </strong>
-                                {record.client_first_name}
-                                <br />
-                                <strong>Serviços: </strong>
-                                {record.service_names && record.service_names.length > 0
-                                  ? record.service_names.join(", ")
-                                  : "Não informado"}
-                                <br />
-                                <strong>Barbearia: </strong>
-                                <Link to={`/barbershop/view/${record.entity_id}`}>
-                                  {record.entity_name === "barbershop"
-                                    ? "Ver barbearia"
-                                    : "Não identificado"}
-                                </Link>
-                                <br />
-                                <strong>Status: </strong>
-                                {record.status}
-                                <br />
-                                <strong>Registrado por: </strong>
-                                {record.registered_by_first_name}
-                              </Card.Text>
-                            </>
-                          )}
-                          <div className="d-flex gap-2">
-                            {record.status.toLowerCase() !== "cancelled" && (
+                          <Card.Title className="mb-2">Atendimento #{record.id}</Card.Title>
+                          <Card.Text>
+                            <strong>Criado:</strong> {new Date(record.created_at).toLocaleString("pt-BR")}<br />
+                            <strong>Cliente:</strong> {record.client_first_name}<br />
+                            <strong>Barbeiro:</strong> {record.provider_first_name}<br />
+                            <strong>Registrado por:</strong> {record.registered_by_first_name}<br />
+                            <strong>Serviços:</strong>{" "}
+                            {record.services && record.services.length > 0
+                              ? record.services
+                                  .map((service) => `${service.id} - ${service.name}`)
+                                  .join(", ")
+                              : "Não informado"}<br />
+                            <strong>Valor Total:</strong> {record.total_price}<br />
+                            <strong>Desconto:</strong> {record.discount}<br />
+                            <strong>Método de Pagamento:</strong> {record.payment_method}
+                          </Card.Text>
+                          {record.status.toLowerCase() === "pending" && (
+                            <div className="d-flex gap-2 mt-2">
                               <Button
-                                variant="danger"
-                                className="action-button"
-                                onClick={() => cancelServiceRecord(record.id)}
+                                className={`action-button ${getButtonClass("approved")}`}
+                                onClick={() => handleStatusUpdate(record.id, "approved")}
                               >
-                                Invalidar
+                                Aprovar
                               </Button>
-                            )}
-                          </div>
+                              <Button
+                                className={`action-button ${getButtonClass("not-approved")}`}
+                                onClick={() => handleStatusUpdate(record.id, "not-approved")}
+                              >
+                                Não Aprovar
+                              </Button>
+                            </div>
+                          )}
                         </Card.Body>
                         <Card.Footer>
-                          <small className="text-muted">
-                            Criado em:{" "}
-                            {new Date(record.created_at).toLocaleString("pt-BR")}
+                          <small className="text-primary">
+                            Criado em: {new Date(record.created_at).toLocaleString("pt-BR")}
                           </small>
                         </Card.Footer>
                       </Card>
