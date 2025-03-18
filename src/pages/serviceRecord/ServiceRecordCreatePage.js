@@ -13,7 +13,7 @@ const ServiceRecordCreatePage = () => {
 
   const [barbershop, setBarbershop] = useState(null);
   const [barbers, setBarbers] = useState([]);
-  const [items, setItems] = useState([]);
+  const [services, setServices] = useState([]);
   const [barbershopId, setBarbershopId] = useState(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,7 +41,7 @@ const ServiceRecordCreatePage = () => {
         const barbershopData = response.data.barbershop || response.data;
         setBarbershop(barbershopData);
         setBarbershopId(barbershopData.id);
-        setItems(response.data.items || []);
+        setServices(response.data.services || []); // Usa os serviços retornados
         setBarbers(response.data.barbers || []);
         window.scrollTo(0, 0);
       } catch (error) {
@@ -73,14 +73,14 @@ const ServiceRecordCreatePage = () => {
   };
 
   const handleServiceSelection = (e) => {
-    const itemId = parseInt(e.target.value);
+    const serviceId = parseInt(e.target.value);
     const checked = e.target.checked;
     setServiceRecordData((prevData) => {
       let updatedServices = [...prevData.service_ids];
       if (checked) {
-        updatedServices.push(itemId);
+        updatedServices.push(serviceId);
       } else {
-        updatedServices = updatedServices.filter((id) => id !== itemId);
+        updatedServices = updatedServices.filter((id) => id !== serviceId);
       }
       return { ...prevData, service_ids: updatedServices };
     });
@@ -243,19 +243,19 @@ const ServiceRecordCreatePage = () => {
                       <Col md={12} className="mb-4">
                         <p className="mb-2">Selecione os Serviços</p>
                         <Row>
-                          {items.length === 0 ? (
+                          {services.length === 0 ? (
                             <Col xs={12}>
                               <p>Nenhum serviço disponível.</p>
                             </Col>
                           ) : (
-                            items.map((item) => (
-                              <Col md={4} key={item.id}>
+                            services.map((service) => (
+                              <Col md={4} key={service.id}>
                                 <Form.Check
                                   type="checkbox"
-                                  id={`service-${item.id}`}
-                                  label={item.name}
-                                  value={item.id}
-                                  checked={serviceRecordData.service_ids.includes(item.id)}
+                                  id={`service-${service.id}`}
+                                  label={service.name}
+                                  value={service.id}
+                                  checked={serviceRecordData.service_ids.includes(service.id)}
                                   onChange={handleServiceSelection}
                                 />
                               </Col>
