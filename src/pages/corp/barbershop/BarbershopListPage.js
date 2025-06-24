@@ -137,11 +137,7 @@ const BarbershopListPage = () => {
                           return (
                             <Col key={barbershop.id}  md={12} className="inner-col m-4">
                               <Card className="inner-card h-100">
-                                {/* Background Image with Blur Effect */}
-                                <div
-                                  className="card-bg"
-                                  style={{ backgroundImage: `url('${bgImage}')` }}
-                                />
+                              
                                 {/* Card Content Overlay */}
                                 <Card.Body className="inner-card-body d-flex flex-column justify-content-between">
                                   <div className="text-center">
