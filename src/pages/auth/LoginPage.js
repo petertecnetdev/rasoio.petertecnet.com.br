@@ -9,7 +9,7 @@ class LoginPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: "",
+      username: "",
       password: "",
       loading: false,
     };
@@ -17,8 +17,8 @@ class LoginPage extends Component {
   
   setToken = (token) => localStorage.setItem("token", token);
 
-  onChangeEmail = (e) => {
-    this.setState({ email: e.target.value });
+  onChangeusername = (e) => {
+    this.setState({ username: e.target.value });
   };
 
   onChangePassword = (e) => {
@@ -27,12 +27,12 @@ class LoginPage extends Component {
 
   onSubmit = async (e) => {
     e.preventDefault();
-    const { email, password } = this.state;
+    const { username, password } = this.state;
 
     this.setState({ loading: true });
 
     try {
-      const response = await axios.post(`${apiBaseUrl}/auth/login`, { email, password });
+      const response = await axios.post(`${apiBaseUrl}/auth/login`, { username, password });
       const token = response?.data?.token.original.access_token;
 
       if (token) {
@@ -46,7 +46,7 @@ class LoginPage extends Component {
 
       if (error.response) {
         const { data } = error.response;
-        errorMessage = data.error || data.password || data.email || errorMessage;
+        errorMessage = data.error || data.password || data.username || errorMessage;
       }
 
       Swal.fire({
@@ -66,7 +66,7 @@ class LoginPage extends Component {
   };
 
   render() {
-    const { loading, email, password } = this.state;
+    const { loading, username, password } = this.state;
 
     return (
       <Container fluid className="page-container">
@@ -90,11 +90,11 @@ class LoginPage extends Component {
                   <Form onSubmit={this.onSubmit} className="form-container">
                     <Form.Group className="form-group">
                       <Form.Control
-                        type="email"
-                        placeholder="Insira o Email"
-                        onChange={this.onChangeEmail}
-                        value={email}
-                        className="input-email"
+                        type="username"
+                        placeholder="Insira o username"
+                        onChange={this.onChangeusername}
+                        value={username}
+                        className="input-username"
                       />
                     </Form.Group>
                     <Form.Group className="form-group">
@@ -114,7 +114,7 @@ class LoginPage extends Component {
                       Não tem conta? <a href="/register" className="footer-link">Registrar-se</a>
                     </p>
                     <p className="footer-text">
-                      Esqueceu a senha? <a href="/password-email" className="footer-link">Recuperar senha</a>
+                      Esqueceu a senha? <a href="/password-username" className="footer-link">Recuperar senha</a>
                     </p>
                   </Form>
                 </Card.Body>
