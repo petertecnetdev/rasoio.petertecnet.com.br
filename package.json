@@ -15,8 +15,13 @@
   "license": "ISC",
   "dependencies": {
     "@capacitor/android": "^7.3.0",
+<<<<<<< HEAD
     "@capacitor/cli": "^7.3.0",
     "@capacitor/core": "^7.3.0",
+=======
+    "@capacitor/cli": "^7.4.0",
+    "@capacitor/core": "^7.4.0",
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fortawesome/fontawesome-free": "^6.5.1",

@@ -1,9 +1,18 @@
 import React, { Component } from "react";
+<<<<<<< HEAD
 import axios from "axios";
 import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
 import Swal from "sweetalert2"; 
 import { apiBaseUrl } from "../../config"; 
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; 
+=======
+import { Link } from "react-router-dom";
+import axios from "axios";
+import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
+import Swal from "sweetalert2";
+import { apiBaseUrl } from "../../config";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 
 class LoginPage extends Component {
   constructor(props) {
@@ -14,7 +23,11 @@ class LoginPage extends Component {
       loading: false,
     };
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
   setToken = (token) => localStorage.setItem("token", token);
 
   onChangeusername = (e) => {
@@ -32,21 +45,36 @@ class LoginPage extends Component {
     this.setState({ loading: true });
 
     try {
+<<<<<<< HEAD
       const response = await axios.post(`${apiBaseUrl}/auth/login`, { username, password });
+=======
+      const response = await axios.post(`${apiBaseUrl}/auth/login`, {
+        username,
+        password,
+      });
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
       const token = response?.data?.token.original.access_token;
 
       if (token) {
         this.setToken(token);
       }
       window.location.href = "/dashboard";
+<<<<<<< HEAD
 
+=======
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
     } catch (error) {
       console.error(error.response?.data);
       let errorMessage = "Ocorreu um erro. Por favor, tente novamente.";
 
       if (error.response) {
         const { data } = error.response;
+<<<<<<< HEAD
         errorMessage = data.error || data.password || data.username || errorMessage;
+=======
+        errorMessage =
+          data.error || data.password || data.username || errorMessage;
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
       }
 
       Swal.fire({
@@ -71,7 +99,13 @@ class LoginPage extends Component {
     return (
       <Container fluid className="page-container">
         {loading && (
+<<<<<<< HEAD
           <ProcessingIndicatorComponent messages={["Autenticando...", "Por favor, aguarde..."]} />
+=======
+          <ProcessingIndicatorComponent
+            messages={["Autenticando...", "Por favor, aguarde..."]}
+          />
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
         )}
 
         {!loading && (
@@ -81,11 +115,21 @@ class LoginPage extends Component {
                 <p className="page-header text-uppercase">Rasoio</p>
                 <Card.Body className="card-body">
                   <div className="logo-container">
+<<<<<<< HEAD
                     <img
                       src="/images/logo.png"
                       alt="Logo"
                       className="logo-image"
                     />
+=======
+                    <Link to="/">
+                      <img
+                        src="/images/logo.png"
+                        alt="Logo"
+                        className="logo-image"
+                      />
+                    </Link>
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
                   </div>
                   <Form onSubmit={this.onSubmit} className="form-container">
                     <Form.Group className="form-group">
@@ -107,6 +151,7 @@ class LoginPage extends Component {
                       />
                     </Form.Group>
 
+<<<<<<< HEAD
                     <Button type="submit" disabled={loading} className="submit-btn">
                       {loading ? "Entrando..." : "Entrar"}
                     </Button>
@@ -115,6 +160,26 @@ class LoginPage extends Component {
                     </p>
                     <p className="footer-text">
                       Esqueceu a senha? <a href="/password-username" className="footer-link">Recuperar senha</a>
+=======
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="submit-btn"
+                    >
+                      {loading ? "Entrando..." : "Entrar"}
+                    </Button>
+                    <p className="footer-text">
+                      Não tem conta?{" "}
+                      <a href="/register" className="footer-link">
+                        Registrar-se
+                      </a>
+                    </p>
+                    <p className="footer-text">
+                      Esqueceu a senha?{" "}
+                      <a href="/password-email" className="footer-link">
+                        Recuperar senha
+                      </a>
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
                     </p>
                   </Form>
                 </Card.Body>

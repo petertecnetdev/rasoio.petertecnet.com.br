@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 
+<<<<<<< HEAD
+=======
+
+
+import HomePage from "./pages/HomePage";
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 // Auth
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -121,6 +127,10 @@ const App = () => {
   return (
     <Router>
       <Routes>
+<<<<<<< HEAD
+=======
+        <Route path="/home" element={restrictedRoute(<HomePage />)} />
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
         <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
         <Route path="/login" element={restrictedRoute(<LoginPage />)} />
         <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
@@ -128,7 +138,11 @@ const App = () => {
         <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
         <Route path="/password" element={protectedRoute(<PasswordPage />)} />
         <Route path="/logout" element={<LogoutPage />} />
+<<<<<<< HEAD
         <Route path="/*" element={<Navigate to="/login" />} />
+=======
+        <Route path="/*" element={<Navigate to="/home" />} />
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
         <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
 
         <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
@@ -147,7 +161,11 @@ const App = () => {
 
         <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
         <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
+<<<<<<< HEAD
         <Route path="/barbershop/view/:slug" element={protectedRoute(<BarbershopViewPage />)} />
+=======
+        <Route path="/barbershop/view/:slug" element={<BarbershopViewPage />}/>
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
         <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
 
         <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
@@ -159,10 +177,17 @@ const App = () => {
         <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
 
         {/* Rotas de agendamentos */}
+<<<<<<< HEAD
         <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
         <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
         <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
         <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
+=======
+       <Route path="/appointment/create/:slug"element={<AppointmentCreatePage />}/>
+       <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
+       <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
+       <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 
         {/* Rotas de atendimentos (ServiceRecord) */}
         <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />

@@ -11,6 +11,7 @@ const PasswordEmailPage = () => {
   const [loading, setLoading] = useState(false);
   const [showProcessing, setShowProcessing] = useState(false);
 
+<<<<<<< HEAD
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -18,6 +19,13 @@ const PasswordEmailPage = () => {
 
     try {
       const response = await axios.post(`${apiBaseUrl}/auth/password-email`, { email });
+=======
+  const sendCode = async (targetEmail) => {
+    setLoading(true);
+    setShowProcessing(true);
+    try {
+      const response = await axios.post(`${apiBaseUrl}/auth/password-email`, { email: targetEmail });
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 
       Swal.fire({
         title: 'Sucesso!',
@@ -40,7 +48,11 @@ const PasswordEmailPage = () => {
             text: 'Por favor, digite seu e-mail novamente para reenviar o código.',
             input: 'email',
             inputPlaceholder: 'Digite seu e-mail',
+<<<<<<< HEAD
             inputValue: email,
+=======
+            inputValue: targetEmail,
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
             showCancelButton: true,
             confirmButtonText: 'Reenviar Código',
             cancelButtonText: 'Cancelar',
@@ -52,7 +64,11 @@ const PasswordEmailPage = () => {
           }).then((resendResult) => {
             if (resendResult.isConfirmed) {
               setEmail(resendResult.value);
+<<<<<<< HEAD
               handleSubmit(e);
+=======
+              sendCode(resendResult.value);
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
             }
           });
         }
@@ -75,6 +91,14 @@ const PasswordEmailPage = () => {
     }
   };
 
+<<<<<<< HEAD
+=======
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    sendCode(email);
+  };
+
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
   return (
     <Container fluid className="page-container">
       <Row className="page-row">

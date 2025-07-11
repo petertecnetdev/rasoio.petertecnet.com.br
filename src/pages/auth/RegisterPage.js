@@ -1,4 +1,8 @@
 import React, { Component } from "react";
+<<<<<<< HEAD
+=======
+import { Link } from "react-router-dom";
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 import axios from "axios";
 import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
 import Swal from "sweetalert2"; // Importando SweetAlert
@@ -64,7 +68,14 @@ class RegisterPage extends Component {
       };
 
       // Requisição para registrar o usuário
+<<<<<<< HEAD
       const response = await axios.post(`${apiBaseUrl}/auth/register`, userObject);
+=======
+      const response = await axios.post(
+        `${apiBaseUrl}/auth/register`,
+        userObject
+      );
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
 
       const modalMessage = response?.data?.message || "Registro bem-sucedido";
 
@@ -126,7 +137,13 @@ class RegisterPage extends Component {
     return (
       <Container fluid className="page-container">
         {loading && (
+<<<<<<< HEAD
           <ProcessingIndicatorComponent messages={["Registrando usuário...", "Por favor, aguarde..."]} />
+=======
+          <ProcessingIndicatorComponent
+            messages={["Registrando usuário...", "Por favor, aguarde..."]}
+          />
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
         )}
         {!loading && (
           <Row className="page-row">
@@ -135,12 +152,22 @@ class RegisterPage extends Component {
                 <p className="page-header text-uppercase">Registre-se</p>
                 <Card.Body className="card-body">
                   <div className="logo-container">
+<<<<<<< HEAD
                     <img
                       src="/images/logo.png"
                       alt="Logo"
                       className="logo-image"
                       style={{ width: "80px", height: "80px" }}
                     />
+=======
+                    <Link to="/">
+                      <img
+                        src="/images/logo.png"
+                        alt="Logo"
+                        className="logo-image"
+                      />
+                    </Link>
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
                   </div>
                   <Form onSubmit={this.onSubmit} className="form-container">
                     <Form.Group className="form-group">
@@ -179,6 +206,7 @@ class RegisterPage extends Component {
                         className="input-password-confirm"
                       />
                     </Form.Group>
+<<<<<<< HEAD
                     <Button type="submit" disabled={loading} className="submit-btn">
                       {loading ? "Registrando..." : "Registrar"}
                     </Button>
@@ -187,6 +215,26 @@ class RegisterPage extends Component {
                     </p>
                     <p className="footer-text">
                       Esqueceu a senha? <a href="/password-email" className="footer-link">Recuperar senha</a>
+=======
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="submit-btn"
+                    >
+                      {loading ? "Registrando..." : "Registrar"}
+                    </Button>
+                    <p className="footer-text">
+                      Já está registrado?{" "}
+                      <a href="/login" className="footer-link">
+                        Entrar
+                      </a>
+                    </p>
+                    <p className="footer-text">
+                      Esqueceu a senha?{" "}
+                      <a href="/password-email" className="footer-link">
+                        Recuperar senha
+                      </a>
+>>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
                     </p>
                   </Form>
                 </Card.Body>
