@@ -1,0 +1,1603 @@
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fade in up animation for cards and elements */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse text animation */
+@keyframes pulseText {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Spin animation for rotating elements */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/*********************************************************
+  Login Page Styles
+*********************************************************/
+/* Container geral da página */
+.page-container {
+  min-height: 100vh;
+  background: url('images/background.png') no-repeat center center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Organização de linhas e colunas */
+.page-row,
+.page-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-col {
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Card do formulário */
+.card-container {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.card-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Cabeçalho */
+.page-header {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0 20px;
+  color: #fff;
+}
+
+/* Corpo do card */
+.card-body {
+  padding: 20px;
+}
+
+/* Logo */
+.logo-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo-image {
+  max-width: 150px;
+}
+
+/* Formulário */
+.form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.input-email,
+.input-password {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.input-email::placeholder,
+.input-password::placeholder {
+  color: #999;
+}
+
+/* Botão */
+.submit-btn {
+  width: 100%;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #666;
+}
+
+/* Rodapé */
+.footer-text {
+  margin-top: 10px;
+  text-align: center;
+  color: #fff;
+}
+
+.footer-link {
+  color: #fff;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #999;
+}
+
+/* SweetAlert Custom */
+.custom-swal {
+  background-color: #1c1c1c;
+  color: #fff;
+  border-radius: 16px;
+}
+
+.custom-swal-title {
+  color: #fff;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.custom-swal-text {
+  color: #ccc;
+  font-size: 16px;
+}
+/*********************************************************
+  Navigation Styles
+*********************************************************/
+/* NavlogComponent Overrides & Enhancements */
+
+.nav-container {
+  background: url('images/background2.png') no-repeat center center;
+  background-size: cover;
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid #444;
+  padding: 0.5rem 1rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+}
+
+.nav-logo {
+  max-height: 40px;
+  transition: transform 0.3s ease;
+}
+.nav-logo:hover {
+  transform: scale(1.1) rotate(2deg);
+}
+
+.nav-toggle {
+  border: none;
+  background: rgba(0,0,0,0.3);
+  font-size: 1.8rem;
+  color: #fff;
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.nav-toggle:hover {
+  background: rgba(255, 174, 0, 0.8);
+  transform: scale(1.1);
+}
+
+.nav-collapse {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  color: #ffffff;
+  margin-right: 15px;
+  font-size: 16px;
+  text-decoration: none;
+  transition: color 0.3s ease, background 0.3s ease;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+}
+.nav-link:hover {
+  color: #f9c74f;
+  background: rgba(249, 199, 79, 0.1);
+}
+
+.nav-icon {
+  margin-right: 5px;
+}
+
+/* Dropdowns */
+.nav-dropdown-corporate,
+.nav-dropdown-admin,
+.nav-profile-dropdown {
+  color: #ffffff;
+}
+.nav-dropdown-item {
+  color: #ffffff !important;
+  background-color: #1c1c1c;
+  transition: background-color 0.3s ease;
+}
+.nav-dropdown-item:hover {
+  background-color: #444;
+}
+
+/* Loader & Badges */
+.nav-spinner {
+  margin: 0 10px;
+}
+.nav-badge {
+  margin-left: 5px;
+  font-size: 12px;
+  background: #f9c74f;
+  color: #000;
+  border-radius: 8px;
+  padding: 0 4px;
+}
+
+/* Right-side */
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Notifications */
+.nav-notifications {
+  position: relative;
+}
+.nav-notification-item {
+  background-color: #1c1c1c !important;
+  color: #fff !important;
+  border-bottom: 1px solid #444;
+}
+.nav-notification-content {
+  display: flex;
+  flex-direction: column;
+}
+.nav-notification-text {
+  font-size: 14px;
+}
+.nav-notification-date {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* User Avatar */
+.nav-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-left: 15px;
+  object-fit: cover;
+  border: 2px solid #f9c74f;
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.95) url('images/background2.png') no-repeat center center;
+  background-size: cover;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: flex-end;
+}
+.mobile-menu-header button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.mobile-menu-content {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Base nav-links in overlay */
+.mobile-menu-content .nav-links {
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Single links */
+.mobile-menu-content .nav-link {
+  width: 100%;
+  padding: 12px 0;
+  border-bottom: 1px solid #444;
+}
+
+/* Dropdown toggles */
+.mobile-menu-content .nav-dropdown-corporate,
+.mobile-menu-content .nav-dropdown-admin,
+.mobile-menu-content .nav-profile-dropdown {
+  width: 100%;
+  padding: 12px 0;
+  margin: 0;
+  border: none;
+  background: none;
+  text-align: center;
+}
+
+/* Dropdown items container */
+.mobile-menu-content .nav-links > .nav-links {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Dropdown items */
+.mobile-menu-content .nav-dropdown-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  margin: 0.25rem auto;
+  max-width: 300px;
+  border-radius: 6px;
+  background: rgba(255, 174, 0, 0.1);
+  transition: background 0.3s ease;
+  text-align: center;
+}
+.mobile-menu-content .nav-dropdown-item:hover {
+  background: rgba(255, 174, 0, 0.2);
+}
+
+/* Remove indent on nested container */
+.mobile-menu-content .nav-profile-dropdown + .nav-links .nav-dropdown-item,
+.mobile-menu-content .nav-dropdown-corporate + .nav-links .nav-dropdown-item,
+.mobile-menu-content .nav-dropdown-admin + .nav-links .nav-dropdown-item {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Override Bootstrap dropdown menu styles for mobile */
+@media (max-width: 991px) {
+  .dropdown-menu {
+    width: 100% !important;
+    background-color: #1c1c1c;
+    border: none;
+  }
+}
+
+/* Center items in overlay on desktop */
+@media (min-width: 992px) {
+  .mobile-menu-content {
+    align-items: center;
+  }
+  .mobile-menu-content .nav-links {
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+  }
+  .mobile-menu-content .nav-link,
+  .mobile-menu-content .nav-dropdown-corporate,
+  .mobile-menu-content .nav-dropdown-admin,
+  .mobile-menu-content .nav-profile-dropdown,
+  .mobile-menu-content .nav-dropdown-item {
+    width: auto;
+    max-width: 300px;
+    margin: 0.5rem auto;
+    text-align: center;
+  }
+}
+
+/*********************************************************
+  Dashboard Styles
+*********************************************************/
+.main-container {
+  min-height: 100vh;
+  background: url('images/background.png') no-repeat center center;
+  background-size: cover;
+  padding: 20px;
+}
+
+.card-component {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid #fff;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 15px 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.loading-section {
+  padding: 20px;
+  text-align: center;
+}
+
+.inner-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+.inner-col {
+  padding: 10px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Staggered animation delays for inner cards */
+.inner-col:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.inner-col:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.inner-col:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.inner-col:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.inner-col:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.inner-col:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+/* Inner cards */
+.inner-card {
+  background-color: #1c1c1c;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.inner-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(4px);
+  z-index: 1;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.inner-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+.link-component {
+  text-decoration: none;
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.link-component:hover {
+  color: #ccc;
+}
+
+.img-component {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.img-item-component {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.item-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 1px;
+  /* Fundo com gradiente em tons de preto para combinar com a logo */
+  background: linear-gradient(135deg, #000 0%, #1c1c1c 100%);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.empty-section {
+  padding: 20px;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.action-button,
+.submit-btn {
+  background-color: #ffffff;
+  border: none;
+  color: #000;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.card-tinfo{
+  background: linear-gradient(135deg, #666666 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 5px 24px;
+  font-size: 14px;
+  font-weight: 100;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.action-button:hover,
+.submit-btn:hover {
+  background-color: #000;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+/*********************************************************
+  Processing Indicator Styles
+*********************************************************/
+.processing-indicator-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.processing-indicator-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  animation: spin 1.5s linear infinite;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
+}
+
+.processing-indicator-message {
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+  animation: pulseText 1.5s infinite;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.barbershop-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-card {
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.barbershop-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.barbershop-info {
+  text-align: center;
+}
+
+.barbershop-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.barbershop-logo {
+  max-width: 150px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.barbershop-manager {
+  font-size: 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.manager-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+}
+
+.barbershop-address {
+  font-size: 16px;
+  color: gray;
+}
+
+.barbershop-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.barbershop-actions button {
+  width: 100%;
+  background-color: #000 !important;
+  border: 1px solid #ffff !important;
+  border: none;
+  color: #ffffff;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.barbershop-actions button:hover {
+  width: 100%;
+
+  background-color: #fff !important;
+  border: 1px solid #000 !important;
+  border: none;
+  color: #000;
+  padding: 12px;
+  font-size: 20px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.barbershop-description-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.barbershop-description-card {
+  background-color: rgba(0, 0, 0);
+  padding: 10px;
+  border-radius: 10px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barbershop-description {
+  font-size: 18px;
+  text-align: center;
+  color: white;
+}
+
+
+.barber-avatar {
+  display: block;
+  margin: 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 20px 10px 6px rgba(255, 255, 255, 0.1);
+  border: 1px solid #ffffff;
+  padding: 5px;
+}
+
+/* Contêiner principal da página */
+.barber-include-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Card geral */
+.barber-include-card {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.barber-include-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Corpo do card */
+.barber-include-card-body {
+  padding: 15px;
+}
+
+/* Linha principal dentro do card */
+.barber-include-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Coluna que mostra informações da barbearia */
+.barbershop-info-col {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Nome da barbearia */
+.barbershop-name-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+/* Logo da barbearia */
+.barbershop-logo {
+  width: 50px;
+  height: 50px;
+  margin-left: 10px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* Coluna que lista os barbeiros */
+.barbers-associated-col {
+  margin-top: 20px;
+}
+
+/* Título da seção de barbeiros */
+.barbers-associated-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* Texto exibido quando não há barbeiros */
+.no-barbers-text {
+  color: #999;
+  font-style: italic;
+}
+
+/* Linha de cards dos barbeiros */
+.barbers-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* Coluna de cada card do barbeiro */
+.barber-card-col {
+  margin-bottom: 10px;
+}
+
+/* Card individual do barbeiro */
+.barber-card {
+  background-color: #000000;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.barber-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Corpo do card do barbeiro */
+.barber-card-body {
+  text-align: center;
+  padding: 15px;
+}
+
+
+.barber-name-title {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.barber-label {
+  border-radius: 10px;
+  color: #000;
+  font-size: 25px;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+}
+
+/* Remove sublinhado do link e mantém a cor herdada */
+.barber-name-title a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Email do barbeiro */
+.barber-email {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+
+/* Email do barbeiro */
+.label-name {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+
+/* Email do barbeiro */
+.label-name-bg {
+  background-color: #000;
+  border-radius: 10px;
+  border: 1px solid #FFF;
+
+  padding: 10px;
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+
+
+/* Botão para remover barbeiro */
+.remove-barber-button {
+  margin-top: 5px;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.remove-barber-button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #444 100%);
+  color: #fff;
+  transform: scale(1.02);
+}
+
+/* Contêiner do botão de adicionar barbeiro */
+.add-barber-button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Botão para adicionar novo barbeiro */
+.add-barber-button {
+  font-weight: bold;
+  background: linear-gradient(135deg, #444 0%, #ffffff 100%);
+  border: none;
+  color: #000;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 32px;
+  cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.add-barber-button:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #444 100%);
+  color: #fff;
+  transform: scale(1.02);
+}
+
+/* Items Container */
+.items-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+/* Individual Item Column */
+.item-col {
+  padding: 10px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Card do item */
+.item-card {
+  background-color: #1c1c1c;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.item-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* Imagem do item */
+.item-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #fff;
+}
+
+/* Corpo do card do item */
+.item-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+/* Nome do item */
+.item-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #000 0%, #1c1c1c 100%);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+/* Preço, tipo, subcategoria, marca e disponibilidade */
+.item-price,
+.item-type,
+.item-subcategory,
+.item-brand,
+.item-availability {
+  color: #ccc;
+  margin: 5px 0;
+}
+
+/* Ações do item (botões de editar/deletar) */
+.item-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.inner-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -10px;
+}
+
+/* 
+  .inner-col é cada coluna individual dentro de .inner-row,
+  com a mesma animação fadeInUp usada nos demais elementos.
+*/
+.inner-col {
+  padding: 10px;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* .inner-card é o card interno (semelhante aos já existentes),
+   com estilo escuro, cantos arredondados e efeito de hover.
+*/
+.inner-card {
+  background-color: #1c1c1c;
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #444;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.inner-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+/* .card-bg é um plano de fundo desfocado dentro do card,
+   usado para dar um efeito de profundidade na imagem de fundo.
+*/
+
+.card-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  z-index: 1;
+  background-color: rgba(0, 0, 0, 0.3);
+  margin: 5px;
+}
+
+
+.img-bg{
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  filter: blur(4px);
+}
+
+/* .inner-card-body mantém o conteúdo em cima do plano de fundo desfocado */
+.inner-card-body {
+  position: relative;
+  z-index: 2;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+.item-create-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Card que envolve o formulário de criação de itens */
+.item-create-card {
+  background-color: rgba(0, 0, 0, 0.9);
+  border-radius: 30px;
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.filterInput{
+  background-color: rgba(75, 75, 75, 0.9);
+  border-radius: 20px;
+  padding: 15px;
+  color: #fff;
+}
+.item-create-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Corpo do card */
+.item-create-card-body {
+  padding: 15px;
+}
+
+/* Título do card */
+.item-create-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* Área que envolve a imagem e o botão de upload */
+.item-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Label que envolve a pré-visualização da imagem */
+.item-image-label {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Imagem do item (preview) */
+.item-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Formulário de criação */
+.item-create-form {
+  margin-top: 10px;
+}
+
+/* Input genérico do formulário */
+.input-field {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  color: #fff;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+/* Botão principal (Criar Item) */
+.create-item-button {
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Mensagens de processamento ou status */
+.item-create-messages {
+  margin-top: 20px;
+}
+
+.item-create-message {
+  color: #ccc;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* Botão para adicionar imagem do item */
+.add-image-button {
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Contêiner principal da página de visualização do barbeiro */
+.barber-view-container {
+  margin-top: 20px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Ajuste geral para o container que envolve toda a página */
+.main-container {
+  min-height: 100vh;
+  background: url('images/background.png') no-repeat center center;
+  background-size: cover;
+  padding: 20px;
+}
+
+
+/* Card base para estilizar componentes de cartão */
+.card-component {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid #fff;
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Ajuste para remover padding extra no Card Body e manter estilo coerente */
+.card-body {
+  padding: 20px;
+}
+
+/* ------------------------------
+   Barber Info Section
+------------------------------ */
+
+.barber-info-row {
+  margin-bottom: 20px;
+}
+
+.barber-info-col {
+  margin-bottom: 20px;
+}
+
+.barber-info-card {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.barber-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+.barber-info-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.barber-details-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Coluna onde fica o avatar do barbeiro */
+.barber-avatar-col {
+  margin-bottom: 10px;
+}
+
+.img-component {
+  max-width: 120px;
+  max-height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+
+/* Nome e local do barbeiro */
+.barber-name {
+  font-size: 1;
+}
+
+.service-banner-item {
+  margin-bottom: 8px;
+}
+
+.service-banner-name {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.service-dots {
+  border-bottom: 1px dotted #ccc;
+}
+
+.service-banner-price {
+  white-space: nowrap;
+  font-weight: 600;
+}
+/* Botão Cancelar - Design com gradiente, borda arredondada e efeito hover */
+.cancel {
+  background: linear-gradient(135deg, #a30b0b, #690404);
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cancel:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Botão Confirmar - Design com borda sólida, fundo suave e transição para hover */
+.confirm {
+  background-color: #f0fff0;
+  border: 2px solid #28a745;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #28a745;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.confirm:hover {
+  background-color: #28a745;
+  color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estado Pendente - Design com borda tracejada, fundo discreto e efeito hover */
+.pendent {
+  background-color: #fff8e1;
+  border: 2px dashed #ff9800;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #ff9800;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pendent:hover {
+  border-color: #ff5722;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estado Aguardando - Design com gradiente suave e borda destacada */
+.awaiting {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 3px solid #2196f3;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #0d47a1;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.awaiting:hover {
+  border-color: #1976d2;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+  .cancel, .confirm, .pendent, .awaiting {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+.awaiting {
+  border: 5px solid blue;
+}
+.avatar-preview {
+  display: block;
+  margin: 0 auto;
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.avatar-preview:hover {
+  transform: scale(1.05);
+}
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+
+/* Estilos aprimorados para os status de agendamento, com background que facilita a leitura */
+
+/* Completed: Success */
+.br-completed {
+  border: 3px solid #28a745 !important;
+  background-color: #d4edda; /* Fundo verde claro */
+  color: #155724; /* Texto em verde escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Cancelled: Danger */
+.br-cancelled {
+  border: 3px solid #ff0000 !important;
+  background-color: #f8d7da; /* Fundo vermelho claro */
+  color: #721c24; /* Texto em vermelho escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Pending: Warning */
+.br-pending {
+  border: 3px solid #ffa602 !important;
+  background-color: #fff3cd; /* Fundo amarelo claro */
+  color: #856404; /* Texto em amarelo escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Confirmed: Info */
+.br-confirmed {
+  border: 3px solid #00d9ff !important;
+  background-color: #d1ecf1; /* Fundo azul claro */
+  color: #0c5460; /* Texto em azul escuro */
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Efeito hover para feedback visual */
+.br-completed:hover,
+.br-cancelled:hover,
+.br-pending:hover,
+.br-confirmed:hover {
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+ 
+}
+/* Card styles for service records */
+.service-record-card-pending {
+  border: 2px solid #ffffff; /* Orange border */
+  background-color: #fffb03;  /* Light yellow background */
+  border-radius: 4px;
+  padding: 1rem; border-radius: 30px;
+  color:#000;
+}
+
+.service-record-card-approved {
+  border: 2px solid #ffffff; /* Green border */
+  background-color: #059900;  /* Light green background */
+  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 30px;
+}
+
+.service-record-card-not-approved {
+  border: 2px solid #ffffff; /* Red border */
+  background-color: #ff0000;  /* Light red background */
+  border-radius: 4px;
+  padding: 1rem; border-radius: 30px;
+  
+  color:#000;
+}
+
+/* Button styles for service record status updates */
+.service-record-btn-approved {
+  background-color: #5cb85c !important; /* Green */
+  border-color: #5cb85c !important;
+  color: #fff !important;
+}
+
+.service-record-btn-pending {
+  background-color: #f0ad4e !important; /* Orange */
+  border-color: #f0ad4e !important;
+  color: #fff !important;
+}
+
+.service-record-btn-not-approved {
+  background-color: #d9534f !important; /* Red */
+  border-color: #d9534f !important;
+  color: #fff !important;
+}
+
+/* Optionally, style the active filter button */
+.action-button.active {
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  font-weight: bold;
+}
