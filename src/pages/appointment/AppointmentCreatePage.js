@@ -24,13 +24,15 @@ const AppointmentCreatePage = () => {
 
   const [appointmentData, setAppointmentData] = useState({
     customer_name: "",
+    customer_cpf: "",
+    customer_phone: "",
     scheduled_at: "",
     provider_id: "",
     notes: "",
     service_ids: []
   });
 
-  // fetch user if authenticated
+  // 1) busca usuário autenticado
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -52,7 +54,7 @@ const AppointmentCreatePage = () => {
     })();
   }, []);
 
-  // fetch barbershop and services
+  // 2) busca barbearia e serviços
   useEffect(() => {
     (async () => {
       setMessages(["Carregando informações da barbearia e serviços..."]);
@@ -88,14 +90,12 @@ const AppointmentCreatePage = () => {
 
   const validateFields = () => {
     const errs = [];
-    if (!appointmentData.customer_name.trim())
-      errs.push("Informe seu nome.");
-    if (!appointmentData.scheduled_at)
-      errs.push("A data e hora do agendamento é obrigatória.");
-    if (!appointmentData.provider_id)
-      errs.push("Selecione um barbeiro.");
-    if (!appointmentData.service_ids.length)
-      errs.push("Selecione ao menos um serviço.");
+    if (!appointmentData.customer_name.trim()) errs.push("Informe seu nome.");
+    if (!user && !appointmentData.customer_cpf.trim()) errs.push("Informe seu CPF.");
+    if (!user && !appointmentData.customer_phone.trim()) errs.push("Informe seu telefone.");
+    if (!appointmentData.scheduled_at) errs.push("A data e hora do agendamento é obrigatória.");
+    if (!appointmentData.provider_id) errs.push("Selecione um barbeiro.");
+    if (!appointmentData.service_ids.length) errs.push("Selecione ao menos um serviço.");
 
     if (errs.length) {
       Swal.fire("Erro de validação", errs.join("\n"), "error");
@@ -116,8 +116,14 @@ const AppointmentCreatePage = () => {
     const start = new Date(appointmentData.scheduled_at);
     const expectedEnd = new Date(start.getTime() + totalDuration * 60000);
 
+    // determina client_id e registered_by
     let clientId = localStorage.getItem("client_id") || 1;
     if (user) clientId = user.id;
+
+    // monta o campo notes com CPF e telefone se não autenticado
+    const extraInfo = !user
+      ? `Cliente ${appointmentData.customer_name} CPF: ${appointmentData.customer_cpf} Telefone: ${appointmentData.customer_phone} Observações: ${appointmentData.notes}`
+      : appointmentData.notes;
 
     const payload = {
       customer_name: appointmentData.customer_name,
@@ -133,7 +139,7 @@ const AppointmentCreatePage = () => {
       status: "pending",
       location: "",
       duration: totalDuration,
-      notes: appointmentData.notes,
+      notes: extraInfo,
       payment_status: "pending",
       appointment_type: "presencial"
     };
@@ -142,9 +148,8 @@ const AppointmentCreatePage = () => {
       await axios.post(`${apiBaseUrl}/appointment`, payload, {
         headers: { "Content-Type": "application/json" }
       });
-      Swal.fire("Sucesso!", "Agendamento criado com sucesso!", "success").then(() =>
-        navigate(-1)
-      );
+      Swal.fire("Sucesso!", "Agendamento criado com sucesso!", "success")
+        .then(() => navigate(-1));
     } catch (err) {
       const msg = err.response?.data?.errors
         ? Object.entries(err.response.data.errors)
@@ -159,7 +164,7 @@ const AppointmentCreatePage = () => {
 
   return (
     <>
-     <NavlogComponent />
+      <NavlogComponent />
 
       <p className="section-title text-center">Agendar</p>
       <Container fluid className="main-container">
@@ -168,17 +173,17 @@ const AppointmentCreatePage = () => {
             {isProcessing ? (
               <ProcessingIndicatorComponent messages={messages} />
             ) : (
-                <Card className="card-component shadow-sm">
+              <Card className="card-component shadow-sm">
                 <Card.Body>
                   {barbershop && (
-                    <p className="section-title text-center">
+                    <p className="text-center mb-3">
                       Agendamento em: <strong>{barbershop.name}</strong>
                     </p>
                   )}
 
                   <Form onSubmit={handleSubmit}>
                     <Row>
-                      {/* Nome do cliente */}
+                      {/* Seu nome */}
                       {!loadingUser && (
                         <Col md={12} className="mb-3">
                           <Form.Group controlId="customer_name">
@@ -196,7 +201,41 @@ const AppointmentCreatePage = () => {
                         </Col>
                       )}
 
-                      {/* Seleção de serviços */}
+                      {/* CPF (só p/ não autenticados) */}
+                      {!loadingUser && !user && (
+                        <Col md={6} className="mb-3">
+                          <Form.Group controlId="customer_cpf">
+                            <Form.Label>CPF</Form.Label>
+                            <Form.Control
+                              type="text"
+                              name="customer_cpf"
+                              value={appointmentData.customer_cpf}
+                              onChange={handleInputChange}
+                              placeholder="000.000.000-00"
+                              required
+                            />
+                          </Form.Group>
+                        </Col>
+                      )}
+
+                      {/* Telefone (só p/ não autenticados) */}
+                      {!loadingUser && !user && (
+                        <Col md={6} className="mb-3">
+                          <Form.Group controlId="customer_phone">
+                            <Form.Label>Telefone</Form.Label>
+                            <Form.Control
+                              type="text"
+                              name="customer_phone"
+                              value={appointmentData.customer_phone}
+                              onChange={handleInputChange}
+                              placeholder="(00) 00000-0000"
+                              required
+                            />
+                          </Form.Group>
+                        </Col>
+                      )}
+
+                      {/* Serviços */}
                       <Col md={12} className="mb-4">
                         <p className="mb-2">Selecione os Serviços</p>
                         <Row>
@@ -221,7 +260,7 @@ const AppointmentCreatePage = () => {
                         </Row>
                       </Col>
 
-                      {/* Data e Hora */}
+                      {/* Data e hora */}
                       <Col md={3} className="mb-3">
                         <Form.Group controlId="scheduled_at">
                           <Form.Label>Data e Hora</Form.Label>
