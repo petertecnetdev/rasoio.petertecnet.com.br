@@ -153,7 +153,7 @@ const App = () => {
         <Route path="/barbershop/view/:slug" element={<BarbershopViewPage />} />
         <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
 
-        <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
+        <Route path="/barber/view/:username" element={(<BarberViewPage />)} />
         <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
          
