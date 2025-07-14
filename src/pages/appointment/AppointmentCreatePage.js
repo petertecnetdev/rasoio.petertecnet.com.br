@@ -11,6 +11,9 @@ const AppointmentCreatePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
   const [barbershop, setBarbershop] = useState(null);
   const [barbers, setBarbers] = useState([]);
   const [items, setItems] = useState([]);
@@ -19,149 +22,112 @@ const AppointmentCreatePage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
 
-  // Dados do agendamento
-  const [appointmentData, setappointmentData] = useState({
+  const [appointmentData, setAppointmentData] = useState({
+    customer_name: "",
     scheduled_at: "",
     provider_id: "",
     notes: "",
-    service_ids: [],
+    service_ids: []
   });
 
+  // fetch user if authenticated
   useEffect(() => {
-    const fetchBarbershop = async () => {
+    (async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(data.user);
+          setAppointmentData(prev => ({
+            ...prev,
+            customer_name: data.user.first_name
+          }));
+        } catch {
+          setUser(null);
+        }
+      }
+      setLoadingUser(false);
+    })();
+  }, []);
+
+  // fetch barbershop and services
+  useEffect(() => {
+    (async () => {
       setMessages(["Carregando informações da barbearia e serviços..."]);
       try {
-        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        const barbershopData = response.data.barbershop || response.data;
-        setBarbershop(barbershopData);
-        setBarbershopId(barbershopData.id);
-        setItems(response.data.items || []);
-        setBarbers(response.data.barbers || []);
-        window.scrollTo(0, 0);
+        const { data } = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`);
+        const shop = data.barbershop || data;
+        setBarbershop(shop);
+        setBarbershopId(shop.id);
+        setItems(data.items || []);
+        setBarbers(data.barbers || []);
       } catch (error) {
-        const errorMessage =
-          error.response?.data?.message || "Erro ao carregar informações da barbearia.";
-        Swal.fire({
-          icon: "error",
-          title: "Erro!",
-          text: errorMessage,
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        Swal.fire("Erro", error.response?.data?.message || "Erro ao carregar barbearia.", "error");
       } finally {
         setMessages([]);
       }
-    };
-
-    if (slug) {
-      fetchBarbershop();
-    }
+    })();
   }, [slug]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
-    setappointmentData((prevData) => ({ ...prevData, [name]: value }));
+    setAppointmentData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Atualiza a lista de serviços selecionados
-  const handleServiceSelection = (e) => {
-    const itemId = parseInt(e.target.value);
-    const checked = e.target.checked;
-
-    setappointmentData((prevData) => {
-      let updatedServices = [...prevData.service_ids];
-      if (checked) {
-        updatedServices.push(itemId);
-      } else {
-        updatedServices = updatedServices.filter((id) => id !== itemId);
-      }
-      return { ...prevData, service_ids: updatedServices };
+  const handleServiceSelection = e => {
+    const id = parseInt(e.target.value, 10);
+    setAppointmentData(prev => {
+      const list = e.target.checked
+        ? [...prev.service_ids, id]
+        : prev.service_ids.filter(i => i !== id);
+      return { ...prev, service_ids: list };
     });
   };
 
-  // Validação dos campos
   const validateFields = () => {
-    const errors = [];
-    if (!appointmentData.scheduled_at) {
-      errors.push("A data e hora do agendamento é obrigatória.");
-    }
-    if (!appointmentData.provider_id) {
-      errors.push("Selecione um barbeiro para ser o prestador.");
-    }
-    if (appointmentData.service_ids.length === 0) {
-      errors.push("Selecione ao menos um serviço.");
-    }
+    const errs = [];
+    if (!appointmentData.customer_name.trim())
+      errs.push("Informe seu nome.");
+    if (!appointmentData.scheduled_at)
+      errs.push("A data e hora do agendamento é obrigatória.");
+    if (!appointmentData.provider_id)
+      errs.push("Selecione um barbeiro.");
+    if (!appointmentData.service_ids.length)
+      errs.push("Selecione ao menos um serviço.");
 
-    if (errors.length > 0) {
-      Swal.fire({
-        title: "Erro de validação",
-        text: errors.join("\n"),
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
+    if (errs.length) {
+      Swal.fire("Erro de validação", errs.join("\n"), "error");
       return false;
     }
     return true;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!validateFields()) return;
-
-    if (!barbershopId) {
-      Swal.fire({
-        title: "Erro",
-        text: "Não foi possível obter o ID da barbearia.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-      return;
-    }
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!validateFields() || !barbershopId) return;
 
     setIsProcessing(true);
     setMessages(["Aguarde enquanto realizamos seu agendamento..."]);
 
-    // Cada serviço dura ~25 minutos
-    const BASE_DURATION = 25; // minutos
+    const BASE_DURATION = 25;
     const totalDuration = appointmentData.service_ids.length * BASE_DURATION;
+    const start = new Date(appointmentData.scheduled_at);
+    const expectedEnd = new Date(start.getTime() + totalDuration * 60000);
 
-    // Calcula expected_end_time
-    const scheduledAtDate = new Date(appointmentData.scheduled_at);
-    const expectedEndTimeDate = new Date(scheduledAtDate.getTime() + totalDuration * 60000);
-
-    // Tenta obter o client_id a partir de /auth/me
-    let clientId = localStorage.getItem("client_id");
-    try {
-      const authResponse = await axios.get(`${apiBaseUrl}/auth/me`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      clientId = authResponse.data.user.id;
-    } catch (error) {
-      clientId = localStorage.getItem("client_id") || 1;
-    }
+    let clientId = localStorage.getItem("client_id") || 1;
+    if (user) clientId = user.id;
 
     const payload = {
+      customer_name: appointmentData.customer_name,
       app_id: 1,
       entity_name: "barbershop",
       entity_id: barbershopId,
       scheduled_at: appointmentData.scheduled_at,
-      service_ids: appointmentData.service_ids, // Array de serviços selecionados
-      expected_end_time: expectedEndTimeDate.toISOString(),
+      service_ids: appointmentData.service_ids,
+      expected_end_time: expectedEnd.toISOString(),
       provider_id: appointmentData.provider_id,
-      description: "",
       client_id: clientId,
       registered_by: clientId,
       status: "pending",
@@ -169,64 +135,23 @@ const AppointmentCreatePage = () => {
       duration: totalDuration,
       notes: appointmentData.notes,
       payment_status: "pending",
-      appointment_type: "presencial",
+      appointment_type: "presencial"
     };
 
     try {
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      };
-
-      await axios.post(`${apiBaseUrl}/appointment`, payload, { headers });
-
-      Swal.fire({
-        title: "Sucesso!",
-        text: "Agendamento criado com sucesso!",
-        icon: "success",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate(-1);
-        }
+      await axios.post(`${apiBaseUrl}/appointment`, payload, {
+        headers: { "Content-Type": "application/json" }
       });
-    } catch (error) {
-      console.error("Erro ao criar agendamento:", error);
-      if (error.response && error.response.status === 422) {
-        const validationErrors = error.response.data.errors;
-        let errorMessage = "Os seguintes campos têm erros:\n";
-        for (const field in validationErrors) {
-          errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
-        }
-        Swal.fire({
-          title: "Validação Falhou",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
-      } else {
-        Swal.fire({
-          title: "Erro",
-          text: "Ocorreu um erro ao tentar criar o agendamento. Tente novamente mais tarde.",
-          icon: "error",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
-      }
+      Swal.fire("Sucesso!", "Agendamento criado com sucesso!", "success").then(() =>
+        navigate(-1)
+      );
+    } catch (err) {
+      const msg = err.response?.data?.errors
+        ? Object.entries(err.response.data.errors)
+            .map(([f, m]) => `${f}: ${m.join(", ")}`)
+            .join("\n")
+        : "Erro ao criar o agendamento.";
+      Swal.fire("Erro", msg, "error");
     } finally {
       setIsProcessing(false);
     }
@@ -234,28 +159,44 @@ const AppointmentCreatePage = () => {
 
   return (
     <>
-      <NavlogComponent />
+     <NavlogComponent />
 
       <p className="section-title text-center">Agendar</p>
-      <Container className="main-container" fluid>
-        <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="section-col">
+      <Container fluid className="main-container">
+        <Row className="justify-content-center">
+          <Col xs={12} lg={10}>
             {isProcessing ? (
-              <div className="loading-section">
-                <ProcessingIndicatorComponent messages={messages} />
-              </div>
+              <ProcessingIndicatorComponent messages={messages} />
             ) : (
-              <Card className="card-component appointment-create-card shadow-sm">
-                <Card.Body className="card-body appointment-create-card-body">
+                <Card className="card-component shadow-sm">
+                <Card.Body>
                   {barbershop && (
-                    <p className="mb-3 text-center">
+                    <p className="section-title text-center">
                       Agendamento em: <strong>{barbershop.name}</strong>
                     </p>
                   )}
 
                   <Form onSubmit={handleSubmit}>
                     <Row>
-                      {/* Selecionar serviços */}
+                      {/* Nome do cliente */}
+                      {!loadingUser && (
+                        <Col md={12} className="mb-3">
+                          <Form.Group controlId="customer_name">
+                            <Form.Label>Seu nome</Form.Label>
+                            <Form.Control
+                              type="text"
+                              name="customer_name"
+                              value={appointmentData.customer_name}
+                              onChange={handleInputChange}
+                              placeholder="Seu nome"
+                              disabled={!!user}
+                              required
+                            />
+                          </Form.Group>
+                        </Col>
+                      )}
+
+                      {/* Seleção de serviços */}
                       <Col md={12} className="mb-4">
                         <p className="mb-2">Selecione os Serviços</p>
                         <Row>
@@ -264,13 +205,12 @@ const AppointmentCreatePage = () => {
                               <p>Nenhum serviço disponível.</p>
                             </Col>
                           ) : (
-                            items.map((item) => (
+                            items.map(item => (
                               <Col md={4} key={item.id}>
                                 <Form.Check
                                   type="checkbox"
                                   id={`service-${item.id}`}
                                   label={item.name}
-                                  // Adicionamos value e checked para garantir controle total via state
                                   value={item.id}
                                   checked={appointmentData.service_ids.includes(item.id)}
                                   onChange={handleServiceSelection}
@@ -281,7 +221,7 @@ const AppointmentCreatePage = () => {
                         </Row>
                       </Col>
 
-                      {/* Data/hora */}
+                      {/* Data e Hora */}
                       <Col md={3} className="mb-3">
                         <Form.Group controlId="scheduled_at">
                           <Form.Label>Data e Hora</Form.Label>
@@ -307,9 +247,9 @@ const AppointmentCreatePage = () => {
                             required
                           >
                             <option value="">Selecione</option>
-                            {barbers.map((barber) => (
-                              <option key={barber.user_id} value={barber.user_id}>
-                                {barber.first_name}
+                            {barbers.map(b => (
+                              <option key={b.user_id} value={b.user_id}>
+                                {b.first_name}
                               </option>
                             ))}
                           </Form.Control>
@@ -332,19 +272,8 @@ const AppointmentCreatePage = () => {
                     </Row>
 
                     <div className="text-center">
-                      <Button variant="primary" type="submit" className="action-button">
-                        {isProcessing ? "Agendando..." : "Agendar"}
-                      </Button>
+                      <Button type="submit">Agendar</Button>
                     </div>
-
-                    {/* Exibe mensagens, se existirem */}
-                    {messages.length > 0 && (
-                      <div className="mt-3">
-                        {messages.map((message, index) => (
-                          <div key={index}>{message}</div>
-                        ))}
-                      </div>
-                    )}
                   </Form>
                 </Card.Body>
               </Card>
