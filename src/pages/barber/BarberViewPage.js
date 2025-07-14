@@ -1,4 +1,4 @@
-// BarberViewPage.jsx
+// src/pages/BarberViewPage.jsx
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import Swal from "sweetalert2";
@@ -13,53 +13,74 @@ const BarberViewPage = () => {
   const [barber, setBarber] = useState(null);
   const [user, setUser] = useState(null);
   const [barbershops, setBarbershops] = useState([]);
+  const [otherBarbers, setOtherBarbers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBarberData = async () => {
       if (!username) {
-        Swal.fire({
-          title: "Erro",
-          text: "O username não foi encontrado na URL.",
-          icon: "error",
-        });
+        Swal.fire("Erro", "O username não foi encontrado na URL.", "error");
         return;
       }
 
       try {
-        const response = await axios.get(`${apiBaseUrl}/barber/${username}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+        // 1) Carrega dados do barbeiro
+        const resp = await axios.get(`${apiBaseUrl}/barber/${username}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        const { barber, user } = response.data;
+        const { barber: bar, user: usr } = resp.data;
+        setBarber(bar || {});
+        setUser(usr || {});
+        setBarbershops(bar?.barbershops || []);
 
-        setBarber(barber || {});
-        setUser(user || {});
-        setBarbershops(barber?.barbershops || []);
+        // 2) Carrega todos os barbeiros e filtra pelo username atual
+        const allResp = await axios.get(`${apiBaseUrl}/barber`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const all = allResp.data.barbers?.data || [];
+        const filtered = all.filter((b) => b.user.user_name !== username);
+        setOtherBarbers(filtered);
       } catch (error) {
         console.error(error.response?.data);
-        Swal.fire({
-          title: "Erro",
-          text: error.response?.data?.error || "Erro ao carregar os dados.",
-          icon: "error",
-        });
+        Swal.fire(
+          "Erro",
+          error.response?.data?.error || "Erro ao carregar os dados.",
+          "error"
+        );
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchBarberData();
   }, [username]);
 
-  // Fallback para o avatar do barbeiro
   const handleBarberAvatarError = (e) => {
-    if (e.target.src.includes("/images/user.png")) return;
-    e.target.src = "/images/user.png";
+    if (!e.target.src.includes("/images/user.png")) {
+      e.target.src = "/images/user.png";
+    }
   };
 
-  // Fallback para o logo da barbearia
   const handleBarbershopLogoError = (e) => {
-    if (e.target.src.includes("/images/logo.png")) return;
-    e.target.src = "/images/logo.png";
+    if (!e.target.src.includes("/images/logo.png")) {
+      e.target.src = "/images/logo.png";
+    }
   };
+
+  if (loading) {
+    return (
+      <>
+        <NavlogComponent />
+        <ProcessingIndicatorComponent
+          messages={[
+            "Carregando os dados do barbeiro...",
+            "Organizando as informações.",
+            "Quase finalizando! Espere só um pouco.",
+          ]}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -67,9 +88,9 @@ const BarberViewPage = () => {
       <Container className="main-container" fluid>
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="section-col">
-            {barber && user ? (
+            {barber && user && (
               <>
-                {/* Informações do barbeiro */}
+                {/* --- Informações do Barbeiro --- */}
                 <Row className="barber-info-row">
                   <Col md={12} className="barber-info-col">
                     <Card className="card-component barber-info-card shadow-sm">
@@ -85,12 +106,18 @@ const BarberViewPage = () => {
                               alt={user.first_name || "Avatar"}
                               className="img-component barber-avatar"
                               onError={handleBarberAvatarError}
+                              style={{
+                                width: 100,
+                                height: 100,
+                                objectFit: "cover",
+                                borderRadius: "50%",
+                              }}
                             />
                             <p className="barber-name mt-2 h4">
                               {user.first_name}
                             </p>
                             <p className="barber-name m-2 text-warning h6">
-                              {user.user_name}
+                              @{user.user_name}
                             </p>
                             <p className="barber-location">
                               {user.city} - {user.uf}
@@ -106,8 +133,10 @@ const BarberViewPage = () => {
                               disabled={!user.phone}
                               onClick={() => {
                                 if (user.phone) {
-                                  const whatsappURL = `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços%20.`;
-                                  window.open(whatsappURL, "_blank");
+                                  window.open(
+                                    `https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços.`,
+                                    "_blank"
+                                  );
                                 }
                               }}
                             >
@@ -115,7 +144,6 @@ const BarberViewPage = () => {
                                 ? `WhatsApp: ${user.phone}`
                                 : "WhatsApp não cadastrado"}
                             </Button>
-
                             <p className="barber-email">Email: {user.email}</p>
                           </Col>
                         </Row>
@@ -123,7 +151,7 @@ const BarberViewPage = () => {
                     </Card>
                   </Col>
 
-                  {/* Descrição do barbeiro, se houver */}
+                  {/* Descrição do barbeiro */}
                   {barber.description && (
                     <Col md={6} className="barber-description-col mt-4">
                       <Card className="card-component barber-description-card shadow-sm">
@@ -137,51 +165,50 @@ const BarberViewPage = () => {
                   )}
                 </Row>
 
-                {/* Lista de barbearias associadas ao barbeiro */}
+                {/* --- Barbearias Associadas --- */}
                 <Row className="barbershops-row mt-4">
                   <Col md={12} className="barbershops-col">
                     <Card className="card-component barbershops-card shadow-sm">
                       <Card.Body className="card-body barbershops-card-body">
                         <p className="barbershops-title">
-                          Barbearias que {user.first_name || "N/D"} está
-                          associado
+                          Barbearias que {user.first_name} está associado
                         </p>
                         <Row className="barbershops-list-row">
-                          {barbershops.map((barbershop) => (
+                          {barbershops.map((shop) => (
                             <Col
                               md={12}
-                              key={barbershop.id}
+                              key={shop.id}
                               className="barbershop-card-col m-2"
                             >
-                              {/* Usando o card conforme solicitado */}
-                              <Card className="inner-card ">
+                              <Card className="inner-card">
                                 <div
                                   className="card-bg"
                                   style={{
-                                    backgroundImage: `url('${storageUrl}/${
-                                      barbershop.logo || "images/logo.png"
+                                    backgroundImage: `url('${
+                                      shop.logo
+                                        ? `${storageUrl}/${shop.logo}`
+                                        : "/images/logo.png"
                                     }')`,
                                   }}
                                 />
                                 <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
                                   <Link
-                                    to={`/barbershop/view/${barbershop.slug}`}
+                                    to={`/barbershop/view/${shop.slug}`}
                                     className="link-component"
                                   >
-                                    {/* Disposição responsiva do logo e nome */}
                                     <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
                                       <img
                                         src={
-                                          barbershop.logo
-                                            ? `${storageUrl}/${barbershop.logo}`
+                                          shop.logo
+                                            ? `${storageUrl}/${shop.logo}`
                                             : "/images/logo.png"
                                         }
                                         className="img-component"
-                                        alt={barbershop.name}
+                                        alt={shop.name}
                                         onError={handleBarbershopLogoError}
                                       />
                                       <p className="item-title mt-2 mt-sm-0 ms-sm-2">
-                                        {barbershop.name}
+                                        {shop.name}
                                       </p>
                                     </div>
                                   </Link>
@@ -194,16 +221,66 @@ const BarberViewPage = () => {
                     </Card>
                   </Col>
                 </Row>
+
+                {/* --- Outros Barbeiros --- */}
+                <Row className="barbers-row mt-4">
+                  <Col md={12} className="barbers-col">
+                    <Card className="card-component other-barbers-card shadow-sm">
+                      <Card.Body className="card-body other-barbers-card-body">
+                        <p className="other-barbers-title">Outros Barbeiros</p>
+                        <Row className="other-barbers-list-row">
+                          {otherBarbers.length > 0 ? (
+                            otherBarbers.map((b) => (
+                              <Col
+                                xs={12}
+                                sm={6}
+                                md={4}
+                                lg={3}
+                                key={b.user.user_name}
+                                className="barber-card-col mb-4"
+                              >
+                                <Card className="inner-card h-100">
+                                  <Card.Body className="inner-card-body d-flex flex-column align-items-center">
+                                    <Link
+                                      to={`/barber/view/${b.user.user_name}`}
+                                      className="d-flex flex-column align-items-center text-decoration-none w-100"
+                                    >
+                                      <img
+                                        src={
+                                          b.user.avatar
+                                            ? `${storageUrl}/${b.user.avatar}`
+                                            : "/images/user.png"
+                                        }
+                                        alt={b.user.first_name}
+                                        style={{
+                                          width: 80,
+                                          height: 80,
+                                          objectFit: "cover",
+                                          borderRadius: "50%",
+                                        }}
+                                        onError={handleBarberAvatarError}
+                                      />
+                                      <p className="mt-2 item-title text-center">
+                                        {b.user.first_name}
+                                      </p>
+                                    </Link>
+                                  </Card.Body>
+                                </Card>
+                              </Col>
+                            ))
+                          ) : (
+                            <Col>
+                              <p className="text-muted">
+                                Nenhum outro barbeiro encontrado.
+                              </p>
+                            </Col>
+                          )}
+                        </Row>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
               </>
-            ) : (
-              // Exibe indicador de processamento se dados ainda não estiverem disponíveis
-              <ProcessingIndicatorComponent
-                messages={[
-                  "Carregando os dados do barbeiro...",
-                  "Organizando as informações.",
-                  "Quase finalizando! Espere só um pouco.",
-                ]}
-              />
             )}
           </Col>
         </Row>
