@@ -1,13 +1,5 @@
-// src/pages/appointment/AppointmentCreatePage.jsx
 import React, { useState, useEffect } from "react";
-import {
-  Form,
-  Button,
-  Container,
-  Row,
-  Card,
-  Col
-} from "react-bootstrap";
+import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
@@ -15,18 +7,38 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 
-const AppointmentCreatePage = () => {
+export default function AppointmentCreatePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
+  // obtém data e hora atuais em fuso de Brasília
+  const brNow = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+  );
+  const pad = n => String(n).padStart(2, "0");
+  const ceilToHalfHour = date => {
+    let h = date.getHours();
+    let m = date.getMinutes();
+    if (m < 30) {
+      m = 30;
+    } else {
+      h += 1;
+      m = 0;
+    }
+    if (h >= 24) h = 0;
+    return `${pad(h)}:${pad(m)}`;
+  };
+
+  const today = brNow.toISOString().substr(0, 10);
+  const nextSlot = ceilToHalfHour(brNow);
+
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-
   const [barbershop, setBarbershop] = useState(null);
-  const [barbers, setBarbers] = useState([]);
-  const [items, setItems] = useState([]);
   const [barbershopId, setBarbershopId] = useState(null);
-
+  const [items, setItems] = useState([]);
+  const [barbers, setBarbers] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
 
@@ -35,22 +47,14 @@ const AppointmentCreatePage = () => {
     customer_cpf: "",
     customer_phone: "",
     customer_email: "",
-    scheduled_date: "",   // YYYY-MM-DD
-    scheduled_time: "",   // HH:mm
+    scheduled_date: today,
+    scheduled_time: nextSlot,
     provider_id: "",
     notes: "",
     service_ids: []
   });
 
-  // slots de 30 em 30 entre 08:00 e 19:00
-  const timeSlots = [];
-  for (let h = 8; h < 19; h++) {
-    timeSlots.push(`${String(h).padStart(2, "0")}:00`);
-    timeSlots.push(`${String(h).padStart(2, "0")}:30`);
-  }
-  timeSlots.push("19:00");
-
-  // carrega usuário autenticado, preenche name/email
+  // carrega usuário autenticado
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -99,6 +103,32 @@ const AppointmentCreatePage = () => {
     })();
   }, [slug]);
 
+  // busca slots disponíveis ao mudar barbeiro ou data
+  useEffect(() => {
+    const { provider_id, scheduled_date } = appointmentData;
+    if (!provider_id || !scheduled_date || !barbershopId) {
+      setAvailableSlots([]);
+      return;
+    }
+    axios
+      .get(`${apiBaseUrl}/appointment/availability`, {
+        params: {
+          provider_id,
+          entity_id: barbershopId,
+          date: scheduled_date
+        }
+      })
+      .then(({ data }) => {
+        let slots = data.slots || [];
+        // se agendamento é hoje, filtra horários menores que nextSlot
+        if (scheduled_date === today) {
+          slots = slots.filter(t => t >= nextSlot);
+        }
+        setAvailableSlots(slots);
+      })
+      .catch(() => setAvailableSlots([]));
+  }, [appointmentData.provider_id, appointmentData.scheduled_date, barbershopId]);
+
   const handleInputChange = e => {
     const { name, value } = e.target;
     setAppointmentData(prev => ({ ...prev, [name]: value }));
@@ -122,11 +152,10 @@ const AppointmentCreatePage = () => {
       if (!appointmentData.customer_phone.trim()) errs.push("Informe seu telefone.");
       if (!appointmentData.customer_email.trim()) errs.push("Informe seu email.");
     }
+    if (!appointmentData.provider_id) errs.push("Selecione um barbeiro.");
     if (!appointmentData.scheduled_date) errs.push("Selecione um dia.");
     if (!appointmentData.scheduled_time) errs.push("Selecione um horário.");
-    if (!appointmentData.provider_id) errs.push("Selecione um barbeiro.");
     if (!appointmentData.service_ids.length) errs.push("Selecione ao menos um serviço.");
-
     if (errs.length) {
       Swal.fire("Erro de validação", errs.join("\n"), "error");
       return false;
@@ -137,23 +166,16 @@ const AppointmentCreatePage = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     if (!validateFields() || !barbershopId) return;
-
     setIsProcessing(true);
     setMessages(["Enviando seu agendamento..."]);
 
-    const BASE_DURATION = 25;
-    const totalDuration = appointmentData.service_ids.length * BASE_DURATION;
-
-    // monta ISO datetime
+    const duration = appointmentData.service_ids.length * 25;
     const scheduledAtIso = new Date(
       `${appointmentData.scheduled_date}T${appointmentData.scheduled_time}:00`
     ).toISOString();
-
     let clientId = localStorage.getItem("client_id") || 1;
     if (user) clientId = user.id;
-
-    // concatena CPF, telefone, email nas notas se não logado
-    const extraInfo = !user
+    const notes = !user
       ? `Cliente: ${appointmentData.customer_name}\nCPF: ${appointmentData.customer_cpf}\nTelefone: ${appointmentData.customer_phone}\nEmail: ${appointmentData.customer_email}\nObservações: ${appointmentData.notes}`
       : appointmentData.notes;
 
@@ -165,15 +187,15 @@ const AppointmentCreatePage = () => {
       scheduled_at: scheduledAtIso,
       service_ids: appointmentData.service_ids,
       expected_end_time: new Date(
-        new Date(scheduledAtIso).getTime() + totalDuration * 60000
+        new Date(scheduledAtIso).getTime() + duration * 60000
       ).toISOString(),
       provider_id: appointmentData.provider_id,
       client_id: clientId,
       registered_by: clientId,
       status: "pending",
       location: "",
-      duration: totalDuration,
-      notes: extraInfo,
+      duration,
+      notes,
       payment_status: "pending",
       appointment_type: "presencial"
     };
@@ -200,7 +222,6 @@ const AppointmentCreatePage = () => {
   return (
     <>
       <NavlogComponent />
-
       <Container fluid className="main-container">
         <Row className="justify-content-center">
           <Col xs={12} lg={8}>
@@ -219,11 +240,7 @@ const AppointmentCreatePage = () => {
                         }
                         alt={barbershop.name}
                         className="rounded-circle"
-                        style={{
-                          height: 80,
-                          width: 80,
-                          objectFit: "cover"
-                        }}
+                        style={{ height: 80, width: 80, objectFit: "cover" }}
                         onError={e => {
                           e.target.onerror = null;
                           e.target.src = "/images/logo.png";
@@ -234,7 +251,6 @@ const AppointmentCreatePage = () => {
                       </h5>
                     </div>
                   )}
-
                   <Form onSubmit={handleSubmit}>
                     <Row>
                       {/* Nome */}
@@ -252,7 +268,7 @@ const AppointmentCreatePage = () => {
                         </Form.Group>
                       </Col>
 
-                      {/* CPF, telefone e email pra não autenticados */}
+                      {/* CPF, Telefone e Email */}
                       {!loadingUser && !user && (
                         <>
                           <Col md={4} className="mb-3">
@@ -263,7 +279,6 @@ const AppointmentCreatePage = () => {
                                 name="customer_cpf"
                                 value={appointmentData.customer_cpf}
                                 onChange={handleInputChange}
-                                placeholder="000.000.000-00"
                                 required
                               />
                             </Form.Group>
@@ -276,7 +291,6 @@ const AppointmentCreatePage = () => {
                                 name="customer_phone"
                                 value={appointmentData.customer_phone}
                                 onChange={handleInputChange}
-                                placeholder="(00) 00000-0000"
                                 required
                               />
                             </Form.Group>
@@ -289,13 +303,32 @@ const AppointmentCreatePage = () => {
                                 name="customer_email"
                                 value={appointmentData.customer_email}
                                 onChange={handleInputChange}
-                                placeholder="seu@exemplo.com"
                                 required
                               />
                             </Form.Group>
                           </Col>
                         </>
                       )}
+
+                      {/* Barbeiro */}
+                      <Col md={6} className="mb-3">
+                        <Form.Group controlId="provider_id">
+                          <Form.Label>Barbeiro</Form.Label>
+                          <Form.Select
+                            name="provider_id"
+                            value={appointmentData.provider_id}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione o barbeiro</option>
+                            {barbers.map(b => (
+                              <option key={b.user_id} value={b.user_id}>
+                                {b.first_name}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
 
                       {/* Dia */}
                       <Col md={6} className="mb-3">
@@ -306,19 +339,9 @@ const AppointmentCreatePage = () => {
                             name="scheduled_date"
                             value={appointmentData.scheduled_date}
                             onChange={handleInputChange}
+                            min={today}
                             required
                           />
-                          {appointmentData.scheduled_date && (
-                            <small className="text-muted">
-                              {new Date(
-                                appointmentData.scheduled_date
-                              ).toLocaleDateString("pt-BR", {
-                                weekday: "long",
-                                day: "2-digit",
-                                month: "2-digit"
-                              })}
-                            </small>
-                          )}
                         </Form.Group>
                       </Col>
 
@@ -326,20 +349,25 @@ const AppointmentCreatePage = () => {
                       <Col md={6} className="mb-3">
                         <Form.Group controlId="scheduled_time">
                           <Form.Label>Horário</Form.Label>
-                          <Form.Control
-                            as="select"
+                          <Form.Select
                             name="scheduled_time"
                             value={appointmentData.scheduled_time}
                             onChange={handleInputChange}
+                            disabled={!appointmentData.provider_id || availableSlots.length === 0}
                             required
                           >
-                            <option value="">Selecione</option>
-                            {timeSlots.map(t => (
+                            <option value="">Selecione o horário</option>
+                            {availableSlots.map(t => (
                               <option key={t} value={t}>
                                 {t}
                               </option>
                             ))}
-                          </Form.Control>
+                          </Form.Select>
+                          {appointmentData.provider_id && availableSlots.length === 0 && (
+                            <small className="text-danger">
+                              Sem horários disponíveis
+                            </small>
+                          )}
                         </Form.Group>
                       </Col>
 
@@ -348,12 +376,10 @@ const AppointmentCreatePage = () => {
                         <Form.Label>Serviços</Form.Label>
                         <Row>
                           {items.length === 0 ? (
-                            <Col xs={12}>
-                              <p>Nenhum serviço disponível.</p>
-                            </Col>
+                            <p>Nenhum serviço disponível.</p>
                           ) : (
                             items.map(item => (
-                              <Col md={4} key={item.id}>
+                              <Col md={4} key={item.id} className="mb-2">
                                 <Form.Check
                                   type="checkbox"
                                   id={`service-${item.id}`}
@@ -366,27 +392,6 @@ const AppointmentCreatePage = () => {
                             ))
                           )}
                         </Row>
-                      </Col>
-
-                      {/* Barbeiro */}
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="provider_id">
-                          <Form.Label>Barbeiro</Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="provider_id"
-                            value={appointmentData.provider_id}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione</option>
-                            {barbers.map(b => (
-                              <option key={b.user_id} value={b.user_id}>
-                                {b.first_name}
-                              </option>
-                            ))}
-                          </Form.Control>
-                        </Form.Group>
                       </Col>
 
                       {/* Observações */}
@@ -403,7 +408,6 @@ const AppointmentCreatePage = () => {
                         </Form.Group>
                       </Col>
                     </Row>
-
                     <div className="text-center">
                       <Button type="submit" variant="primary">
                         Agendar
@@ -418,6 +422,4 @@ const AppointmentCreatePage = () => {
       </Container>
     </>
   );
-};
-
-export default AppointmentCreatePage;
+}
