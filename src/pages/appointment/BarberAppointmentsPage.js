@@ -27,6 +27,12 @@ const paymentLabels = {
   confirmed: "Confirmado",
 };
 
+const attendanceLabels = {
+  attended: "Atendido",
+  not_attended: "Não Atendido",
+  null: "—",
+};
+
 const rowClasses = {
   pending: "table-warning",
   confirmed: "table-success",
@@ -52,7 +58,6 @@ export default function BarberAppointmentsPage() {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
-
   const [filterStatus, setFilterStatus] = useState("");
   const [filterProvider, setFilterProvider] = useState("");
   const [filterShop, setFilterShop] = useState("");
@@ -64,25 +69,24 @@ export default function BarberAppointmentsPage() {
       setMessages(["Carregando agendamentos..."]);
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${apiBaseUrl}/appointment/listbyprovider`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const res = await axios.get(
+          `${apiBaseUrl}/appointment/listbyprovider`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         const list = (res.data.appointments || []).map((a) => {
           let infoObj = {};
           if (a.info) {
             try {
-              infoObj = typeof a.info === "string" ? JSON.parse(a.info) : a.info;
+              infoObj =
+                typeof a.info === "string" ? JSON.parse(a.info) : a.info;
             } catch {
               infoObj = {};
             }
           }
-
           const clientName =
             infoObj.name && infoObj.name.trim()
               ? infoObj.name
               : a.client?.first_name || "Cliente não informado";
-
           const clientPhone =
             infoObj.phone && infoObj.phone.trim()
               ? infoObj.phone
@@ -100,7 +104,6 @@ export default function BarberAppointmentsPage() {
             client_phone: clientPhone,
           };
         });
-
         setAppointments(list);
 
         const provs = [];
@@ -135,6 +138,34 @@ export default function BarberAppointmentsPage() {
     })();
   }, []);
 
+  const updateStatus = async (id, status, attendanceStatus = null) => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = { status };
+      if (attendanceStatus !== null) payload.attendance_status = attendanceStatus;
+      await axios.patch(
+        `${apiBaseUrl}/appointment/${id}/status`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      Swal.fire("Sucesso", "Agendamento atualizado.", "success");
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.id === id
+            ? {
+                ...a,
+                status,
+                attendance_status:
+                  attendanceStatus !== null ? attendanceStatus : a.attendance_status,
+              }
+            : a
+        )
+      );
+    } catch {
+      Swal.fire("Erro", "Falha ao atualizar agendamento.", "error");
+    }
+  };
+
   const cancelAppointment = async (id) => {
     const { isConfirmed } = await Swal.fire({
       title: "Cancelar?",
@@ -145,19 +176,32 @@ export default function BarberAppointmentsPage() {
       cancelButtonText: "Não",
     });
     if (!isConfirmed) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `${apiBaseUrl}/appointment/${id}/status`,
-        { status: "cancelled" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      Swal.fire("Cancelado", "Agendamento cancelado.", "success");
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, status: "cancelled" } : a))
-      );
-    } catch {
-      Swal.fire("Erro", "Falha ao cancelar. Tente novamente.", "error");
+    await updateStatus(id, "cancelled");
+  };
+
+  const canChangeAttendance = (appointment) => {
+    if (appointment.status !== "confirmed") return false;
+    const now = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+    );
+    const scheduled = new Date(appointment.scheduled_at + " GMT-0300");
+    return now - scheduled >= 5 * 60 * 1000;
+  };
+
+  const finalizeAppointment = async (id) => {
+    const { isConfirmed, isDenied } = await Swal.fire({
+      title: "Finalizar agendamento",
+      text: "Marcar como atendido ou não atendido?",
+      icon: "question",
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Atendido",
+      denyButtonText: "Não atendido",
+    });
+    if (isConfirmed) {
+      await updateStatus(id, "completed", "attended");
+    } else if (isDenied) {
+      await updateStatus(id, "completed", "not_attended");
     }
   };
 
@@ -174,58 +218,37 @@ export default function BarberAppointmentsPage() {
       <NavlogComponent />
       <Container fluid className="main-container">
         <Row className="my-3 align-items-center g-2">
-          <Col>
-            <h3>Meus Agendamentos</h3>
-          </Col>
-
+          <Col><h3>Meus Agendamentos</h3></Col>
           <Col md="auto">
-            <Form.Select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
+            <Form.Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="">Situação</option>
               {Object.entries(statusLabels).map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
+                <option key={key} value={key}>{label}</option>
               ))}
             </Form.Select>
           </Col>
-
           <Col md="auto">
-            <Form.Select
-              value={filterProvider}
-              onChange={(e) => setFilterProvider(e.target.value)}
-            >
+            <Form.Select value={filterProvider} onChange={e => setFilterProvider(e.target.value)}>
               <option value="">Todos Barbeiros</option>
-              {providers.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+              {providers.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </Form.Select>
           </Col>
-
           <Col md="auto">
-            <Form.Select
-              value={filterShop}
-              onChange={(e) => setFilterShop(e.target.value)}
-            >
+            <Form.Select value={filterShop} onChange={e => setFilterShop(e.target.value)}>
               <option value="">Todas barbearias</option>
-              {shops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
+              {shops.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </Form.Select>
           </Col>
-
           <Col md="auto">
             <Form.Control
               type="date"
               value={filterDate}
               min={today}
-              onChange={(e) => setFilterDate(e.target.value)}
+              onChange={e => setFilterDate(e.target.value)}
             />
           </Col>
         </Row>
@@ -234,7 +257,7 @@ export default function BarberAppointmentsPage() {
           <ProcessingIndicatorComponent messages={messages} />
         ) : (
           <>
-            {/* DESKTOP */}
+            {/* Desktop */}
             <div className="d-none d-md-block">
               <Table bordered hover>
                 <thead>
@@ -247,43 +270,60 @@ export default function BarberAppointmentsPage() {
                     <th>Serviços</th>
                     <th>Situação</th>
                     <th>Pagamento</th>
+                    <th>Status Atendimento</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center">
+                      <td colSpan={10} className="text-center">
                         Nenhum agendamento encontrado.
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((a) => (
+                    filtered.map(a => (
                       <tr key={a.id} className={rowClasses[a.status] || ""}>
                         <td>{new Date(a.scheduled_at).toLocaleString("pt-BR")}</td>
                         <td>{new Date(a.created_at).toLocaleString("pt-BR")}</td>
                         <td>{a.client_name}</td>
                         <td>{a.client_phone}</td>
                         <td>
-                          {a.shop_slug ? (
-                            <Link to={`/barbershop/view/${a.shop_slug}`}>
-                              {a.shop_name}
-                            </Link>
-                          ) : (
-                            a.shop_name
-                          )}
+                          {a.shop_slug
+                            ? <Link to={`/barbershop/view/${a.shop_slug}`}>{a.shop_name}</Link>
+                            : a.shop_name}
                         </td>
                         <td>{a.service_names.join(", ") || "—"}</td>
                         <td>{statusLabels[a.status]}</td>
                         <td>{paymentLabels[a.payment_status] || "—"}</td>
+                        <td>{attendanceLabels[a.attendance_status ?? null]}</td>
                         <td>
-                          {["pending", "confirmed"].includes(a.status) && (
+                          {a.status === "pending" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                className="me-1"
+                                onClick={() => updateStatus(a.id, "confirmed")}
+                              >
+                                Confirmar
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => cancelAppointment(a.id)}
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {a.status === "confirmed" && canChangeAttendance(a) && (
                             <Button
-                              variant="danger"
+                              variant="primary"
                               size="sm"
-                              onClick={() => cancelAppointment(a.id)}
+                              onClick={() => finalizeAppointment(a.id)}
                             >
-                              Cancelar
+                              Finalizar
                             </Button>
                           )}
                         </td>
@@ -294,19 +334,14 @@ export default function BarberAppointmentsPage() {
               </Table>
             </div>
 
-            {/* MOBILE */}
+            {/* Mobile */}
             <div className="d-block d-md-none">
               <Row>
                 {filtered.length === 0 && (
-                  <Col>
-                    <p className="text-center">Nenhum agendamento encontrado.</p>
-                  </Col>
+                  <Col><p className="text-center">Nenhum agendamento encontrado.</p></Col>
                 )}
-                {filtered.map((a) => {
-                  const variant = cardVariants[a.status] || {
-                    bg: "light",
-                    text: "dark",
-                  };
+                {filtered.map(a => {
+                  const variant = cardVariants[a.status] || { bg: "light", text: "dark" };
                   return (
                     <Col xs={12} key={a.id} className="mb-3">
                       <Card bg={variant.bg} text={variant.text}>
@@ -315,28 +350,39 @@ export default function BarberAppointmentsPage() {
                             Agendado: {new Date(a.scheduled_at).toLocaleString("pt-BR")}
                           </Card.Title>
                           <Card.Text>
-                            <strong>Solicitado em:</strong>{" "}
-                            {new Date(a.created_at).toLocaleString("pt-BR")}
-                            <br />
-                            <strong>Cliente:</strong> {a.client_name}
-                            <br />
-                            <strong>Telefone:</strong> {a.client_phone}
-                            <br />
-                            <strong>Serviços:</strong>{" "}
-                            {a.service_names.join(", ") || "—"}
-                            <br />
-                            <strong>Status:</strong> {statusLabels[a.status]}
-                            <br />
-                            <strong>Pagamento:</strong>{" "}
-                            {paymentLabels[a.payment_status] || "—"}
+                            <strong>Solicitado em:</strong> {new Date(a.created_at).toLocaleString("pt-BR")}<br/>
+                            <strong>Cliente:</strong> {a.client_name}<br/>
+                            <strong>Telefone:</strong> {a.client_phone}<br/>
+                            <strong>Serviços:</strong> {a.service_names.join(", ") || "—"}<br/>
+                            <strong>Situação:</strong> {statusLabels[a.status]}<br/>
+                            <strong>Status Atendimento:</strong> {attendanceLabels[a.attendance_status ?? null]}
                           </Card.Text>
-                          {["pending", "confirmed"].includes(a.status) && (
+                          {a.status === "pending" && (
+                            <>
+                              <Button
+                                variant="success"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => updateStatus(a.id, "confirmed")}
+                              >
+                                Confirmar
+                              </Button>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={() => cancelAppointment(a.id)}
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {a.status === "confirmed" && canChangeAttendance(a) && (
                             <Button
-                              variant="light"
+                              variant="primary"
                               size="sm"
-                              onClick={() => cancelAppointment(a.id)}
+                              onClick={() => finalizeAppointment(a.id)}
                             >
-                              Cancelar
+                              Finalizar
                             </Button>
                           )}
                         </Card.Body>
