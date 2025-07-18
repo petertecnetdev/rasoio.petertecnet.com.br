@@ -160,7 +160,7 @@ const NavlogComponent = () => {
                           Meus Atendimentos
                         </Link>
                         <Link
-                          to={`/appointment/barber/${user.user.user_name}`}
+                          to={`/appointment/barber/`}
                           onClick={toggleMobile}
                           className="mobile-link"
                         >

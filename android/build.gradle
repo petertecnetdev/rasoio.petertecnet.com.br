@@ -1,25 +1,24 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-<<<<<<< HEAD
-        classpath 'com.android.tools.build:gradle:8.7.2'
-=======
-        classpath 'com.android.tools.build:gradle:8.2.1'
->>>>>>> b6dc8a5d0af000183a529371eabcd70a64f359c4
-        classpath 'com.google.gms:google-services:4.4.2'
-
+        classpath "com.android.tools.build:gradle:8.7.2"
+        classpath "com.google.gms:google-services:4.4.2"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
 apply from: "variables.gradle"
+
+plugins {
+    // apenas registra o plugin, sem aplicá‑lo globalmente
+    id "com.google.gms.google-services" version "4.4.2" apply false
+}
 
 allprojects {
     repositories {
