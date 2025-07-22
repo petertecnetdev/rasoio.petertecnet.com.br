@@ -1,277 +1,252 @@
-// BarbershopViewPage.jsx
+
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  ButtonGroup,
+  Badge,
+} from "react-bootstrap";
 import axios from "axios";
-import { apiBaseUrl, storageUrl } from "../../config";
 import Swal from "sweetalert2";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import { apiBaseUrl, storageUrl } from "../../config";
+import "./BarbershopViewPage.css";
 
-const BarbershopViewPage = () => {
+export default function BarbershopViewPage() {
   const navigate = useNavigate();
   const { slug } = useParams();
-
-  const [barbershop, setBarbershop] = useState(null);
+  const [shop, setShop] = useState(null);
   const [owner, setOwner] = useState({});
   const [items, setItems] = useState([]);
   const [barbers, setBarbers] = useState([]);
+  const [others, setOthers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBarbershopData = async () => {
+    (async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
+        const { data } = await axios.get(
           `${apiBaseUrl}/barbershop/view/${slug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
-
-        setBarbershop(response.data.barbershop || {});
-        setOwner(response.data.owner || {});
-        setItems(response.data.items || []);
-        setBarbers(response.data.barbers || []);
-
+        setShop(data.barbershop);
+        setOwner(data.owner); // corrigido: usar data.owner em vez de data.user
+        setItems(data.items);
+        setBarbers(data.barbers);
+        setOthers(data.otherBarbershops);
         window.scrollTo(0, 0);
-      } catch (error) {
-        if (error.response?.data?.errors) {
-          const errorMessages = Object.entries(error.response.data.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-            .join("\n");
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text: errorMessages,
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Erro!",
-            text:
-              error.response?.data?.message ||
-              "Erro ao carregar a barbearia.",
-          });
-        }
+      } catch (e) {
+        Swal.fire({ icon: "error", title: "Erro!", text: e.response?.data?.message || "Falha ao carregar." });
       } finally {
         setLoading(false);
       }
-    };
-
-    if (slug) {
-      fetchBarbershopData();
-    }
+    })();
   }, [slug]);
 
-  const handleBarbershopLogoError = (e) => {
-    if (e.target.src.includes("/images/logo.png")) return;
-    e.target.src = "/images/logo.png";
-  };
+  if (loading || !shop) {
+    return (
+      <ProcessingIndicatorComponent
+        messages={[
+          "Carregando barbearia...",
+          "Aguarde um instante...",
+          "Quase lá!",
+        ]}
+      />
+    );
+  }
 
-  const handleBarberAvatarError = (e) => {
-    if (e.target.src.includes("/images/user.png")) return;
-    e.target.src = "/images/user.png";
-  };
-
-  // Filtra apenas os itens que são do tipo "Serviço"
-  const services = items.filter(
-    (item) => item.type === "service"
-  );
+  const services = items.filter((i) => i.type === "service");
+  const rating = parseFloat(shop.rating) || 0;
 
   return (
     <>
       <NavlogComponent />
+      <Container fluid className="barbershop-container p-4">
 
-      {loading ? (
-        <ProcessingIndicatorComponent
-          messages={[
-            "Carregando dados da barbearia...",
-            "Verificando barbeiros...",
-            "Quase pronto!",
-          ]}
-        />
-      ) : (
-        <Container className="main-container " fluid>
-          {barbershop && (
-            <Card
-              className="barbershop-card "
-              style={{ position: "relative", overflow: "hidden" }}
-            >
-              {/* Background image com blur */}
-              <div
-                className="card-bg"
-                style={{
-                  backgroundImage: `url('${
-                    barbershop.logo
-                      ? `${storageUrl}/${barbershop.logo}`
-                      : "/images/logo.png"
-                  }')`
-                }}
-              />
-              {/* Conteúdo do card */}
-              <Card.Body
-                className="barbershop-body "
-                style={{ position: "relative", zIndex: 2 }}
-              >
-                <Row className="barbershop-row">
-                  <Col md={6} className="barbershop-info">
-                    <p className="barbershop-name label-name-bg">{barbershop.name}</p>
-                    <img
-                      src={
-                        barbershop.logo
-                          ? `${storageUrl}/${barbershop.logo}`
-                          : "/images/logo.png"
-                      }
-                      className="img-component"
-                      alt={barbershop.name}
-                      onError={handleBarbershopLogoError}
-                    />
-                    <p className="barbershop-manager">
-                      <strong>
-                        {owner.first_name}{" "}
-                        <img
-                          src={
-                            owner.avatar
-                              ? `${storageUrl}/${owner.avatar}`
-                              : "/images/user.png"
-                          }
-                          className="manager-avatar"
-                          onError={handleBarberAvatarError}
-                          alt={owner.first_name || "Gerente"}
-                          style={{ margin: "0 auto", display: "block" }}
-                        />
-                      </strong>
-                    </p>
-                    <p className="barbershop-address bg-dark text-white rounded p-2 w-50 ">
-                      {barbershop.address}, {barbershop.city} -{" "}
-                      {barbershop.state}
-                    </p>
-                    <div className="barbershop-actions">
-                      <Button
-                        variant="primary"
-                        onClick={() =>
-                          navigate(`/appointment/create/${barbershop.slug}`)
-                        }
-                      >
-                        Agendar
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={() =>
-                          window.open(barbershop.location, "_blank")
-                        }
-                      >
-                        Localização
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={() =>
-                          window.open(barbershop.instagram, "_blank")
-                        }
-                      >
-                        Instagram
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={() =>
-                          window.open(
-                            `https://wa.me/${barbershop.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20os%20serviços%20da%20${barbershop.name}.`,
-                            "_blank"
-                          )
-                        }
-                      >
-                        WhatsApp: {barbershop.phone}
-                      </Button>
-                    </div>
-                  </Col>
-                  <Col md={6} className="barbershop-description-container">
-                    <Card className="barbershop-description-card">
-                      <Card.Body>
-                        <p className="barbershop-description">
-                          {barbershop.description}
-                        </p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
+        {/* Header */}
+        <Card className="barbershop-header background-gradient mb-4 shadow-lg">
+          <div
+            className="card-bg"
+            style={{
+              backgroundImage: `url(${shop.background_image ? `${storageUrl}/${shop.background_image}` : shop.logo ? `${storageUrl}/${shop.logo}` : "/images/logo.png"})`,
+            }}
+          />
+          <Card.Body className="barbershop-body">
+            <Row className="align-items-center">
+
+              {/* Logo & Rating */}
+              <Col md={3} className="text-center mb-3 mb-md-0">
+                <img
+                  src={shop.logo ? `${storageUrl}/${shop.logo}` : "/images/logo.png"}
+                  alt={shop.name}
+                  onError={(e) => { if (!e.target.src.includes("logo.png")) e.target.src = "/images/logo.png"; }}
+                  className="barbershop-logo"
+                />
+                <div className="mt-2">
+                  <Badge bg="warning" text="dark">
+                    ⭐ {rating.toFixed(1)}/5
+                  </Badge>
+                </div>
+              </Col>
+
+              {/* Basic Info */}
+              <Col md={6} className="text-center text-md-start">
+                <h2 className="barbershop-title mb-2">{shop.name}</h2>
+                <div className="manager-info mb-2">
+                  <img
+                    src={owner.avatar ? `${storageUrl}/${owner.avatar}` : "/images/user.png"}
+                    alt={owner.first_name}
+                    onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/user.png"; }}
+                    className="manager-avatar-sm"
+                  />
+                  <span>
+                    Gerente: <strong>{owner.first_name} {owner.last_name}</strong>
+                  </span>
+                </div>
+                <p className="barbershop-address mb-1">
+                  <i className="bi bi-geo-alt-fill"/> {shop.address}, {shop.city} - {shop.state} <br />
+                  CEP: {shop.zipcode}
+                </p>
+                <p className="mb-1">
+                  <i className="bi bi-telephone-fill"/> <a href={`tel:${shop.phone}`}>{shop.phone}</a>
+                </p>
+                <p className="mb-1">
+                  <i className="bi bi-envelope-fill"/> <a href={`mailto:${shop.email}`}>{shop.email}</a>
+                </p>
+                {shop.website && (
+                  <p className="mb-0">
+                    <i className="bi bi-globe"/> <a href={shop.website} target="_blank" rel="noopener noreferrer">{new URL(shop.website).hostname}</a>
+                  </p>
+                )}
+              </Col>
+
+              {/* Actions */}
+              <Col md={3} className="text-center text-md-end">
+                <ButtonGroup vertical className="barbershop-actions">
+                  <Button onClick={() => navigate(`/appointment/create/${shop.slug}`)}>Agendar</Button>
+                  <Button onClick={() => window.open(shop.location, "_blank")}>Ver Mapa</Button>
+                  <Button onClick={() => window.open(shop.instagram, "_blank")}>Instagram</Button>
+                  <Button onClick={() => window.open(`https://wa.me/${shop.phone}?text=Olá!`, "_blank")}>WhatsApp</Button>
+                </ButtonGroup>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+
+        {/* Descrição & Metadados */}
+        <Card className="description-card mb-4 shadow-sm">
+          <Card.Header>Descrição & Metadados</Card.Header>
+          <Card.Body>
+            <Card.Text>{shop.description}</Card.Text>
+            <ul>
+              <li><strong>Criado em:</strong> {new Date(shop.created_at).toLocaleDateString("pt-BR")}</li>
+              <li><strong>Atualizado em:</strong> {new Date(shop.updated_at).toLocaleDateString("pt-BR")}</li>
+              <li><strong>Meta Title:</strong> {shop.meta_title}</li>
+              <li><strong>Meta Description:</strong> {shop.meta_description}</li>
+            </ul>
+          </Card.Body>
+        </Card>
+
+        {/* Serviços */}
+        <Row>
+          <Col lg={6} className="mb-4">
+            <Card className="services-card shadow-sm">
+              <Card.Header className="services-header">Serviços</Card.Header>
+              <Card.Body className="p-0">
+                <Table hover responsive className="services-table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Serviço</th>
+                      <th>Descrição</th>
+                      <th className="text-end">Preço</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {services.length ? (
+                      services.map((s) => (
+                        <tr key={s.id}>
+                          <td>{s.name}</td>
+                          <td>{s.description}</td>
+                          <td className="text-end">R${s.price}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="text-center">
+                          Nenhum serviço encontrado.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
               </Card.Body>
             </Card>
-          )}
+          </Col>
 
-          {/* Linha que divide tabela de preços e barbeiros */}
-          <Row className="mt-4">
-            {/* Coluna Tabela de Preços (Serviços) */}
-            <Col md={6}>
-              {services.length === 0 ? (
-                <Card className="card-component service-banner shadow-sm mb-4">
-                  <Card.Body className="service-banner-body text-center">
-                    <p className="service-banner-title">
-                      Tabela de Preços 
-                    </p>
-                    <p className="empty-text">Nenhum serviço encontrado.</p>
-                  </Card.Body>
-                </Card>
-              ) : (
-                <Card className="card-component service-banner shadow-sm mb-4">
-                  <Card.Body className="service-banner-body text-center">
-                    <p className="service-banner-title">Tabela de Preços</p>
-                    {services.map((service) => (
-                      <div
-                        key={service.id}
-                        className="service-banner-item d-flex align-items-center p-2"
-                      >
-                        <span className="service-banner-name">
-                          {service.name}
-                        </span>
-                        <span className="service-dots flex-grow-1" />
-                        <span className="service-banner-price">
-                          R${service.price}
-                        </span>
-                      </div>
+          {/* Equipe */}
+          <Col lg={6} className="mb-4">
+            <Card className="barbers-card shadow-sm">
+              <Card.Header className="barbers-header">Equipe de Barbeiros</Card.Header>
+              <Card.Body>
+                {barbers.length ? (
+                  <Row>
+                    {barbers.map((b) => (
+                      <Col xs={6} key={b.id} className="barber-col">
+                        <Link to={`/barber/view/${b.user_name}`} className="text-decoration-none text-body">
+                          <img
+                            src={b.avatar ? `${storageUrl}/${b.avatar}` : "/images/user.png"}
+                            alt={b.first_name}
+                            onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/user.png"; }}
+                            className="barber-avatar-lg mb-2"
+                          />
+                          <div>
+                            <strong>{b.first_name}</strong>
+                          </div>
+                        </Link>
+                      </Col>
                     ))}
-                  </Card.Body>
-                </Card>
-              )}
-            </Col>
+                  </Row>
+                ) : (
+                  <p className="text-center mb-0">Nenhum barbeiro encontrado.</p>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-            {/* Coluna Barbeiros */}
-            <Col md={6}>
-              <Card className="card-component shadow-sm">
-                <p className="section-title text-center mt-3">Barbeiros</p>
-                <Card.Body>
-                  {barbers.length > 0 ? (
-                    <Row>
-                      {barbers.map((barber) => (
-                        <Col key={barber.id} md={6}>
-                          <Link
-                            to={`/barber/view/${barber.user_name}`}
-                            className="link-component"
-                          >
-                            <div>
-                              <p className="barber-name barber-label text-center">
-                                {barber.first_name}
-                              </p>
-                            </div>
-                          </Link>
-                        </Col>
-                      ))}
-                    </Row>
-                  ) : (
-                    <Col xs={12} className="empty-section text-center">
-                      <p className="empty-text">Nenhum barbeiro encontrado.</p>
-                    </Col>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      )}
+        {/* Outras Barbearias */}
+        {others.length > 0 && (
+          <Card className="mb-4 shadow-sm">
+            <Card.Header>Outras Barbearias</Card.Header>
+            <Card.Body>
+              <Row>
+                {others.map((o, i) => (
+                  <Col xs={6} md={3} key={i} className="text-center mb-3">
+                    <Link to={`/barbershop/view/${o.slug}`} className="text-decoration-none text-body">
+                      <img
+                        src={`${storageUrl}/${o.logo}`}
+                        alt={o.name}
+                        className="other-shop-logo mb-2"
+                      />
+                      <div>
+                        <strong>{o.name}</strong>
+                      </div>
+                    </Link>
+                  </Col>
+                ))}
+              </Row>
+            </Card.Body>
+          </Card>
+        )}
+
+      </Container>
     </>
   );
-};
-
-export default BarbershopViewPage;
+}

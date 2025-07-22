@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
@@ -16,13 +16,9 @@ export default function AppointmentCreatePage() {
   );
   const pad = (n) => String(n).padStart(2, "0");
   const ceilToHalfHour = (date) => {
-    let h = date.getHours(),
-      m = date.getMinutes();
+    let h = date.getHours(), m = date.getMinutes();
     if (m < 30) m = 30;
-    else {
-      h += 1;
-      m = 0;
-    }
+    else { h += 1; m = 0; }
     if (h >= 24) h = 0;
     return `${pad(h)}:${pad(m)}`;
   };
@@ -52,6 +48,7 @@ export default function AppointmentCreatePage() {
     service_ids: [],
   });
 
+  // Carrega usuário autenticado
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
@@ -61,19 +58,18 @@ export default function AppointmentCreatePage() {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUser(data.user);
-          setAppointmentData((prev) => ({
+          setAppointmentData(prev => ({
             ...prev,
             customer_name: data.user.first_name,
             customer_email: data.user.email,
           }));
-        } catch {
-          setUser(null);
-        }
+        } catch { setUser(null); }
       }
       setLoadingUser(false);
     })();
   }, []);
 
+  // Carrega barbearia, serviços e barbeiros
   useEffect(() => {
     (async () => {
       setMessages(["Carregando informações..."]);
@@ -92,38 +88,47 @@ export default function AppointmentCreatePage() {
     })();
   }, [slug]);
 
+  // Disponibilidade de horários
   useEffect(() => {
     const { provider_id, scheduled_date } = appointmentData;
     if (!provider_id || !scheduled_date || !barbershopId) {
       setAvailableSlots([]);
       return;
     }
-    axios
-      .get(`${apiBaseUrl}/appointment/availability`, {
-        params: { provider_id, entity_id: barbershopId, date: scheduled_date },
-      })
-      .then(({ data }) => {
-        let slots = data.slots || [];
-        if (scheduled_date === today) slots = slots.filter((t) => t >= nextSlot);
-        setAvailableSlots(slots);
-      })
-      .catch(() => setAvailableSlots([]));
+    axios.get(`${apiBaseUrl}/appointment/availability`, {
+      params: { provider_id, entity_id: barbershopId, date: scheduled_date }
+    })
+    .then(({ data }) => {
+      let slots = data.slots || [];
+      if (scheduled_date === today) slots = slots.filter(t => t >= nextSlot);
+      setAvailableSlots(slots);
+    })
+    .catch(() => setAvailableSlots([]));
   }, [appointmentData.provider_id, appointmentData.scheduled_date, barbershopId]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = e => {
     const { name, value } = e.target;
-    setAppointmentData((prev) => ({ ...prev, [name]: value }));
+    setAppointmentData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleServiceSelection = (e) => {
+  const handleServiceSelection = e => {
     const id = parseInt(e.target.value, 10);
-    setAppointmentData((prev) => ({
+    setAppointmentData(prev => ({
       ...prev,
       service_ids: e.target.checked
         ? [...prev.service_ids, id]
-        : prev.service_ids.filter((i) => i !== id),
+        : prev.service_ids.filter(i => i !== id),
     }));
   };
+
+  // Cálculo total de preços (converte string para número)
+  const totalPrice = useMemo(() => {
+    return appointmentData.service_ids.reduce((sum, id) => {
+      const svc = items.find(i => i.id === id);
+      const priceNum = svc ? parseFloat(svc.price) : 0;
+      return sum + priceNum;
+    }, 0);
+  }, [appointmentData.service_ids, items]);
 
   const validateFields = () => {
     const errs = [];
@@ -144,7 +149,7 @@ export default function AppointmentCreatePage() {
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!validateFields() || !barbershopId) return;
 
@@ -152,12 +157,8 @@ export default function AppointmentCreatePage() {
     setMessages(["Enviando seu agendamento..."]);
 
     const duration = appointmentData.service_ids.length * 25;
-    const scheduledAtIso = new Date(
-      `${appointmentData.scheduled_date}T${appointmentData.scheduled_time}:00`
-    ).toISOString();
-    const expectedEndTime = new Date(
-      new Date(scheduledAtIso).getTime() + duration * 60000
-    ).toISOString();
+    const scheduledAtIso = new Date(`${appointmentData.scheduled_date}T${appointmentData.scheduled_time}:00`).toISOString();
+    const expectedEndTime = new Date(new Date(scheduledAtIso).getTime() + duration * 60000).toISOString();
 
     const token = localStorage.getItem("token");
     const userId = user?.id || null;
@@ -180,15 +181,12 @@ export default function AppointmentCreatePage() {
       notes: appointmentData.notes || null,
       payment_status: "pending",
       appointment_type: "presencial",
-      // **CORREÇÃO: campos cliente não autenticado enviados DIRETAMENTE no payload**
-      ...(user
-        ? {}
-        : {
-            customer_name: appointmentData.customer_name,
-            customer_cpf: appointmentData.customer_cpf,
-            customer_phone: appointmentData.customer_phone,
-            customer_email: appointmentData.customer_email,
-          }),
+      ...(!user && {
+        customer_name: appointmentData.customer_name,
+        customer_cpf: appointmentData.customer_cpf,
+        customer_phone: appointmentData.customer_phone,
+        customer_email: appointmentData.customer_email,
+      }),
     };
 
     try {
@@ -198,7 +196,6 @@ export default function AppointmentCreatePage() {
           Authorization: token ? `Bearer ${token}` : undefined,
         },
       });
-
       setIsProcessing(false);
       await Swal.fire("Sucesso!", "Agendamento criado!", "success");
       navigate("/appointment/my");
@@ -206,28 +203,19 @@ export default function AppointmentCreatePage() {
       setIsProcessing(false);
       const data = err.response?.data || {};
       let msg = "Erro ao criar o agendamento.";
-
       if (data.errors) {
         msg = Object.entries(data.errors)
           .map(([field, arr]) => {
             switch (field) {
-              case "customer_name":
-                return "Informe seu nome.";
-              case "customer_cpf":
-                return "Informe seu CPF.";
-              case "customer_phone":
-                return "Informe seu telefone.";
-              case "customer_email":
-                return "Informe seu email.";
-              default:
-                return arr.join(", ");
+              case "customer_name": return "Informe seu nome.";
+              case "customer_cpf": return "Informe seu CPF.";
+              case "customer_phone": return "Informe seu telefone.";
+              case "customer_email": return "Informe seu email.";
+              default: return arr.join(", ");
             }
           })
           .join("\n");
-      } else if (data.error) {
-        msg = data.error;
-      }
-
+      } else if (data.error) msg = data.error;
       Swal.fire("Erro", msg, "error");
     }
   };
@@ -250,171 +238,34 @@ export default function AppointmentCreatePage() {
                         alt={barbershop.name}
                         className="rounded-circle"
                         style={{ height: 80, width: 80, objectFit: "cover" }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/images/logo.png";
-                        }}
+                        onError={e => { e.target.onerror = null; e.target.src = "/images/logo.png"; }}
                       />
-                      <h5 className="mt-2">
-                        Agendamento em <strong>{barbershop.name}</strong>
-                      </h5>
+                      <h5 className="mt-2">Agendamento em <strong>{barbershop.name}</strong></h5>
                     </div>
                   )}
-
                   <Form onSubmit={handleSubmit}>
                     <Row>
                       <Col md={12} className="mb-3">
                         <Form.Group controlId="customer_name">
                           <Form.Label>Seu Nome</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="customer_name"
-                            value={appointmentData.customer_name}
-                            onChange={handleInputChange}
-                            disabled={!!user}
-                            required
-                          />
+                          <Form.Control type="text" name="customer_name" value={appointmentData.customer_name} onChange={handleInputChange} disabled={!!user} required />
                         </Form.Group>
                       </Col>
-
                       {!loadingUser && !user && (
                         <>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_cpf">
-                              <Form.Label>CPF</Form.Label>
-                              <Form.Control
-                                type="text"
-                                name="customer_cpf"
-                                value={appointmentData.customer_cpf}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_phone">
-                              <Form.Label>Telefone</Form.Label>
-                              <Form.Control
-                                type="text"
-                                name="customer_phone"
-                                value={appointmentData.customer_phone}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_email">
-                              <Form.Label>Email</Form.Label>
-                              <Form.Control
-                                type="email"
-                                name="customer_email"
-                                value={appointmentData.customer_email}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
+                          <Col md={4} className="mb-3"><Form.Group controlId="customer_cpf"><Form.Label>CPF</Form.Label><Form.Control type="text" name="customer_cpf" value={appointmentData.customer_cpf} onChange={handleInputChange} required /></Form.Group></Col>
+                          <Col md={4} className="mb-3"><Form.Group controlId="customer_phone"><Form.Label>Telefone</Form.Label><Form.Control type="text" name="customer_phone" value={appointmentData.customer_phone} onChange={handleInputChange} required /></Form.Group></Col>
+                          <Col md={4} className="mb-3"><Form.Group controlId="customer_email"><Form.Label>Email</Form.Label><Form.Control type="email" name="customer_email" value={appointmentData.customer_email} onChange={handleInputChange} required /></Form.Group></Col>
                         </>
                       )}
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="provider_id">
-                          <Form.Label>Barbeiro</Form.Label>
-                          <Form.Select
-                            name="provider_id"
-                            value={appointmentData.provider_id}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione o barbeiro</option>
-                            {barbers.map((b) => (
-                              <option key={b.user_id} value={b.user_id}>
-                                {b.first_name}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="scheduled_date">
-                          <Form.Label>Dia</Form.Label>
-                          <Form.Control
-                            type="date"
-                            name="scheduled_date"
-                            value={appointmentData.scheduled_date}
-                            onChange={handleInputChange}
-                            min={today}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="scheduled_time">
-                          <Form.Label>Horário</Form.Label>
-                          <Form.Select
-                            name="scheduled_time"
-                            value={appointmentData.scheduled_time}
-                            onChange={handleInputChange}
-                            disabled={!appointmentData.provider_id || availableSlots.length === 0}
-                            required
-                          >
-                            <option value="">Selecione o horário</option>
-                            {availableSlots.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </Form.Select>
-                          {appointmentData.provider_id && availableSlots.length === 0 && (
-                            <small className="text-danger">Sem horários disponíveis</small>
-                          )}
-                        </Form.Group>
-                      </Col>
-
-                      <Col md={12} className="mb-4">
-                        <Form.Label>Serviços</Form.Label>
-                        <Row>
-                          {items.length === 0 ? (
-                            <p>Nenhum serviço disponível.</p>
-                          ) : (
-                            items.map((item) => (
-                              <Col md={4} key={item.id} className="mb-2">
-                                <Form.Check
-                                  type="checkbox"
-                                  id={`service-${item.id}`}
-                                  label={item.name}
-                                  value={item.id}
-                                  checked={appointmentData.service_ids.includes(item.id)}
-                                  onChange={handleServiceSelection}
-                                />
-                              </Col>
-                            ))
-                          )}
-                        </Row>
-                      </Col>
-
-                      <Col md={12} className="mb-3">
-                        <Form.Group controlId="notes">
-                          <Form.Label>Observações</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            name="notes"
-                            value={appointmentData.notes}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
+                      <Col md={6} className="mb-3"><Form.Group controlId="provider_id"><Form.Label>Barbeiro</Form.Label><Form.Select name="provider_id" value={appointmentData.provider_id} onChange={handleInputChange} required><option value="">Selecione o barbeiro</option>{barbers.map(b => <option key={b.user_id} value={b.user_id}>{b.first_name}</option>)}</Form.Select></Form.Group></Col>
+                      <Col md={6} className="mb-3"><Form.Group controlId="scheduled_date"><Form.Label>Dia</Form.Label><Form.Control type="date" name="scheduled_date" value={appointmentData.scheduled_date} onChange={handleInputChange} min={today} required /></Form.Group></Col>
+                      <Col md={6} className="mb-3"><Form.Group controlId="scheduled_time"><Form.Label>Horário</Form.Label><Form.Select name="scheduled_time" value={appointmentData.scheduled_time} onChange={handleInputChange} disabled={!appointmentData.provider_id || availableSlots.length===0} required><option value="">Selecione o horário</option>{availableSlots.map(t => <option key={t} value={t}>{t}</option>)}</Form.Select>{appointmentData.provider_id && availableSlots.length===0 && <small className="text-danger">Sem horários disponíveis</small>}</Form.Group></Col>
+                      <Col md={12} className="mb-4"><Form.Label>Serviços</Form.Label><Row>{items.length===0 ? <p>Nenhum serviço disponível.</p> : items.map(item => <Col md={4} key={item.id} className="mb-2"><Form.Check type="checkbox" id={`service-${item.id}`} label={`${item.name} (${Number(item.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})})`} value={item.id} checked={appointmentData.service_ids.includes(item.id)} onChange={handleServiceSelection} /></Col>)}</Row></Col>
+                      <Col md={12} className="mb-3"><h5>Total: {totalPrice.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</h5></Col>
+                      <Col md={12} className="mb-3"><Form.Group controlId="notes"><Form.Label>Observações</Form.Label><Form.Control as="textarea" rows={3} name="notes" value={appointmentData.notes} onChange={handleInputChange} /></Form.Group></Col>
                     </Row>
-
-                    <div className="text-center">
-                      <Button type="submit" variant="primary">
-                        Agendar
-                      </Button>
-                    </div>
+                    <div className="text-center"><Button type="submit" variant="primary">Agendar</Button></div>
                   </Form>
                 </Card.Body>
               </Card>

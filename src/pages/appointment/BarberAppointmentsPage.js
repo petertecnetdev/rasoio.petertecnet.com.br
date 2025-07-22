@@ -33,18 +33,22 @@ const attendanceLabels = {
   null: "—",
 };
 
+// classes de linha combinadas
 const rowClasses = {
   pending: "table-warning",
   confirmed: "table-success",
   cancelled: "table-danger",
-  completed: "table-secondary",
+  attended: "table-success",
+  not_attended: "table-danger",
 };
 
+// variantes de card para mobile
 const cardVariants = {
   pending: { bg: "warning", text: "dark" },
   confirmed: { bg: "success", text: "white" },
   cancelled: { bg: "danger", text: "white" },
-  completed: { bg: "secondary", text: "white" },
+  attended: { bg: "success", text: "white" },
+  not_attended: { bg: "danger", text: "white" },
 };
 
 export default function BarberAppointmentsPage() {
@@ -77,8 +81,7 @@ export default function BarberAppointmentsPage() {
           let infoObj = {};
           if (a.info) {
             try {
-              infoObj =
-                typeof a.info === "string" ? JSON.parse(a.info) : a.info;
+              infoObj = typeof a.info === "string" ? JSON.parse(a.info) : a.info;
             } catch {
               infoObj = {};
             }
@@ -110,27 +113,17 @@ export default function BarberAppointmentsPage() {
         const shopList = [];
         list.forEach((a) => {
           if (a.provider_id && !provs.some((p) => p.id === a.provider_id)) {
-            provs.push({
-              id: a.provider_id,
-              name: a.provider_name,
-              slug: a.provider_slug,
-            });
+            provs.push({ id: a.provider_id, name: a.provider_name, slug: a.provider_slug });
           }
           if (a.entity_id && !shopList.some((s) => s.id === a.entity_id)) {
-            shopList.push({
-              id: a.entity_id,
-              name: a.shop_name,
-              slug: a.shop_slug,
-            });
+            shopList.push({ id: a.entity_id, name: a.shop_name, slug: a.shop_slug });
           }
         });
         setProviders(provs);
         setShops(shopList);
-      } catch (err) {
-        if (err.response?.status !== 404) {
-          Swal.fire("Erro", "Falha ao carregar agendamentos.", "error");
-        }
+      } catch {
         setAppointments([]);
+        Swal.fire("Erro", "Falha ao carregar agendamentos.", "error");
       } finally {
         setLoading(false);
         setMessages([]);
@@ -220,7 +213,10 @@ export default function BarberAppointmentsPage() {
         <Row className="my-3 align-items-center g-2">
           <Col><h3>Meus Agendamentos</h3></Col>
           <Col md="auto">
-            <Form.Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <Form.Select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
               <option value="">Situação</option>
               {Object.entries(statusLabels).map(([key, label]) => (
                 <option key={key} value={key}>{label}</option>
@@ -228,17 +224,23 @@ export default function BarberAppointmentsPage() {
             </Form.Select>
           </Col>
           <Col md="auto">
-            <Form.Select value={filterProvider} onChange={e => setFilterProvider(e.target.value)}>
+            <Form.Select
+              value={filterProvider}
+              onChange={(e) => setFilterProvider(e.target.value)}
+            >
               <option value="">Todos Barbeiros</option>
-              {providers.map(p => (
+              {providers.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </Form.Select>
           </Col>
           <Col md="auto">
-            <Form.Select value={filterShop} onChange={e => setFilterShop(e.target.value)}>
+            <Form.Select
+              value={filterShop}
+              onChange={(e) => setFilterShop(e.target.value)}
+            >
               <option value="">Todas barbearias</option>
-              {shops.map(s => (
+              {shops.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </Form.Select>
@@ -248,7 +250,7 @@ export default function BarberAppointmentsPage() {
               type="date"
               value={filterDate}
               min={today}
-              onChange={e => setFilterDate(e.target.value)}
+              onChange={(e) => setFilterDate(e.target.value)}
             />
           </Col>
         </Row>
@@ -282,53 +284,58 @@ export default function BarberAppointmentsPage() {
                       </td>
                     </tr>
                   ) : (
-                    filtered.map(a => (
-                      <tr key={a.id} className={rowClasses[a.status] || ""}>
-                        <td>{new Date(a.scheduled_at).toLocaleString("pt-BR")}</td>
-                        <td>{new Date(a.created_at).toLocaleString("pt-BR")}</td>
-                        <td>{a.client_name}</td>
-                        <td>{a.client_phone}</td>
-                        <td>
-                          {a.shop_slug
-                            ? <Link to={`/barbershop/view/${a.shop_slug}`}>{a.shop_name}</Link>
-                            : a.shop_name}
-                        </td>
-                        <td>{a.service_names.join(", ") || "—"}</td>
-                        <td>{statusLabels[a.status]}</td>
-                        <td>{paymentLabels[a.payment_status] || "—"}</td>
-                        <td>{attendanceLabels[a.attendance_status ?? null]}</td>
-                        <td>
-                          {a.status === "pending" && (
-                            <>
+                    filtered.map((a) => {
+                      const key = a.status === "completed"
+                        ? a.attendance_status
+                        : a.status;
+                      return (
+                        <tr key={a.id} className={rowClasses[key] || ""}>
+                          <td>{new Date(a.scheduled_at).toLocaleString("pt-BR")}</td>
+                          <td>{new Date(a.created_at).toLocaleString("pt-BR")}</td>
+                          <td>{a.client_name}</td>
+                          <td>{a.client_phone}</td>
+                          <td>
+                            {a.shop_slug
+                              ? <Link to={`/barbershop/view/${a.shop_slug}`}>{a.shop_name}</Link>
+                              : a.shop_name}
+                          </td>
+                          <td>{a.service_names.join(", ") || "—"}</td>
+                          <td>{statusLabels[a.status]}</td>
+                          <td>{paymentLabels[a.payment_status] || "—"}</td>
+                          <td>{attendanceLabels[a.attendance_status ?? null]}</td>
+                          <td>
+                            {a.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="success"
+                                  size="sm"
+                                  className="me-1"
+                                  onClick={() => updateStatus(a.id, "confirmed")}
+                                >
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  variant="danger"
+                                  size="sm"
+                                  onClick={() => cancelAppointment(a.id)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                            {a.status === "confirmed" && canChangeAttendance(a) && (
                               <Button
-                                variant="success"
+                                variant="primary"
                                 size="sm"
-                                className="me-1"
-                                onClick={() => updateStatus(a.id, "confirmed")}
+                                onClick={() => finalizeAppointment(a.id)}
                               >
-                                Confirmar
+                                Finalizar
                               </Button>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                onClick={() => cancelAppointment(a.id)}
-                              >
-                                Cancelar
-                              </Button>
-                            </>
-                          )}
-                          {a.status === "confirmed" && canChangeAttendance(a) && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              onClick={() => finalizeAppointment(a.id)}
-                            >
-                              Finalizar
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </Table>
@@ -338,10 +345,15 @@ export default function BarberAppointmentsPage() {
             <div className="d-block d-md-none">
               <Row>
                 {filtered.length === 0 && (
-                  <Col><p className="text-center">Nenhum agendamento encontrado.</p></Col>
+                  <Col>
+                    <p className="text-center">Nenhum agendamento encontrado.</p>
+                  </Col>
                 )}
-                {filtered.map(a => {
-                  const variant = cardVariants[a.status] || { bg: "light", text: "dark" };
+                {filtered.map((a) => {
+                  const key = a.status === "completed"
+                    ? a.attendance_status
+                    : a.status;
+                  const variant = cardVariants[key] || { bg: "light", text: "dark" };
                   return (
                     <Col xs={12} key={a.id} className="mb-3">
                       <Card bg={variant.bg} text={variant.text}>
@@ -350,12 +362,20 @@ export default function BarberAppointmentsPage() {
                             Agendado: {new Date(a.scheduled_at).toLocaleString("pt-BR")}
                           </Card.Title>
                           <Card.Text>
-                            <strong>Solicitado em:</strong> {new Date(a.created_at).toLocaleString("pt-BR")}<br/>
-                            <strong>Cliente:</strong> {a.client_name}<br/>
-                            <strong>Telefone:</strong> {a.client_phone}<br/>
-                            <strong>Serviços:</strong> {a.service_names.join(", ") || "—"}<br/>
-                            <strong>Situação:</strong> {statusLabels[a.status]}<br/>
-                            <strong>Status Atendimento:</strong> {attendanceLabels[a.attendance_status ?? null]}
+                            <strong>Solicitado em:</strong>{" "}
+                            {new Date(a.created_at).toLocaleString("pt-BR")}
+                            <br />
+                            <strong>Cliente:</strong> {a.client_name}
+                            <br />
+                            <strong>Telefone:</strong> {a.client_phone}
+                            <br />
+                            <strong>Serviços:</strong>{" "}
+                            {a.service_names.join(", ") || "—"}
+                            <br />
+                            <strong>Situação:</strong> {statusLabels[a.status]}
+                            <br />
+                            <strong>Status Atendimento:</strong>{" "}
+                            {attendanceLabels[a.attendance_status ?? null]}
                           </Card.Text>
                           {a.status === "pending" && (
                             <>
