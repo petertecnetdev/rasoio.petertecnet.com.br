@@ -1,10 +1,9 @@
 :root {
-  /* Tema principal */
   --brand-primary: #007bff;
   --brand-light: #f2ebef;
   --brand-white: #ffffff;
   --brand-dark: #1a1a1a;
-  --accent: #ffc107;
+  --accent: #ff0707;
   --card-radius: 1rem;
   --transition-time: 0.3s;
   --shadow-light: rgba(0, 0, 0, 0.1);
@@ -32,31 +31,44 @@
   box-shadow: 0 8px 20px var(--shadow-light);
   transition: transform var(--transition-time);
 }
+
 .barbershop-header:hover {
   transform: translateY(-4px);
+}
+
+.barbershop-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
 }
 
 .card-bg {
   position: absolute;
   inset: 0;
+  /* fallback solid dark background */
+  background-color: var(--brand-dark);
+  /* blend image with dark for consistent contrast */
+  background-blend-mode: multiply;
   background-size: cover;
   background-position: center;
-  filter: blur(10px) brightness(0.6);
+  filter: blur(10px);
+  transform: scale(1.1);
   z-index: 1;
 }
 
-/* Conteúdo principal */
 .barbershop-body {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
   padding: var(--card-padding) 2rem;
+  color: var(--brand-white);
 }
 
-/* Logo */
 .barbershop-logo {
   width: 140px;
   height: 140px;
@@ -65,27 +77,28 @@
   box-shadow: 0 4px 10px var(--shadow-dark);
   transition: transform var(--transition-time);
 }
+
 .barbershop-logo:hover {
   transform: scale(var(--hover-scale));
 }
 
-/* Título */
 .barbershop-title {
   flex: 1;
-  color: var(--brand-dark);
+  color: var(--brand-white);
   font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: 1px;
   margin-bottom: 0.5rem;
+  text-shadow: var(--text-shadow);
 }
 
-/* Informações do gerente */
 .manager-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+
 .manager-avatar-sm {
   width: 48px;
   height: 48px;
@@ -94,24 +107,34 @@
   box-shadow: 0 2px 6px var(--shadow-dark);
   transition: transform var(--transition-time);
 }
+
 .manager-avatar-sm:hover {
   transform: scale(var(--hover-scale));
 }
 
-/* Endereço */
+.manager-info span {
+  color: var(--brand-white);
+  text-shadow: var(--text-shadow);
+}
+
 .barbershop-address {
   font-size: 0.9rem;
-  color: var(--brand-dark);
-  opacity: 0.8;
+  color: var(--brand-white);
+  opacity: 0.9;
   margin-bottom: 0.5rem;
 }
 
-/* Botões de ação */
+.barbershop-body a {
+  color: var(--brand-white);
+  text-decoration: underline;
+}
+
 .barbershop-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
+
 .barbershop-actions button {
   background: var(--brand-primary);
   color: var(--brand-white);
@@ -121,36 +144,39 @@
   box-shadow: 0 3px 8px var(--shadow-light);
   transition: background var(--transition-time), transform var(--transition-time);
 }
+
 .barbershop-actions button:hover {
   background: var(--accent);
   transform: scale(var(--hover-scale));
 }
 
-/* Cartões gerais */
 .description-card,
 .services-card,
 .barbers-card {
-  background: var(--brand-white);
+  background: var(--brand-dark);
+  color: var(--brand-white);
   border-radius: var(--card-radius);
   overflow: hidden;
   box-shadow: 0 4px 15px var(--shadow-light);
   margin-bottom: 1rem;
 }
 
-/* Cartão de descrição */
 .description-card {
   border-left: 5px solid var(--accent);
-}
-.description-card .card-header {
-  background: var(--brand-light);
-  font-weight: 600;
-  color: var(--brand-dark);
-}
-.description-card .card-body {
-  padding: var(--card-padding);
+  color: var(--brand-white);
 }
 
-/* Cabeçalhos de serviços e equipe */
+.description-card .card-header {
+  background: var(--brand-dark);
+  font-weight: 600;
+  color: var(--brand-white);
+}
+
+.description-card .card-body {
+  padding: var(--card-padding);
+  color: var(--brand-white);
+}
+
 .services-header,
 .barbers-header {
   background: var(--brand-dark);
@@ -160,38 +186,46 @@
   padding: 0.75rem 1rem;
 }
 
-/* Tabela de serviços */
 .services-table {
   width: 100%;
   border-collapse: collapse;
+  background-color: #1a1a1a;
 }
+
 .services-table th,
 .services-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--shadow-light);
+  background-color: var(--brand-dark);
+  color: var(--brand-white);
 }
+
 .services-table thead th {
   border-bottom: 2px solid var(--accent);
 }
+
 .services-table tbody tr {
   transition: background var(--transition-time);
 }
+
 .services-table tbody tr:nth-child(even) {
   background: var(--brand-light);
 }
+
 .services-table tbody tr:hover {
   background: rgba(255, 193, 7, 0.1);
 }
 
-/* Cartões de barbeiro */
 .barber-col {
   text-align: center;
   margin-bottom: 1.5rem;
   transition: transform var(--transition-time);
 }
+
 .barber-col:hover {
   transform: translateY(-3px);
 }
+
 .barber-avatar-lg {
   width: 90px;
   height: 90px;
@@ -199,11 +233,11 @@
   box-shadow: 0 4px 12px var(--shadow-dark);
   transition: transform var(--transition-time);
 }
+
 .barber-avatar-lg:hover {
   transform: scale(calc(var(--hover-scale) + 0.05));
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .barbershop-body {
     flex-direction: column;

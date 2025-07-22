@@ -141,15 +141,13 @@ export default function BarbershopViewPage() {
         </Card>
 
         {/* Descrição & Metadados */}
-        <Card className="description-card mb-4 shadow-sm">
-          <Card.Header>Descrição & Metadados</Card.Header>
+        <Card className="description-card text-white mb-4 shadow-sm">
+          <Card.Header >Descrição & Metadados</Card.Header>
           <Card.Body>
             <Card.Text>{shop.description}</Card.Text>
             <ul>
               <li><strong>Criado em:</strong> {new Date(shop.created_at).toLocaleDateString("pt-BR")}</li>
               <li><strong>Atualizado em:</strong> {new Date(shop.updated_at).toLocaleDateString("pt-BR")}</li>
-              <li><strong>Meta Title:</strong> {shop.meta_title}</li>
-              <li><strong>Meta Description:</strong> {shop.meta_description}</li>
             </ul>
           </Card.Body>
         </Card>
@@ -207,7 +205,7 @@ export default function BarbershopViewPage() {
                             className="barber-avatar-lg mb-2"
                           />
                           <div>
-                            <strong>{b.first_name}</strong>
+                            <strong className="text-white">{b.first_name}</strong>
                           </div>
                         </Link>
                       </Col>
@@ -223,7 +221,7 @@ export default function BarbershopViewPage() {
 
         {/* Outras Barbearias */}
         {others.length > 0 && (
-          <Card className="mb-4 shadow-sm">
+          <Card className="mb-4 shadow-sm bg-dark text-white">
             <Card.Header>Outras Barbearias</Card.Header>
             <Card.Body>
               <Row>
@@ -233,7 +231,7 @@ export default function BarbershopViewPage() {
                       <img
                         src={`${storageUrl}/${o.logo}`}
                         alt={o.name}
-                        className="other-shop-logo mb-2"
+                        className="barbershop-logo mb-2 rounded-circle"
                       />
                       <div>
                         <strong>{o.name}</strong>
