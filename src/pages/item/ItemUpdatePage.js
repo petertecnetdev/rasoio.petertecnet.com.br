@@ -137,15 +137,16 @@ const ItemUpdatePage = () => {
     }));
   };
 
-  // Validação básica antes do envio
   const validateFields = () => {
     const errors = [];
     const price = parseFloat(itemData.price);
     if (isNaN(price) || price < 0) {
       errors.push("O preço deve ser um valor monetário válido.");
     }
-    const stock = parseInt(itemData.stock, 10);
-    if (isNaN(stock) || stock < 0) {
+    if (
+      itemData.stock !== "" &&
+      (isNaN(parseInt(itemData.stock)) || parseInt(itemData.stock) < 0)
+    ) {
       errors.push("O estoque deve ser um número inteiro válido.");
     }
     const discount = parseFloat(itemData.discount);
@@ -175,9 +176,9 @@ const ItemUpdatePage = () => {
     e.preventDefault();
     if (!validateFields()) return;
 
-    // Se estoque não for preenchido corretamente, assume 0
-    if (!itemData.stock || isNaN(parseInt(itemData.stock))) {
-      itemData.stock = 0;
+    // Se o estoque estiver vazio ou inválido, envia como null
+    if (itemData.stock === "" || isNaN(parseInt(itemData.stock))) {
+      itemData.stock = "";
     }
 
     setIsProcessing(true);

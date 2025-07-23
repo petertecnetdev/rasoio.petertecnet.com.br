@@ -147,12 +147,6 @@ const ItemCreatePage = () => {
     if (itemData.status !== "1" && itemData.status !== "0") {
       errors.push("O status deve ser 'Ativo' ou 'Inativo'.");
     }
-    const stock = parseInt(itemData.stock, 10);
-    if (isNaN(stock) || stock < 0) {
-      errors.push(
-        "O estoque deve ser um número inteiro válido. Use o valor zero caso não queria gerenciar o estoque."
-      );
-    }
     const discount = parseFloat(itemData.discount);
     if (isNaN(discount) || discount < 0) {
       errors.push(
@@ -179,113 +173,112 @@ const ItemCreatePage = () => {
     }
     return true;
   };
-const handleSubmit = async (event) => {
-  event.preventDefault();
-  if (!validateFields()) return;
 
-  if (!barbershopId) {
-    Swal.fire({
-      title: "Erro",
-      text: "Não foi possível obter o ID da barbearia.",
-      icon: "error",
-      confirmButtonText: "OK",
-    });
-    return;
-  }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateFields()) return;
 
-  // Se estoque não for preenchido corretamente, assume 0
-  if (!itemData.stock || isNaN(parseInt(itemData.stock))) {
-    itemData.stock = 0;
-  }
-
-  setIsProcessing(true);
-  setMessages(["Aguarde enquanto criamos o item..."]);
-
-  const formData = new FormData();
-
-  if (imagePreview && itemData.image && typeof itemData.image !== "string") {
-    try {
-      const imageBlob = await fetch(imagePreview).then((res) => res.blob());
-      formData.append("image", imageBlob, "item.png");
-    } catch (err) {
-      console.error("Erro ao converter a imagem:", err);
-    }
-  }
-
-  Object.keys(itemData).forEach((key) => {
-    if (key !== "image") {
-      if (key === "is_featured") {
-        formData.append(key, itemData[key] ? 1 : 0);
-      } else {
-        formData.append(key, itemData[key]);
-      }
-    }
-  });
-
-  formData.append("entity_id", barbershopId);
-  formData.append("entity_name", "barbershop");
-  formData.append("app_id", 1);
-
-  try {
-    const headers = {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-      "Content-Type": "multipart/form-data",
-    };
-
-    await axios.post(`${apiBaseUrl}/item`, formData, { headers });
-
-    Swal.fire({
-      title: "Sucesso!",
-      text: "Item criado com sucesso!",
-      icon: "success",
-      confirmButtonText: "OK",
-      customClass: {
-        popup: "custom-swal",
-        title: "custom-swal-title",
-        content: "custom-swal-text",
-      },
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigate(-1);
-      }
-    });
-  } catch (error) {
-    console.error("Erro ao criar item:", error);
-    if (error.response && error.response.status === 422) {
-      const validationErrors = error.response.data.errors;
-      let errorMessage = "Os seguintes campos têm erros:\n";
-      for (const field in validationErrors) {
-        errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
-      }
-      Swal.fire({
-        title: "Validação Falhou",
-        text: errorMessage,
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
-    } else {
+    if (!barbershopId) {
       Swal.fire({
         title: "Erro",
-        text: "Ocorreu um erro ao tentar criar o item. Tente novamente mais tarde.",
+        text: "Não foi possível obter o ID da barbearia.",
         icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    if (itemData.stock === "" || isNaN(parseInt(itemData.stock))) {
+      itemData.stock = null;
+    }
+
+    setIsProcessing(true);
+    setMessages(["Aguarde enquanto criamos o item..."]);
+
+    const formData = new FormData();
+
+    if (imagePreview && itemData.image && typeof itemData.image !== "string") {
+      try {
+        const imageBlob = await fetch(imagePreview).then((res) => res.blob());
+        formData.append("image", imageBlob, "item.png");
+      } catch (err) {
+        console.error("Erro ao converter a imagem:", err);
+      }
+    }
+
+    Object.keys(itemData).forEach((key) => {
+      if (key !== "image") {
+        if (key === "is_featured") {
+          formData.append(key, itemData[key] ? 1 : 0);
+        } else {
+          formData.append(key, itemData[key]);
+        }
+      }
+    });
+
+    formData.append("entity_id", barbershopId);
+    formData.append("entity_name", "barbershop");
+    formData.append("app_id", 1);
+
+    try {
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "multipart/form-data",
+      };
+
+      await axios.post(`${apiBaseUrl}/item`, formData, { headers });
+
+      Swal.fire({
+        title: "Sucesso!",
+        text: "Item criado com sucesso!",
+        icon: "success",
         confirmButtonText: "OK",
         customClass: {
           popup: "custom-swal",
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(-1);
+        }
       });
+    } catch (error) {
+      console.error("Erro ao criar item:", error);
+      if (error.response && error.response.status === 422) {
+        const validationErrors = error.response.data.errors;
+        let errorMessage = "Os seguintes campos têm erros:\n";
+        for (const field in validationErrors) {
+          errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
+        }
+        Swal.fire({
+          title: "Validação Falhou",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          title: "Erro",
+          text: "Ocorreu um erro ao tentar criar o item. Tente novamente mais tarde.",
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
+    } finally {
+      setIsProcessing(false);
     }
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
+  };
 
   return (
     <>
