@@ -9,7 +9,7 @@ import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 
 const ItemUpdatePage = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,6 +33,7 @@ const ItemUpdatePage = () => {
     is_featured: false,
     limited_by_user: 0,
     notes: "",
+    duration: "",
   });
 
   useEffect(() => {
@@ -62,6 +63,7 @@ const ItemUpdatePage = () => {
           is_featured: data.is_featured || false,
           limited_by_user: data.limited_by_user || 0,
           notes: data.notes || "",
+          duration: data.duration || "",
         });
         if (data.image) {
           setImagePreview(`${storageUrl}/${data.image}`);
@@ -169,15 +171,20 @@ const ItemUpdatePage = () => {
     }
     return true;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateFields()) return;
+
+    // Se estoque não for preenchido corretamente, assume 0
+    if (!itemData.stock || isNaN(parseInt(itemData.stock))) {
+      itemData.stock = 0;
+    }
 
     setIsProcessing(true);
     setMessages(["Aguarde enquanto atualizamos o item..."]);
 
     const formData = new FormData();
+
     // Se houver nova imagem, converte e adiciona
     if (imagePreview && itemData.image && typeof itemData.image !== "string") {
       try {
@@ -187,6 +194,7 @@ const ItemUpdatePage = () => {
         console.error("Erro ao converter a imagem:", err);
       }
     }
+
     // Adiciona apenas campos que foram alterados
     Object.keys(itemData).forEach((key) => {
       if (key !== "image" && itemData[key] !== originalData[key]) {
@@ -203,6 +211,7 @@ const ItemUpdatePage = () => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "multipart/form-data",
       };
+
       await axios.post(`${apiBaseUrl}/item/${id}`, formData, { headers });
 
       Swal.fire({
@@ -350,7 +359,10 @@ const ItemUpdatePage = () => {
                       </Col>
 
                       <Col md={2} className="mb-3">
-                        <Form.Group controlId="formPrice" className="form-group">
+                        <Form.Group
+                          controlId="formPrice"
+                          className="form-group"
+                        >
                           <Form.Label>Preço</Form.Label>
                           <Form.Control
                             type="number"
@@ -365,13 +377,35 @@ const ItemUpdatePage = () => {
                       </Col>
 
                       <Col md={2} className="mb-3">
-                        <Form.Group controlId="formStock" className="form-group">
+                        <Form.Group
+                          controlId="formStock"
+                          className="form-group"
+                        >
                           <Form.Label>Estoque</Form.Label>
                           <Form.Control
                             type="number"
                             name="stock"
                             value={itemData.stock || ""}
                             onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={2} className="mb-3">
+                        <Form.Group
+                          controlId="formDuration"
+                          className="form-group"
+                        >
+                          <Form.Label>Duração (min)</Form.Label>
+                          <Form.Control
+                            type="number"
+                            name="duration"
+                            value={itemData.duration || ""}
+                            onChange={handleInputChange}
+                            placeholder="Ex: 25"
+                            min="1"
+                            max="480"
                             className="input-field"
                           />
                         </Form.Group>
@@ -453,7 +487,6 @@ const ItemUpdatePage = () => {
                             name="category"
                             value={itemData.category || ""}
                             onChange={handleInputChange}
-                            
                             className="input-field"
                           />
                         </Form.Group>
@@ -470,14 +503,16 @@ const ItemUpdatePage = () => {
                             name="subcategory"
                             value={itemData.subcategory || ""}
                             onChange={handleInputChange}
-                            
                             className="input-field"
                           />
                         </Form.Group>
                       </Col>
 
                       <Col md={2} className="mb-3">
-                        <Form.Group controlId="formBrand" className="form-group">
+                        <Form.Group
+                          controlId="formBrand"
+                          className="form-group"
+                        >
                           <Form.Label>Marca</Form.Label>
                           <Form.Control
                             type="text"
@@ -501,14 +536,16 @@ const ItemUpdatePage = () => {
                             name="description"
                             value={itemData.description || ""}
                             onChange={handleInputChange}
-                            
                             className="input-field"
                           />
                         </Form.Group>
                       </Col>
 
                       <Col md={12} className="mb-3">
-                        <Form.Group controlId="formNotes" className="form-group">
+                        <Form.Group
+                          controlId="formNotes"
+                          className="form-group"
+                        >
                           <Form.Label>Notas</Form.Label>
                           <Form.Control
                             as="textarea"
