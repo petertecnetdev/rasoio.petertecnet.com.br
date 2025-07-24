@@ -1,0 +1,404 @@
+/* src/pages/appointment/Appointment.css */
+
+/* container geral */
+.main-container {
+  padding: 1rem;
+  background: #0d0d0d;
+}
+
+/* filtros */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filters-container select,
+.filters-container input[type="date"] {
+  width: 200px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #e1e1e6;
+}
+
+/* wrapper tabela */
+.appointments-table-wrapper {
+  background: #1a1a1a;
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  padding: 40px;
+}
+
+/* tabela desktop */
+.appointments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointments-table thead {
+  background: #1f1f1f;
+}
+
+.appointments-table thead th {
+  padding: 0.75rem 1rem;
+  color: #cfcfcf;
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-align: left;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.appointments-table tbody tr {
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.appointments-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.appointments-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: top;
+  background: #1a1a1a;
+  color: #e1e1e6;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.appointments-table tbody tr:hover td {
+  background: #2a2a2a;
+}
+
+/* célula de data em duas linhas */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.date-main {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e1e1e6;
+}
+
+.date-sub {
+  font-size: 0.875rem;
+  color: #6b6b6b;
+  margin-top: 2px;
+}
+
+/* badges de situação */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #6b7280;
+  color: #fff;
+}
+
+.status-confirmed {
+  background: #10b981;
+  color: #fff;
+}
+
+.status-cancelled {
+  background: #dc2626;
+  color: #fff;
+}
+
+.status-completed {
+  background: #ea580c;
+  color: #fff;
+}
+
+/* botão Editar */
+.btn-edit {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  color: #e1e1e6;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 0.375rem;
+  text-decoration: none;
+}
+
+.btn-edit:hover {
+  background: #333;
+}
+
+/* cards mobile */
+.appointment-card {
+    background: linear-gradient(
+    135deg,
+    #474747 0%,
+    #1a1a1a 50%,
+    #000000 100%
+  );
+  color: #e1e1e6 !important;
+  border: 3px solid #ffffff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 1rem 0;
+}
+
+
+.appointment-card .card-body {
+  padding: 1rem;
+}
+
+/* cabeçalho da tabela */
+.appointments-table thead {
+  background: #1f1f1f;
+}
+
+.appointments-table thead th {
+  padding: 0.75rem 1rem;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+  border-bottom: 2px solid #000000;
+  background-color: #000000;
+}
+
+/* src/pages/appointment/Appointment.css */
+
+/* ... (outros estilos permanecem iguais) */
+
+/* logo da barbearia (desktop) */
+.shop-logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 0.5rem;
+}
+
+.shop-logo {
+  border-radius: 50%;
+  max-width: 80px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+/* logo da barbearia (mobile) */
+.shop-logo-mobile {
+  display: block;
+  margin: 0.5rem auto 0;
+  border-radius: 50%;
+  max-width: 40px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+/* alinhamento logo + nome */
+.shop-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.shop-name {
+  margin-top: 0.25rem;
+  color: #e1e1e6;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* remover decoração do link no nome da barbearia */
+.shop-name a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+.shop-logo-mobile a {
+   text-decoration: none;
+  color: inherit;
+}
+.shop-name a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* centralizar cabeçalho e corpo */
+/* Centraliza texto e aplica degradê sutil sem uso de !important */
+.appointments-table thead th {
+  text-align: center;
+  background: linear-gradient(
+    135deg,
+    #383737 0%,
+    #2c2b2b 50%,
+    #1a1a1a 100%
+  );
+  color: #e1e1e6;
+}
+
+.appointments-table tbody td {
+  text-align: center;
+  background-color: #1a1a1a;
+}
+
+/* Linha alternada para corpo da tabela */
+.appointments-table tbody tr:nth-child(odd) td {
+  background-color: #242323;
+}
+
+/* Hover reforçado */
+.appointments-table tbody tr:hover td {
+  background-color: #2e2d2d;
+}
+
+/* Ajuste de espaçamento para células centralizadas */
+.appointments-table td,
+.appointments-table th {
+  padding: 0.75rem 1rem;
+}
+
+
+/* as datas em duas linhas continuam centralizadas */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+/* botões e badges também centralizados */
+.btn-edit {
+  margin: 0 auto;
+}
+
+/* no mobile, o card já usa alinhamento centrado para logo e nome */
+.appointment-card .card-body {
+  text-align: center;
+}
+
+/* src/pages/appointment/Appointment.css */
+
+/* provider cell (desktop) */
+.provider-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.provider-avatar {
+  display: block;
+  margin: 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 20px 10px 6px rgba(255, 255, 255, 0.1);
+  border: 1px solid #ffffff;
+  padding: 5px;
+}
+
+.provider-name {
+  font-size: 0.875rem;
+  color: #e1e1e6;
+  text-align: center;
+}
+
+.provider-name a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.provider-name a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* provider cell (mobile) */
+.provider-cell-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.provider-avatar-mobile {
+  display: block;
+  margin: 0 auto;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 20px 10px 6px rgba(255, 255, 255, 0.1);
+  border: 1px solid #ffffff;
+  padding: 5px;
+  border: 1px solid #000000;
+}
+
+.provider-name-mobile {
+  font-size: 0.875rem;
+  color: #e1e1e6;
+  text-align: center;
+}
+
+.provider-name-mobile a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.provider-name-mobile a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* remover decoração do link no nome do barbeiro */
+.provider-cell a,
+.provider-name a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.provider-cell a:hover,
+.provider-name a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* remover decoração do link no nome do barbeiro (mobile) */
+.provider-cell-mobile a,
+.provider-name-mobile a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.provider-cell-mobile a:hover,
+.provider-name-mobile a:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Mobile: alinhamento logo + nome da barbearia */
+.shop-cell-mobile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.shop-cell-mobile a {
+  text-decoration: none;
+  color: inherit;
+}
+/* Row-level status: sobrescreve o background padrão das células */
+.appointments-table tr.status-pending   td { background: #6b7280; color: #fff; }
+.appointments-table tr.status-confirmed td { background: #10b981; color: #fff; }
+.appointments-table tr.status-cancelled td { background: #dc2626; color: #fff; }
+.appointments-table tr.status-completed td { background: #ea580c; color: #fff; }

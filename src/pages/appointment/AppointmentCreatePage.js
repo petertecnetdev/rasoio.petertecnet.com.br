@@ -6,7 +6,7 @@ import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorCo
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
-import "./AppointmentCreatePage.css"; // Import custom styles if needed
+import "./Appointment.css"; // Import custom styles if needed
 
 export default function AppointmentCreatePage() {
   const { slug } = useParams();

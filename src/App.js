@@ -41,8 +41,8 @@ import BarberIncludePage from "./pages/barber/BarberIncludePage";
 
 // Agendamentos
 import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
-import ClientAppointmentsPage from "./pages/appointment/ClientAppointmentsPage";
-import BarberAppointmentsPage from "./pages/appointment/BarberAppointmentsPage";
+import AppointmentsClientPage from "./pages/appointment/AppointmentsClientPage.js";
+import AppointmentsBarberPage from "./pages/appointment/AppointmentsBarberPage";
 import BarbershopAppointmentsPage from "./pages/appointment/BarbershopAppointmentsPage.js";
 
 // Service Record
@@ -146,8 +146,8 @@ const App = () => {
 
         {/* AGENDAMENTOS */}
         <Route path="/appointment/create/:slug" element={<AppointmentCreatePage />} />
-        <Route path="/appointment/my" element={protectedRoute(<ClientAppointmentsPage />)} />
-        <Route path="/appointment/barber" element={protectedRoute(<BarberAppointmentsPage />)} />
+        <Route path="/appointment/my" element={protectedRoute(<AppointmentsClientPage />)} />
+        <Route path="/appointment/barber" element={protectedRoute(<AppointmentsBarberPage />)} />
         <Route path="/appointment/barbershop/:slug" element={protectedRoute(<BarbershopAppointmentsPage />)} />
 
         {/* SERVICE RECORD */}
