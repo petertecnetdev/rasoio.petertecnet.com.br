@@ -199,10 +199,10 @@ export default function BarbershopViewPage() {
                       <Col xs={6} key={b.id} className="barber-col">
                         <Link to={`/barber/view/${b.user_name}`} className="text-decoration-none text-body">
                           <img
-                            src={b.avatar ? `${storageUrl}/${b.avatar}` : "/images/user.png"}
+                            src={b.avatar ? `${storageUrl}/${b.avatar}` :"/images/barber.png"}
                             alt={b.first_name}
-                            onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/user.png"; }}
-                            className="barber-avatar-lg mb-2"
+                            onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/barber.png"; }}
+                            className="barber-avatar  mb-2"
                           />
                           <div>
                             <strong className="text-white">{b.first_name}</strong>

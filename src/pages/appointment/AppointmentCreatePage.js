@@ -223,7 +223,11 @@ export default function AppointmentCreatePage() {
         },
       });
       setIsProcessing(false);
-      await Swal.fire("Sucesso!", "Agendamento criado!", "success");
+      await Swal.fire(
+        "Sucesso!",
+        "Seu agendamento solicitado! Aguarde confirmação do barbeiro.",
+        "success"
+      );
       navigate("/appointment/my");
     } catch (err) {
       setIsProcessing(false);
