@@ -152,13 +152,7 @@ const NavlogComponent = () => {
                     </button>
                     {showBarberSubmenu && (
                       <div className="submenu-list">
-                        <Link
-                          to={`/service-record/barber/${user.user.user_name}`}
-                          onClick={toggleMobile}
-                          className="mobile-link"
-                        >
-                          Meus Atendimentos
-                        </Link>
+                       
                         <Link
                           to={`/appointment/barber/`}
                           onClick={toggleMobile}
