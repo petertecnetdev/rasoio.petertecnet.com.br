@@ -1,6 +1,8 @@
+// src/App.js
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import HomePage from "./pages/HomePage";
 
@@ -13,6 +15,7 @@ import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
 
+// Dashboard
 import DashboardPage from "./pages/DashboardPage";
 
 // Administrativo
@@ -100,67 +103,138 @@ const App = () => {
     if (!user) return element;
     return <Navigate to="/dashboard" />;
   };
-
+console.log("GOOGLE_CLIENT_ID=", process.env.REACT_APP_GOOGLE_CLIENT_ID);
   return (
-    <Router>
-      <Routes>
-        {/* PÚBLICAS */}
-        <Route path="/home" element={restrictedRoute(<HomePage />)} />
-        <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
-        <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-        <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
-        <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
-        <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
-        <Route path="/password" element={protectedRoute(<PasswordPage />)} />
-        <Route path="/logout" element={<LogoutPage />} />
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+      <Router>
+        <Routes>
+          {/* PÚBLICAS */}
+          <Route path="/home" element={restrictedRoute(<HomePage />)} />
+          <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
+          <Route path="/login" element={restrictedRoute(<LoginPage />)} />
+          <Route
+            path="/password-email"
+            element={restrictedRoute(<PasswordEmailPage />)}
+          />
+          <Route
+            path="/password-reset"
+            element={restrictedRoute(<PasswordResetPage />)}
+          />
+          <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
+          <Route path="/password" element={protectedRoute(<PasswordPage />)} />
+          <Route path="/logout" element={<LogoutPage />} />
 
-        {/* DASHBOARD */}
-        <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
+          {/* DASHBOARD */}
+          <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
 
-        {/* USUÁRIOS */}
-        <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
-        <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
-        <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
-        <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
+          {/* USUÁRIOS */}
+          <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
+          <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
+          <Route
+            path="/user/:userName"
+            element={protectedRoute(<UserViewPage />)}
+          />
+          <Route
+            path="/user/update"
+            element={protectedRoute(<UserUpdatePage />)}
+          />
 
-        {/* PERFIS */}
-        <Route path="/profile/list" element={protectedRoute(<ProfileListPage />)} />
-        <Route path="/profile/create" element={protectedRoute(<ProfileCreatePage />)} />
-        <Route path="/profile/update/:id" element={protectedRoute(<ProfileUpdatePage />)} />
+          {/* PERFIS */}
+          <Route
+            path="/profile/list"
+            element={protectedRoute(<ProfileListPage />)}
+          />
+          <Route
+            path="/profile/create"
+            element={protectedRoute(<ProfileCreatePage />)}
+          />
+          <Route
+            path="/profile/update/:id"
+            element={protectedRoute(<ProfileUpdatePage />)}
+          />
 
-        {/* ITENS */}
-        <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
-        <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
-        <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
-        <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
+          {/* ITENS */}
+          <Route
+            path="/item/list/:slug"
+            element={protectedRoute(<ItemListPage />)}
+          />
+          <Route
+            path="/item/create/:slug"
+            element={protectedRoute(<ItemCreatePage />)}
+          />
+          <Route
+            path="/item/update/:id"
+            element={protectedRoute(<ItemUpdatePage />)}
+          />
+          <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
-        {/* BARBERSHOP */}
-        <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
-        <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
-        <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
-        <Route path="/barbershop/view/:slug" element={<BarbershopViewPage />} />
+          {/* BARBERSHOP */}
+          <Route
+            path="/barbershop"
+            element={protectedRoute(<BarbershopListPage />)}
+          />
+          <Route
+            path="/barbershop/create"
+            element={protectedRoute(<BarbershopCreatePage />)}
+          />
+          <Route
+            path="/barbershop/update/:id"
+            element={protectedRoute(<BarbershopUpdatePage />)}
+          />
+          <Route path="/barbershop/view/:slug" element={<BarbershopViewPage />} />
 
-        {/* BARBEIRO */}
-        <Route path="/barber/view/:username" element={<BarberViewPage />} />
-        <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
+          {/* BARBEIRO */}
+          <Route path="/barber/view/:username" element={<BarberViewPage />} />
+          <Route
+            path="/barber/include/:slug"
+            element={protectedRoute(<BarberIncludePage />)}
+          />
 
-        {/* AGENDAMENTOS */}
-        <Route path="/appointment/create/:slug" element={<AppointmentCreatePage />} />
-        <Route path="/appointment/my" element={protectedRoute(<AppointmentsClientPage />)} />
-        <Route path="/appointment/barber" element={protectedRoute(<AppointmentsBarberPage />)} />
-        <Route path="/appointment/barbershop/:slug" element={protectedRoute(<BarbershopAppointmentsPage />)} />
+          {/* AGENDAMENTOS */}
+          <Route
+            path="/appointment/create/:slug"
+            element={<AppointmentCreatePage />}
+          />
+          <Route
+            path="/appointment/my"
+            element={protectedRoute(<AppointmentsClientPage />)}
+          />
+          <Route
+            path="/appointment/barber"
+            element={protectedRoute(<AppointmentsBarberPage />)}
+          />
+          <Route
+            path="/appointment/barbershop/:slug"
+            element={protectedRoute(<BarbershopAppointmentsPage />)}
+          />
 
-        {/* SERVICE RECORD */}
-        <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
-        <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
-        <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />
-        <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />
-        <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
+          {/* SERVICE RECORD */}
+          <Route
+            path="/service-record/my"
+            element={protectedRoute(<ServiceRecordListPage />)}
+          />
+          <Route
+            path="/service-record/barber/:username"
+            element={protectedRoute(<ServiceRecordListPage />)}
+          />
+          <Route
+            path="/service-record/barbershop/:slug"
+            element={protectedRoute(<ServiceRecordListPage />)}
+          />
+          <Route
+            path="/service-record/create/:slug"
+            element={protectedRoute(<ServiceRecordCreatePage />)}
+          />
+          <Route
+            path="/service-record/view/:id"
+            element={protectedRoute(<ServiceRecordViewPage />)}
+          />
 
-        {/* REDIRECIONAMENTO */}
-        <Route path="/*" element={<Navigate to="/home" replace />} />
-      </Routes>
-    </Router>
+          {/* REDIRECIONAMENTO */}
+          <Route path="/*" element={<Navigate to="/home" replace />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 };
 
