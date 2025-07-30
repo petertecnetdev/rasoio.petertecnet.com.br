@@ -1,0 +1,58 @@
+.page-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #111;
+}
+
+.page-row {
+  width: 100%;
+  margin: 0;
+}
+
+.card-container {
+  width: 100%;
+  max-width: 400px;
+  background-color: #1c1c1c;
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo-image {
+  max-width: 120px;
+  height: auto;
+}
+
+.form-container .form-control {
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  color: #eee;
+}
+
+.form-container .form-control:focus {
+  background-color: #2a2a2a;
+  border-color: #555;
+  box-shadow: none;
+}
+
+.google-login-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+button.w-100 {
+  font-weight: 600;
+}

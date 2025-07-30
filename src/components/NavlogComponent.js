@@ -1,186 +1,170 @@
-// src/components/NavlogComponent.jsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Navbar, Container } from "react-bootstrap";
+import { Link, useLocation } from "react-router-dom";
+import { Navbar } from "react-bootstrap";
+import { storageUrl, apiBaseUrl } from "../config";
 import axios from "axios";
-import { apiBaseUrl, storageUrl } from "../config";
+import "./NavlogComponent.css";
 
-const NavlogComponent = () => {
+export default function NavlogComponent() {
+  const location = useLocation();
+  const isPublicView = location.pathname.startsWith("/establishment/view");
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showCorporateSubmenu, setShowCorporateSubmenu] = useState(false);
   const [showAdminSubmenu, setShowAdminSubmenu] = useState(false);
-  const [showBarberSubmenu, setShowBarberSubmenu] = useState(false);
 
-  // Fecha o menu mobile ao redimensionar para >= 992px
   useEffect(() => {
-    const onResize = () => window.innerWidth >= 992 && setShowMobileMenu(false);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const handleResize = () => {
+      if (window.innerWidth >= 992) setShowMobileMenu(false);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Busca dados do usuário
   useEffect(() => {
-    (async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUser(data);  // data já contém user, is_barber, barber, barbershops...
-        } catch {
-          localStorage.removeItem("token");
-          setUser(null);
-        }
-      }
+    if (isPublicView) {
       setLoading(false);
       setLoadingMenu(false);
+      return;
+    }
+
+    (async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setLoading(false);
+        setLoadingMenu(false);
+        return;
+      }
+
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+        const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
+        setUser({
+          ...response.data.user,
+          establishments: response.data.establishments || [],
+        });
+      } catch {
+        localStorage.removeItem("token");
+      } finally {
+        setLoading(false);
+        setLoadingMenu(false);
+      }
     })();
-  }, []);
+  }, [isPublicView]);
 
-  const toggleMobile       = () => setShowMobileMenu(v => !v);
-  const toggleCorp         = () => setShowCorporateSubmenu(v => !v);
-  const toggleAdmin        = () => setShowAdminSubmenu(v => !v);
-  const toggleBarber       = () => setShowBarberSubmenu(v => !v);
+  const handleImageError = (e) => {
+    e.target.onerror = null;
+    e.target.src = "/images/user.png";
+  };
 
-  // condição para mostrar o submenu corporativo:
-  const isManager = user?.barbershops && user.barbershops.length > 0;
+  const handleToggleMobileMenu = () => {
+    setShowMobileMenu((prev) => !prev);
+    setShowAdminSubmenu(false);
+  };
 
-  return (
+  const renderAdminMenu = () => (
     <>
-      <Navbar expand="lg" sticky="top" variant="dark" className="nav-background">
-        <Container fluid className="d-flex align-items-center">
-          <Navbar.Brand as={Link} to="/" className="nav-brand">
-            <img src="/images/logo.png" alt="Logo" className="nav-logo" />
-          </Navbar.Brand>
-          <button
-            onClick={toggleMobile}
-            className="nav-toggle"
-            aria-label="Toggle menu"
-          >
-            ☰
-          </button>
-        </Container>
-      </Navbar>
-
-      {showMobileMenu && (
-        <div className="mobile-overlay">
-          <button
-            onClick={toggleMobile}
-            className="close-icon"
-            aria-label="Close menu"
-          >
-            ×
-          </button>
-
-          {loading || loadingMenu ? (
-            <p className="loading-text">Carregando...</p>
-          ) : user ? (
-            <>
-              <img
-                src={user.user.avatar ? `${storageUrl}/${user.user.avatar}` : "/images/user.png"}
-                alt={user.user.first_name}
-                className="mobile-avatar"
-                onError={e => (e.target.src = "/images/user.png")}
-              />
-              <h5 className="mobile-username">{user.user.first_name}</h5>
-
-              <nav className="mobile-nav">
-                <Link to="/user/update" onClick={toggleMobile} className="mobile-link">
-                  Gerenciar Conta
-                </Link>
-                <Link to="/appointment/my" onClick={toggleMobile} className="mobile-link">
-                  Meus Agendamentos
-                </Link>
-
-                {/* Submenu Corporativo se for gerente */}
-                {isManager && (
-                  <>
-                    <button onClick={toggleCorp} className="submenu-toggle">
-                      Corporativo {showCorporateSubmenu ? "▲" : "▼"}
-                    </button>
-                    {showCorporateSubmenu && (
-                      <div className="submenu-list">
-                        {user.barbershops.map(shop => (
-                          <Link
-                            key={shop.id}
-                            to={`/barbershop`}
-                            onClick={toggleMobile}
-                            className="mobile-link"
-                          >
-                            {shop.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Submenu Administrativo */}
-                {user.user.profile?.name === "Administrador" && (
-                  <>
-                    <button onClick={toggleAdmin} className="submenu-toggle">
-                      Administrativo {showAdminSubmenu ? "▲" : "▼"}
-                    </button>
-                    {showAdminSubmenu && (
-                      <div className="submenu-list">
-                        <Link to="/user/list" onClick={toggleMobile} className="mobile-link">
-                          Usuários
-                        </Link>
-                        <Link to="/barber/list" onClick={toggleMobile} className="mobile-link">
-                          Barbeiros
-                        </Link>
-                        <Link to="/service/list" onClick={toggleMobile} className="mobile-link">
-                          Serviços
-                        </Link>
-                        <Link to="/appointments/list" onClick={toggleMobile} className="mobile-link">
-                          Agendamentos
-                        </Link>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Submenu Área do Barbeiro */}
-                {user.is_barber && (
-                  <>
-                    <button onClick={toggleBarber} className="submenu-toggle">
-                      Área do Barbeiro {showBarberSubmenu ? "▲" : "▼"}
-                    </button>
-                    {showBarberSubmenu && (
-                      <div className="submenu-list">
-                       
-                        <Link
-                          to={`/appointment/barber/`}
-                          onClick={toggleMobile}
-                          className="mobile-link"
-                        >
-                          Agendamentos de Clientes
-                        </Link>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <Link to="/logout" onClick={toggleMobile} className="mobile-link">
-                  Sair
-                </Link>
-              </nav>
-            </>
-          ) : (
-            <div className="mobile-auth">
-              <Link to="/login" onClick={toggleMobile} className="mobile-link">
-                Login
-              </Link>
-            </div>
-          )}
+      <button
+        className="navlog__admin-btn"
+        onClick={() => setShowAdminSubmenu((v) => !v)}
+      >
+        Administrativo {showAdminSubmenu ? "▲" : "▼"}
+      </button>
+      {showAdminSubmenu && (
+        <div className="navlog__admin-submenu">
+          <Link to="/user/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+            Usuários
+          </Link>
+          <Link to="/barber/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+            Barbeiros
+          </Link>
+          <Link to="/service/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+            Serviços
+          </Link>
+          <Link to="/appointments/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+            Agendamentos
+          </Link>
         </div>
       )}
     </>
   );
-};
 
-export default NavlogComponent;
+  return (
+    <>
+      <Navbar expand={false} sticky="top" bg="dark" variant="dark" className="navlog__navbar">
+        <Navbar.Brand as={Link} to="/" className="navlog__brand">
+          <img
+            src="/images/logo.png"
+            alt="Logo Buddys Royale"
+            className="navlog__logo-image"
+            draggable={false}
+          />
+        </Navbar.Brand>
+        <div className="navlog__menu-icon">
+          <button
+            onClick={handleToggleMobileMenu}
+            className="navlog__mobile-toggle-btn"
+            aria-label="Abrir menu"
+          >
+            ☰
+          </button>
+        </div>
+      </Navbar>
+
+      {showMobileMenu && (
+        <div className="navlog__mobile-menu">
+          <div className="navlog__mobile-close">
+            <button
+              onClick={handleToggleMobileMenu}
+              className="navlog__close-btn"
+              aria-label="Fechar menu"
+            >
+              ×
+            </button>
+          </div>
+          <div className="navlog__mobile-content">
+            {loading || loadingMenu ? (
+              <p className="navlog__loading">Carregando...</p>
+            ) : user ? (
+              <>
+                <img
+                  src={user.avatar ? `${storageUrl}/${user.avatar}` : "/images/user.png"}
+                  alt="Avatar"
+                  onError={handleImageError}
+                  className="navlog__avatar"
+                />
+                <h5 className="navlog__user-name">{user.first_name}</h5>
+                <div className="navlog__mobile-links">
+                  <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
+                    Gerenciar Conta
+                  </Link>
+
+                  {user.establishments?.length === 0 && (
+                    <Link
+                      to="/establishment/create"
+                      onClick={handleToggleMobileMenu}
+                      className="navlog__link"
+                    >
+                      Criar Estabelecimento
+                    </Link>
+                  )}
+
+                  {user.profile?.name === "Administrador" && renderAdminMenu()}
+
+                  <Link to="/logout" onClick={handleToggleMobileMenu} className="navlog__link">
+                    Sair
+                  </Link>
+                </div>
+              </>
+            ) : isPublicView ? null : (
+              <p className="navlog__loading">Usuário não encontrado</p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

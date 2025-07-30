@@ -7,6 +7,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import "./Barber.css"; 
 
 const BarberViewPage = () => {
   const { username } = useParams();
@@ -275,16 +276,30 @@ const BarberViewPage = () => {
                               </p>
                             </Col>
                           )}
-                        </Row>
+                        </Row>     {/* botão flutuante WhatsApp */}
+
                       </Card.Body>
                     </Card>
                   </Col>
                 </Row>
+          
+
               </>
             )}
           </Col>
         </Row>
+       
       </Container>
+       {user?.phone && (
+  <a
+    href={`https://wa.me/${user.phone}?text=Olá,%20gostaria%20de%20saber%20mais%20sobre%20seus%20serviços.`}
+    className="whatsapp-float"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <img src="/images/whatsapp-icon.png" alt="WhatsApp" />
+  </a>
+)}
     </>
   );
 };

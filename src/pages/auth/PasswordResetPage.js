@@ -3,7 +3,8 @@ import { Button, Form, Container, Row, Col, Card } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { apiBaseUrl } from "../../config"; // Importando a URL base da API
-import './css/Auth.css'; // Estilos adicionais
+import "./Auth.css";
+
 
 const PasswordResetPage = () => {
   const [email, setEmail] = useState('');

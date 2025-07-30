@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -34,7 +33,11 @@ export default function BarbershopViewPage() {
         setLoading(true);
         const { data } = await axios.get(
           `${apiBaseUrl}/barbershop/view/${slug}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
         );
         setShop(data.barbershop);
         setOwner(data.owner); // corrigido: usar data.owner em vez de data.user
@@ -43,7 +46,11 @@ export default function BarbershopViewPage() {
         setOthers(data.otherBarbershops);
         window.scrollTo(0, 0);
       } catch (e) {
-        Swal.fire({ icon: "error", title: "Erro!", text: e.response?.data?.message || "Falha ao carregar." });
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: e.response?.data?.message || "Falha ao carregar.",
+        });
       } finally {
         setLoading(false);
       }
@@ -68,25 +75,37 @@ export default function BarbershopViewPage() {
   return (
     <>
       <NavlogComponent />
-      <Container fluid className="barbershop-container p-4">
 
+      <Container fluid className="barbershop-container p-4">
         {/* Header */}
         <Card className="barbershop-header background-gradient mb-4 shadow-lg">
           <div
             className="card-bg"
             style={{
-              backgroundImage: `url(${shop.background_image ? `${storageUrl}/${shop.background_image}` : shop.logo ? `${storageUrl}/${shop.logo}` : "/images/logo.png"})`,
+              backgroundImage: `url(${
+                shop.background_image
+                  ? `${storageUrl}/${shop.background_image}`
+                  : shop.logo
+                  ? `${storageUrl}/${shop.logo}`
+                  : "/images/logo.png"
+              })`,
             }}
           />
           <Card.Body className="barbershop-body">
             <Row className="align-items-center">
-
               {/* Logo & Rating */}
               <Col md={3} className="text-center mb-3 mb-md-0">
                 <img
-                  src={shop.logo ? `${storageUrl}/${shop.logo}` : "/images/logo.png"}
+                  src={
+                    shop.logo
+                      ? `${storageUrl}/${shop.logo}`
+                      : "/images/logo.png"
+                  }
                   alt={shop.name}
-                  onError={(e) => { if (!e.target.src.includes("logo.png")) e.target.src = "/images/logo.png"; }}
+                  onError={(e) => {
+                    if (!e.target.src.includes("logo.png"))
+                      e.target.src = "/images/logo.png";
+                  }}
                   className="barbershop-logo"
                 />
                 <div className="mt-2">
@@ -101,28 +120,48 @@ export default function BarbershopViewPage() {
                 <h2 className="barbershop-title mb-2">{shop.name}</h2>
                 <div className="manager-info mb-2">
                   <img
-                    src={owner.avatar ? `${storageUrl}/${owner.avatar}` : "/images/user.png"}
+                    src={
+                      owner.avatar
+                        ? `${storageUrl}/${owner.avatar}`
+                        : "/images/user.png"
+                    }
                     alt={owner.first_name}
-                    onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/user.png"; }}
+                    onError={(e) => {
+                      if (!e.target.src.includes("user.png"))
+                        e.target.src = "/images/user.png";
+                    }}
                     className="manager-avatar-sm"
                   />
                   <span>
-                    Gerente: <strong>{owner.first_name} {owner.last_name}</strong>
+                    Gerente:{" "}
+                    <strong>
+                      {owner.first_name} {owner.last_name}
+                    </strong>
                   </span>
                 </div>
                 <p className="barbershop-address mb-1">
-                  <i className="bi bi-geo-alt-fill"/> {shop.address}, {shop.city} - {shop.state} <br />
+                  <i className="bi bi-geo-alt-fill" /> {shop.address},{" "}
+                  {shop.city} - {shop.state} <br />
                   CEP: {shop.zipcode}
                 </p>
                 <p className="mb-1">
-                  <i className="bi bi-telephone-fill"/> <a href={`tel:${shop.phone}`}>{shop.phone}</a>
+                  <i className="bi bi-telephone-fill" />{" "}
+                  <a href={`tel:${shop.phone}`}>{shop.phone}</a>
                 </p>
                 <p className="mb-1">
-                  <i className="bi bi-envelope-fill"/> <a href={`mailto:${shop.email}`}>{shop.email}</a>
+                  <i className="bi bi-envelope-fill" />{" "}
+                  <a href={`mailto:${shop.email}`}>{shop.email}</a>
                 </p>
                 {shop.website && (
                   <p className="mb-0">
-                    <i className="bi bi-globe"/> <a href={shop.website} target="_blank" rel="noopener noreferrer">{new URL(shop.website).hostname}</a>
+                    <i className="bi bi-globe" />{" "}
+                    <a
+                      href={shop.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {new URL(shop.website).hostname}
+                    </a>
                   </p>
                 )}
               </Col>
@@ -130,10 +169,27 @@ export default function BarbershopViewPage() {
               {/* Actions */}
               <Col md={3} className="text-center text-md-end">
                 <ButtonGroup vertical className="barbershop-actions">
-                  <Button onClick={() => navigate(`/appointment/create/${shop.slug}`)}>Agendar</Button>
-                  <Button onClick={() => window.open(shop.location, "_blank")}>Ver Mapa</Button>
-                  <Button onClick={() => window.open(shop.instagram, "_blank")}>Instagram</Button>
-                  <Button onClick={() => window.open(`https://wa.me/${shop.phone}?text=Olá!`, "_blank")}>WhatsApp</Button>
+                  <Button
+                    onClick={() => navigate(`/appointment/create/${shop.slug}`)}
+                  >
+                    Agendar
+                  </Button>
+                  <Button onClick={() => window.open(shop.location, "_blank")}>
+                    Ver Mapa
+                  </Button>
+                  <Button onClick={() => window.open(shop.instagram, "_blank")}>
+                    Instagram
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      window.open(
+                        `https://wa.me/${shop.phone}?text=Olá!`,
+                        "_blank"
+                      )
+                    }
+                  >
+                    WhatsApp
+                  </Button>
                 </ButtonGroup>
               </Col>
             </Row>
@@ -142,12 +198,18 @@ export default function BarbershopViewPage() {
 
         {/* Descrição & Metadados */}
         <Card className="description-card text-white mb-4 shadow-sm">
-          <Card.Header >Descrição & Metadados</Card.Header>
+          <Card.Header>Descrição & Metadados</Card.Header>
           <Card.Body>
             <Card.Text>{shop.description}</Card.Text>
             <ul>
-              <li><strong>Criado em:</strong> {new Date(shop.created_at).toLocaleDateString("pt-BR")}</li>
-              <li><strong>Atualizado em:</strong> {new Date(shop.updated_at).toLocaleDateString("pt-BR")}</li>
+              <li>
+                <strong>Criado em:</strong>{" "}
+                {new Date(shop.created_at).toLocaleDateString("pt-BR")}
+              </li>
+              <li>
+                <strong>Atualizado em:</strong>{" "}
+                {new Date(shop.updated_at).toLocaleDateString("pt-BR")}
+              </li>
             </ul>
           </Card.Body>
         </Card>
@@ -170,9 +232,30 @@ export default function BarbershopViewPage() {
                     {services.length ? (
                       services.map((s) => (
                         <tr key={s.id}>
-                          <td>{s.name}</td>
-                          <td>{s.description}</td>
-                          <td className="text-end">R${s.price}</td>
+                          <td>
+                            <Link
+                              to={`/item/${s.slug}`}
+                              className="text-decoration-none text-reset"
+                            >
+                              {s.name}
+                            </Link>
+                          </td>
+                          <td>
+                            <Link
+                              to={`/item/${s.slug}`}
+                              className="text-decoration-none text-reset"
+                            >
+                              {s.description}
+                            </Link>
+                          </td>
+                          <td className="text-end">
+                            <Link
+                              to={`/item/view/${s.id}`}
+                              className="text-decoration-none text-reset"
+                            >
+                              R${s.price}
+                            </Link>
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -191,28 +274,44 @@ export default function BarbershopViewPage() {
           {/* Equipe */}
           <Col lg={6} className="mb-4">
             <Card className="barbers-card shadow-sm">
-              <Card.Header className="barbers-header">Equipe de Barbeiros</Card.Header>
+              <Card.Header className="barbers-header">
+                Equipe de Barbeiros
+              </Card.Header>
               <Card.Body>
                 {barbers.length ? (
                   <Row>
                     {barbers.map((b) => (
                       <Col xs={6} key={b.id} className="barber-col">
-                        <Link to={`/barber/view/${b.user_name}`} className="text-decoration-none text-body">
+                        <Link
+                          to={`/barber/view/${b.user_name}`}
+                          className="text-decoration-none text-body"
+                        >
                           <img
-                            src={b.avatar ? `${storageUrl}/${b.avatar}` :"/images/barber.png"}
+                            src={
+                              b.avatar
+                                ? `${storageUrl}/${b.avatar}`
+                                : "/images/barber.png"
+                            }
                             alt={b.first_name}
-                            onError={(e) => { if (!e.target.src.includes("user.png")) e.target.src = "/images/barber.png"; }}
+                            onError={(e) => {
+                              if (!e.target.src.includes("user.png"))
+                                e.target.src = "/images/barber.png";
+                            }}
                             className="barber-avatar  mb-2"
                           />
                           <div>
-                            <strong className="text-white">{b.first_name}</strong>
+                            <strong className="text-white">
+                              {b.first_name}
+                            </strong>
                           </div>
                         </Link>
                       </Col>
                     ))}
                   </Row>
                 ) : (
-                  <p className="text-center mb-0">Nenhum barbeiro encontrado.</p>
+                  <p className="text-center mb-0">
+                    Nenhum barbeiro encontrado.
+                  </p>
                 )}
               </Card.Body>
             </Card>
@@ -227,7 +326,10 @@ export default function BarbershopViewPage() {
               <Row>
                 {others.map((o, i) => (
                   <Col xs={6} md={3} key={i} className="text-center mb-3">
-                    <Link to={`/barbershop/view/${o.slug}`} className="text-decoration-none text-body">
+                    <Link
+                      to={`/barbershop/view/${o.slug}`}
+                      className="text-decoration-none text-body"
+                    >
                       <img
                         src={`${storageUrl}/${o.logo}`}
                         alt={o.name}
@@ -243,8 +345,21 @@ export default function BarbershopViewPage() {
             </Card.Body>
           </Card>
         )}
-
       </Container>
+      {shop?.phone && (
+        <a
+          href={`https://wa.me/${
+            shop.phone
+          }?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20a%20${encodeURIComponent(
+            shop.name
+          )}.`}
+          className="whatsapp-float"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img src="/images/whatsapp-icon.png" alt="WhatsApp" />
+        </a>
+      )}
     </>
   );
 }

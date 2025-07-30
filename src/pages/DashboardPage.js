@@ -1,3 +1,4 @@
+// src/pages/DashboardPage.js
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import Swal from "sweetalert2";
@@ -6,32 +7,29 @@ import ProcessingIndicatorComponent from "../components/ProcessingIndicatorCompo
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../config";
 import { Link } from "react-router-dom";
+import "./dashboard.css";
 
-const Dashboard = () => {
+const DashboardPage = () => {
   const [barbershops, setBarbershops] = useState([]);
-  const [barbers, setBarbers] = useState([]);
-  const [isLoadingBarbershops, setIsLoadingBarbershops] = useState(true);
-  const [isLoadingBarbers, setIsLoadingBarbers] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchBarbershops = async () => {
+      setIsLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        };
-        const response = await axios.get(`${apiBaseUrl}/barbershop`, { headers });
-        if (response?.data?.barbershops) {
-          setBarbershops(response.data.barbershops.data);
+        const response = await axios.get(
+          `${apiBaseUrl}/establishment/category/barbershop`
+        );
+        if (response?.data?.establishments?.data) {
+          setBarbershops(response.data.establishments.data);
         } else {
           setBarbershops([]);
         }
-      } catch (err) {
+      } catch {
         Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Erro ao carregar barbearias.",
+          text: "Erro ao carregar as barbearias.",
           customClass: {
             popup: "custom-swal",
             title: "custom-swal-title",
@@ -40,66 +38,26 @@ const Dashboard = () => {
         });
         setBarbershops([]);
       } finally {
-        setIsLoadingBarbershops(false);
+        setIsLoading(false);
       }
     };
-
     fetchBarbershops();
   }, []);
 
-  useEffect(() => {
-    const fetchBarbers = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        };
-        const response = await axios.get(`${apiBaseUrl}/barber`, { headers });
-        if (response?.data?.barbers) {
-          setBarbers(response.data.barbers.data);
-        } else {
-          setBarbers([]);
-        }
-      } catch (err) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Erro ao carregar barbeiros.",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
-        setBarbers([]);
-      } finally {
-        setIsLoadingBarbers(false);
-      }
-    };
-
-    fetchBarbers();
-  }, []);
-
-  const handleBarberAvatarError = (e) => {
-    e.target.src = "images/user.png";
-  };
-
   const handleBarbershopLogoError = (e) => {
-    e.target.src = "images/logo.png";
+    e.target.src = "/images/logo.png";
   };
 
   return (
     <>
       <NavlogComponent />
       <Container className="main-container" fluid>
-        {/* Seção de Barbearias */}
         <Row className="section-row justify-content-center">
           <Col xs={12} lg={10} className="m-2">
             <Card className="card-component shadow-sm">
               <p className="section-title text-center">Barbearias</p>
               <Card.Body className="card-body">
-                {isLoadingBarbershops ? (
+                {isLoading ? (
                   <Col xs={12} className="loading-section">
                     <ProcessingIndicatorComponent
                       messages={[
@@ -114,22 +72,25 @@ const Dashboard = () => {
                     {barbershops.length > 0 ? (
                       <Row className="inner-row">
                         {barbershops.map((barbershop) => (
-                          <Col key={barbershop.id} xs={12} md={6} lg={4} className="inner-col mb-4">
+                          <Col
+                            key={barbershop.id}
+                            xs={12}
+                            md={6}
+                            lg={4}
+                            className="inner-col mb-4"
+                          >
                             <Card className="inner-card h-100">
-                              {/* Background with logo and blur */}
                               <div
                                 className="card-bg"
                                 style={{
-                                  backgroundImage: `url('${storageUrl}/${barbershop.logo || "images/logo.png"}')`,
+                                  backgroundImage: `url('${storageUrl}/${barbershop.background || "images/logo.png"}')`,
                                 }}
                               />
-                              {/* Card content overlay */}
                               <Card.Body className="inner-card-body card-content d-flex flex-column justify-content-center">
                                 <Link
-                                  to={`/barbershop/view/${barbershop.slug}`}
+                                  to={`/establishment/view/${barbershop.slug}`}
                                   className="link-component"
                                 >
-                                  {/* Responsivo: empilha no mobile, lado a lado em telas maiores */}
                                   <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center text-center text-sm-start">
                                     <img
                                       src={`${storageUrl}/${barbershop.logo || "images/logo.png"}`}
@@ -137,7 +98,7 @@ const Dashboard = () => {
                                       alt={barbershop.name}
                                       onError={handleBarbershopLogoError}
                                     />
-                                    <p className="label-name-bg  m-2">{barbershop.name}</p>
+                                    <p className="label-name-bg m-2">{barbershop.name}</p>
                                   </div>
                                 </Link>
                               </Card.Body>
@@ -148,74 +109,11 @@ const Dashboard = () => {
                     ) : (
                       <Col xs={12} className="empty-section text-center">
                         <p className="empty-text">Nenhuma barbearia encontrada.</p>
-                        <Link to="/barbershop/create" className="link-component">
-                          <Button variant="primary" className="action-button">
+                        <Link to="/establishment/create" className="link-component">
+                          <Button className="action-button">
                             Adicionar Nova Barbearia
                           </Button>
                         </Link>
-                      </Col>
-                    )}
-                  </>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Seção de Barbeiros */}
-        <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="m-2">
-            <Card className="card-component shadow-sm">
-              <p className="section-title text-center">Barbeiros</p>
-              <Card.Body className="card-body">
-                {isLoadingBarbers ? (
-                  <Col xs={12} className="loading-section">
-                    <ProcessingIndicatorComponent
-                      messages={[
-                        "Carregando os barbeiros...",
-                        "Estamos buscando as informações.",
-                        "Quase pronto! Apenas um momento.",
-                      ]}
-                    />
-                  </Col>
-                ) : (
-                  <>
-                    {barbers.length > 0 ? (
-                      <Row className="inner-row">
-                        {barbers.map((barber) => (
-                         <Col
-                                                  key={barber.id}
-                                                  md={4}
-                                                  className="barber-card-col"
-                                                >     <Card className="barber-card">
-          
-                                                       <Card.Body className="barber-card-body">
-                                                       <Link
-                                                             to={`/barber/view/${barber.user.user_name}`}                                   
-                                                           >
-                                                            <img
-                                                           src={
-                                                             barber.user.avatar
-                                                               ? `${storageUrl}/${barber.user.avatar}`
-                                                               : "/images/barber.png"
-                                                           }
-                                                           alt={barber.first_name}
-                                                           className="barber-avatar"
-                                                           onError={handleBarberAvatarError}
-                                                         />
-                                                         </Link>
-                                                         <p className="barber-name-title">
-                                                         
-                                                         </p>
-                                                         <p className="label-name">{barber.user.first_name}</p>
-                                                       </Card.Body>
-                                                     </Card>
-                          </Col>
-                        ))}
-                      </Row>
-                    ) : (
-                      <Col xs={12} className="empty-section text-center">
-                        <p className="empty-text">Nenhum barbeiro encontrado.</p>
                       </Col>
                     )}
                   </>
@@ -229,4 +127,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardPage;

@@ -1,152 +1,80 @@
+// src/pages/HomePage.js
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import Swal from "sweetalert2";
 import axios from "axios";
-import { apiBaseUrl, storageUrl } from "../config";
+import { Link } from "react-router-dom";
+import { Container, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
 import NavlogComponent from "../components/NavlogComponent";
-import ProcessingIndicatorComponent from "../components/ProcessingIndicatorComponent";
+import { apiBaseUrl, storageUrl } from "../config";
+import "./homepage.css";
 
-const HomePage = () => {
-  const [barbershops, setBarbershops] = useState([]);
-  const [barbers, setBarbers] = useState([]);
-  const [loadingShops, setLoadingShops] = useState(true);
-  const [loadingBarbers, setLoadingBarbers] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const { data } = await axios.get(`${apiBaseUrl}/barbershop`, { headers });
-        setBarbershops(data.barbershops?.data || []);
-      } catch {
-        Swal.fire("Erro", "Não foi possível carregar as barbearias.", "error");
-        setBarbershops([]);
-      } finally {
-        setLoadingShops(false);
-      }
-    })();
-  }, []);
+export default function HomePage() {
+  const [establishments, setEstablishments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    (async () => {
+    async function fetchBarbershops() {
       try {
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const { data } = await axios.get(`${apiBaseUrl}/barber`, { headers });
-        setBarbers(data.barbers?.data || []);
+        const { data } = await axios.get(
+          `${apiBaseUrl}/establishment/category/barbershop`
+        );
+        setEstablishments(data.establishments || []);
       } catch {
-        Swal.fire("Erro", "Não foi possível carregar os barbeiros.", "error");
-        setBarbers([]);
+        setError("Não foi possível carregar as barbearias.");
       } finally {
-        setLoadingBarbers(false);
+        setLoading(false);
       }
-    })();
+    }
+    fetchBarbershops();
   }, []);
 
-  const onShopError = e => { e.target.src = "/images/logo.png"; };
-  const onBarberError = e => { e.target.src = "/images/user.png"; };
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center my-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="my-5">
+        <Alert variant="danger" className="text-center">
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
-    <>
+    <Container className="home-page my-4">
       <NavlogComponent />
-      <Container fluid className="main-container">
-        <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="m-2">
-            <Card className="card-component shadow-sm">
-              <p className="section-title text-center">Barbearias</p>
-              <Card.Body className="card-body">
-                {loadingShops ? (
-                  <ProcessingIndicatorComponent
-                    messages={[
-                      "Carregando barbearias...",
-                      "Aguarde um momento...",
-                    ]}
-                  />
-                ) : barbershops.length > 0 ? (
-                  <Row className="inner-row">
-                    {barbershops.map(shop => (
-                      <Col key={shop.id} xs={12} md={6} lg={4} className="inner-col mb-4">
-                        <Card className="inner-card h-100">
-                          <div
-                            className="card-bg"
-                            style={{
-                              backgroundImage: `url('${storageUrl}/${shop.logo || "images/logo.png"}')`,
-                            }}
-                          />
-                          <Card.Body className="inner-card-body d-flex align-items-center justify-content-center">
-                            <Link to={`/barbershop/view/${shop.slug}`} className="link-component">
-                              <img
-                                src={`${storageUrl}/${shop.logo || "images/logo.png"}`}
-                                alt={shop.name}
-                                className="img-component me-2"
-                                onError={onShopError}
-                              />
-                              <span className="label-name-bg">{shop.name}</span>
-                            </Link>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                ) : (
-                  <div className="empty-section text-center">
-                    <p className="empty-text">Nenhuma barbearia encontrada.</p>
-                    <Link to="/barbershop/create" className="link-component">
-                      <Button variant="primary">Adicionar Barbearia</Button>
-                    </Link>
-                  </div>
-                )}
+      <h1 className="mb-4">Barbearias</h1>
+      <Row>
+        {establishments.map(est => (
+          <Col key={est.id} xs={12} md={6} lg={4} className="mb-4">
+            <Card className="h-100 est-card">
+              {est.logo && (
+                <Card.Img
+                  variant="top"
+                  src={`${storageUrl}/${est.logo}`}
+                  className="est-logo"
+                />
+              )}
+              <Card.Body className="d-flex flex-column">
+                <Card.Title>{est.fantasy || est.name}</Card.Title>
+                <Card.Text>{est.city}</Card.Text>
+                <Link
+                  to={`/establishment/view/${est.slug}`}
+                  className="btn btn-primary mt-auto"
+                >
+                  Ver detalhes
+                </Link>
               </Card.Body>
             </Card>
           </Col>
-        </Row>
-
-        <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="m-2">
-            <Card className="card-component shadow-sm">
-              <p className="section-title text-center">Barbeiros</p>
-              <Card.Body className="card-body">
-                {loadingBarbers ? (
-                  <ProcessingIndicatorComponent
-                    messages={[
-                      "Carregando barbeiros...",
-                      "Aguarde um momento...",
-                    ]}
-                  />
-                ) : barbers.length > 0 ? (
-                  <Row className="inner-row">
-                    {barbers.map(b => (
-                      <Col key={b.id} xs={12} md={6} lg={4} className="inner-col mb-4 text-center">
-                        <Link to={`/barber/view/${b.user.user_name}`} className="link-component">
-                          <Card className="barber-card">
-                            <Card.Body>
-                              <img
-                                src={b.user.avatar ? `${storageUrl}/${b.user.avatar}` : "/images/user.png"}
-                                alt={b.user.first_name}
-                                className="barber-avatar mb-2"
-                                onError={onBarberError}
-                              />
-                              <p className="label-name">{b.user.first_name}</p>
-                            </Card.Body>
-                          </Card>
-                        </Link>
-                      </Col>
-                    ))}
-                  </Row>
-                ) : (
-                  <div className="empty-section text-center">
-                    <p className="empty-text">Nenhum barbeiro encontrado.</p>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </>
+        ))}
+      </Row>
+    </Container>
   );
-};
-
-export default HomePage;
+}

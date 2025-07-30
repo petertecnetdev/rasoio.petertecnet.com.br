@@ -18,37 +18,33 @@ import PasswordPage from "./pages/auth/PasswordPage";
 // Dashboard
 import DashboardPage from "./pages/DashboardPage";
 
-// Administrativo
-import UserListPage from "./pages/admin/user/UserListPage";
-import UserCreatePage from "./pages/admin/user/UserCreatePage";
-import UserViewPage from "./pages/user/UserViewPage";
-import UserUpdatePage from "./pages/user/UserUpdatePage";
+import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
+import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
+import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
 
-import ProfileCreatePage from "./pages/admin/profile/ProfileCreatePage";
-import ProfileListPage from "./pages/admin/profile/ProfileListPage";
-import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
-
-// Corporativo
+// Items
 import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
 import ItemUpdatePage from "./pages/item/ItemUpdatePage";
 import ItemViewPage from "./pages/item/ItemViewPage";
 
+// Barbershops
 import BarbershopListPage from "./pages/corp/barbershop/BarbershopListPage";
 import BarbershopCreatePage from "./pages/corp/barbershop/BarbershopCreatePage";
 import BarbershopUpdatePage from "./pages/corp/barbershop/BarbershopUpdatePage";
 import BarbershopViewPage from "./pages/barbershop/BarbershopViewPage";
 
+// Barbers
 import BarberViewPage from "./pages/barber/BarberViewPage";
 import BarberIncludePage from "./pages/barber/BarberIncludePage";
 
-// Agendamentos
+// Appointments
 import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
-import AppointmentsClientPage from "./pages/appointment/AppointmentsClientPage.js";
+import AppointmentsClientPage from "./pages/appointment/AppointmentsClientPage";
 import AppointmentsBarberPage from "./pages/appointment/AppointmentsBarberPage";
-import BarbershopAppointmentsPage from "./pages/appointment/BarbershopAppointmentsPage.js";
+import BarbershopAppointmentsPage from "./pages/appointment/BarbershopAppointmentsPage";
 
-// Service Record
+// Service Records
 import ServiceRecordListPage from "./pages/serviceRecord/ServiceRecordListPage";
 import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePage";
 import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
@@ -88,149 +84,74 @@ const App = () => {
     );
   }
 
-  const protectedRoute = element => {
-    if (!user) return <Navigate to="/login" />;
-    if (!user.email_verified_at) return <Navigate to="/email-verify" />;
+  const protectedRoute = (element) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!user.email_verified_at) return <Navigate to="/email-verify" replace />;
     return element;
   };
 
-  const emailVerifiedRoute = element => {
+  const emailVerifiedRoute = (element) => {
     if (user && !user.email_verified_at) return element;
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/dashboard" replace />;
   };
 
-  const restrictedRoute = element => {
+  const restrictedRoute = (element) => {
     if (!user) return element;
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/dashboard" replace />;
   };
-console.log("GOOGLE_CLIENT_ID=", process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <Router>
         <Routes>
-          {/* PÚBLICAS */}
+          {/* Públicas */}
           <Route path="/home" element={restrictedRoute(<HomePage />)} />
           <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
           <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-          <Route
-            path="/password-email"
-            element={restrictedRoute(<PasswordEmailPage />)}
-          />
-          <Route
-            path="/password-reset"
-            element={restrictedRoute(<PasswordResetPage />)}
-          />
+          <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
+          <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
           <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
           <Route path="/password" element={protectedRoute(<PasswordPage />)} />
           <Route path="/logout" element={<LogoutPage />} />
 
-          {/* DASHBOARD */}
+          {/* Dashboard */}
           <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
 
-          {/* USUÁRIOS */}
-          <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
-          <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
-          <Route
-            path="/user/:userName"
-            element={protectedRoute(<UserViewPage />)}
-          />
-          <Route
-            path="/user/update"
-            element={protectedRoute(<UserUpdatePage />)}
-          />
+          {/* Establishments */}
+          <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
+          <Route path="/establishment/view/:slug" element={protectedRoute(<EstablishmentViewPage />)} />
+          <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
 
-          {/* PERFIS */}
-          <Route
-            path="/profile/list"
-            element={protectedRoute(<ProfileListPage />)}
-          />
-          <Route
-            path="/profile/create"
-            element={protectedRoute(<ProfileCreatePage />)}
-          />
-          <Route
-            path="/profile/update/:id"
-            element={protectedRoute(<ProfileUpdatePage />)}
-          />
+          {/* Items */}
+          <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
+          <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
+          <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
+          <Route path="/item/:slug" element={protectedRoute(<ItemViewPage />)} />
 
-          {/* ITENS */}
-          <Route
-            path="/item/list/:slug"
-            element={protectedRoute(<ItemListPage />)}
-          />
-          <Route
-            path="/item/create/:slug"
-            element={protectedRoute(<ItemCreatePage />)}
-          />
-          <Route
-            path="/item/update/:id"
-            element={protectedRoute(<ItemUpdatePage />)}
-          />
-          <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
+          {/* Barbershops */}
+          <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
+          <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
+          <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
+          <Route path="/barbershop/view/:slug" element={protectedRoute(<BarbershopViewPage />)} />
 
-          {/* BARBERSHOP */}
-          <Route
-            path="/barbershop"
-            element={protectedRoute(<BarbershopListPage />)}
-          />
-          <Route
-            path="/barbershop/create"
-            element={protectedRoute(<BarbershopCreatePage />)}
-          />
-          <Route
-            path="/barbershop/update/:id"
-            element={protectedRoute(<BarbershopUpdatePage />)}
-          />
-          <Route path="/barbershop/view/:slug" element={<BarbershopViewPage />} />
+          {/* Barbers */}
+          <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
+          <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
 
-          {/* BARBEIRO */}
-          <Route path="/barber/view/:username" element={<BarberViewPage />} />
-          <Route
-            path="/barber/include/:slug"
-            element={protectedRoute(<BarberIncludePage />)}
-          />
+          {/* Appointments */}
+          <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
+          <Route path="/appointment/my" element={protectedRoute(<AppointmentsClientPage />)} />
+          <Route path="/appointment/barber" element={protectedRoute(<AppointmentsBarberPage />)} />
+          <Route path="/appointment/barbershop/:slug" element={protectedRoute(<BarbershopAppointmentsPage />)} />
 
-          {/* AGENDAMENTOS */}
-          <Route
-            path="/appointment/create/:slug"
-            element={<AppointmentCreatePage />}
-          />
-          <Route
-            path="/appointment/my"
-            element={protectedRoute(<AppointmentsClientPage />)}
-          />
-          <Route
-            path="/appointment/barber"
-            element={protectedRoute(<AppointmentsBarberPage />)}
-          />
-          <Route
-            path="/appointment/barbershop/:slug"
-            element={protectedRoute(<BarbershopAppointmentsPage />)}
-          />
+          {/* Service Records */}
+          <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
+          <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
+          <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />
+          <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />
+          <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
 
-          {/* SERVICE RECORD */}
-          <Route
-            path="/service-record/my"
-            element={protectedRoute(<ServiceRecordListPage />)}
-          />
-          <Route
-            path="/service-record/barber/:username"
-            element={protectedRoute(<ServiceRecordListPage />)}
-          />
-          <Route
-            path="/service-record/barbershop/:slug"
-            element={protectedRoute(<ServiceRecordListPage />)}
-          />
-          <Route
-            path="/service-record/create/:slug"
-            element={protectedRoute(<ServiceRecordCreatePage />)}
-          />
-          <Route
-            path="/service-record/view/:id"
-            element={protectedRoute(<ServiceRecordViewPage />)}
-          />
-
-          {/* REDIRECIONAMENTO */}
+          {/* Redirecionamento */}
           <Route path="/*" element={<Navigate to="/home" replace />} />
         </Routes>
       </Router>
