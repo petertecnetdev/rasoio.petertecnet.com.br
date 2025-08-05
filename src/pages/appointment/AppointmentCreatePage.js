@@ -1,429 +1,278 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { apiBaseUrl, storageUrl } from "../../config";
-import "./Appointment.css"; // Import custom styles if needed
+import { apiBaseUrl } from "../../config";
 
-export default function AppointmentCreatePage() {
+const AppointmentCreatePage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const brNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
-  );
-  const pad = (n) => String(n).padStart(2, "0");
-  const ceilToHalfHour = (date) => {
-    let h = date.getHours(),
-      m = date.getMinutes();
-    if (m < 30) m = 30;
-    else {
-      h += 1;
-      m = 0;
-    }
-    if (h >= 24) h = 0;
-    return `${pad(h)}:${pad(m)}`;
-  };
-
-  const today = brNow.toISOString().slice(0, 10);
-  const nextSlot = ceilToHalfHour(brNow);
-
-  const [user, setUser] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
   const [barbershop, setBarbershop] = useState(null);
-  const [barbershopId, setBarbershopId] = useState(null);
-  const [items, setItems] = useState([]);
   const [barbers, setBarbers] = useState([]);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [items, setItems] = useState([]);
+  const [barbershopId, setBarbershopId] = useState(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
 
-  const [appointmentData, setAppointmentData] = useState({
-    customer_name: "",
-    customer_cpf: "",
-    customer_phone: "",
-    customer_email: "",
-    scheduled_date: today,
-    scheduled_time: nextSlot,
+  // Dados do agendamento
+  const [appointmentData, setappointmentData] = useState({
+    scheduled_at: "",
     provider_id: "",
     notes: "",
     service_ids: [],
   });
 
-  // Carrega usuário autenticado
   useEffect(() => {
-    (async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(data.user);
-          setAppointmentData((prev) => ({
-            ...prev,
-            customer_name: data.user.first_name,
-            customer_email: data.user.email,
-          }));
-        } catch {
-          setUser(null);
-        }
-      }
-      setLoadingUser(false);
-    })();
-  }, []);
-
-  // Carrega barbearia, serviços e barbeiros
-  useEffect(() => {
-    (async () => {
-      setMessages(["Carregando informações..."]);
+    const fetchBarbershop = async () => {
+      setMessages(["Carregando informações da barbearia e serviços..."]);
       try {
-        const { data } = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`
-        );
-        const shop = data.barbershop || data;
-        setBarbershop(shop);
-        setBarbershopId(shop.id);
-        setItems(data.items || []);
-        setBarbers(data.barbers || []);
-      } catch (err) {
-        Swal.fire(
-          "Erro",
-          err.response?.data?.message || "Erro ao carregar.",
-          "error"
-        );
+        const response = await axios.get(`${apiBaseUrl}/barbershop/view/${slug}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        const barbershopData = response.data.barbershop || response.data;
+        setBarbershop(barbershopData);
+        setBarbershopId(barbershopData.id);
+        setItems(response.data.items || []);
+        setBarbers(response.data.barbers || []);
+        window.scrollTo(0, 0);
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message || "Erro ao carregar informações da barbearia.";
+        Swal.fire({
+          icon: "error",
+          title: "Erro!",
+          text: errorMessage,
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
       } finally {
         setMessages([]);
       }
-    })();
-  }, [slug]);
+    };
 
-  // Disponibilidade de horários
-  useEffect(() => {
-    const { provider_id, scheduled_date } = appointmentData;
-    if (!provider_id || !scheduled_date || !barbershopId) {
-      setAvailableSlots([]);
-      return;
+    if (slug) {
+      fetchBarbershop();
     }
-    axios
-      .get(`${apiBaseUrl}/appointment/availability`, {
-        params: { provider_id, entity_id: barbershopId, date: scheduled_date },
-      })
-      .then(({ data }) => {
-        let slots = data.slots || [];
-        if (scheduled_date === today)
-          slots = slots.filter((t) => t >= nextSlot);
-        setAvailableSlots(slots);
-      })
-      .catch(() => setAvailableSlots([]));
-  }, [
-    appointmentData.provider_id,
-    appointmentData.scheduled_date,
-    barbershopId,
-  ]);
+  }, [slug]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setAppointmentData((prev) => ({ ...prev, [name]: value }));
+    setappointmentData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  // Atualiza a lista de serviços selecionados
   const handleServiceSelection = (e) => {
-    const id = parseInt(e.target.value, 10);
-    setAppointmentData((prev) => ({
-      ...prev,
-      service_ids: e.target.checked
-        ? [...prev.service_ids, id]
-        : prev.service_ids.filter((i) => i !== id),
-    }));
+    const itemId = parseInt(e.target.value);
+    const checked = e.target.checked;
+
+    setappointmentData((prevData) => {
+      let updatedServices = [...prevData.service_ids];
+      if (checked) {
+        updatedServices.push(itemId);
+      } else {
+        updatedServices = updatedServices.filter((id) => id !== itemId);
+      }
+      return { ...prevData, service_ids: updatedServices };
+    });
   };
 
-  // Cálculo total de preços (converte string para número)
-  const totalPrice = useMemo(() => {
-    return appointmentData.service_ids.reduce((sum, id) => {
-      const svc = items.find((i) => i.id === id);
-      const priceNum = svc ? parseFloat(svc.price) : 0;
-      return sum + priceNum;
-    }, 0);
-  }, [appointmentData.service_ids, items]);
-
+  // Validação dos campos
   const validateFields = () => {
-    const errs = [];
-    if (!appointmentData.customer_name.trim()) errs.push("Informe seu nome.");
-    if (!user) {
-      if (!appointmentData.customer_cpf.trim()) errs.push("Informe seu CPF.");
-      if (!appointmentData.customer_phone.trim())
-        errs.push("Informe seu telefone.");
-      if (!appointmentData.customer_email.trim())
-        errs.push("Informe seu email.");
+    const errors = [];
+    if (!appointmentData.scheduled_at) {
+      errors.push("A data e hora do agendamento é obrigatória.");
     }
-    if (!appointmentData.provider_id) errs.push("Selecione um barbeiro.");
-    if (!appointmentData.scheduled_date) errs.push("Selecione um dia.");
-    if (!appointmentData.scheduled_time) errs.push("Selecione um horário.");
-    if (!appointmentData.service_ids.length)
-      errs.push("Selecione ao menos um serviço.");
-    if (errs.length) {
-      Swal.fire("Erro de validação", errs.join("\n"), "error");
+    if (!appointmentData.provider_id) {
+      errors.push("Selecione um barbeiro para ser o prestador.");
+    }
+    if (appointmentData.service_ids.length === 0) {
+      errors.push("Selecione ao menos um serviço.");
+    }
+
+    if (errors.length > 0) {
+      Swal.fire({
+        title: "Erro de validação",
+        text: errors.join("\n"),
+        icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
+        },
+      });
       return false;
     }
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateFields() || !barbershopId) return;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!validateFields()) return;
+
+    if (!barbershopId) {
+      Swal.fire({
+        title: "Erro",
+        text: "Não foi possível obter o ID da barbearia.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
 
     setIsProcessing(true);
-    setMessages(["Enviando seu agendamento..."]);
+    setMessages(["Aguarde enquanto realizamos seu agendamento..."]);
 
-    const duration = appointmentData.service_ids.length * 25;
-    const scheduledAtIso = new Date(
-      `${appointmentData.scheduled_date}T${appointmentData.scheduled_time}:00`
-    ).toISOString();
-    const expectedEndTime = new Date(
-      new Date(scheduledAtIso).getTime() + duration * 60000
-    ).toISOString();
+    // Cada serviço dura ~25 minutos
+    const BASE_DURATION = 25; // minutos
+    const totalDuration = appointmentData.service_ids.length * BASE_DURATION;
 
-    const token = localStorage.getItem("token");
-    const userId = user?.id || null;
-    const clientId = userId || barbershop.user_id;
-    const registeredBy = userId || clientId;
+    // Calcula expected_end_time
+    const scheduledAtDate = new Date(appointmentData.scheduled_at);
+    const expectedEndTimeDate = new Date(scheduledAtDate.getTime() + totalDuration * 60000);
+
+    // Tenta obter o client_id a partir de /auth/me
+    let clientId = localStorage.getItem("client_id");
+    try {
+      const authResponse = await axios.get(`${apiBaseUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      clientId = authResponse.data.user.id;
+    } catch (error) {
+      clientId = localStorage.getItem("client_id") || 1;
+    }
 
     const payload = {
       app_id: 1,
       entity_name: "barbershop",
       entity_id: barbershopId,
-      scheduled_at: scheduledAtIso,
-      expected_end_time: expectedEndTime,
-      service_ids: appointmentData.service_ids,
-      provider_id: parseInt(appointmentData.provider_id, 10),
+      scheduled_at: appointmentData.scheduled_at,
+      service_ids: appointmentData.service_ids, // Array de serviços selecionados
+      expected_end_time: expectedEndTimeDate.toISOString(),
+      provider_id: appointmentData.provider_id,
+      description: "",
       client_id: clientId,
-      registered_by: registeredBy,
+      registered_by: clientId,
       status: "pending",
-      duration,
       location: "",
-      notes: appointmentData.notes || null,
+      duration: totalDuration,
+      notes: appointmentData.notes,
       payment_status: "pending",
       appointment_type: "presencial",
-      ...(!user && {
-        customer_name: appointmentData.customer_name,
-        customer_cpf: appointmentData.customer_cpf,
-        customer_phone: appointmentData.customer_phone,
-        customer_email: appointmentData.customer_email,
-      }),
     };
 
     try {
-      await axios.post(`${apiBaseUrl}/appointment`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      });
-      setIsProcessing(false);
-      await Swal.fire(
-        "Sucesso!",
-        "Seu agendamento solicitado! Aguarde confirmação do barbeiro.",
-        "success"
-      );
-      navigate("/appointment/my");
-    } catch (err) {
-      setIsProcessing(false);
-      const data = err.response?.data || {};
-      let msgHtml = `
-    <div class="swal-error-block">
-      <div class="swal-error-title">${
-        data.reason || data.error || "Ocorreu um erro"
-      }</div>
-      ${
-        data.suggestion
-          ? `<div class="swal-suggestion-title">Sugestão</div>
-      <div class="swal-suggestion-msg">${data.suggestion}</div>`
-          : ""
-      }
-    </div>
-  `;
-      await Swal.fire({
-        icon: "error",
-        title: "Erro ao agendar",
-        html: msgHtml,
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      };
+
+      await axios.post(`${apiBaseUrl}/appointment`, payload, { headers });
+
+      Swal.fire({
+        title: "Sucesso!",
+        text: "Agendamento criado com sucesso!",
+        icon: "success",
+        confirmButtonText: "OK",
         customClass: {
-          popup: "swal2-plat-popup",
-          title: "swal2-plat-title",
+          popup: "custom-swal",
+          title: "custom-swal-title",
+          content: "custom-swal-text",
         },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate(-1);
+        }
       });
+    } catch (error) {
+      console.error("Erro ao criar agendamento:", error);
+      if (error.response && error.response.status === 422) {
+        const validationErrors = error.response.data.errors;
+        let errorMessage = "Os seguintes campos têm erros:\n";
+        for (const field in validationErrors) {
+          errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
+        }
+        Swal.fire({
+          title: "Validação Falhou",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      } else {
+        Swal.fire({
+          title: "Erro",
+          text: "Ocorreu um erro ao tentar criar o agendamento. Tente novamente mais tarde.",
+          icon: "error",
+          confirmButtonText: "OK",
+          customClass: {
+            popup: "custom-swal",
+            title: "custom-swal-title",
+            content: "custom-swal-text",
+          },
+        });
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
     <>
       <NavlogComponent />
-      <Container fluid className="main-container">
-        <Row className="justify-content-center">
-          <Col xs={12} lg={8}>
+
+      <p className="section-title text-center">Agendar</p>
+      <Container className="main-container" fluid>
+        <Row className="section-row justify-content-center">
+          <Col xs={12} lg={10} className="section-col">
             {isProcessing ? (
-              <ProcessingIndicatorComponent messages={messages} />
+              <div className="loading-section">
+                <ProcessingIndicatorComponent messages={messages} />
+              </div>
             ) : (
-              <Card className="card-component shadow-sm">
-                <Card.Body>
+              <Card className="card-component appointment-create-card shadow-sm">
+                <Card.Body className="card-body appointment-create-card-body">
                   {barbershop && (
-                    <div className="text-center mb-4">
-                      <img
-                        src={
-                          barbershop.logo
-                            ? `${storageUrl}/${barbershop.logo}`
-                            : "/images/logo.png"
-                        }
-                        alt={barbershop.name}
-                        className="rounded-circle"
-                        style={{ height: 80, width: 80, objectFit: "cover" }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/images/logo.png";
-                        }}
-                      />
-                      <h5 className="mt-2">
-                        Agendamento em <strong>{barbershop.name}</strong>
-                      </h5>
-                    </div>
+                    <p className="mb-3 text-center">
+                      Agendamento em: <strong>{barbershop.name}</strong>
+                    </p>
                   )}
+
                   <Form onSubmit={handleSubmit}>
                     <Row>
-                      <Col md={12} className="mb-3">
-                        <Form.Group controlId="customer_name">
-                          <Form.Label>Seu Nome</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="customer_name"
-                            value={appointmentData.customer_name}
-                            onChange={handleInputChange}
-                            disabled={!!user}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                      {!loadingUser && !user && (
-                        <>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_cpf">
-                              <Form.Label>CPF</Form.Label>
-                              <Form.Control
-                                type="text"
-                                name="customer_cpf"
-                                value={appointmentData.customer_cpf}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_phone">
-                              <Form.Label>Telefone</Form.Label>
-                              <Form.Control
-                                type="text"
-                                name="customer_phone"
-                                value={appointmentData.customer_phone}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
-                          <Col md={4} className="mb-3">
-                            <Form.Group controlId="customer_email">
-                              <Form.Label>Email</Form.Label>
-                              <Form.Control
-                                type="email"
-                                name="customer_email"
-                                value={appointmentData.customer_email}
-                                onChange={handleInputChange}
-                                required
-                              />
-                            </Form.Group>
-                          </Col>
-                        </>
-                      )}
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="provider_id">
-                          <Form.Label>Barbeiro</Form.Label>
-                          <Form.Select
-                            name="provider_id"
-                            value={appointmentData.provider_id}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione o barbeiro</option>
-                            {barbers.map((b) => (
-                              <option key={b.user_id} value={b.user_id}>
-                                {b.first_name}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Form.Group>
-                      </Col>
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="scheduled_date">
-                          <Form.Label>Dia</Form.Label>
-                          <Form.Control
-                            type="date"
-                            name="scheduled_date"
-                            value={appointmentData.scheduled_date}
-                            onChange={handleInputChange}
-                            min={today}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-                      <Col md={6} className="mb-3">
-                        <Form.Group controlId="scheduled_time">
-                          <Form.Label>Horário</Form.Label>
-                          <Form.Select
-                            name="scheduled_time"
-                            value={appointmentData.scheduled_time}
-                            onChange={handleInputChange}
-                            disabled={
-                              !appointmentData.provider_id ||
-                              availableSlots.length === 0
-                            }
-                            required
-                          >
-                            <option value="">Selecione o horário</option>
-                            {availableSlots.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </Form.Select>
-                          {appointmentData.provider_id &&
-                            availableSlots.length === 0 && (
-                              <small className="text-danger">
-                                Sem horários disponíveis
-                              </small>
-                            )}
-                        </Form.Group>
-                      </Col>
+                      {/* Selecionar serviços */}
                       <Col md={12} className="mb-4">
-                        <Form.Label>Serviços</Form.Label>
+                        <p className="mb-2">Selecione os Serviços</p>
                         <Row>
                           {items.length === 0 ? (
-                            <p>Nenhum serviço disponível.</p>
+                            <Col xs={12}>
+                              <p>Nenhum serviço disponível.</p>
+                            </Col>
                           ) : (
                             items.map((item) => (
-                              <Col md={4} key={item.id} className="mb-2">
+                              <Col md={4} key={item.id}>
                                 <Form.Check
                                   type="checkbox"
                                   id={`service-${item.id}`}
-                                  label={`${item.name} (${Number(
-                                    item.price
-                                  ).toLocaleString("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                  })})`}
+                                  label={item.name}
+                                  // Adicionamos value e checked para garantir controle total via state
                                   value={item.id}
-                                  checked={appointmentData.service_ids.includes(
-                                    item.id
-                                  )}
+                                  checked={appointmentData.service_ids.includes(item.id)}
                                   onChange={handleServiceSelection}
                                 />
                               </Col>
@@ -431,15 +280,43 @@ export default function AppointmentCreatePage() {
                           )}
                         </Row>
                       </Col>
-                      <Col md={12} className="mb-3">
-                        <h5>
-                          Total:{" "}
-                          {totalPrice.toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </h5>
+
+                      {/* Data/hora */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="scheduled_at">
+                          <Form.Label>Data e Hora</Form.Label>
+                          <Form.Control
+                            type="datetime-local"
+                            name="scheduled_at"
+                            value={appointmentData.scheduled_at}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </Form.Group>
                       </Col>
+
+                      {/* Barbeiro */}
+                      <Col md={3} className="mb-3">
+                        <Form.Group controlId="provider_id">
+                          <Form.Label>Barbeiro</Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="provider_id"
+                            value={appointmentData.provider_id}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            {barbers.map((barber) => (
+                              <option key={barber.user_id} value={barber.user_id}>
+                                {barber.first_name}
+                              </option>
+                            ))}
+                          </Form.Control>
+                        </Form.Group>
+                      </Col>
+
+                      {/* Observações */}
                       <Col md={12} className="mb-3">
                         <Form.Group controlId="notes">
                           <Form.Label>Observações</Form.Label>
@@ -453,11 +330,21 @@ export default function AppointmentCreatePage() {
                         </Form.Group>
                       </Col>
                     </Row>
+
                     <div className="text-center">
-                      <Button type="submit" variant="primary">
-                        Agendar
+                      <Button variant="primary" type="submit" className="action-button">
+                        {isProcessing ? "Agendando..." : "Agendar"}
                       </Button>
                     </div>
+
+                    {/* Exibe mensagens, se existirem */}
+                    {messages.length > 0 && (
+                      <div className="mt-3">
+                        {messages.map((message, index) => (
+                          <div key={index}>{message}</div>
+                        ))}
+                      </div>
+                    )}
                   </Form>
                 </Card.Body>
               </Card>
@@ -467,4 +354,6 @@ export default function AppointmentCreatePage() {
       </Container>
     </>
   );
-}
+};
+
+export default AppointmentCreatePage;

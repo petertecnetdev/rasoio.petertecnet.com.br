@@ -1,12 +1,12 @@
-// src/App.js
-import React, { useState, useEffect } from "react";
+// src/App.jsx
+import React, { useState, useEffect, useContext } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
+import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
+import { useGlobalLoadingSync } from "./hooks/useGlobalLoadingSync";
+import { apiBaseUrl } from "./config";
 
-import HomePage from "./pages/HomePage";
-
-// Auth
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import EmailVerifyPage from "./pages/auth/EmailVerifyPage";
@@ -15,97 +15,111 @@ import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
 
-// Dashboard
 import DashboardPage from "./pages/DashboardPage";
 
-import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
-import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
-import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
+import OrderCreatePage from "./pages/order/OrderCreatePage";
+import OrderListPage from "./pages/order/OrderListPage";
+import OrderEditPage from "./pages/order/OrderEditPage";
 
-// Items
+import UserListPage from "./pages/admin/user/UserListPage";
+import UserCreatePage from "./pages/admin/user/UserCreatePage";
+import UserViewPage from "./pages/user/UserViewPage";
+import UserUpdatePage from "./pages/user/UserUpdatePage";
+
+import ProfileCreatePage from "./pages/admin/profile/ProfileCreatePage";
+import ProfileListPage from "./pages/admin/profile/ProfileListPage";
+import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
+
 import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
 import ItemUpdatePage from "./pages/item/ItemUpdatePage";
 import ItemViewPage from "./pages/item/ItemViewPage";
 
-// Barbershops
-import BarbershopListPage from "./pages/corp/barbershop/BarbershopListPage";
-import BarbershopCreatePage from "./pages/corp/barbershop/BarbershopCreatePage";
-import BarbershopUpdatePage from "./pages/corp/barbershop/BarbershopUpdatePage";
-import BarbershopViewPage from "./pages/barbershop/BarbershopViewPage";
+import EmployerListPage from "./pages/employer/EmployerListPage";
+import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
+import EmployerUpdatePage from "./pages/employer/EmployerUpdatePage";
+import EmployerViewPage from "./pages/employer/EmployerViewPage";
 
-// Barbers
-import BarberViewPage from "./pages/barber/BarberViewPage";
-import BarberIncludePage from "./pages/barber/BarberIncludePage";
+import EstablishmentListPage from "./pages/corp/establishment/EstablishmentListPage";
+import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
+import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
+import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
 
-// Appointments
+import AppointmentListPage from "./pages/appointment/AppointmentListPage";
 import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
-import AppointmentsClientPage from "./pages/appointment/AppointmentsClientPage";
-import AppointmentsBarberPage from "./pages/appointment/AppointmentsBarberPage";
-import BarbershopAppointmentsPage from "./pages/appointment/BarbershopAppointmentsPage";
 
-// Service Records
 import ServiceRecordListPage from "./pages/serviceRecord/ServiceRecordListPage";
 import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePage";
 import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
 
-import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
-import { apiBaseUrl } from "./config";
+import ReportOrderPage from "./pages/report/ReportOrderPage";
 
-const App = () => {
+import "./index.css";
+
+const AppInner = () => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const { isLoading } = useContext(LoadingContext);
+
+  useGlobalLoadingSync();
 
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
           const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           });
           setUser(data.user);
         } catch {
-          setUser(null);
           localStorage.removeItem("token");
         }
       }
-      setLoading(false);
-    };
-    fetchData();
+      setInitialLoading(false);
+    })();
   }, []);
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <ProcessingIndicatorComponent
-        messages={["Carregando...", "Aguarde um instante..."]}
+        messages={["Carregando...", "Quase pronto, por favor aguarde..."]}
         interval={500}
+        videoSrc="/image/logo.grif"
       />
     );
   }
 
-  const protectedRoute = (element) => {
-    if (!user) return <Navigate to="/login" replace />;
-    if (!user.email_verified_at) return <Navigate to="/email-verify" replace />;
-    return element;
-  };
+  const protectedRoute = (el) =>
+    user
+      ? user.email_verified_at
+        ? el
+        : <Navigate to="/email-verify" replace />
+      : <Navigate to="/login" replace />;
 
-  const emailVerifiedRoute = (element) => {
-    if (user && !user.email_verified_at) return element;
-    return <Navigate to="/dashboard" replace />;
-  };
+  const emailVerifiedRoute = (el) =>
+    user
+      ? !user.email_verified_at
+        ? el
+        : <Navigate to="/dashboard" replace />
+      : <Navigate to="/login" replace />;
 
-  const restrictedRoute = (element) => {
-    if (!user) return element;
-    return <Navigate to="/dashboard" replace />;
-  };
+  const restrictedRoute = (el) =>
+    user ? <Navigate to="/dashboard" replace /> : el;
 
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+    <>
+      {isLoading && (
+        <ProcessingIndicatorComponent
+          messages={["Processando sua solicitação...", "Por favor, aguarde..."]}
+          interval={800}
+          videoSrc="/videos/loading.mp4"
+        />
+      )}
       <Router>
         <Routes>
-          {/* Públicas */}
-          <Route path="/home" element={restrictedRoute(<HomePage />)} />
+          <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
+
           <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
           <Route path="/login" element={restrictedRoute(<LoginPage />)} />
           <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
@@ -114,49 +128,59 @@ const App = () => {
           <Route path="/password" element={protectedRoute(<PasswordPage />)} />
           <Route path="/logout" element={<LogoutPage />} />
 
-          {/* Dashboard */}
           <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
 
-          {/* Establishments */}
-          <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
-          <Route path="/establishment/view/:slug" element={protectedRoute(<EstablishmentViewPage />)} />
-          <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
+          <Route path="/order/list/:entityId" element={protectedRoute(<OrderListPage />)} />
+          <Route path="/order/create/:entityId" element={protectedRoute(<OrderCreatePage />)} />
+          <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
 
-          {/* Items */}
+          <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
+          <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
+          <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
+          <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
+
+          <Route path="/profile/create" element={protectedRoute(<ProfileCreatePage />)} />
+          <Route path="/profile/list" element={protectedRoute(<ProfileListPage />)} />
+          <Route path="/profile/update/:id" element={protectedRoute(<ProfileUpdatePage />)} />
+
           <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
           <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
           <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
-          <Route path="/item/:slug" element={protectedRoute(<ItemViewPage />)} />
+          <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
-          {/* Barbershops */}
-          <Route path="/barbershop" element={protectedRoute(<BarbershopListPage />)} />
-          <Route path="/barbershop/create" element={protectedRoute(<BarbershopCreatePage />)} />
-          <Route path="/barbershop/update/:id" element={protectedRoute(<BarbershopUpdatePage />)} />
-          <Route path="/barbershop/view/:slug" element={protectedRoute(<BarbershopViewPage />)} />
+          <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
+          <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
+          <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
+          <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
 
-          {/* Barbers */}
-          <Route path="/barber/view/:username" element={protectedRoute(<BarberViewPage />)} />
-          <Route path="/barber/include/:slug" element={protectedRoute(<BarberIncludePage />)} />
+          <Route path="/establishment" element={protectedRoute(<EstablishmentListPage />)} />
+          <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
+          <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
 
-          {/* Appointments */}
           <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
-          <Route path="/appointment/my" element={protectedRoute(<AppointmentsClientPage />)} />
-          <Route path="/appointment/barber" element={protectedRoute(<AppointmentsBarberPage />)} />
-          <Route path="/appointment/barbershop/:slug" element={protectedRoute(<BarbershopAppointmentsPage />)} />
+          <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
+          <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
+          <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
 
-          {/* Service Records */}
-          <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
-          <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
-          <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />
           <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />
+          <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
+          <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />
+          <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
           <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
 
-          {/* Redirecionamento */}
-          <Route path="/*" element={<Navigate to="/home" replace />} />
+          <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
+
+          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
         </Routes>
       </Router>
-    </GoogleOAuthProvider>
+    </>
   );
 };
+
+const App = () => (
+  <LoadingProvider>
+    <AppInner />
+  </LoadingProvider>
+);
 
 export default App;

@@ -1,532 +1,341 @@
-import React, { useState, useEffect } from "react";
-import { Form, Button, Container, Row, Card, Col } from "react-bootstrap";
-import { useParams, useNavigate } from "react-router-dom";
-import NavlogComponent from "../../components/NavlogComponent";
-import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
-import Swal from "sweetalert2";
+// src/pages/item/ItemCreatePage.jsx
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
+import { useForm } from "react-hook-form";
 import axios from "axios";
-import { apiBaseUrl } from "../../config";
+import Swal from "sweetalert2";
+import NavlogComponent from "../../components/NavlogComponent";
+import { apiBaseUrl, storageUrl } from "../../config";
+import "./Item.css";
 
-const ItemCreatePage = () => {
+export default function ItemCreatePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-
-  const [barbershopId, setBarbershopId] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [itemData, setItemData] = useState({
-    image: null,
-    name: "",
-    type: "",
-    price: "",
-    status: "",
-    stock: "",
-    availability_start: "",
-    availability_end: "",
-    discount: "",
-    expiration_date: "",
-    description: "",
-    category: "",
-    subcategory: "",
-    brand: "",
-    is_featured: false,
-    limited_by_user: 0,
-    notes: "",
-    duration: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm({
+    defaultValues: {
+      stock: 0,
+      status: "1",
+      limited_by_user: "0",
+      is_featured: "0",
+    },
   });
+
+  const [establishment, setEstablishment] = useState({});
+  const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
-    const fetchBarbershop = async () => {
+    (async () => {
       try {
-        const response = await axios.get(
-          `${apiBaseUrl}/barbershop/view/${slug}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get(
+          `${apiBaseUrl}/establishment/view/${slug}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        const barbershop = response.data.barbershop || response.data;
-        if (barbershop && barbershop.id) {
-          setBarbershopId(barbershop.id);
-        } else {
-          Swal.fire({
-            title: "Erro",
-            text: "Barbearia não encontrada.",
-            icon: "error",
-            confirmButtonText: "OK",
-            customClass: {
-              popup: "custom-swal",
-              title: "custom-swal-title",
-              content: "custom-swal-text",
-            },
-          });
-        }
-      } catch (error) {
-        console.error("Erro ao buscar dados da barbearia:", error);
-        Swal.fire({
-          title: "Erro",
-          text: "Ocorreu um erro ao buscar os dados da barbearia.",
-          icon: "error",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        setEstablishment(data.establishment);
+      } catch {
+        Swal.fire("Erro", "Não foi possível carregar o estabelecimento.", "error");
+        navigate(-1);
+      } finally {
+        setLoading(false);
       }
-    };
+    })();
+  }, [slug, navigate]);
 
-    if (slug) {
-      fetchBarbershop();
-    }
-  }, [slug]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setItemData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleImageResize = (file, setPreview) => {
-    const reader = new FileReader();
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) {
-      Swal.fire({
-        title: "Formato de imagem inválido",
-        text: "Por favor, selecione uma imagem.",
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
-      return;
+      return Swal.fire("Formato inválido", "Selecione uma imagem válida.", "error");
     }
+    const reader = new FileReader();
     reader.onloadend = () => {
       const img = new Image();
       img.src = reader.result;
       img.onload = () => {
+        const W = 150, H = 150;
         const canvas = document.createElement("canvas");
+        canvas.width = W;
+        canvas.height = H;
         const ctx = canvas.getContext("2d");
-        canvas.width = 150;
-        canvas.height = 150;
-        ctx.drawImage(img, 0, 0, 150, 150);
-        const resizedDataURL = canvas.toDataURL("image/png");
-        setPreview(resizedDataURL);
+        ctx.drawImage(img, 0, 0, W, H);
+        setImagePreview(canvas.toDataURL("image/png"));
       };
+      img.onerror = () =>
+        Swal.fire("Erro", "Falha ao processar a imagem.", "error");
     };
     reader.readAsDataURL(file);
   };
 
-  const handleItemImageChange = (e) => {
-    const file = e.target.files[0];
-    handleImageResize(file, setImagePreview);
-    setItemData((prevData) => ({
-      ...prevData,
-      image: file,
-    }));
-  };
-
-  const handleImageError = (e) => {
-    if (e.target.src.includes("/images/itemdefault.png")) return;
-    e.target.src = "/images/itemdefault.png";
-  };
-
-  const validateFields = () => {
-    const errors = [];
-    const price = parseFloat(itemData.price);
-    if (isNaN(price) || price < 0) {
-      errors.push("O preço deve ser um valor monetário válido.");
+  const onSubmit = async (data) => {
+    data.stock = data.stock ?? 0;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return Swal.fire("Erro", "Você precisa estar autenticado.", "error");
     }
-    if (itemData.status !== "1" && itemData.status !== "0") {
-      errors.push("O status deve ser 'Ativo' ou 'Inativo'.");
-    }
-    const discount = parseFloat(itemData.discount);
-    if (isNaN(discount) || discount < 0) {
-      errors.push(
-        "O desconto deve ser um valor monetário válido. Use o valor zero caso não queria ofertar desconto para este item."
-      );
-    }
-    if (itemData.type !== "product" && itemData.type !== "service") {
-      errors.push("O tipo de item deve ser 'Produto' ou 'Serviço'.");
-    }
-
-    if (errors.length > 0) {
-      Swal.fire({
-        title: "Erro de validação",
-        text: errors.join("\n"),
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
-        },
-      });
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!validateFields()) return;
-
-    if (!barbershopId) {
-      Swal.fire({
-        title: "Erro",
-        text: "Não foi possível obter o ID da barbearia.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
-      return;
-    }
-
-    if (itemData.stock === "" || isNaN(parseInt(itemData.stock))) {
-      itemData.stock = null;
-    }
-
-    setIsProcessing(true);
-    setMessages(["Aguarde enquanto criamos o item..."]);
 
     const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("type", data.type);
+    formData.append("price", data.price);
+    formData.append("stock", data.stock);
+    formData.append("description", data.description || "");
+    formData.append("category", data.category || "");
+    formData.append("subcategory", data.subcategory || "");
+    formData.append("brand", data.brand || "");
+    formData.append("availability_start", data.availability_start || "");
+    formData.append("availability_end", data.availability_end || "");
+    formData.append("expiration_date", data.expiration_date || "");
+    formData.append("status", data.status);
+    formData.append("limited_by_user", data.limited_by_user);
+    formData.append("discount", data.discount || "");
+    formData.append("is_featured", data.is_featured);
+    formData.append("notes", data.notes || "");
+    formData.append("entity_id", establishment.id);
+    formData.append("entity_name", "establishment");
+    formData.append("app_id", "2");
 
-    if (imagePreview && itemData.image && typeof itemData.image !== "string") {
-      try {
-        const imageBlob = await fetch(imagePreview).then((res) => res.blob());
-        formData.append("image", imageBlob, "item.png");
-      } catch (err) {
-        console.error("Erro ao converter a imagem:", err);
-      }
+    if (imagePreview && imagePreview.startsWith("data:")) {
+      const blob = await fetch(imagePreview).then((res) => res.blob());
+      formData.append("image", blob, "image.png");
     }
-
-    Object.keys(itemData).forEach((key) => {
-      if (key !== "image") {
-        if (key === "is_featured") {
-          formData.append(key, itemData[key] ? 1 : 0);
-        } else {
-          formData.append(key, itemData[key]);
-        }
-      }
-    });
-
-    formData.append("entity_id", barbershopId);
-    formData.append("entity_name", "barbershop");
-    formData.append("app_id", 1);
 
     try {
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "multipart/form-data",
-      };
-
-      await axios.post(`${apiBaseUrl}/item`, formData, { headers });
-
-      Swal.fire({
-        title: "Sucesso!",
-        text: "Item criado com sucesso!",
-        icon: "success",
-        confirmButtonText: "OK",
-        customClass: {
-          popup: "custom-swal",
-          title: "custom-swal-title",
-          content: "custom-swal-text",
+      await axios.post(`${apiBaseUrl}/item`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate(-1);
-        }
       });
-    } catch (error) {
-      console.error("Erro ao criar item:", error);
-      if (error.response && error.response.status === 422) {
-        const validationErrors = error.response.data.errors;
-        let errorMessage = "Os seguintes campos têm erros:\n";
-        for (const field in validationErrors) {
-          errorMessage += `${field}: ${validationErrors[field].join(", ")}\n`;
-        }
-        Swal.fire({
-          title: "Validação Falhou",
-          text: errorMessage,
-          icon: "error",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+      Swal.fire("Sucesso", "Item cadastrado com sucesso.", "success");
+      navigate(-1);
+    } catch (err) {
+      if (err.response?.status === 422) {
+        const msgs = Object.values(err.response.data.errors || {}).flat();
+        Swal.fire("Erro de Validação", msgs.join("\n"), "warning");
       } else {
-        Swal.fire({
-          title: "Erro",
-          text: "Ocorreu um erro ao tentar criar o item. Tente novamente mais tarde.",
-          icon: "error",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "custom-swal",
-            title: "custom-swal-title",
-            content: "custom-swal-text",
-          },
-        });
+        Swal.fire("Erro", "Não foi possível criar o item.", "error");
       }
-    } finally {
-      setIsProcessing(false);
     }
   };
+
+  if (loading) {
+    return <Spinner animation="border" className="item-loading__spinner" />;
+  }
 
   return (
     <>
       <NavlogComponent />
-      <p className="section-title text-center">Novo Item</p>
-      <Container className="main-container" fluid>
-        <Row className="section-row justify-content-center">
-          <Col xs={12} lg={10} className="section-col">
-            <Card className="card-component shadow-sm">
-              <Card.Body className="card-body">
-                {isProcessing ? (
-                  <Col xs={12} className="loading-section">
-                    <ProcessingIndicatorComponent messages={messages} />
-                  </Col>
+      <Container className="item-create__container">
+        <div className="item-create__header d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center">
+            {establishment.logo && (
+              <img
+                src={`${storageUrl}/${establishment.logo}`}
+                alt="logo"
+                className="item-establishment-logo me-3"
+                onError={(e) => (e.currentTarget.src = "/images/logo.png")}
+              />
+            )}
+            <h4 className="mb-0 text-uppercase">{establishment.name}</h4>
+          </div>
+          <Button as={Link} to={`/item/list/${slug}`} variant="info" size="sm">
+            Ver Itens
+          </Button>
+        </div>
+
+        <Form
+          noValidate
+          encType="multipart/form-data"
+          onSubmit={handleSubmit(onSubmit)}
+          className="item-create__form mt-4"
+        >
+          <Row className="mb-4">
+            <Col xs={12} sm={6} md={4} className="text-center">
+              <label
+                htmlFor="imageInput"
+                style={{ cursor: "pointer" }}
+              >
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="img-thumbnail"
+                    width={150}
+                    height={150}
+                  />
                 ) : (
-                  <Form onSubmit={handleSubmit}>
-                    <Row>
-                      <Col xs={12} className="mb-4 text-center">
-                        <div>
-                          <label
-                            htmlFor="imageInput"
-                            style={{ cursor: "pointer" }}
-                          >
-                            {imagePreview ? (
-                              <img
-                                src={imagePreview}
-                                alt="Preview da Imagem do Item"
-                                className="img-component"
-                                onError={handleImageError}
-                              />
-                            ) : (
-                              <img
-                                src="/images/logo.png"
-                                alt="Imagem Padrão"
-                                className="img-component"
-                                onError={handleImageError}
-                              />
-                            )}
-                          </label>
-                          <div className="mt-3">
-                            <Button
-                              variant="secondary"
-                              className="action-button"
-                              onClick={() =>
-                                document.getElementById("imageInput").click()
-                              }
-                            >
-                              Adicionar imagem do item (opcional)
-                            </Button>
-                          </div>
-                          <Form.Control
-                            id="imageInput"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleItemImageChange}
-                            style={{ display: "none" }}
-                          />
-                        </div>
-                      </Col>
-
-                      {/* Nome */}
-                      <Col md={4} className="">
-                        <Form.Group controlId="name">
-                          <Form.Label>Nome</Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="name"
-                            value={itemData.name}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Preço */}
-                      <Col md={2} className="">
-                        <Form.Group controlId="price">
-                          <Form.Label>Preço</Form.Label>
-                          <Form.Control
-                            type="number"
-                            step="0.01"
-                            name="price"
-                            value={itemData.price}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Tipo */}
-                      <Col md={2} className="">
-                        <Form.Group controlId="type">
-                          <Form.Label>Tipo</Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="type"
-                            value={itemData.type}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione</option>
-                            <option value="product">Produto</option>
-                            <option value="service">Serviço</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
-
-                      {/* Status */}
-                      <Col md={2} className="">
-                        <Form.Group controlId="status">
-                          <Form.Label>Status</Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="status"
-                            value={itemData.status}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Selecione</option>
-                            <option value="1">Ativo</option>
-                            <option value="0">Inativo</option>
-                          </Form.Control>
-                        </Form.Group>
-                      </Col>
-
-                      {/* Estoque */}
-                      <Col md={2} className="">
-                        <Form.Group controlId="stock">
-                          <Form.Label>Estoque</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name="stock"
-                            value={itemData.stock}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-                      {/* Duração (minutos) */}
-                      <Col md={2}>
-                        <Form.Group controlId="duration">
-                          <Form.Label>Duração (min)</Form.Label>
-                          <Form.Control
-                            type="number"
-                            name="duration"
-                            value={itemData.duration || ""}
-                            onChange={handleInputChange}
-                            min="1"
-                            max="480"
-                            placeholder="Ex: 25"
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Desconto */}
-                      <Col md={2} className="">
-                        <Form.Group controlId="discount">
-                          <Form.Label>Desconto</Form.Label>
-                          <Form.Control
-                            type="number"
-                            step="0.01"
-                            name="discount"
-                            value={itemData.discount}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Data de Início */}
-                      <Col md={3} className="">
-                        <Form.Group controlId="availability_start">
-                          <Form.Label>Data de Início</Form.Label>
-                          <Form.Control
-                            type="datetime-local"
-                            name="availability_start"
-                            value={itemData.availability_start}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Data de Término */}
-                      <Col md={3} className="">
-                        <Form.Group controlId="availability_end">
-                          <Form.Label>Data de Término</Form.Label>
-                          <Form.Control
-                            type="datetime-local"
-                            name="availability_end"
-                            value={itemData.availability_end}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Descrição */}
-                      <Col md={12} className="">
-                        <Form.Group controlId="description">
-                          <Form.Label>Descrição</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            name="description"
-                            value={itemData.description}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-
-                      {/* Notas */}
-                      <Col md={12} className="">
-                        <Form.Group controlId="notes">
-                          <Form.Label>Notas</Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            rows={3}
-                            name="notes"
-                            value={itemData.notes || ""}
-                            onChange={handleInputChange}
-                          />
-                        </Form.Group>
-                      </Col>
-                    </Row>
-
-                    <div className="text-center">
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        className="action-button"
-                      >
-                        {isProcessing ? "Criando..." : "Criar Item"}
-                      </Button>
-                    </div>
-
-                    {messages.length > 0 && (
-                      <div className="mt-3">
-                        {messages.map((message, index) => (
-                          <div key={index}>{message}</div>
-                        ))}
-                      </div>
-                    )}
-                  </Form>
+                  <div className="border p-4">Clique para adicionar imagem</div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+              </label>
+              <Form.Control
+                id="imageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+            </Col>
+            <Col xs={12} md={8}>
+              <Row className="g-3">
+                <Col xs={12} md={6} lg={3}>
+                  <Form.Group controlId="name">
+                    <Form.Label>Nome*</Form.Label>
+                    <Form.Control {...register("name", { required: true })} />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={6} lg={3}>
+                  <Form.Group controlId="type">
+                    <Form.Label>Tipo*</Form.Label>
+                    <Form.Select {...register("type", { required: true })}>
+                      <option value="">Selecione...</option>
+                      <option value="product">Produto</option>
+                      <option value="service">Serviço</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={6} lg={3}>
+                  <Form.Group controlId="price">
+                    <Form.Label>Preço (R$)*</Form.Label>
+                    <Form.Control
+                      type="number"
+                      step="0.01"
+                      {...register("price", { required: true })}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={6} lg={3}>
+                  <Form.Group controlId="stock">
+                    <Form.Label>Estoque</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      {...register("stock", { valueAsNumber: true })}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="g-3 mt-3">
+                <Col xs={12} md={4}>
+                  <Form.Group controlId="availability_start">
+                    <Form.Label>Disponível de</Form.Label>
+                    <Form.Control
+                      type="datetime-local"
+                      {...register("availability_start")}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={4}>
+                  <Form.Group controlId="availability_end">
+                    <Form.Label>até</Form.Label>
+                    <Form.Control
+                      type="datetime-local"
+                      {...register("availability_end")}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col xs={12} md={4}>
+                  <Form.Group controlId="expiration_date">
+                    <Form.Label>Expira em</Form.Label>
+                    <Form.Control
+                      type="date"
+                      {...register("expiration_date")}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+
+          <Row className="g-3 mb-4">
+            <Col>
+              <Form.Group controlId="description">
+                <Form.Label>Descrição</Form.Label>
+                <Form.Control as="textarea" rows={2} {...register("description")} />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row className="g-3 mb-4">
+            <Col xs={12} md={4}>
+              <Form.Group controlId="category">
+                <Form.Label>Categoria</Form.Label>
+                <Form.Control {...register("category")} />
+              </Form.Group>
+            </Col>
+            <Col xs={12} md={4}>
+              <Form.Group controlId="subcategory">
+                <Form.Label>Subcategoria</Form.Label>
+                <Form.Control {...register("subcategory")} />
+              </Form.Group>
+            </Col>
+            <Col xs={12} md={4}>
+              <Form.Group controlId="brand">
+                <Form.Label>Marca</Form.Label>
+                <Form.Control {...register("brand")} />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row className="g-3 mb-4">
+            <Col xs={12} md={6} lg={3}>
+              <Form.Group controlId="status">
+                <Form.Label>Status</Form.Label>
+                <Form.Select {...register("status")}>
+                  <option value="1">Ativo</option>
+                  <option value="0">Inativo</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Form.Group controlId="limited_by_user">
+                <Form.Label>Limitado por usuário</Form.Label>
+                <Form.Select {...register("limited_by_user")}>
+                  <option value="0">Não</option>
+                  <option value="1">Sim</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Form.Group controlId="discount">
+                <Form.Label>Desconto (%)</Form.Label>
+                <Form.Control type="number" step="0.01" {...register("discount")} />
+              </Form.Group>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Form.Group controlId="is_featured">
+                <Form.Label>Destaque</Form.Label>
+                <Form.Select {...register("is_featured")}>
+                  <option value="0">Não</option>
+                  <option value="1">Sim</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row className="g-3 mb-4">
+            <Col>
+              <Form.Group controlId="notes">
+                <Form.Label>Notas</Form.Label>
+                <Form.Control as="textarea" rows={2} {...register("notes")} />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col className="text-end">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Spinner animation="border" size="sm" /> : "Criar Item"}
+              </Button>
+            </Col>
+          </Row>
+        </Form>
       </Container>
     </>
   );
-};
-
-export default ItemCreatePage;
+}

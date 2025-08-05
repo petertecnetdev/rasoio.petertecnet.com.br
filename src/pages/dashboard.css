@@ -1,185 +1,139 @@
-:root {
-  --plat-dark-bg: #171717;
-  --plat-dark-bg-2: #222;
-  --plat-gray: #2e2c35;
-  --plat-gray-light: #383838;
-  --plat-text: #ededed;
-  --plat-text-muted: #aaa;
-  --plat-border: #222;
-  --plat-shadow: 0 2px 16px 0 rgba(40,40,40,0.12), 0 1.5px 5px 0 rgba(10,10,10,0.16);
-  --plat-radius: 2rem;
-}
+/* src/pages/Dashboard.css */
 
-.main-container {
+.dashboard-root {
+  background-color: #181818;
+  color: #ededed;
   min-height: 100vh;
-  background: var(--plat-dark-bg);
-  padding-top: 40px;
-  padding-bottom: 40px;
+  padding: 20px;
 }
 
-.section-row {
-  margin-bottom: 24px;
+.dashboard-main {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 24px;
+  background: rgba(24, 24, 24, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
 }
 
-.card-component {
-  background: var(--plat-dark-bg-2);
-  border: 1px solid var(--plat-border);
-  border-radius: var(--plat-radius);
-  box-shadow: var(--plat-shadow);
-  padding: 0;
-}
-
-.section-title {
-  font-size: 2rem;
-  font-weight: 900;
-  color: var(--plat-text);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin: 1.2rem 0 0.4rem 0;
-}
-
-.card-body {
-  background: transparent;
-  padding: 2.2rem 1.4rem 1.4rem 1.4rem;
-  border-radius: var(--plat-radius);
-}
-
-.inner-row {
-  margin-left: -12px;
-  margin-right: -12px;
-}
-
-.inner-col {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-.inner-card {
-  position: relative;
-  background: var(--plat-gray);
-  border-radius: var(--plat-radius);
-  box-shadow: var(--plat-shadow);
-  min-height: 230px;
-  transition: transform 0.12s;
-  overflow: hidden;
-  border: 1px solid #232323;
-}
-
-.inner-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 4px 18px 0 rgba(40,40,40,0.18), 0 2.5px 10px 0 rgba(23,23,23,0.28);
-}
-
-.card-bg {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-size: cover;
-  background-position: center;
-  filter: blur(6px) brightness(0.38);
-  z-index: 1;
-  opacity: 0.8;
-}
-
-.card-content {
-  position: relative;
-  z-index: 2;
-  min-height: 180px;
-}
-
-.img-component {
-  width: 82px;
-  height: 82px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 3px solid var(--plat-gray-light);
-  box-shadow: 0 1.5px 8px 0 rgba(0,0,0,0.12);
-  margin-right: 1.2rem;
-  background: var(--plat-dark-bg-2);
-}
-
-.label-name-bg {
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: var(--plat-text);
-  text-shadow: 1px 1px 2px #000, 0 0 6px #222;
-  margin-bottom: 0.3rem;
-  line-height: 1.2;
-  word-break: break-word;
-}
-
-.link-component {
-  text-decoration: none !important;
-}
-
-.empty-section {
-  margin-top: 1.8rem;
-  margin-bottom: 1.8rem;
-}
-
-.empty-text {
-  font-size: 1.2rem;
-  color: var(--plat-text-muted);
+.dashboard-section-title {
+  font-size: 1.75rem;
   font-weight: 600;
-  margin-bottom: 1.1rem;
+  color: #e0e0e0;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
 }
 
-.action-button {
-  background: var(--plat-gray-light);
-  color: var(--plat-text) !important;
-  border: none;
-  font-weight: bold;
-  font-size: 1.09rem;
-  padding: 0.7rem 2.1rem;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px 0 rgba(30,30,30,0.12);
-  transition: filter 0.14s, background 0.18s;
-}
-.action-button:hover {
-  filter: brightness(1.1) drop-shadow(0 1px 4px #000);
-  background: #444;
+.dashboard-establishments-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
 }
 
-.loading-section {
+.dashboard-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #666;
+  padding: 32px 0;
+  font-size: 1rem;
+}
+
+.dashboard-establishment-card {
+  background: #232323;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s;
+}
+
+.dashboard-establishment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.85);
+}
+
+.dashboard-establishment-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 180px;
+  margin-bottom: 12px;
 }
 
-@media (max-width: 991px) {
-  .inner-card {
-    min-height: 180px;
-  }
-  .img-component {
-    width: 64px;
-    height: 64px;
-    margin-right: 0.8rem;
-  }
-  .label-name-bg {
-    font-size: 1.07rem;
-  }
+.dashboard-establishment-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #414141;
+  margin-right: 16px;
+  background: #181818;
 }
 
-@media (max-width: 767px) {
-  .section-title {
-    font-size: 1.4rem;
-    margin-top: 0.5rem;
-  }
-  .card-body {
-    padding: 1.2rem 0.7rem 0.7rem 0.7rem;
-  }
-  .empty-section {
-    margin-top: 0.9rem;
-    margin-bottom: 0.9rem;
-  }
+.dashboard-establishment-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ededed;
+  margin-bottom: 4px;
 }
 
-::-webkit-scrollbar {
-  width: 7px;
-  background: #1a1a1a;
+.dashboard-establishment-slug {
+  font-size: 0.9rem;
+  color: #b3b3b3;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #343434;
+.dashboard-establishment-btn {
+  background-color: #353535 !important;
+  color: #ededed !important;
+  border: none !important;
   border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.dashboard-establishment-btn:hover {
+  background-color: #434343 !important;
+}
+
+/* Override for black variation */
+.dashboard-establishment-btn.bg-black {
+  background-color: #181818 !important;
+  color: #ededed !important;
+  border: 1px solid #373737 !important;
+}
+
+/* Spinner center on load */
+.text-center .spinner-border {
+  color: #b3b3b3;
+}
+
+/* Card portrait section styling */
+.dashboard-establishment-card .card {
+  background: #232323;
+  border: 1px solid #303030;
+  border-radius: 6px;
+}
+
+.dashboard-establishment-card .card-header {
+  background: #181818;
+  border-bottom: 1px solid #292929;
+  color: #ededed;
+}
+
+.dashboard-establishment-card .card-body {
+  padding: 12px;
+  background: #101010;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-main {
+    padding: 16px;
+  }
+  .dashboard-establishment-logo {
+    width: 50px;
+    height: 50px;
+    margin-right: 12px;
+  }
+  .dashboard-section-title {
+    font-size: 1.5rem;
+  }
 }

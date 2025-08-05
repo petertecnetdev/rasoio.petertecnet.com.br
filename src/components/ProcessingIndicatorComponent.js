@@ -1,65 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import ReactDOM from 'react-dom';
-import loadingImage from '../images/logo.gif';
+// src/components/ProcessingIndicatorComponent.jsx
+import React, { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import "./ProcessingIndicatorComponent.css";
 
-const ProcessingIndicatorComponent = ({ messages = [], interval = 1500 }) => {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+const ProcessingIndicatorComponent = ({ messages = [], interval = 1000, videoSrc }) => {
+  const msgRef = useRef(0);
+  const [current, setCurrent] = React.useState(messages[0] || "");
 
   useEffect(() => {
-    if (!messages.length) return;
-
-    const messageInterval = setInterval(() => {
-      setCurrentMessageIndex(prev => (prev + 1) % messages.length);
+    if (messages.length === 0) return;
+    const iv = setInterval(() => {
+      msgRef.current = (msgRef.current + 1) % messages.length;
+      setCurrent(messages[msgRef.current]);
     }, interval);
-
-    return () => clearInterval(messageInterval);
+    return () => clearInterval(iv);
   }, [messages, interval]);
 
-  const indicator = (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      zIndex: 9999,
-      overflow: 'hidden'
-    }}>
-      <img
-        src={loadingImage}
-        alt="Loading"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover'
-        }}
-      />
-      {messages.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          width: '100%',
-          textAlign: 'center',
-          color: '#FFFFFF',
-          fontSize: '1.2rem',
-          padding: '0 20px'
-        }}>
-          {messages[currentMessageIndex]}
+  return (
+    <div className="processing-overlay">
+      <div className="processing-inner">
+        {videoSrc && (
+          <video
+            className="processing-video"
+            src={videoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-label="Indicador de carregamento"
+          />
+        )}
+        <div className="processing-text">
+          <div className="processing-message">{current}</div>
         </div>
-      )}
+      </div>
     </div>
   );
-
-  return ReactDOM.createPortal(indicator, document.body);
 };
 
 ProcessingIndicatorComponent.propTypes = {
   messages: PropTypes.arrayOf(PropTypes.string),
   interval: PropTypes.number,
+  videoSrc: PropTypes.string,
 };
 
 export default ProcessingIndicatorComponent;

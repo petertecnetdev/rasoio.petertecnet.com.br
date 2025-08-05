@@ -1,141 +1,217 @@
-/* NavlogComponent.css */
-
+/* NAVBAR MODERNO/ARREDONDADO PRETO E CINZA */
 .navlog__navbar {
-  padding: 0.5rem 1rem;
-  background-color: #000;          /* preto puro */
-  border-bottom: 1px solid #333;   /* cinza escuro */
-  z-index: 1000;
+  background: rgba(30, 30, 36, 0.97) !important;
+  border: none;
+  border-radius: 2.2rem;
+  margin: 14px 18px 0 18px;
+  padding: 0.5rem 2.2rem !important;
+  box-shadow: 0 8px 32px #000c, 0 1.5px 0 #4448;
+  z-index: 1020;
+  min-height: 70px;
+  transition: box-shadow .2s, background .3s;
+  display: flex;
+  align-items: center;
 }
 
 .navlog__brand {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  padding: 0;
+  gap: 0.7rem;
+  padding-left: 0.2rem;
+  border-radius: 1.6rem;
 }
 
 .navlog__logo-image {
-  height: 40px;
-  width: auto;
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  object-position: center;
+  background: #111a;
+  border-radius: 50%;
+  box-shadow: 0 2px 16px #0007, 0 0 0 4px #4446;
+  transition: transform .19s, box-shadow .19s;
+  padding: 2px;
+  border: 2px solid #333b;
+  user-select: none;
+}
+.navlog__brand:hover .navlog__logo-image {
+  transform: scale(1.07) rotate(-2deg);
+  box-shadow: 0 4px 28px #222a, 0 0 0 4px #5559;
+  border-color: #555;
 }
 
 .navlog__menu-icon {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
 }
 
 .navlog__mobile-toggle-btn {
   background: none;
   border: none;
-  color: #ccc;                     /* cinza claro */
-  font-size: 1.5rem;
+  font-size: 2.3rem;
+  color: #bbb;
   cursor: pointer;
+  border-radius: 1.5rem;
+  transition: color 0.18s, background .18s;
+  padding: 2px 13px 1px 13px;
+  box-shadow: 0 0px 8px #4443;
+  display: block;
+}
+.navlog__mobile-toggle-btn:hover {
+  color: #fff;
+  background: #3337;
 }
 
 .navlog__mobile-menu {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.95); /* preto quase opaco */
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: linear-gradient(135deg, #18191c 85%, #2b2d38 100%);
+  z-index: 1100;
+  padding: 36px 0 0 0;
   display: flex;
   flex-direction: column;
-  z-index: 1100;
+  align-items: center;
+  animation: navlogFadeIn .3s;
+  overflow-y: auto;
+  border-radius: 2.4rem;
+  box-shadow: 0 12px 36px #000c;
+}
+@keyframes navlogFadeIn {
+  from { opacity: 0; transform: translateY(-15px);}
+  to { opacity: 1; transform: none;}
 }
 
 .navlog__mobile-close {
-  display: flex;
-  justify-content: flex-end;
-  padding: 1rem;
+  align-self: flex-end;
+  margin-right: 32px;
 }
-
 .navlog__close-btn {
   background: none;
   border: none;
-  color: #ccc;
-  font-size: 2rem;
+  font-size: 2.5rem;
+  color: #bbb;
   cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 1.4rem;
+  transition: color .2s, background .18s;
 }
+.navlog__close-btn:hover { color: #fff; background: #2229; }
 
 .navlog__mobile-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 1.5rem;
-}
-
-.navlog__loading {
-  color: #777;                     /* cinza médio */
+  margin-top: 24px;
   text-align: center;
-  margin-top: 2rem;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 2rem;
+  box-shadow: 0 1.5px 8px #4445;
+  background: rgba(36, 36, 42, 0.93);
+  padding: 2rem 1.1rem 1.7rem 1.1rem;
 }
 
 .navlog__avatar {
-  display: block;
-  margin: 1rem auto 0.5rem;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  width: 90px;
+  height: 90px;
   object-fit: cover;
-  border: 2px solid #444;          /* cinza escuro */
+  border-radius: 50%;
+  border: 2.5px solid #444;
+  box-shadow: 0 2px 12px #0007;
+  margin-bottom: 12px;
+  background: #232323;
 }
 
 .navlog__user-name {
-  color: #eee;                     /* quase branco */
-  text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-  text-transform: capitalize;
+  color: #ededed;
+  font-size: 1.22rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
 }
 
 .navlog__mobile-links {
+  margin-top: 36px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 22px;
+  align-items: center;
+  width: 100%;
 }
 
 .navlog__link {
-  color: #ccc;
+  color: #ededed;
+  background: none;
   text-decoration: none;
-  font-size: 1rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  font-weight: 500;
+  transition: color 0.2s;
+  border: none;
+  padding: 0;
+  border-radius: 1.2rem;
 }
-
 .navlog__link:hover {
-  color: #888;
-  border-color: #444;
+  color: #fff;
+  text-decoration: underline;
+  background: #282a3644;
 }
 
-/* Administrativo submenu */
+.navlog__loading {
+  color: #ccc;
+  font-size: 1.06rem;
+  letter-spacing: 0.5px;
+  margin-top: 18px;
+}
+
 .navlog__admin-btn {
-  display: block;
-  width: 100%;
-  text-align: left;
   background: none;
   border: none;
-  color: #bbb;                     /* cinza intermediário */
-  font-weight: 600;
-  padding: 0.5rem 0;
-  font-size: 1rem;
+  color: #bbb;
+  font-size: 1.07rem;
+  text-align: left;
   cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+  margin-top: 18px;
+  border-radius: 1.1rem;
+  transition: color .2s, background .18s;
+  letter-spacing: .5px;
+  padding: 3px 9px 3px 3px;
 }
+.navlog__admin-btn:hover { color: #ededed; background: #282a3644; }
 
 .navlog__admin-submenu {
-  padding-left: 1rem;
-  margin: 0.5rem 0;
+  padding-left: 16px;
+  margin-top: 10px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
 }
-
 .navlog__submenu-link {
-  color: #aaa;                     /* cinza suave */
+  color: #ededed;
+  background: none;
   text-decoration: none;
-  font-size: 0.95rem;
-  padding: 0.25rem 0;
-  transition: color 0.2s;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 0.2s, background .18s;
+  border: none;
+  padding: 0;
+  border-radius: 1rem;
+}
+.navlog__submenu-link:hover {
+  color: #fff;
+  text-decoration: underline;
+  background: #282a3644;
 }
 
-.navlog__submenu-link:hover {
-  color: #666;
+@media (max-width: 991px) {
+  .navlog__navbar { padding: 0.5rem 1rem !important; margin: 10px 5px 0 5px; }
+  .navlog__brand { gap: 0.3rem; }
+  .navlog__logo-image { width: 44px; height: 44px; }
+  .navlog__mobile-content { max-width: 94vw; }
+  .navlog__mobile-menu { border-radius: 0; }
 }

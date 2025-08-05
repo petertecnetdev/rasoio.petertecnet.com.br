@@ -156,7 +156,7 @@ const EmailVerifyPage = () => {
                 </div>
                 <Card.Title className="card-title text-center">Verificar Email</Card.Title>
                 <p className="footer-text text-center">
-                  Bem-vindo ao Rasoio! Para garantir a segurança da sua conta, insira o código que enviamos para seu e-mail.
+                  Bem-vindo ao Plat! Para garantir a segurança da sua conta, insira o código que enviamos para seu e-mail.
                 </p>
                 <Form onSubmit={handleVerifyEmail} className="form-container">
                   <Form.Group className="form-group">

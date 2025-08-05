@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/pages/establishment/EstablishmentCreatePage.js
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,34 +9,36 @@ import NavlogComponent from "../../components/NavlogComponent";
 import { Button, Col, Row, Form } from "react-bootstrap";
 import "./Establishment.css";
 
+const categoryOptions = [
+  { value: "restaurante", label: "Restaurante" },
+  { value: "hamburgueria", label: "Hamburgueria" },
+  { value: "sorveteria", label: "Sorveteria" },
+  { value: "fast_food", label: "Fast Food" },
+  { value: "doceria", label: "Doceria" },
+  { value: "cafeteria", label: "Cafeteria" },
+  { value: "pizzaria", label: "Pizzaria" },
+  { value: "pub", label: "Pub" }
+];
+
 const segmentOptions = [
-  { value: "corte_masculino", label: "Corte Masculino" },
-  { value: "corte_feminino", label: "Corte Feminino" },
-  { value: "barba", label: "Barba" },
-  { value: "sobrancelha", label: "Sobrancelha" },
-  { value: "tratamento_de_cabelo", label: "Tratamento de Cabelo" },
-  { value: "massagem_capilar", label: "Massagem Capilar" },
-  { value: "coloracao", label: "Coloração" },
-  { value: "alisamento", label: "Alisamento" }
+  { value: "delivery", label: "Delivery" },
+  { value: "retirada", label: "Retirada no local" },
+  { value: "presencial", label: "Consumo no local" },
+  { value: "balcao", label: "Balcão" },
+  { value: "eventos", label: "Eventos" },
+  { value: "catering", label: "Catering" },
+  { value: "aniversarios", label: "Aniversários" },
+  { value: "infantil", label: "Infantil" }
 ];
 
 export default function EstablishmentCreatePage() {
   const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { isSubmitting }
-  } = useForm();
+  const { register, handleSubmit, setValue, formState: { isSubmitting } } = useForm();
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [backgroundPreview, setBackgroundPreview] = useState(null);
   const [segments, setSegments] = useState([]);
   const [files, setFiles] = useState({});
-
-  useEffect(() => {
-    setValue("category", "barbershop");
-  }, [setValue]);
 
   const handleResizeImage = (file, setPreview, width, height, key) => {
     return new Promise((resolve, reject) => {
@@ -81,7 +84,9 @@ export default function EstablishmentCreatePage() {
 
   const handleSegmentsChange = e => {
     const { value, checked } = e.target;
-    const updated = checked ? [...segments, value] : segments.filter(s => s !== value);
+    const updated = checked
+      ? [...segments, value]
+      : segments.filter(s => s !== value);
     setSegments(updated);
     setValue("segments", updated);
   };
@@ -129,10 +134,9 @@ export default function EstablishmentCreatePage() {
       <NavlogComponent />
       <div className="establishment-create-page">
         <div className="d-flex justify-content-between align-items-center mb-2">
-          <h2 className="title">Criar Barbearia</h2>
+          <h2 className="title">Criar Estabelecimento</h2>
         </div>
         <Form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
-          <input type="hidden" defaultValue="barbershop" {...register("category")} />
           <Row>
             <Col xs={12} className="text-center">
               <div className="image-preview-container">
@@ -158,17 +162,17 @@ export default function EstablishmentCreatePage() {
               <div className="d-flex justify-content-center gap-3 mb-4">
                 <Button
                   variant="secondary"
-                  className="action-button mt-2"
+                  className="action-button"
                   onClick={() => document.getElementById("backgroundInput").click()}
                 >
-                  Enviar imagem de Background
+                  Alterar Background
                 </Button>
                 <Button
                   variant="secondary"
-                  className="action-button mt-2"
+                  className="action-button"
                   onClick={() => document.getElementById("logoInput").click()}
                 >
-                  Enviar  Logo
+                  Alterar Logo
                 </Button>
               </div>
               <Form.Control
@@ -211,6 +215,17 @@ export default function EstablishmentCreatePage() {
                 <div className="form-group">
                   <label>Tipo</label>
                   <input type="text" {...register("type")} />
+                </div>
+              </Col>
+              <Col xs={12} md={6} lg={4}>
+                <div className="form-group">
+                  <label>Categoria*</label>
+                  <select {...register("category", { required: true })} className="form-select">
+                    <option value="">Selecione...</option>
+                    {categoryOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
               </Col>
               <Col xs={12} md={6} lg={4}>
@@ -285,10 +300,10 @@ export default function EstablishmentCreatePage() {
                   <input type="url" {...register("website_url")} />
                 </div>
               </Col>
-              <Col md={7}>
+              <Col md={7} >
                 <div className="form-group">
                   <label>Segmentos Atendidos</label>
-                  <div className="segments-checkbox-grid">  
+                  <div className="segments-checkbox-grid">
                     {segmentOptions.map(opt => (
                       <div className="form-check segment-check" key={opt.value}>
                         <input
@@ -308,7 +323,7 @@ export default function EstablishmentCreatePage() {
               </Col>
               <Col xs={12} className="text-end">
                 <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                  {isSubmitting ? <> Salvando...</> : "Criar Barbearia"}
+                  {isSubmitting ? <> Salvando...</> : "Criar Estabelecimento"}
                 </button>
               </Col>
             </Row>

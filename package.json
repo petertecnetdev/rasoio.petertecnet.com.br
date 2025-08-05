@@ -8,7 +8,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+     "lint": "eslint 'src/**/*.{js,jsx}'"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +28,9 @@
     "chart.js": "^4.4.4",
     "express": "^4.19.2",
     "framer-motion": "^12.4.2",
+    "html2canvas": "^1.4.1",
     "jquery": "^3.7.1",
+    "jspdf": "^3.0.1",
     "prop-types": "^15.8.1",
     "react-bootstrap": "^2.10.2",
     "react-chartjs-2": "^5.2.0",
@@ -58,6 +61,9 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/plugin-transform-private-property-in-object": "^7.24.7",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "sass": "^1.72.0",
     "source-map-loader": "^5.0.0"
   }
