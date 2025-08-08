@@ -1,35 +1,55 @@
 // src/contexts/LoadingContext.jsx
-import React, { createContext, useState, useCallback } from "react";
-import PropTypes from "prop-types";
+import React, { createContext, useState, useCallback, useEffect } from "react";
+import axios from "axios";
 
 export const LoadingContext = createContext({
   isLoading: false,
-  push: () => {},
-  pop: () => {},
 });
 
-let counter = 0;
-
-export const LoadingProvider = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(false);
+export function LoadingProvider({ children }) {
+  const [count, setCount] = useState(0);
+  const isLoading = count > 0;
 
   const push = useCallback(() => {
-    counter += 1;
-    setIsLoading(true);
+    setCount((c) => c + 1);
   }, []);
 
   const pop = useCallback(() => {
-    counter = Math.max(0, counter - 1);
-    if (counter === 0) setIsLoading(false);
+    setCount((c) => Math.max(c - 1, 0));
   }, []);
 
+  useEffect(() => {
+    const reqId = axios.interceptors.request.use(
+      (config) => {
+        push();
+        return config;
+      },
+      (error) => {
+        pop();
+        return Promise.reject(error);
+      }
+    );
+
+    const resId = axios.interceptors.response.use(
+      (response) => {
+        pop();
+        return response;
+      },
+      (error) => {
+        pop();
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqId);
+      axios.interceptors.response.eject(resId);
+    };
+  }, [push, pop]);
+
   return (
-    <LoadingContext.Provider value={{ isLoading, push, pop }}>
+    <LoadingContext.Provider value={{ isLoading }}>
       {children}
     </LoadingContext.Provider>
   );
-};
-
-LoadingProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
+}

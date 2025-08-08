@@ -1,138 +1,162 @@
-/* NAVBAR MODERNO/ARREDONDADO PRETO E CINZA */
+/* NavlogComponent.css */
+
+/* NAVBAR MODERNO FUTURISTA COM NEON AZUL */
 .navlog__navbar {
-  background: rgba(30, 30, 36, 0.97) !important;
-  border: none;
+  background: linear-gradient(145deg, #0e0f13, #191b21);
   border-radius: 2.2rem;
   margin: 14px 18px 0 18px;
-  padding: 0.5rem 2.2rem !important;
-  box-shadow: 0 8px 32px #000c, 0 1.5px 0 #4448;
+  padding: 0.5rem 2.2rem;
+  box-shadow: 0 0 18px #00f2ff33, 0 2px 12px #ffffff;
   z-index: 1020;
-  min-height: 70px;
-  transition: box-shadow .2s, background .3s;
+  min-height: 72px;
   display: flex;
   align-items: center;
+  border: 1px solid #00e5ff22;
 }
 
+/* LOGO / BRAND */
 .navlog__brand {
-  display: flex !important;
+  display: flex;
   align-items: center;
   gap: 0.7rem;
   padding-left: 0.2rem;
   border-radius: 1.6rem;
 }
-
 .navlog__logo-image {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   object-fit: cover;
   object-position: center;
-  background: #111a;
+  background: #0c0c0c;
   border-radius: 50%;
-  box-shadow: 0 2px 16px #0007, 0 0 0 4px #4446;
-  transition: transform .19s, box-shadow .19s;
-  padding: 2px;
-  border: 2px solid #333b;
-  user-select: none;
+  box-shadow: 0 0 20px #00eaff99, 0 0 0 3px #00d6ff44;
+  padding: 3px;
+  border: 2px solid #fffbfb;
+  transition: transform 0.19s, box-shadow 0.19s;
+  
 }
 .navlog__brand:hover .navlog__logo-image {
   transform: scale(1.07) rotate(-2deg);
-  box-shadow: 0 4px 28px #222a, 0 0 0 4px #5559;
-  border-color: #555;
+  box-shadow: 0 0 28px #00ffff, 0 0 0 4px #00dfff66;
+  border-color: #00f6ff;
 }
 
+/* MENU ICON */
 .navlog__menu-icon {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 1.1rem;
+  gap: 1rem;
 }
-
 .navlog__mobile-toggle-btn {
   background: none;
   border: none;
-  font-size: 2.3rem;
-  color: #bbb;
+  font-size: 2.4rem;
+  color: #00eaff;
   cursor: pointer;
-  border-radius: 1.5rem;
-  transition: color 0.18s, background .18s;
-  padding: 2px 13px 1px 13px;
-  box-shadow: 0 0px 8px #4443;
-  display: block;
+  border-radius: 50px;
+  transition: all 0.2s;
+  padding: 4px 12px;
+  box-shadow: 0 0 10px #00eaff33;
 }
 .navlog__mobile-toggle-btn:hover {
   color: #fff;
-  background: #3337;
+  background: #00dfff22;
 }
 
+/* LOGIN BUTTON */
+.navlog__login-btn {
+  margin-left: auto;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #00f0ff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.navlog__login-btn:hover {
+  background: #00dfff;
+  color: #000;
+  border-color: #00faff;
+}
+
+/* MOBILE MENU OVERLAY */
 .navlog__mobile-menu {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background: linear-gradient(135deg, #18191c 85%, #2b2d38 100%);
+  background: radial-gradient(circle at top, #0a0a0e, #131419 70%);
   z-index: 1100;
-  padding: 36px 0 0 0;
+  padding-top: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  animation: navlogFadeIn .3s;
+  animation: navlogFadeIn 0.3s;
   overflow-y: auto;
-  border-radius: 2.4rem;
-  box-shadow: 0 12px 36px #000c;
+  box-shadow: inset 0 0 20px #00eaff33;
 }
 @keyframes navlogFadeIn {
-  from { opacity: 0; transform: translateY(-15px);}
-  to { opacity: 1; transform: none;}
+  from { opacity: 0; transform: translateY(-15px); }
+  to   { opacity: 1; transform: none; }
 }
 
+/* CLOSE BUTTON */
 .navlog__mobile-close {
   align-self: flex-end;
-  margin-right: 32px;
+  margin-right: 28px;
 }
 .navlog__close-btn {
   background: none;
   border: none;
-  font-size: 2.5rem;
-  color: #bbb;
+  font-size: 2.6rem;
+  color: #00eaff;
   cursor: pointer;
-  padding: 5px 12px;
-  border-radius: 1.4rem;
-  transition: color .2s, background .18s;
+  padding: 5px 10px;
+  border-radius: 1.5rem;
+  transition: all 0.18s;
 }
-.navlog__close-btn:hover { color: #fff; background: #2229; }
+.navlog__close-btn:hover {
+  color: #fff;
+  background: #00dfff33;
+}
 
+/* MOBILE CONTENT */
 .navlog__mobile-content {
   margin-top: 24px;
   text-align: center;
   width: 100%;
-  max-width: 340px;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
   border-radius: 2rem;
-  box-shadow: 0 1.5px 8px #4445;
-  background: rgba(36, 36, 42, 0.93);
-  padding: 2rem 1.1rem 1.7rem 1.1rem;
+  background: #121316;
+  padding: 2rem 1.1rem 1.7rem;
+  box-shadow: 0 0 12px #00eaff33;
 }
 
+/* AVATAR */
 .navlog__avatar {
   width: 90px;
   height: 90px;
   object-fit: cover;
   border-radius: 50%;
-  border: 2.5px solid #444;
-  box-shadow: 0 2px 12px #0007;
+  border: 2.5px solid #00dfff44;
+  box-shadow: 0 0 12px #00f6ff77;
   margin-bottom: 12px;
-  background: #232323;
+  background: #111;
 }
-
 .navlog__user-name {
-  color: #ededed;
-  font-size: 1.22rem;
+  color: #fff;
+  font-size: 1.24rem;
   font-weight: 700;
   margin-bottom: 15px;
   letter-spacing: 1px;
 }
 
+/* LINKS */
 .navlog__mobile-links {
   margin-top: 36px;
   display: flex;
@@ -141,49 +165,44 @@
   align-items: center;
   width: 100%;
 }
-
-.navlog__link {
-  color: #ededed;
-  background: none;
-  text-decoration: none;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
-  font-weight: 500;
-  transition: color 0.2s;
-  border: none;
-  padding: 0;
-  border-radius: 1.2rem;
-}
-.navlog__link:hover {
-  color: #fff;
-  text-decoration: underline;
-  background: #282a3644;
-}
-
-.navlog__loading {
-  color: #ccc;
-  font-size: 1.06rem;
-  letter-spacing: 0.5px;
-  margin-top: 18px;
-}
-
+.navlog__link,
+.navlog__submenu-link,
 .navlog__admin-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: #00f6ff;
   background: none;
   border: none;
-  color: #bbb;
-  font-size: 1.07rem;
-  text-align: left;
+  font: inherit;
   cursor: pointer;
-  width: 100%;
-  font-weight: 600;
-  margin-top: 18px;
-  border-radius: 1.1rem;
-  transition: color .2s, background .18s;
-  letter-spacing: .5px;
-  padding: 3px 9px 3px 3px;
+  padding: 0.5rem 0;
+  text-decoration: none;
+  transition: all 0.2s;
 }
-.navlog__admin-btn:hover { color: #ededed; background: #282a3644; }
+.navlog__link:hover,
+.navlog__submenu-link:hover {
+  color: #fff;
+  background: #00dfff22;
+}
 
+/* LOADING */
+.navlog__loading {
+  color: #00eaff;
+  font-size: 1.1rem;
+  margin-top: 18px;
+}
+
+/* ADMIN BUTTON */
+.navlog__admin-btn {
+  font-weight: 600;
+  font-size: 1.07rem;
+  border-radius: 1.1rem;
+}
+.navlog__admin-btn:hover {
+  color: #fff;
+  background: #00eaff22;
+}
 .navlog__admin-submenu {
   padding-left: 16px;
   margin-top: 10px;
@@ -191,27 +210,15 @@
   flex-direction: column;
   gap: 12px;
 }
-.navlog__submenu-link {
-  color: #ededed;
-  background: none;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: color 0.2s, background .18s;
-  border: none;
-  padding: 0;
-  border-radius: 1rem;
-}
-.navlog__submenu-link:hover {
-  color: #fff;
-  text-decoration: underline;
-  background: #282a3644;
-}
 
+/* RESPONSIVO */
 @media (max-width: 991px) {
-  .navlog__navbar { padding: 0.5rem 1rem !important; margin: 10px 5px 0 5px; }
+  .navlog__navbar {
+    padding: 0.5rem 1.1rem;
+    margin: 10px 6px 0;
+  }
   .navlog__brand { gap: 0.3rem; }
-  .navlog__logo-image { width: 44px; height: 44px; }
-  .navlog__mobile-content { max-width: 94vw; }
+  .navlog__logo-image { width: 46px; height: 46px; }
+  .navlog__mobile-content { max-width: 92vw; }
   .navlog__mobile-menu { border-radius: 0; }
 }

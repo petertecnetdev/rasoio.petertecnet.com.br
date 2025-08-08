@@ -4,9 +4,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import axios from "axios";
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
-import { useGlobalLoadingSync } from "./hooks/useGlobalLoadingSync";
 import { apiBaseUrl } from "./config";
 
+import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
 import EmailVerifyPage from "./pages/auth/EmailVerifyPage";
@@ -56,12 +56,10 @@ import ReportOrderPage from "./pages/report/ReportOrderPage";
 
 import "./index.css";
 
-const AppInner = () => {
+function AppInner() {
   const [user, setUser] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const { isLoading } = useContext(LoadingContext);
-
-  useGlobalLoadingSync();
 
   useEffect(() => {
     (async () => {
@@ -83,9 +81,8 @@ const AppInner = () => {
   if (initialLoading) {
     return (
       <ProcessingIndicatorComponent
-        messages={["Carregando...", "Quase pronto, por favor aguarde..."]}
         interval={500}
-        videoSrc="/image/logo.grif"
+        gifSrc="/images/logo.gif"
       />
     );
   }
@@ -111,13 +108,15 @@ const AppInner = () => {
     <>
       {isLoading && (
         <ProcessingIndicatorComponent
-          messages={["Processando sua solicitação...", "Por favor, aguarde..."]}
           interval={800}
-          videoSrc="/videos/loading.mp4"
+          gifSrc="/images/logo.gif"
         />
       )}
+
       <Router>
         <Routes>
+          <Route path="/" element={<HomePage />} />
+
           <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
 
           <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
@@ -170,17 +169,17 @@ const AppInner = () => {
 
           <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
 
-          <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </>
   );
-};
+}
 
-const App = () => (
-  <LoadingProvider>
-    <AppInner />
-  </LoadingProvider>
-);
-
-export default App;
+export default function App() {
+  return (
+    <LoadingProvider>
+      <AppInner />
+    </LoadingProvider>
+  );
+}

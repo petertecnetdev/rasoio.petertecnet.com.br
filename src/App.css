@@ -1,0 +1,87 @@
+/* cores e variáveis do tema */
+:root {
+  --swal-bg: #111;               /* fundo escuro */
+  --swal-border: #333;           /* borda suave */
+  --swal-text: #f5f5f5;          /* texto claro */
+  --swal-accent: #f39c12;        /* laranja/dourado */
+  --swal-accent-hover: #d35400;  /* hover do botão */
+  --swal-font: "Roboto", sans-serif;
+}
+
+/* container */
+.swal2-popup {
+  background: var(--swal-bg) !important;
+  color: var(--swal-text) !important;
+  border: 1px solid var(--swal-border) !important;
+  font-family: var(--swal-font) !important;
+  border-radius: 0.5rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7) !important;
+}
+
+/* título */
+.swal2-title {
+  color: var(--swal-text) !important;
+  font-size: 1.75rem !important;
+  margin-bottom: 0.75rem !important;
+  text-transform: uppercase !important;
+}
+
+/* conteúdo */
+.swal2-content {
+  color: var(--swal-text) !important;
+  font-size: 1rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+/* inputs dentro do swal */
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+  background: #222 !important;
+  color: var(--swal-text) !important;
+  border: 1px solid var(--swal-border) !important;
+  border-radius: 0.25rem !important;
+  padding: 0.5rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0.25rem 0 !important;
+}
+
+/* botões */
+.swal2-styled {
+  font-family: var(--swal-font) !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  border-radius: 0.25rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+/* confirmar */
+.swal2-styled.swal2-confirm {
+  background-color: var(--swal-accent) !important;
+  color: var(--swal-bg) !important;
+}
+.swal2-styled.swal2-confirm:hover {
+  background-color: var(--swal-accent-hover) !important;
+}
+
+/* cancelar */
+.swal2-styled.swal2-cancel {
+  background-color: transparent !important;
+  color: var(--swal-accent) !important;
+  box-shadow: none !important;
+}
+.swal2-styled.swal2-cancel:hover {
+  background-color: rgba(243,156,18,0.1) !important;
+}
+
+/* rodapé de links (se usar) */
+.swal2-footer {
+  margin-top: 1rem !important;
+  font-size: 0.875rem !important;
+  color: var(--swal-text) !important;
+  text-align: center !important;
+}

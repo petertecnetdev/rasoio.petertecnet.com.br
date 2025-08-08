@@ -1,80 +1,106 @@
-// src/pages/HomePage.js
+// src/pages/HomePage.jsx
 import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Spinner, Badge } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { Container, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
-import NavlogComponent from "../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../config";
-import "./homepage.css";
+import NavlogComponent from "../components/NavlogComponent";
+import { FaMapMarkerAlt } from "react-icons/fa";
+import "./HomePage.css";
 
 export default function HomePage() {
-  const [establishments, setEstablishments] = useState([]);
+  const [barbershops, setBarbershops] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchBarbershops() {
+    (async () => {
       try {
-        const { data } = await axios.get(
-          `${apiBaseUrl}/establishment/category/barbershop`
-        );
-        setEstablishments(data.establishments || []);
+        const { data } = await axios.get(`${apiBaseUrl}/establishment/category/barbershop`);
+        let list = [];
+        if (Array.isArray(data)) list = data;
+        else if (Array.isArray(data.establishments)) list = data.establishments;
+        else if (data.establishments?.data) list = data.establishments.data;
+        else if (Array.isArray(data.data)) list = data.data;
+        setBarbershops(list);
       } catch {
-        setError("Não foi possível carregar as barbearias.");
+        navigate("/404");
       } finally {
         setLoading(false);
       }
-    }
-    fetchBarbershops();
-  }, []);
+    })();
+  }, [navigate]);
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center my-5">
-        <Spinner animation="border" />
+      <div className="hp-root">
+        <NavlogComponent />
+        <div className="hp-loading">
+          <Spinner animation="border" variant="warning" />
+        </div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <Container className="my-5">
-        <Alert variant="danger" className="text-center">
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
-
   return (
-    <Container className="home-page my-4">
+    <div className="hp-root">
       <NavlogComponent />
-      <h1 className="mb-4">Barbearias</h1>
-      <Row>
-        {establishments.map(est => (
-          <Col key={est.id} xs={12} md={6} lg={4} className="mb-4">
-            <Card className="h-100 est-card">
-              {est.logo && (
-                <Card.Img
-                  variant="top"
-                  src={`${storageUrl}/${est.logo}`}
-                  className="est-logo"
-                />
-              )}
-              <Card.Body className="d-flex flex-column">
-                <Card.Title>{est.fantasy || est.name}</Card.Title>
-                <Card.Text>{est.city}</Card.Text>
-                <Link
-                  to={`/establishment/view/${est.slug}`}
-                  className="btn btn-primary mt-auto"
-                >
-                  Ver detalhes
-                </Link>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-    </Container>
+      <Container className="hp-container py-4">
+        <h2 className="hp-title">Escolha a melhor barbearia</h2>
+        <Row className="hp-grid">
+          {barbershops.map((shop) => (
+            <Col key={shop.id} md={6} lg={4} xl={3} className="hp-col">
+              <div
+                className="hp-card"
+                style={{
+                  backgroundImage: `url("${
+                    shop.background
+                      ? `${storageUrl}/${shop.background}`
+                      : "/images/default-bg.png"
+                  }")`,
+                }}
+                onClick={() => navigate(`/establishment/view/${shop.slug}`)}
+              >
+                <div className="hp-hero-overlay" />
+                <div className="hp-logo-bubble">
+                  <img
+                    src={
+                      shop.logo
+                        ? `${storageUrl}/${shop.logo}`
+                        : "/images/logo.png"
+                    }
+                    alt={shop.name}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/images/logo.png";
+                    }}
+                  />
+                </div>
+                <div className="hp-info">
+                  <h3 className="hp-name">{shop.name}</h3>
+                  {shop.address && (
+                    <div className="hp-address">
+                      <FaMapMarkerAlt />{" "}
+                      {shop.address +
+                        (shop.city ? `, ${shop.city}` : "")}
+                    </div>
+                  )}
+                  {(Array.isArray(shop.segments)
+                    ? shop.segments
+                    : shop.segments
+                    ? JSON.parse(shop.segments)
+                    : []
+                  ).map((seg) => (
+                    <Badge key={seg} bg="warning" text="dark" className="me-1">
+                      {seg}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    </div>
   );
 }

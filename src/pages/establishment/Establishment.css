@@ -513,3 +513,106 @@
     font-size: 0.93rem !important;
   }
 }
+.estab-barbers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.4rem;
+  margin-top: 1.4rem;
+}
+
+.estab-barber-card {
+  background: linear-gradient(180deg, #1b1b1f 0%, #2a2a33 100%);
+  border-radius: 1.6rem;
+  box-shadow: 0 4px 12px #0004;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.2rem 0.8rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #2c2c2f;
+}
+.estab-barber-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 24px #0006;
+}
+
+.estab-barber-img-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 14px #000a;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.9rem;
+}
+
+.estab-barber-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.estab-barber-placeholder {
+  font-size: 2rem;
+  color: #fff;
+  font-weight: bold;
+}
+
+.estab-barber-info {
+  text-align: center;
+  color: #eee;
+}
+
+.estab-barber-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.estab-barber-role {
+  font-size: 0.9rem;
+  color: #aaa;
+  background: #444;
+  padding: 2px 10px;
+  border-radius: 1rem;
+  display: inline-block;
+}
+
+
+.estab-nav-buttons {
+  position: sticky;
+  top: 80px; /* abaixo da navbar */
+  z-index: 1000;
+  background-color: #111;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-bottom: 1px solid #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.estab-nav-buttons button {
+  background: #222;
+  border: 1px solid #444;
+  color: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.estab-nav-buttons button:hover {
+  background-color: #333;
+  border-color: #ffd700;
+  color: #fff;
+}
+
+.estab-cardapio-section {
+  scroll-margin-top: 120px; /* garante que o título apareça mesmo com scrollIntoView */
+}

@@ -1,11 +1,14 @@
-// src/components/ProcessingIndicatorComponent.jsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import "./ProcessingIndicatorComponent.css";
 
-const ProcessingIndicatorComponent = ({ messages = [], interval = 1000, videoSrc }) => {
+const ProcessingIndicatorComponent = ({
+  messages = ["Carregando..."],
+  interval = 1000,
+  gifSrc = "/images/logo.gif",
+}) => {
   const msgRef = useRef(0);
-  const [current, setCurrent] = React.useState(messages[0] || "");
+  const [current, setCurrent] = useState(messages[0] || "");
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -19,14 +22,11 @@ const ProcessingIndicatorComponent = ({ messages = [], interval = 1000, videoSrc
   return (
     <div className="processing-overlay">
       <div className="processing-inner">
-        {videoSrc && (
-          <video
-            className="processing-video"
-            src={videoSrc}
-            autoPlay
-            muted
-            loop
-            playsInline
+        {gifSrc && (
+          <img
+            className="processing-gif"
+            src={gifSrc}
+            alt="Carregando"
             aria-label="Indicador de carregamento"
           />
         )}
@@ -41,7 +41,7 @@ const ProcessingIndicatorComponent = ({ messages = [], interval = 1000, videoSrc
 ProcessingIndicatorComponent.propTypes = {
   messages: PropTypes.arrayOf(PropTypes.string),
   interval: PropTypes.number,
-  videoSrc: PropTypes.string,
+  gifSrc: PropTypes.string,
 };
 
 export default ProcessingIndicatorComponent;

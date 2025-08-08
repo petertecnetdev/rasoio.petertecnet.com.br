@@ -1,3 +1,4 @@
+// src/components/NavlogComponent.js
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Navbar } from "react-bootstrap";
@@ -14,12 +15,12 @@ export default function NavlogComponent() {
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAdminSubmenu, setShowAdminSubmenu] = useState(false);
+  const [showEstSubmenu, setShowEstSubmenu] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 992) setShowMobileMenu(false);
     };
-    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -30,7 +31,6 @@ export default function NavlogComponent() {
       setLoadingMenu(false);
       return;
     }
-
     (async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -38,13 +38,13 @@ export default function NavlogComponent() {
         setLoadingMenu(false);
         return;
       }
-
       try {
         const headers = { Authorization: `Bearer ${token}` };
-        const response = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
+        const { data } = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
         setUser({
-          ...response.data.user,
-          establishments: response.data.establishments || [],
+          ...data.user,
+          establishments: data.establishments || [],
+          profile: data.profile || {},
         });
       } catch {
         localStorage.removeItem("token");
@@ -63,6 +63,7 @@ export default function NavlogComponent() {
   const handleToggleMobileMenu = () => {
     setShowMobileMenu((prev) => !prev);
     setShowAdminSubmenu(false);
+    setShowEstSubmenu(false);
   };
 
   const renderAdminMenu = () => (
@@ -103,7 +104,9 @@ export default function NavlogComponent() {
             draggable={false}
           />
         </Navbar.Brand>
-        <div className="navlog__menu-icon">
+
+        {/* if user loaded and present, show hamburger; otherwise a Login button */}
+        {!loadingMenu && (user ? (
           <button
             onClick={handleToggleMobileMenu}
             className="navlog__mobile-toggle-btn"
@@ -111,10 +114,17 @@ export default function NavlogComponent() {
           >
             ☰
           </button>
-        </div>
+        ) : (
+          !isPublicView && (
+            <Link to="/login" className="navlog__login-btn">
+              Login
+            </Link>
+          )
+        ))}
       </Navbar>
 
-      {showMobileMenu && (
+      {/* Mobile menu only if user is authenticated */}
+      {showMobileMenu && user && (
         <div className="navlog__mobile-menu">
           <div className="navlog__mobile-close">
             <button
@@ -126,9 +136,9 @@ export default function NavlogComponent() {
             </button>
           </div>
           <div className="navlog__mobile-content">
-            {loading || loadingMenu ? (
+            {loading ? (
               <p className="navlog__loading">Carregando...</p>
-            ) : user ? (
+            ) : (
               <>
                 <img
                   src={user.avatar ? `${storageUrl}/${user.avatar}` : "/images/user.png"}
@@ -137,30 +147,50 @@ export default function NavlogComponent() {
                   className="navlog__avatar"
                 />
                 <h5 className="navlog__user-name">{user.first_name}</h5>
-                <div className="navlog__mobile-links">
+                <nav className="navlog__mobile-links">
                   <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
                     Gerenciar Conta
                   </Link>
 
-                  {user.establishments?.length === 0 && (
+                  {user.establishments.filter(est => est.category === "barbershop").length > 0 ? (
+                    <>
+                      <button
+                        className="navlog__admin-btn"
+                        onClick={() => setShowEstSubmenu((v) => !v)}
+                      >
+                        Meus Barbearias {showEstSubmenu ? "▲" : "▼"}
+                      </button>
+                      {showEstSubmenu &&
+                        user.establishments
+                          .filter(est => est.category === "barbershop")
+                          .map((est) => (
+                            <Link
+                              key={est.id}
+                              to={`/establishment/view/${est.slug}`}
+                              onClick={handleToggleMobileMenu}
+                              className="navlog__submenu-link"
+                            >
+                              {est.name}
+                            </Link>
+                          ))}
+                    </>
+                  ) : (
                     <Link
                       to="/establishment/create"
                       onClick={handleToggleMobileMenu}
                       className="navlog__link"
                     >
-                      Criar Estabelecimento
+                      Criar Barbearia
                     </Link>
                   )}
 
-                  {user.profile?.name === "Administrador" && renderAdminMenu()}
+                  {user.profile.name === "Administrador" && renderAdminMenu()}
 
                   <Link to="/logout" onClick={handleToggleMobileMenu} className="navlog__link">
                     Sair
                   </Link>
-                </div>
+                </nav>
               </>
-            ) : isPublicView ? null : (
-              <p className="navlog__loading">Usuário não encontrado</p>
             )}
           </div>
         </div>

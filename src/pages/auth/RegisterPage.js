@@ -1,50 +1,26 @@
-import React, { Component } from "react";
-import axios from "axios";
-import { Button, Card, Col, Container, Row, Form } from "react-bootstrap";
-import Swal from "sweetalert2"; // Importando SweetAlert
-import { apiBaseUrl } from "../../config"; // Importando a configuração da URL base da API
-import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent"; // Importando o componente de indicador de processamento
+// src/pages/auth/RegisterPage.jsx
+import React, { useState } from "react";
+import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
+import Swal from "sweetalert2";
+import api from "../../services/api";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import "./Auth.css";
 
-class RegisterPage extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      first_name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      loading: false,
-    };
-  }
+export default function RegisterPage() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  onChangeFirstName = (e) => {
-    this.setState({ first_name: e.target.value });
-  };
-
-  onChangeEmail = (e) => {
-    this.setState({ email: e.target.value });
-  };
-
-  onChangePassword = (e) => {
-    this.setState({ password: e.target.value });
-  };
-
-  onChangeConfirmPassword = (e) => {
-    this.setState({ confirmPassword: e.target.value });
-  };
-
-  onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const { first_name, email, password, confirmPassword } = this.state;
-
-    // Verificando se a senha e a confirmação de senha coincidem
-    if (password !== confirmPassword) {
+    if (password !== passwordConfirmation) {
       Swal.fire({
-        title: "Erro!",
-        text: "As senhas não coincidem. Por favor, tente novamente.",
+        title: "Erro",
+        text: "As senhas não coincidem.",
         icon: "error",
         confirmButtonText: "Ok",
-        iconColor: "#dc3545",
         customClass: {
           popup: "custom-swal",
           title: "custom-swal-title",
@@ -54,58 +30,39 @@ class RegisterPage extends Component {
       return;
     }
 
-    this.setState({ loading: true });
-
+    setLoading(true);
     try {
-      const userObject = {
-        first_name,
+      await api.post("/auth/register", {
+        username,
         email,
         password,
-      };
-
-      // Requisição para registrar o usuário
-      const response = await axios.post(`${apiBaseUrl}/auth/register`, userObject);
-
-      const modalMessage = response?.data?.message || "Registro bem-sucedido";
-
+        password_confirmation: passwordConfirmation,
+      });
       Swal.fire({
-        title: "Sucesso!",
-        text: modalMessage,
+        title: "Sucesso",
+        text: "Cadastro realizado com sucesso!",
         icon: "success",
-        confirmButtonText: "Ok",
+        confirmButtonText: "Entrar",
         customClass: {
           popup: "custom-swal",
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
-        iconColor: "#28a745",
       }).then(() => {
         window.location.href = "/login";
       });
-
-      this.setState({ loading: false });
-    } catch (error) {
-      console.log(error);
-      let errorMessages = "";
-
-      if (error.response && error.response.data.errors) {
-        const errors = error.response.data.errors;
-        if (errors.email) {
-          errorMessages += errors.email[0] + " ";
-        }
-        if (errors.first_name) {
-          errorMessages += errors.first_name[0] + " ";
-        }
-        if (errors.password) {
-          errorMessages += errors.password[0] + " ";
-        }
-      } else {
-        errorMessages = "Erro desconhecido ao tentar se registrar.";
+    } catch (err) {
+      let msg = "Ocorreu um erro.";
+      if (err.response) {
+        msg = err.response.data.error ||
+              err.response.data.message ||
+              (err.response.data.errors
+                ? Object.values(err.response.data.errors).flat().join(" ")
+                : msg);
       }
-
       Swal.fire({
-        title: "Erro!",
-        text: errorMessages,
+        title: "Erro",
+        text: msg,
         icon: "error",
         confirmButtonText: "Ok",
         customClass: {
@@ -113,90 +70,73 @@ class RegisterPage extends Component {
           title: "custom-swal-title",
           content: "custom-swal-text",
         },
-        iconColor: "#dc3545",
       });
-
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  render() {
-    const { loading } = this.state;
-
-    return (
-      <Container fluid className="page-container">
-        {loading && (
-          <ProcessingIndicatorComponent messages={["Registrando usuário...", "Por favor, aguarde..."]} />
-        )}
-        {!loading && (
-          <Row className="page-row">
-            <Col md={12} className="page-col">
-              <Card className="card-container">
-                <p className="page-header text-uppercase">Registre-se</p>
-                <Card.Body className="card-body">
-                  <div className="logo-container">
-                    <img
-                      src="/images/logo.png"
-                      alt="Logo"
-                      className="logo-image"
-                      style={{ width: "80px", height: "80px" }}
+  return (
+    <div className="login-bg">
+      {loading && (
+        <ProcessingIndicatorComponent
+          messages={["Registrando...", "Aguarde..."]}
+        />
+      )}
+      {!loading && (
+        <Container fluid className="login-container">
+          <Row className="justify-content-center">
+            <Col xs={12} sm={8} md={6} lg={4}>
+              <Card className="login-card">
+                <Card.Body className="text-center">
+                  <img src="/images/logo.png" alt="Buddy’s Royale" className="logo" />
+                  <Form onSubmit={handleSubmit} className="mt-4">
+                    <Form.Control
+                      type="text"
+                      placeholder="Usuário"
+                      className="neon-input mb-3"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
                     />
-                  </div>
-                  <Form onSubmit={this.onSubmit} className="form-container">
-                    <Form.Group className="form-group">
-                      <Form.Control
-                        type="text"
-                        placeholder="Nome"
-                        onChange={this.onChangeFirstName}
-                        value={this.state.first_name}
-                        className="input-text"
-                      />
-                    </Form.Group>
-                    <Form.Group className="form-group">
-                      <Form.Control
-                        type="email"
-                        placeholder="Insira o Email"
-                        onChange={this.onChangeEmail}
-                        value={this.state.email}
-                        className="input-email"
-                      />
-                    </Form.Group>
-                    <Form.Group className="form-group">
-                      <Form.Control
-                        type="password"
-                        placeholder="Insira a Senha"
-                        onChange={this.onChangePassword}
-                        value={this.state.password}
-                        className="input-password"
-                      />
-                    </Form.Group>
-                    <Form.Group className="form-group">
-                      <Form.Control
-                        type="password"
-                        placeholder="Confirme a Senha"
-                        onChange={this.onChangeConfirmPassword}
-                        value={this.state.confirmPassword}
-                        className="input-password-confirm"
-                      />
-                    </Form.Group>
-                    <Button type="submit" disabled={loading} className="submit-btn">
-                      {loading ? "Registrando..." : "Registrar"}
+                    <Form.Control
+                      type="email"
+                      placeholder="E-mail"
+                      className="neon-input mb-3"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <Form.Control
+                      type="password"
+                      placeholder="Senha"
+                      className="neon-input mb-3"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <Form.Control
+                      type="password"
+                      placeholder="Confirmar Senha"
+                      className="neon-input mb-4"
+                      value={passwordConfirmation}
+                      onChange={(e) => setPasswordConfirmation(e.target.value)}
+                      required
+                    />
+                    <Button type="submit" className="neon-button w-100 mb-3">
+                      Registrar
                     </Button>
-                    <p className="footer-text">
-                      Já está registrado? <a href="/login" className="footer-link">Entrar</a>
-                    </p>
-                    <p className="footer-text">
-                      Esqueceu a senha? <a href="/password-email" className="footer-link">Recuperar senha</a>
-                    </p>
                   </Form>
+                  <div className="login-links">
+                    <a href="/login">Já tenho conta</a>
+                    <span className="sep">|</span>
+                    <a href="/password-email">Recuperar senha</a>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
-        )}
-      </Container>
-    );
-  }
+        </Container>
+      )}
+    </div>
+  );
 }
-
-export default RegisterPage;
