@@ -5,7 +5,7 @@ import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorCo
 import Swal from "sweetalert2";
 import axios from "axios";
 import { apiBaseUrl, storageUrl } from "../../config";
-
+import "./User.css";
 const UserUpdatePage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [messages, setMessages] = useState([]);
