@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
-import NavlogComponent from "../components/NavlogComponent";
 import Swal from "sweetalert2";
+import NavlogComponent from "../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../config";
 import "./dashboard.css";
 
@@ -18,7 +18,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
         const { data } = await axios.get(
-          `${apiBaseUrl}/establishment/category/barbershop`,
+          `${apiBaseUrl}/establishment/my/category/barbershop`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -27,10 +27,7 @@ export default function Dashboard() {
           ests = data;
         } else if (Array.isArray(data.establishments)) {
           ests = data.establishments;
-        } else if (
-          data.establishments &&
-          Array.isArray(data.establishments.data)
-        ) {
+        } else if (data.establishments && Array.isArray(data.establishments.data)) {
           ests = data.establishments.data;
         } else if (Array.isArray(data.data)) {
           ests = data.data;
@@ -46,20 +43,15 @@ export default function Dashboard() {
           ests.map(async (est) => {
             let rawOrders = [];
             try {
-              const res = await axios.get(
-                `${apiBaseUrl}/order/listbyentity`,
-                {
-                  params: {
-                    app_id: 3,
-                    entity_name: "establishment",
-                    entity_id: est.id,
-                  },
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
-              rawOrders = Array.isArray(res.data.orders)
-                ? res.data.orders
-                : [];
+              const res = await axios.get(`${apiBaseUrl}/order/listbyentity`, {
+                params: {
+                  app_id: 3,
+                  entity_name: "establishment",
+                  entity_id: est.id,
+                },
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              rawOrders = Array.isArray(res.data.orders) ? res.data.orders : [];
             } catch (err) {
               if (err.response?.status === 404) {
                 rawOrders = [];
@@ -69,10 +61,9 @@ export default function Dashboard() {
             }
 
             const orders = rawOrders.filter((o) => {
-              const date = new Date(o.order_datetime).toLocaleDateString(
-                "en-CA",
-                { timeZone: "America/Sao_Paulo" }
-              );
+              const date = new Date(o.order_datetime).toLocaleDateString("en-CA", {
+                timeZone: "America/Sao_Paulo",
+              });
               return date === today;
             });
 
@@ -80,12 +71,10 @@ export default function Dashboard() {
             const totalValue = orders.reduce((sum, o) => {
               const orderSum = o.items.reduce((s, it) => {
                 let sub = Number(it.subtotal);
-                it.modifiers
+                (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
-                    const prod = it.modifiers?.find(
-                      (p) => p.id === m.modifier_id
-                    );
+                    const prod = (it.modifiers || []).find((p) => p.id === m.modifier_id);
                     sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
                   });
                 return s + sub;
@@ -96,37 +85,35 @@ export default function Dashboard() {
             const itemCounts = {};
             orders.forEach((o) =>
               o.items.forEach((it) => {
-                itemCounts[it.item.name] =
-                  (itemCounts[it.item.name] || 0) + it.quantity;
+                const name = it.item?.name || "-";
+                itemCounts[name] = (itemCounts[name] || 0) + (it.quantity || 0);
               })
             );
             const mostOrderedItem =
               Object.entries(itemCounts).reduce(
                 (max, [name, qty]) => (qty > max[1] ? [name, qty] : max),
-                ["", 0]
+                ["-", 0]
               )[0] || "-";
 
             const customerSums = {};
             orders.forEach((o) => {
               const sum = o.items.reduce((s, it) => {
                 let sub = Number(it.subtotal);
-                it.modifiers
+                (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
-                    const prod = it.modifiers?.find(
-                      (p) => p.id === m.modifier_id
-                    );
+                    const prod = (it.modifiers || []).find((p) => p.id === m.modifier_id);
                     sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
                   });
                 return s + sub;
               }, 0);
-              customerSums[o.customer_name] =
-                (customerSums[o.customer_name] || 0) + sum;
+              const cname = o.customer_name || "-";
+              customerSums[cname] = (customerSums[cname] || 0) + sum;
             });
             const topCustomer =
               Object.entries(customerSums).reduce(
                 (max, [name, sum]) => (sum > max[1] ? [name, sum] : max),
-                ["", 0]
+                ["-", 0]
               )[0] || "-";
 
             const start = new Date();
@@ -134,9 +121,7 @@ export default function Dashboard() {
             const now = new Date();
             const hoursElapsed = Math.max((now - start) / 36e5, 1);
             const avgOrdersPerHour = (totalOrders / hoursElapsed).toFixed(2);
-            const avgTicket = totalOrders
-              ? (totalValue / totalOrders).toFixed(2)
-              : "0.00";
+            const avgTicket = totalOrders ? (totalValue / totalOrders).toFixed(2) : "0.00";
 
             return [
               est.id,
@@ -153,11 +138,15 @@ export default function Dashboard() {
         );
 
         setMetrics(Object.fromEntries(results));
-      } catch {
+      } catch (err) {
+        const status = err.response?.status;
         Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Não foi possível carregar dados.",
+          text:
+            status === 401
+              ? "Sessão expirada. Faça login novamente."
+              : "Não foi possível carregar dados.",
         });
       } finally {
         setIsLoading(false);
@@ -183,13 +172,23 @@ export default function Dashboard() {
       <NavlogComponent />
       <Container fluid className="dashboard-main">
         <div className="dashboard-section">
-          <h3 className="dashboard-section-title"></h3>
+          <h3 className="dashboard-section-title" />
           <Row className="dashboard-establishments-list gx-3 gy-4">
             {establishments.length === 0 && (
-              <Col>
-                <div className="dashboard-empty">
-                  Nenhum estabelecimento encontrado.
-                </div>
+              <Col md={12}>
+                <Card className="dashboard-empty-card">
+                  <Card.Body className="text-center">
+                    <div className="dashboard-empty mb-3">Nenhum estabelecimento encontrado.</div>
+                    <Button
+                      as={Link}
+                      to="/establishment/create"
+                      size="sm"
+                      className="dashboard-establishment-btn bg-black"
+                    >
+                      Criar meu estabelecimento
+                    </Button>
+                  </Card.Body>
+                </Card>
               </Col>
             )}
             {establishments.map((est) => {
@@ -206,12 +205,8 @@ export default function Dashboard() {
                           onError={handleLogoError}
                         />
                         <div>
-                          <div className="dashboard-establishment-name">
-                            {est.name}
-                          </div>
-                          <div className="dashboard-establishment-slug">
-                            @{est.slug}
-                          </div>
+                          <div className="dashboard-establishment-name">{est.name}</div>
+                          <div className="dashboard-establishment-slug">@{est.slug}</div>
                           <Button
                             as={Link}
                             to={`/establishment/view/${est.slug}`}
@@ -225,37 +220,37 @@ export default function Dashboard() {
                       <Card bg="dark" text="light" className="m-2">
                         <Card.Body className="p-2">
                           <Row className="gx-2 gy-2 text-center">
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
                                 to={`/order/create/${est.id}`}
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
-                                Novo Atendimento
+                                Novo Pedido de atendimento
                               </Button>
                             </Col>
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
                                 to={`/order/list/${est.id}`}
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
-                                📑 Atendimentos
+                                📑 Pedidos de atendimentos
                               </Button>
                             </Col>
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
-                                to={`/order/list/${est.id}`}
+                                to={`/employer/list/${est.id}`}
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
                                 📑 Colaboradores
                               </Button>
                             </Col>
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
                                 to={`/report/order/${est.id}`}
@@ -265,7 +260,7 @@ export default function Dashboard() {
                                 📊 Relatório
                               </Button>
                             </Col>
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
                                 to={`/item/list/${est.slug}`}
@@ -275,7 +270,7 @@ export default function Dashboard() {
                                 Itens
                               </Button>
                             </Col>
-                            <Col  md={2}>
+                            <Col md={3}>
                               <Button
                                 as={Link}
                                 to={`/establishment/update/${est.id}`}
@@ -297,9 +292,7 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Atendimentos de Hoje
-                                  </Card.Title>
+                                  <Card.Title className="fs-6">Atendimentos de Hoje</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
                                     {m.totalOrders || 0}
                                   </Card.Text>
@@ -309,15 +302,9 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Faturamento
-                                  </Card.Title>
+                                  <Card.Title className="fs-6">Faturamento</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
-                                    R$
-                                    {(m.totalValue || "0.00").replace(
-                                      ".",
-                                      ","
-                                    )}
+                                    R${(m.totalValue || "0.00").replace(".", ",")}
                                   </Card.Text>
                                 </Card.Body>
                               </Card>
@@ -337,21 +324,15 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Cliente Top
-                                  </Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">
-                                    {m.topCustomer}
-                                  </Card.Text>
+                                  <Card.Title className="fs-6">Cliente Top</Card.Title>
+                                  <Card.Text className="fs-6 fw-bold">{m.topCustomer}</Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Média/Hora
-                                  </Card.Title>
+                                  <Card.Title className="fs-6">Média/Hora</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
                                     {m.avgOrdersPerHour}
                                   </Card.Text>
@@ -361,15 +342,9 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Ticket Médio
-                                  </Card.Title>
+                                  <Card.Title className="fs-6">Ticket Médio</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
-                                    R$
-                                    {(m.avgTicket || "0.00").replace(
-                                      ".",
-                                      ","
-                                    )}
+                                    R${(m.avgTicket || "0.00").replace(".", ",")}
                                   </Card.Text>
                                 </Card.Body>
                               </Card>

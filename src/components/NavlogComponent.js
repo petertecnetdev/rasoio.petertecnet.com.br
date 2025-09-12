@@ -151,14 +151,16 @@ export default function NavlogComponent() {
                   <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
                     Gerenciar Conta
                   </Link>
-
+ <Link to="/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
+                    Dashboard
+                  </Link>
                   {user.establishments.filter(est => est.category === "barbershop").length > 0 ? (
                     <>
                       <button
                         className="navlog__admin-btn"
                         onClick={() => setShowEstSubmenu((v) => !v)}
                       >
-                        Meus Barbearias {showEstSubmenu ? "▲" : "▼"}
+                        Minhas Barbearias {showEstSubmenu ? "▲" : "▼"}
                       </button>
                       {showEstSubmenu &&
                         user.establishments

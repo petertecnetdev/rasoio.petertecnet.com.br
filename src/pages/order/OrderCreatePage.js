@@ -1,4 +1,3 @@
-// src/pages/order/OrderCreatePage.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Container, Row, Col, Form, Button, Spinner } from "react-bootstrap";
@@ -11,21 +10,32 @@ import "./Order.css";
 export default function OrderCreatePage() {
   const { entityId } = useParams();
   const navigate = useNavigate();
-
-  const [items, setItems] = useState([]);
+  const [products, setProducts] = useState([]);
   const [estName, setEstName] = useState("");
   const [estLogo, setEstLogo] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     customer_name: "",
-    customer_phone: "",
-    customer_cpf: "",
-    notes: "",
+    origin: "Balcão",
+    fulfillment: "dine-in",
     payment_status: "pending",
-    payment_method: "Fiado",
+    payment_method: "Dinheiro",
+    notes: "",
   });
   const [orderLines, setOrderLines] = useState([]);
+
+  const originLabels = {
+    Balcão: "Balcão",
+    WhatsApp: "WhatsApp",
+    Telefone: "Telefone",
+    App: "Aplicativo",
+  };
+  const fulfillmentLabels = {
+    "dine-in": "Local",
+    "take-away": "Levar",
+    delivery: "Delivery",
+  };
 
   useEffect(() => {
     (async () => {
@@ -41,7 +51,7 @@ export default function OrderCreatePage() {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-        setItems(resItems.data);
+        setProducts(resItems.data);
         const est = resEst.data.establishment;
         setEstName(est.name.toUpperCase());
         setEstLogo(est.logo || "");
@@ -53,84 +63,156 @@ export default function OrderCreatePage() {
     })();
   }, [entityId]);
 
-  const total = useMemo(
-    () =>
-      orderLines.reduce(
-        (sum, line) => sum + line.quantity * Number(line.product.price),
-        0
-      ),
-    [orderLines]
-  );
+  const total = useMemo(() => {
+    let t = 0;
+    orderLines.forEach((line) => {
+      t += line.quantity * Number(line.product.price);
+      line.additions.forEach((a) => {
+        const prod = products.find((p) => p.id === a.id);
+        if (prod) t += Number(prod.price) * a.quantity;
+      });
+    });
+    return t;
+  }, [orderLines, products]);
 
   const formattedTotal = `R$${total.toFixed(2).replace(".", ",")}`;
 
-  const getItemsHtml = (category) => {
-    const filtered = items.filter(
-      (p) =>
-        ["service", "product"].includes(p.type) &&
-        (p.category || "Outros") === category
+  const buildReceipt = (order) => {
+    const WIDTH = 32;
+    const center = (text) =>
+      text.padStart(Math.floor((WIDTH + text.length) / 2)).padEnd(WIDTH);
+    const line = (char = "-") => char.repeat(WIDTH);
+    const fmt = (v) => `R$${Number(v).toFixed(2).replace(".", ",")}`;
+    const pad = (l, r) => {
+      const dots = ".".repeat(Math.max(WIDTH - (l.length + r.length), 0));
+      return `${l}${dots}${r}`;
+    };
+    const consLabel = fulfillmentLabels[order.fulfillment] || order.fulfillment;
+    const origLabel = originLabels[order.origin] || order.origin;
+    const L = [];
+    L.push("");
+    L.push("─".repeat(WIDTH));
+    L.push(center(estName));
+    L.push("─".repeat(WIDTH));
+    L.push("");
+    L.push(`👤 Cliente: ${(order.customer_name || "").toUpperCase()}`);
+    L.push(`📦 Origem: ${origLabel.toUpperCase()}`);
+    L.push(`🍽️ Consumo: ${consLabel.toUpperCase()}`);
+    L.push(line());
+    L.push(center("ITENS DO PEDIDO"));
+    L.push(line());
+    let totalRec = 0;
+    order.items.forEach((it) => {
+      const unitPrice = Number(it.item.price);
+      const itemSubtotal = unitPrice * it.quantity;
+      totalRec += itemSubtotal;
+      L.push(pad(`${it.quantity}x ${it.item.name}`, fmt(itemSubtotal)));
+      it.modifiers
+        .filter((m) => m.type === "addition")
+        .forEach((m) => {
+          const prod = products.find((p) => p.id === m.modifier_id);
+          if (prod) {
+            const addUnit = Number(prod.price);
+            const addQty = m.quantity || 1;
+            const addSubtotal = addUnit * addQty;
+            totalRec += addSubtotal;
+            L.push(pad(`  + ${prod.name}`, fmt(addSubtotal)));
+          }
+        });
+      it.modifiers
+        .filter((m) => m.type === "removal")
+        .forEach((m) => {
+          const prod = products.find((p) => p.id === m.modifier_id);
+          if (prod) {
+            L.push(`  - ${prod.name}`);
+          }
+        });
+    });
+    L.push(line());
+    L.push(pad("TOTAL", fmt(totalRec)));
+    L.push("");
+    L.push(
+      `Data: ${new Date(order.order_datetime).toLocaleString("pt-BR", {
+        hour12: false,
+      })}`
     );
-    if (!filtered.length) {
+    L.push("");
+    L.push("");
+    return L.join("\n");
+  };
+
+  const getItemsHtml = (category) => {
+    const items = products.filter((p) => (p.category || "Outros") === category);
+    if (!items.length) {
       return '<div class="order-modal__empty">Nenhum item nesta categoria.</div>';
     }
-    return filtered
+    return items
       .map(
         (p) => `
-      <div class="col-12 col-sm-6 col-md-3 mb-3">
-        <div class="order-modal__item">
-          <div class="order-modal__item-info">
-            <span class="order-modal__item-name">${p.name}</span>
-            <span class="order-modal__item-price">
-              R$ ${Number(p.price).toFixed(2).replace(".", ",")}
-            </span>
-          </div>
-          <button class="order-modal__item-add" data-id="${p.id}">
-            Adicionar
-          </button>
+   <div class="col-12 col-sm-6 col-md-3 mb-3">
+      <div class="order-modal__item">
+        <div class="order-modal__item-info">
+          <span class="order-modal__item-name">${p.name}</span>
+          <span class="order-modal__item-price">
+            R$ ${Number(p.price).toFixed(2).replace(".", ",")}
+          </span>
         </div>
+        <button class="order-modal__item-add" data-id="${p.id}">
+          Adicionar
+        </button>
       </div>
-    `
+    </div>
+  `
       )
       .join("");
   };
 
   const handleAddItem = async () => {
     const categories = Array.from(
-      new Set(items.map((p) => p.category || "Outros"))
+      new Set(products.map((p) => p.category || "Outros"))
     );
-    let idx = 0,
-      dir = null;
+    let currentIndex = 0;
+    let lastDirection = null;
 
     const getHtml = () => {
-      const mobile = window.innerWidth <= 600;
-      const cat = categories[idx];
-      const trans =
-        dir === "left"
+      const isMobile = window.innerWidth <= 600;
+      const currentCat = categories[currentIndex];
+      const transitionClass =
+        lastDirection === "left"
           ? "order-modal__slide-left"
-          : dir === "right"
+          : lastDirection === "right"
           ? "order-modal__slide-right"
           : "";
+
       return `
-        <div class="order-modal d-flex flex-column h-100">
-          ${
-            mobile
-              ? `<div class="order-modal__category-title">${cat}</div>`
-              : `<nav class="order-modal__tabs">${categories
+      <div class="order-modal d-flex flex-column h-100">
+        ${
+          isMobile
+            ? `<div class="order-modal__category-title">${currentCat}</div>`
+            : `
+              <nav class="order-modal__tabs">
+                ${categories
                   .map(
-                    (c, i) =>
-                      `<button class="order-modal__tab${
-                        i === idx ? " order-modal__tab--active" : ""
-                      }" data-index="${i}">${c}</button>`
+                    (cat, idx) => `
+                      <button
+                        class="order-modal__tab${
+                          idx === currentIndex ? " order-modal__tab--active" : ""
+                        }"
+                        data-cat-index="${idx}"
+                      >${cat}</button>
+                    `
                   )
-                  .join("")}</nav>`
-          }
-          <div class="container-fluid flex-grow-1 overflow-auto p-3">
-            <div class="row order-modal__items-grid ${trans}">
-              ${getItemsHtml(cat)}
-            </div>
+                  .join("")}
+              </nav>
+            `
+        }
+        <div class="container-fluid flex-grow-1 overflow-auto p-3">
+          <div class="row order-modal__items-grid ${transitionClass}">
+            ${getItemsHtml(currentCat)}
           </div>
         </div>
-      `;
+      </div>
+    `;
     };
 
     await Swal.fire({
@@ -141,7 +223,7 @@ export default function OrderCreatePage() {
       width: "100vw",
       heightAuto: false,
       background: "#000",
-      padding: 0,
+      padding: "0",
       customClass: {
         container: "order-modal__container-fullscreen",
         popup: "order-modal__swal-fullscreen",
@@ -149,127 +231,127 @@ export default function OrderCreatePage() {
         cancelButton: "order-modal__swal-btn-cancel",
       },
       didOpen: () => {
-        let startX = 0,
-          touching = false;
-        const attach = () => {
+        let startX = 0;
+        let isTouching = false;
+
+        const attachListeners = () => {
           const grid = document.querySelector(".order-modal__items-grid");
           if (grid) {
             grid.addEventListener("touchstart", (e) => {
-              touching = true;
+              isTouching = true;
               startX = e.touches[0].clientX;
             });
             grid.addEventListener("touchend", (e) => {
-              if (!touching) return;
-              touching = false;
+              if (!isTouching) return;
+              isTouching = false;
               const diff = e.changedTouches[0].clientX - startX;
               if (Math.abs(diff) < 40) return;
-              if (diff < 0 && idx < categories.length - 1) {
-                dir = "left";
-                idx++;
-              } else if (diff > 0 && idx > 0) {
-                dir = "right";
-                idx--;
-              } else if (diff < 0 && idx === categories.length - 1) {
-                dir = "left";
-                idx = 0;
-              } else if (diff > 0 && idx === 0) {
-                dir = "right";
-                idx = categories.length - 1;
+              if (diff < 0 && currentIndex < categories.length - 1) {
+                lastDirection = "left";
+                currentIndex++;
+                Swal.update({ html: getHtml() });
+                setTimeout(attachListeners, 180);
+              } else if (diff > 0 && currentIndex > 0) {
+                lastDirection = "right";
+                currentIndex--;
+                Swal.update({ html: getHtml() });
+                setTimeout(attachListeners, 180);
+              } else if (diff < 0 && currentIndex === categories.length - 1) {
+                lastDirection = "left";
+                currentIndex = 0;
+                Swal.update({ html: getHtml() });
+                setTimeout(attachListeners, 180);
+              } else if (diff > 0 && currentIndex === 0) {
+                lastDirection = "right";
+                currentIndex = categories.length - 1;
+                Swal.update({ html: getHtml() });
+                setTimeout(attachListeners, 180);
               }
-              Swal.update({ html: getHtml() });
-              setTimeout(attach, 180);
             });
           }
           document.querySelectorAll(".order-modal__tab").forEach((btn) => {
             btn.onclick = () => {
-              dir = null;
-              idx = Number(btn.dataset.index);
+              lastDirection = null;
+              currentIndex = Number(btn.dataset.catIndex);
               Swal.update({ html: getHtml() });
-              setTimeout(attach, 120);
+              setTimeout(attachListeners, 120);
             };
           });
           document.querySelectorAll(".order-modal__item-add").forEach((btn) => {
             btn.onclick = (e) => {
               const id = Number(e.currentTarget.dataset.id);
-              const prod = items.find((x) => x.id === id);
+              const prod = products.find((p) => p.id === id);
               if (!prod) return;
-              setOrderLines((ls) => [...ls, { product: prod, quantity: 1 }]);
+              setOrderLines((lines) => [
+                ...lines,
+                { product: prod, quantity: 1, additions: [], removals: [] },
+              ]);
               Swal.close();
             };
           });
         };
-        attach();
+        attachListeners();
       },
     });
   };
 
-  const removeLine = (i) => setOrderLines((ls) => ls.filter((_, j) => j !== i));
-  const updateLine = (i, v) =>
-    setOrderLines((ls) =>
-      ls.map((ln, j) => (j === i ? { ...ln, quantity: v } : ln))
-    );
+  const removeLine = (i) =>
+    setOrderLines((lines) => lines.filter((_, idx) => idx !== i));
+  const updateLine = (i, field, v) =>
+    setOrderLines((lines) => {
+      const copy = [...lines];
+      copy[i][field] = v;
+      return copy;
+    });
 
-  // handleSubmit completo com status e método
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-
-    // se método for 'Fiado', força status 'pending'
-    let payment_status = form.payment_status;
-    let payment_method = form.payment_method;
-    if (payment_method === "Fiado") {
-      payment_status = "pending";
-    }
-    // se status for pending, define método 'Fiado'
-    if (payment_status === "pending") {
-      payment_method = "Fiado";
-    }
-
     const payload = {
-  app_id: 2,
-  entity_name: "establishment",
-  entity_id: Number(entityId),
-  origin: "Balcão",
-  fulfillment: "dine-in",
-  payment_status,
-  payment_method,
-  items: orderLines.map((l) => ({
-    item_id: l.product.id,
-    quantity: l.quantity,
-  })),
-  ...form, // já inclui customer_name, phone, cpf, notes
-};
-
-
+      app_id: 3,
+      entity_name: "establishment",
+      entity_id: +entityId,
+      items: orderLines.map((l) => ({
+        item_id: l.product.id,
+        quantity: l.quantity,
+        additions: l.additions.flatMap((a) => Array(a.quantity).fill(a.id)),
+        removals: l.removals,
+      })),
+      ...form,
+    };
     try {
       const token = localStorage.getItem("token");
-      const { data } = await axios.post(`${apiBaseUrl}/order`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const ord = data.order;
-      await Swal.fire(
-        "Registro Salvo",
-        `Pedido #${ord.order_number} — ${new Date(
-          ord.order_datetime
-        ).toLocaleString("pt-BR", { hour12: false })}`,
-        "success"
+      const { data: created } = await axios.post(
+        `${apiBaseUrl}/order`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      const { data: fetched } = await axios.get(
+        `${apiBaseUrl}/order/${created.order.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const receiptText = buildReceipt(fetched.order);
+      await Swal.fire({
+        title: `Recibo Pedido #${fetched.order.order_number}`,
+        html: `<pre>${receiptText}</pre>`,
+        showCancelButton: true,
+        confirmButtonText: "Imprimir",
+      });
       navigate(`/order/list/${entityId}`);
     } catch (err) {
       if (err.response?.status === 422) {
         const msgs = Object.values(err.response.data.errors || {}).flat();
         Swal.fire("Erro de Validação", msgs.join("\n"), "warning");
       } else {
-        Swal.fire("Erro", "Não foi possível registrar atendimento.", "error");
+        Swal.fire("Erro", "Não foi possível criar pedido.", "error");
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (loading)
     return <Spinner animation="border" className="order-loading__spinner" />;
-  }
 
   return (
     <>
@@ -297,7 +379,6 @@ export default function OrderCreatePage() {
             Ver Pedidos
           </Button>
         </div>
-
         <Button
           variant="success"
           onClick={handleAddItem}
@@ -305,11 +386,9 @@ export default function OrderCreatePage() {
         >
           + Adicionar Item
         </Button>
-
         <div className="order-create__total">
           <h5>Total: {formattedTotal}</h5>
         </div>
-
         <div className="order-lines__block">
           <p className="order-lines__title">Itens do Pedido</p>
           <Row className="order-lines__list">
@@ -322,17 +401,19 @@ export default function OrderCreatePage() {
                   <Button
                     size="sm"
                     variant="outline-danger"
+                    className="order-line__btn-remove"
                     onClick={() => removeLine(i)}
                   >
                     ×
                   </Button>
                 </Col>
-                <Col xs={12} sm={4} lg={2} className="order-line__quantity">
+                <Col xs={12} sm={6} lg={3} className="order-line__quantity">
                   <Button
                     size="sm"
                     variant="outline-info"
+                    className="order-line__btn-minus"
                     onClick={() =>
-                      updateLine(i, Math.max(1, line.quantity - 1))
+                      updateLine(i, "quantity", Math.max(1, line.quantity - 1))
                     }
                   >
                     −
@@ -343,7 +424,8 @@ export default function OrderCreatePage() {
                   <Button
                     size="sm"
                     variant="outline-info"
-                    onClick={() => updateLine(i, line.quantity + 1)}
+                    className="order-line__btn-plus"
+                    onClick={() => updateLine(i, "quantity", line.quantity + 1)}
                   >
                     +
                   </Button>
@@ -352,61 +434,80 @@ export default function OrderCreatePage() {
             ))}
           </Row>
         </div>
-
         <Form onSubmit={handleSubmit} className="order-create__form">
-          <Row className="order-create__form-row g-3 mb-3">
+          <Row className="order-create__form-row">
             <Col md={4}>
-              <Form.Group controlId="customer_name">
-                <Form.Label>Cliente</Form.Label>
+              <Form.Group
+                controlId="customer"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">Cliente</Form.Label>
                 <Form.Control
                   required
                   value={form.customer_name}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, customer_name: e.target.value }))
                   }
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group controlId="customer_phone">
-                <Form.Label>Telefone</Form.Label>
-                <Form.Control
-                  value={form.customer_phone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, customer_phone: e.target.value }))
-                  }
-                  inputMode="tel"
-                  placeholder="(00) 00000-0000"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group controlId="customer_cpf">
-                <Form.Label>CPF</Form.Label>
-                <Form.Control
-                  value={form.customer_cpf}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, customer_cpf: e.target.value }))
-                  }
-                  inputMode="numeric"
-                  placeholder="000.000.000-00"
+                  className="order-create__input"
                 />
               </Form.Group>
             </Col>
           </Row>
-
-          <Row className="g-3 mb-4">
-            <Col xs={12} md={6} lg={3}>
-              <Form.Group controlId="payment_status">
-                <Form.Label>Status Pagamento</Form.Label>
+          <Row className="order-create__form-row">
+            <Col md={2}>
+              <Form.Group
+                controlId="origin"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">Origem</Form.Label>
+                <Form.Select
+                  value={form.origin}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, origin: e.target.value }))
+                  }
+                  className="order-create__select"
+                >
+                  {Object.keys(originLabels).map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={2}>
+              <Form.Group
+                controlId="fulfillment"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">Consumo</Form.Label>
+                <Form.Select
+                  value={form.fulfillment}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, fulfillment: e.target.value }))
+                  }
+                  className="order-create__select"
+                >
+                  {Object.entries(fulfillmentLabels).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={2}>
+              <Form.Group
+                controlId="payment_status"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">
+                  Status Pagamento
+                </Form.Label>
                 <Form.Select
                   value={form.payment_status}
                   onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      payment_status: e.target.value,
-                    }))
+                    setForm((f) => ({ ...f, payment_status: e.target.value }))
                   }
+                  className="order-create__select"
                 >
                   <option value="pending">Pendente</option>
                   <option value="paid">Pago</option>
@@ -414,29 +515,56 @@ export default function OrderCreatePage() {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col xs={12} md={6} lg={3}>
-              <Form.Group controlId="payment_method">
-                <Form.Label>Método Pagamento</Form.Label>
+            <Col md={2}>
+              <Form.Group
+                controlId="payment_method"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">
+                  Método Pagamento
+                </Form.Label>
                 <Form.Select
                   value={form.payment_method}
                   onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      payment_method: e.target.value,
-                    }))
+                    setForm((f) => ({ ...f, payment_method: e.target.value }))
                   }
+                  className="order-create__select"
                 >
-                  <option value="Dinheiro">Dinheiro</option>
-                  <option value="Pix">Pix</option>
-                  <option value="Crédito">Crédito</option>
-                  <option value="Débito">Débito</option>
-                  <option value="Fiado">Fiado</option>
-                  <option value="Cortesia">Cortesia</option>
+                  <option>Dinheiro</option>
+                  <option>Pix</option>
+                  <option>Crédito</option>
+                  <option>Débito</option>
+                  <option>Fiado</option>
+                  <option>Cortesia</option>
+                  <option>Transferência bancária</option>
+                  <option>Vale-refeição</option>
+                  <option>Cheque</option>
+                  <option>PayPal</option>
                 </Form.Select>
               </Form.Group>
             </Col>
           </Row>
-
+          <Row className="order-create__form-row">
+            <Col md={12}>
+              <Form.Group
+                controlId="notes"
+                className="order-create__form-group"
+              >
+                <Form.Label className="order-create__label">
+                  Observações
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={form.notes}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, notes: e.target.value }))
+                  }
+                  className="order-create__textarea"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
           <Row>
             <Col className="d-flex justify-content-center">
               <Button
