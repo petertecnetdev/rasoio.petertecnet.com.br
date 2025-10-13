@@ -69,8 +69,8 @@ export default function Dashboard() {
 
             const totalOrders = orders.length;
             const totalValue = orders.reduce((sum, o) => {
-              const orderSum = o.items.reduce((s, it) => {
-                let sub = Number(it.subtotal);
+              const orderSum = (o.items || []).reduce((s, it) => {
+                let sub = Number(it.subtotal || 0);
                 (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
@@ -84,7 +84,7 @@ export default function Dashboard() {
 
             const itemCounts = {};
             orders.forEach((o) =>
-              o.items.forEach((it) => {
+              (o.items || []).forEach((it) => {
                 const name = it.item?.name || "-";
                 itemCounts[name] = (itemCounts[name] || 0) + (it.quantity || 0);
               })
@@ -97,8 +97,8 @@ export default function Dashboard() {
 
             const customerSums = {};
             orders.forEach((o) => {
-              const sum = o.items.reduce((s, it) => {
-                let sub = Number(it.subtotal);
+              const sum = (o.items || []).reduce((s, it) => {
+                let sub = Number(it.subtotal || 0);
                 (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
@@ -155,7 +155,9 @@ export default function Dashboard() {
   }, []);
 
   const handleLogoError = (e) => {
+    // eslint-disable-next-line no-param-reassign
     e.target.onerror = null;
+    // eslint-disable-next-line no-param-reassign
     e.target.src = "/images/logo.png";
   };
 
@@ -213,7 +215,7 @@ export default function Dashboard() {
                             size="sm"
                             className="dashboard-establishment-btn mx-1 bg-black"
                           >
-                            Page
+                            Página
                           </Button>
                         </div>
                       </div>
@@ -227,7 +229,7 @@ export default function Dashboard() {
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
-                                Novo Pedido de atendimento
+                                Novo atendimento
                               </Button>
                             </Col>
                             <Col md={3}>
@@ -237,7 +239,7 @@ export default function Dashboard() {
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
-                                📑 Pedidos de atendimentos
+                                📑 Atendimentos
                               </Button>
                             </Col>
                             <Col md={3}>
@@ -247,7 +249,7 @@ export default function Dashboard() {
                                 size="sm"
                                 className="dashboard-establishment-btn bg-black w-100"
                               >
-                                📑 Colaboradores
+                                👥 Colaboradores
                               </Button>
                             </Col>
                             <Col md={3}>
@@ -270,7 +272,7 @@ export default function Dashboard() {
                                 Itens
                               </Button>
                             </Col>
-                            <Col md={3}>
+                            <Col md={2}>
                               <Button
                                 as={Link}
                                 to={`/establishment/update/${est.id}`}
@@ -292,10 +294,8 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Atendimentos de Hoje</Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    {m.totalOrders || 0}
-                                  </Card.Text>
+                                  <Card.Title className="fs-6">Atendimentos</Card.Title>
+                                  <Card.Text className="fs-5 fw-bold">{m.totalOrders || 0}</Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
@@ -304,27 +304,24 @@ export default function Dashboard() {
                                 <Card.Body className="p-2">
                                   <Card.Title className="fs-6">Faturamento</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
-                                    R${(m.totalValue || "0.00").replace(".", ",")}
+                                    R{String.fromCharCode(36)}
+                                    {(m.totalValue || "0.00").replace(".", ",")}
                                   </Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
-                            <Col md={2}>
+                            <Col md={3}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Produtos/Serviços Mais Pedido
-                                  </Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">
-                                    {m.mostOrderedItem}
-                                  </Card.Text>
+                                  <Card.Title className="fs-6">Mais pedido</Card.Title>
+                                  <Card.Text className="fs-6 fw-bold">{m.mostOrderedItem}</Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
-                            <Col md={2}>
+                            <Col md={3}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Cliente Top</Card.Title>
+                                  <Card.Title className="fs-6">Cliente top</Card.Title>
                                   <Card.Text className="fs-6 fw-bold">{m.topCustomer}</Card.Text>
                                 </Card.Body>
                               </Card>
@@ -332,19 +329,18 @@ export default function Dashboard() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Média/Hora</Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    {m.avgOrdersPerHour}
-                                  </Card.Text>
+                                  <Card.Title className="fs-6">Média/hora</Card.Title>
+                                  <Card.Text className="fs-5 fw-bold">{m.avgOrdersPerHour}</Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Ticket Médio</Card.Title>
+                                  <Card.Title className="fs-6">Ticket médio</Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
-                                    R${(m.avgTicket || "0.00").replace(".", ",")}
+                                    R{String.fromCharCode(36)}
+                                    {(m.avgTicket || "0.00").replace(".", ",")}
                                   </Card.Text>
                                 </Card.Body>
                               </Card>

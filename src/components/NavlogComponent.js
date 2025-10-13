@@ -8,8 +8,6 @@ import "./NavlogComponent.css";
 
 export default function NavlogComponent() {
   const location = useLocation();
-  const isPublicView = location.pathname.startsWith("/establishment/view");
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMenu, setLoadingMenu] = useState(true);
@@ -26,11 +24,6 @@ export default function NavlogComponent() {
   }, []);
 
   useEffect(() => {
-    if (isPublicView) {
-      setLoading(false);
-      setLoadingMenu(false);
-      return;
-    }
     (async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -53,7 +46,7 @@ export default function NavlogComponent() {
         setLoadingMenu(false);
       }
     })();
-  }, [isPublicView]);
+  }, []);
 
   const handleImageError = (e) => {
     e.target.onerror = null;
@@ -105,7 +98,6 @@ export default function NavlogComponent() {
           />
         </Navbar.Brand>
 
-        {/* if user loaded and present, show hamburger; otherwise a Login button */}
         {!loadingMenu && (user ? (
           <button
             onClick={handleToggleMobileMenu}
@@ -115,15 +107,12 @@ export default function NavlogComponent() {
             ☰
           </button>
         ) : (
-          !isPublicView && (
-            <Link to="/login" className="navlog__login-btn">
-              Login
-            </Link>
-          )
+          <Link to="/login" className="navlog__login-btn">
+            Login
+          </Link>
         ))}
       </Navbar>
 
-      {/* Mobile menu only if user is authenticated */}
       {showMobileMenu && user && (
         <div className="navlog__mobile-menu">
           <div className="navlog__mobile-close">
@@ -151,9 +140,10 @@ export default function NavlogComponent() {
                   <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
                     Gerenciar Conta
                   </Link>
- <Link to="/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
+                  <Link to="/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
                     Dashboard
                   </Link>
+
                   {user.establishments.filter(est => est.category === "barbershop").length > 0 ? (
                     <>
                       <button
