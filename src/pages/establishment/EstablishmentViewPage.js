@@ -324,15 +324,6 @@ export default function EstablishmentViewPage() {
                     {services.map((sv) => (
                       <Col key={`sv-${sv.id}`} lg={4} md={6} sm={6} xs={12}>
                         <Card className="estv-card h-100" bg="black" text="light">
-                          <div className="estv-media-wrap">
-                            <img
-                              src={imageUrl(sv.image)}
-                              alt={sv.name}
-                              className="estv-media"
-                              onError={handleImgError}
-                              loading="lazy"
-                            />
-                          </div>
                           <Card.Body className="p-3">
                             <div className="estv-item-name">{sv.name}</div>
                             <div className="d-flex justify-content-between align-items-center">
