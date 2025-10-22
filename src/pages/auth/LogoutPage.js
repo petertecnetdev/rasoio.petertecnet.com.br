@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import authService from '../../services/AuthService';
-import LoadingComponent from '../../components/LoadingComponent'; // Importa o componente de carregamento
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import authService from "../../services/AuthService";
+import LoadingComponent from "../../components/LoadingComponent";
 
 const LogoutPage = () => {
   const navigate = useNavigate();
@@ -10,29 +10,26 @@ const LogoutPage = () => {
   useEffect(() => {
     const logout = async () => {
       try {
-        await authService.logout(); // 
-          history('/login', { replace: true });
+        await authService.logout();
+        localStorage.removeItem("token");
       } catch (error) {
-        console.error('Erro durante o logout:', error);
+        console.error("Erro durante o logout:", error);
       } finally {
         setTimeout(() => {
           setLoading(false);
-          navigate('/login');
-        }, 2000); // Tempo de espera de 2 segundos (2000 milissegundos)
+          navigate("/login", { replace: true });
+        }, 2000);
       }
     };
 
-    localStorage.removeItem("token");
-    window.location.href = "/login";
     logout();
   }, [navigate]);
 
-  // Se loading for verdadeiro, renderiza o componente de carregamento
   if (loading) {
-    return <LoadingComponent />; // Renderiza o componente de carregamento
+    return <LoadingComponent />;
   }
 
-  return null; // Este componente não renderiza nada visível para o usuário
+  return null;
 };
 
 export default LogoutPage;

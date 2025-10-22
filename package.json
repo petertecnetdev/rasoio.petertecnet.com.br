@@ -9,7 +9,7 @@
     "build": "react-scripts build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-     "lint": "eslint 'src/**/*.{js,jsx}'"
+    "lint": "eslint 'src/**/*.{js,jsx}'"
   },
   "keywords": [],
   "author": "",
@@ -43,7 +43,8 @@
     "react-webcam": "^7.2.0",
     "reactstrap": "^9.2.2",
     "recharts": "^2.12.7",
-    "sweetalert2": "^11.14.1",
+    "sweetalert2": "^11.26.3",
+    "sweetalert2-react-content": "^5.1.0",
     "web-vitals": "^3.5.2"
   },
   "browserslist": {

@@ -52,6 +52,9 @@ import ServiceRecordListPage from "./pages/serviceRecord/ServiceRecordListPage";
 import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePage";
 import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
 
+import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
+
+
 import ReportOrderPage from "./pages/report/ReportOrderPage";
 
 import "./index.css";
@@ -168,6 +171,9 @@ function AppInner() {
           <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
 
           <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
+
+          <Route path="/establishment/:slug/schedule"  element={<EstablishmentSchedulePage />} />
+
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
