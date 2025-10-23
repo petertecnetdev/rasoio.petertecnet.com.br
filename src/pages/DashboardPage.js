@@ -8,7 +8,7 @@ import NavlogComponent from "../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../config";
 import "./dashboard.css";
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const [establishments, setEstablishments] = useState([]);
   const [metrics, setMetrics] = useState({});
   const [isLoading, setIsLoading] = useState(true);

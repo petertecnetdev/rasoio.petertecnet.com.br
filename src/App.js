@@ -53,9 +53,10 @@ import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePa
 import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
 
 import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
-
-
 import ReportOrderPage from "./pages/report/ReportOrderPage";
+
+// NOVO: área do Employer (colaborador/barbeiro)
+import EmployerDashboardPage from "./pages/employer/EmployerDashboardPage";
 
 import "./index.css";
 
@@ -72,9 +73,17 @@ function AppInner() {
           const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setUser(data.user);
+          const userData = {
+            ...data.user,
+            isEmployer: data.is_employer,
+            employer: data.employer,
+            establishments: data.establishments || [],
+          };
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
         } catch {
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
       }
       setInitialLoading(false);
@@ -106,6 +115,9 @@ function AppInner() {
 
   const restrictedRoute = (el) =>
     user ? <Navigate to="/dashboard" replace /> : el;
+
+  const employerRoute = (el) =>
+    user && user.isEmployer ? el : <Navigate to="/dashboard" replace />;
 
   return (
     <>
@@ -172,8 +184,13 @@ function AppInner() {
 
           <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
 
-          <Route path="/establishment/:slug/schedule"  element={<EstablishmentSchedulePage />} />
+          <Route path="/establishment/:slug/schedule" element={<EstablishmentSchedulePage />} />
 
+          {/* NOVA ROTA - Área do Employer */}
+          <Route
+            path="/employer/dashboard"
+            element={protectedRoute(employerRoute(<EmployerDashboardPage />))}
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

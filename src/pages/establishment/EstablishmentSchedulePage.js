@@ -17,7 +17,7 @@ import { apiBaseUrl, storageUrl } from "../../config";
 import "./EstablishmentSchedulePage.css";
 
 const MySwal = withReactContent(Swal);
-const APP_ID = 3;
+const APP_ID = 2;
 const PLACEHOLDER = "/images/logo.png";
 const TZ = "America/Sao_Paulo";
 
@@ -43,7 +43,8 @@ export default function EstablishmentSchedulePage() {
   const [availableTimes, setAvailableTimes] = useState([]);
 
   const totalDuration = useMemo(
-    () => selectedServices.reduce((sum, s) => sum + (Number(s.duration) || 0), 0),
+    () =>
+      selectedServices.reduce((sum, s) => sum + (Number(s.duration) || 0), 0),
     [selectedServices]
   );
 
@@ -85,10 +86,14 @@ export default function EstablishmentSchedulePage() {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`);
+        const { data } = await axios.get(
+          `${apiBaseUrl}/establishment/view/${slug}`
+        );
         const est = data?.establishment || null;
         const items = Array.isArray(data?.items) ? data.items : [];
-        const cols = Array.isArray(data?.collaborators) ? data.collaborators : [];
+        const cols = Array.isArray(data?.collaborators)
+          ? data.collaborators
+          : [];
         if (!est) {
           await MySwal.fire({
             icon: "error",
@@ -100,7 +105,11 @@ export default function EstablishmentSchedulePage() {
         }
         if (!mounted) return;
         setEstablishment(est);
-        setServices(items.filter((i) => String(i.type) === "service" && String(i.status) === "1"));
+        setServices(
+          items.filter(
+            (i) => String(i.type) === "service" && String(i.status) === "1"
+          )
+        );
         setCollaborators(cols);
       } catch {
         await MySwal.fire({
@@ -115,6 +124,63 @@ export default function EstablishmentSchedulePage() {
     })();
     return () => (mounted = false);
   }, [slug, navigate]);
+
+  const loadAvailableTimes = useCallback(
+    async (dayKey, collaborator, durationMin) => {
+      try {
+        setAvailableTimes([]);
+        if (!dayKey || !collaborator || !durationMin) return;
+
+        console.log("🔹 Buscando horários disponíveis:", {
+          collaborator: collaborator.id,
+          date: dayKey,
+          duration: durationMin,
+        });
+
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const { data } = await axios.get(
+          `${apiBaseUrl}/employer-schedule/available`,
+          {
+            params: {
+              employer_id: collaborator.id,
+              date: dayKey,
+              duration: durationMin,
+            },
+            headers,
+          }
+        );
+
+        setAvailableTimes(
+          Array.isArray(data.available_times) ? data.available_times : []
+        );
+      } catch (err) {
+        console.error(
+          "❌ Erro ao carregar horários disponíveis:",
+          err.response || err
+        );
+        await MySwal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Não foi possível carregar os horários disponíveis.",
+        });
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (selectedCollaborator && selectedDateKey && totalDuration > 0) {
+      console.log("⚙️ Atualizando horários disponíveis...");
+      loadAvailableTimes(selectedDateKey, selectedCollaborator, totalDuration);
+    }
+  }, [
+    selectedCollaborator,
+    selectedDateKey,
+    totalDuration,
+    loadAvailableTimes,
+  ]);
 
   const openCollaboratorPicker = async () => {
     if (!collaborators.length) {
@@ -136,11 +202,17 @@ export default function EstablishmentSchedulePage() {
       <div class="swal-grid">
         ${collaborators
           .map((c) => {
-            const nm = `${c.user?.first_name || ""} ${c.user?.last_name || ""}`.trim() || "Colaborador";
+            const nm =
+              `${c.user?.first_name || ""} ${c.user?.last_name || ""}`.trim() ||
+              "Colaborador";
             return `<button type="button" class="selbtn" data-id="${c.id}">
               <div style="display:flex;align-items:center;gap:10px;">
-                <img src="${imageUrl(c.user?.avatar)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="this.src='${PLACEHOLDER}'" />
-                <div><div>${nm}</div><div class="small">${c.role || ""}</div></div>
+                <img src="${imageUrl(
+                  c.user?.avatar
+                )}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="this.src='${PLACEHOLDER}'" />
+                <div><div>${nm}</div><div class="small">${
+              c.role || ""
+            }</div></div>
               </div>
             </button>`;
           })
@@ -154,13 +226,16 @@ export default function EstablishmentSchedulePage() {
         const root = MySwal.getHtmlContainer();
         root.querySelectorAll(".selbtn").forEach((btn) => {
           btn.addEventListener("click", () => {
-            root.querySelectorAll(".selbtn").forEach((b) => b.classList.remove("active"));
+            root
+              .querySelectorAll(".selbtn")
+              .forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
             const id = Number(btn.getAttribute("data-id"));
             const col = collaborators.find((c) => Number(c.id) === id);
             setSelectedCollaborator(col || null);
             setAvailableTimes([]);
             setSelectedDateKey(null);
+            setSelectedServices([]);
             Swal.close();
           });
         });
@@ -191,8 +266,12 @@ export default function EstablishmentSchedulePage() {
         ${services
           .map((sv) => {
             const activeClass = selectedIds.has(sv.id) ? "active" : "";
-            return `<button type="button" class="selbtn ${activeClass}" data-id="${sv.id}">
-              <div class="rowtop"><strong>${sv.name}</strong><span>${fmtBRL(sv.price)}</span></div>
+            return `<button type="button" class="selbtn ${activeClass}" data-id="${
+              sv.id
+            }">
+              <div class="rowtop"><strong>${sv.name}</strong><span>${fmtBRL(
+              sv.price
+            )}</span></div>
               <div class="small">${sv.duration || 0} min</div>
             </button>`;
           })
@@ -222,9 +301,7 @@ export default function EstablishmentSchedulePage() {
               btn.classList.add("active");
             }
             refresh();
-            if (chosen.size > 0) {
-              setTimeout(() => Swal.close(), 1000);
-            }
+            setTimeout(() => Swal.close(), 400);
           });
         });
       },
@@ -233,10 +310,66 @@ export default function EstablishmentSchedulePage() {
 
   const handleCreateAppointment = async (timeStr) => {
     try {
-      if (!selectedCollaborator || !selectedDateKey || !selectedServices.length) return;
+      if (!selectedCollaborator || !selectedDateKey || !selectedServices.length)
+        return;
+
+      const collaboratorName = `${
+        selectedCollaborator.user?.first_name || ""
+      } ${selectedCollaborator.user?.last_name || ""}`.trim();
+      const servicesList = selectedServices
+        .map((s) => `• ${s.name} (${fmtBRL(s.price)})`)
+        .join("<br>");
+      const dateFormatted = new Date(selectedDateKey).toLocaleDateString(
+        "pt-BR"
+      );
+
+      const confirm = await MySwal.fire({
+        icon: "question",
+        title: "Confirmar agendamento",
+        html: `
+        <div style="text-align:left;">
+          <b>Colaborador:</b> ${collaboratorName}<br>
+          <b>Data:</b> ${dateFormatted}<br>
+          <b>Horário:</b> ${timeStr}<br>
+          <b>Serviços:</b><br>${servicesList}<br>
+          <b>Total:</b> ${fmtBRL(totalPrice)}
+        </div>
+      `,
+        showCancelButton: true,
+        confirmButtonText: "Confirmar",
+        cancelButtonText: "Cancelar",
+        reverseButtons: true,
+      });
+
+      if (!confirm.isConfirmed) return;
+
       const [h, m] = timeStr.split(":").map((n) => parseInt(n, 10));
-      const start = new Date(selectedDateKey + "T00:00:00");
-      start.setHours(h, m, 0, 0);
+      const [year, month, day] = selectedDateKey.split("-").map(Number);
+const start = new Date(year, month - 1, day, h, m, 0);
+
+
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+
+      let customerName = user
+        ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+        : "";
+
+      if (!customerName) {
+        const { value: name } = await MySwal.fire({
+          title: "Informe seu nome",
+          input: "text",
+          inputLabel: "Como devemos chamar você?",
+          inputPlaceholder: "Ex: João Silva",
+          confirmButtonText: "Continuar",
+          cancelButtonText: "Cancelar",
+          inputValidator: (v) =>
+            !v ? "Por favor, informe seu nome para continuar." : undefined,
+        });
+
+        if (!name) return;
+        customerName = name.trim();
+      }
+
       const payload = {
         app_id: APP_ID,
         entity_name: "establishment",
@@ -247,30 +380,77 @@ export default function EstablishmentSchedulePage() {
           additions: [],
           removals: [],
         })),
-        customer_name: "Cliente",
+        customer_name: customerName,
         origin: "App",
         fulfillment: "dine-in",
         payment_status: "pending",
         payment_method: "Dinheiro",
         notes: "",
-        order_datetime: start.toISOString(),
+       order_datetime: start.toLocaleString("sv-SE").replace(" ", "T"),
         attendant_id: selectedCollaborator.id,
       };
+
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const { data } = await axios.post(`${apiBaseUrl}/order`, payload, { headers });
+      const { data } = await axios.post(`${apiBaseUrl}/order`, payload, {
+        headers,
+      });
+
       await MySwal.fire({
         icon: "success",
-        title: "Agendamento criado!",
-        text: data?.message || "Seu agendamento foi registrado.",
+        title: "Agendamento confirmado!",
+        text: data?.message || "Seu agendamento foi registrado com sucesso.",
       });
+
       navigate(`/establishment/view/${slug}`);
     } catch (err) {
-      const msg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Não foi possível criar o agendamento.";
-      await MySwal.fire({ icon: "error", title: "Erro", text: msg });
+      const data = err.response?.data || {};
+      const baseMsg =
+        data.error || data.message || "Não foi possível criar o agendamento.";
+
+      if (data.suggestion) {
+        const result = await MySwal.fire({
+          icon: "warning",
+          title: "Conflito de horário",
+          html: `
+          <div style="text-align:left;">
+            <p>${baseMsg}</p>
+            <p><b>${data.suggestion}</b></p>
+            ${data.tip ? `<p class="text-muted small">${data.tip}</p>` : ""}
+          </div>
+        `,
+          showCancelButton: true,
+          confirmButtonText: "Agendar no horário sugerido",
+          cancelButtonText: "Cancelar",
+          reverseButtons: true,
+        });
+
+        if (result.isConfirmed) {
+          const suggestion = data.suggestion.match(/\d{2}:\d{2}/);
+          if (suggestion) {
+            const newTime = suggestion[0];
+            await loadAvailableTimes(
+              selectedDateKey,
+              selectedCollaborator,
+              totalDuration
+            );
+            const isValidTime = availableTimes.includes(newTime);
+
+            if (!isValidTime) {
+              await MySwal.fire({
+                icon: "info",
+                title: "Horário incompatível",
+                text: `O horário sugerido (${newTime}) não está dentro do período de atendimento do colaborador.`,
+              });
+              return;
+            }
+
+            await handleCreateAppointment(newTime);
+          }
+        }
+      } else {
+        await MySwal.fire({ icon: "error", title: "Erro", text: baseMsg });
+      }
     }
   };
 
@@ -285,6 +465,7 @@ export default function EstablishmentSchedulePage() {
     );
 
   if (!establishment) return null;
+
   const title = `Agendar com ${establishment.name || ""}`;
 
   return (
@@ -297,7 +478,10 @@ export default function EstablishmentSchedulePage() {
         }}
       >
         <div className="estv-hero-overlay" />
-        <Container fluid className="estv-hero-content d-flex flex-column flex-md-row align-items-center justify-content-between">
+        <Container
+          fluid
+          className="estv-hero-content d-flex flex-column flex-md-row align-items-center justify-content-between"
+        >
           <div className="mb-3 mb-md-0">
             <img
               src={imageUrl(establishment.logo)}
@@ -309,17 +493,33 @@ export default function EstablishmentSchedulePage() {
           <div>
             <h1 className="estv-title">{title}</h1>
             <div className="d-flex flex-wrap gap-2 mt-2 justify-content-center justify-content-md-start">
-              <Button size="sm" className="bg-black" onClick={openCollaboratorPicker}>
+              <Button
+                size="sm"
+                className="bg-black"
+                onClick={openCollaboratorPicker}
+              >
                 Selecionar Colaborador
               </Button>
-              <Button size="sm" className="bg-black" onClick={openServicePicker}>
+              <Button
+                size="sm"
+                className="bg-black"
+                onClick={openServicePicker}
+              >
                 Selecionar Serviços
               </Button>
             </div>
             <div className="mt-3 text-center text-md-start">
-              <Badge bg={selectedCollaborator ? "info" : "secondary"} text="dark" className="me-2">
+              <Badge
+                bg={selectedCollaborator ? "info" : "secondary"}
+                text="dark"
+                className="me-2"
+              >
                 {selectedCollaborator
-                  ? `Colaborador: ${(selectedCollaborator.user?.first_name || "") + " " + (selectedCollaborator.user?.last_name || "")}`
+                  ? `Colaborador: ${
+                      (selectedCollaborator.user?.first_name || "") +
+                      " " +
+                      (selectedCollaborator.user?.last_name || "")
+                    }`
                   : "Nenhum colaborador"}
               </Badge>
               <Badge bg={selectedServices.length ? "success" : "secondary"}>
@@ -344,29 +544,46 @@ export default function EstablishmentSchedulePage() {
         <Row className="gx-3 gy-3">
           <Col xs={12}>
             <Card bg="dark" text="light" className="mb-3">
-              <Card.Header><strong>Escolha uma data</strong></Card.Header>
+              <Card.Header>
+                <strong>Escolha uma data</strong>
+              </Card.Header>
               <Card.Body className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
                 {futureDays.map((d) => (
                   <Button
                     key={d.key}
                     size="sm"
-                    variant={selectedDateKey === d.key ? "warning" : "secondary"}
-                    onClick={() => setSelectedDateKey(d.key)}
-                    disabled={!selectedCollaborator}
+                    variant={
+                      selectedDateKey === d.key ? "warning" : "secondary"
+                    }
+                    onClick={() => {
+                      setSelectedDateKey(d.key);
+                      if (selectedCollaborator && selectedServices.length) {
+                        loadAvailableTimes(
+                          d.key,
+                          selectedCollaborator,
+                          totalDuration
+                        );
+                      }
+                    }}
+                    disabled={!selectedCollaborator || !selectedServices.length}
                   >
                     {d.label}
                   </Button>
                 ))}
               </Card.Body>
             </Card>
-          </Col>
 
-          <Col xs={12}>
             <Card bg="dark" text="light" className="mb-3">
-              <Card.Header><strong>Horários disponíveis</strong></Card.Header>
+              <Card.Header>
+                <strong>Horários disponíveis</strong>
+              </Card.Header>
               <Card.Body className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                {!selectedCollaborator || !selectedDateKey || !selectedServices.length ? (
-                  <div className="text-muted">Selecione colaborador, serviços e uma data.</div>
+                {!selectedCollaborator ||
+                !selectedDateKey ||
+                !selectedServices.length ? (
+                  <div className="text-muted">
+                    Selecione colaborador, serviços e uma data.
+                  </div>
                 ) : availableTimes.length ? (
                   availableTimes.map((t) => (
                     <Button
@@ -383,11 +600,11 @@ export default function EstablishmentSchedulePage() {
                 )}
               </Card.Body>
             </Card>
-          </Col>
 
-          <Col xs={12}>
             <Card bg="dark" text="light">
-              <Card.Header><strong>Serviços selecionados</strong></Card.Header>
+              <Card.Header>
+                <strong>Serviços selecionados</strong>
+              </Card.Header>
               <Card.Body>
                 {selectedServices.length ? (
                   <Row className="gx-3 gy-3 justify-content-center justify-content-md-start">
@@ -399,14 +616,18 @@ export default function EstablishmentSchedulePage() {
                               <strong>{s.name}</strong>
                               <span>{fmtBRL(s.price)}</span>
                             </div>
-                            <div className="small text-muted">{s.duration || 0} min</div>
+                            <div className="small text-muted">
+                              {s.duration || 0} min
+                            </div>
                             <Button
                               size="sm"
                               variant="outline-danger"
                               className="mt-2 w-100"
                               onClick={() =>
                                 setSelectedServices((prev) =>
-                                  prev.filter((x) => Number(x.id) !== Number(s.id))
+                                  prev.filter(
+                                    (x) => Number(x.id) !== Number(s.id)
+                                  )
                                 )
                               }
                             >
@@ -418,7 +639,9 @@ export default function EstablishmentSchedulePage() {
                     ))}
                   </Row>
                 ) : (
-                  <div className="text-muted text-center">Nenhum serviço selecionado.</div>
+                  <div className="text-muted text-center">
+                    Nenhum serviço selecionado.
+                  </div>
                 )}
               </Card.Body>
             </Card>

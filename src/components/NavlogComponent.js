@@ -8,7 +8,10 @@ import "./NavlogComponent.css";
 
 export default function NavlogComponent() {
   const location = useLocation();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const cached = localStorage.getItem("user");
+    return cached ? JSON.parse(cached) : null;
+  });
   const [loading, setLoading] = useState(true);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -24,29 +27,47 @@ export default function NavlogComponent() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+    const loadUser = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        setLoading(false);
-        setLoadingMenu(false);
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+          setLoadingMenu(false);
+        }
         return;
       }
       try {
         const headers = { Authorization: `Bearer ${token}` };
         const { data } = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
-        setUser({
-          ...data.user,
-          establishments: data.establishments || [],
-          profile: data.profile || {},
-        });
+        if (!cancelled) {
+          const userData = {
+            ...data.user,
+            isEmployer: data.is_employer,
+            employer: data.employer,
+            establishments: data.establishments || [],
+            profile: data.profile || {},
+          };
+          setUser(userData);
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
       } catch {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        if (!cancelled) setUser(null);
       } finally {
-        setLoading(false);
-        setLoadingMenu(false);
+        if (!cancelled) {
+          setLoading(false);
+          setLoadingMenu(false);
+        }
       }
-    })();
-  }, []);
+    };
+    loadUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
   const handleImageError = (e) => {
     e.target.onerror = null;
@@ -69,16 +90,32 @@ export default function NavlogComponent() {
       </button>
       {showAdminSubmenu && (
         <div className="navlog__admin-submenu">
-          <Link to="/user/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+          <Link
+            to="/user/list"
+            onClick={handleToggleMobileMenu}
+            className="navlog__submenu-link"
+          >
             Usuários
           </Link>
-          <Link to="/barber/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+          <Link
+            to="/barber/list"
+            onClick={handleToggleMobileMenu}
+            className="navlog__submenu-link"
+          >
             Barbeiros
           </Link>
-          <Link to="/service/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+          <Link
+            to="/service/list"
+            onClick={handleToggleMobileMenu}
+            className="navlog__submenu-link"
+          >
             Serviços
           </Link>
-          <Link to="/appointments/list" onClick={handleToggleMobileMenu} className="navlog__submenu-link">
+          <Link
+            to="/appointments/list"
+            onClick={handleToggleMobileMenu}
+            className="navlog__submenu-link"
+          >
             Agendamentos
           </Link>
         </div>
@@ -88,29 +125,36 @@ export default function NavlogComponent() {
 
   return (
     <>
-      <Navbar expand={false} sticky="top" bg="dark" variant="dark" className="navlog__navbar">
+      <Navbar
+        expand={false}
+        sticky="top"
+        bg="dark"
+        variant="dark"
+        className="navlog__navbar"
+      >
         <Navbar.Brand as={Link} to="/" className="navlog__brand">
           <img
             src="/images/logo.png"
-            alt="Logo Buddys Royale"
+            alt="Logo Rasoio"
             className="navlog__logo-image"
             draggable={false}
           />
         </Navbar.Brand>
 
-        {!loadingMenu && (user ? (
-          <button
-            onClick={handleToggleMobileMenu}
-            className="navlog__mobile-toggle-btn"
-            aria-label="Abrir menu"
-          >
-            ☰
-          </button>
-        ) : (
-          <Link to="/login" className="navlog__login-btn">
-            Login
-          </Link>
-        ))}
+        {!loadingMenu &&
+          (user ? (
+            <button
+              onClick={handleToggleMobileMenu}
+              className="navlog__mobile-toggle-btn"
+              aria-label="Abrir menu"
+            >
+              ☰
+            </button>
+          ) : (
+            <Link to="/login" className="navlog__login-btn">
+              Login
+            </Link>
+          ))}
       </Navbar>
 
       {showMobileMenu && user && (
@@ -130,21 +174,35 @@ export default function NavlogComponent() {
             ) : (
               <>
                 <img
-                  src={user.avatar ? `${storageUrl}/${user.avatar}` : "/images/user.png"}
+                  src={
+                    user.avatar
+                      ? `${storageUrl}/${user.avatar}`
+                      : "/images/user.png"
+                  }
                   alt="Avatar"
                   onError={handleImageError}
                   className="navlog__avatar"
                 />
                 <h5 className="navlog__user-name">{user.first_name}</h5>
                 <nav className="navlog__mobile-links">
-                  <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
+                  <Link
+                    to="/user/update"
+                    onClick={handleToggleMobileMenu}
+                    className="navlog__link"
+                  >
                     Gerenciar Conta
                   </Link>
-                  <Link to="/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
+                  <Link
+                    to="/dashboard"
+                    onClick={handleToggleMobileMenu}
+                    className="navlog__link"
+                  >
                     Dashboard
                   </Link>
 
-                  {user.establishments.filter(est => est.category === "barbershop").length > 0 ? (
+                  {user.establishments.filter(
+                    (est) => est.category === "barbershop"
+                  ).length > 0 ? (
                     <>
                       <button
                         className="navlog__admin-btn"
@@ -154,7 +212,7 @@ export default function NavlogComponent() {
                       </button>
                       {showEstSubmenu &&
                         user.establishments
-                          .filter(est => est.category === "barbershop")
+                          .filter((est) => est.category === "barbershop")
                           .map((est) => (
                             <Link
                               key={est.id}
@@ -176,9 +234,28 @@ export default function NavlogComponent() {
                     </Link>
                   )}
 
+                  {user.isEmployer && (
+                    <Link
+                      to="/employer/dashboard"
+                      onClick={handleToggleMobileMenu}
+                      className="navlog__link"
+                    >
+                      Área do Colaborador
+                    </Link>
+                  )}
+
                   {user.profile.name === "Administrador" && renderAdminMenu()}
 
-                  <Link to="/logout" onClick={handleToggleMobileMenu} className="navlog__link">
+                  <Link
+                    to="/logout"
+                    onClick={() => {
+                      handleToggleMobileMenu();
+                      localStorage.removeItem("token");
+                      localStorage.removeItem("user");
+                      window.location.replace("/logout");
+                    }}
+                    className="navlog__link"
+                  >
                     Sair
                   </Link>
                 </nav>

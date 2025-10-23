@@ -25,7 +25,7 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/login", { username, password });
       const token = extractToken(data);
-      if (!token) throw new Error("Token não recebido");
+      if (!token) throw new Error("Token nÃ£o recebido");
       setToken(token);
       window.location.href = "/dashboard";
     } catch (err) {
@@ -51,7 +51,7 @@ export default function LoginPage() {
     try {
       const { data } = await api.post("/auth/google", { token_id: credential });
       const token = extractToken(data);
-      if (!token) throw new Error("Token Google não recebido");
+      if (!token) throw new Error("Token Google nÃ£o recebido");
       setToken(token);
       window.location.href = "/dashboard";
     } catch (err) {
@@ -105,7 +105,7 @@ export default function LoginPage() {
                   <Form onSubmit={handleSubmit} className="mt-4">
                     <Form.Control
                       type="text"
-                      placeholder="Usuário ou e-mail"
+                      placeholder="UsuÃ¡rio ou e-mail"
                       className="neon-input mb-3"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
