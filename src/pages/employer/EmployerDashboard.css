@@ -1,414 +1,247 @@
-/* DashboardEmployer.css – Tema escuro premium para EmployerDashboardPage */
-
-/* ===============================
-   Paleta base (tokens reutilizáveis)
-   =============================== */
+/* ===========================
+   EmployerDashboard.css — v2 Futuristic Responsive
+   =========================== */
 :root {
-  --dash-bg: #0b0b0c;
-  --dash-bg-elev: #121214;
-  --dash-panel: #151518;
-  --dash-border: rgba(255, 255, 255, 0.08);
-  --dash-text: #e9e9ea;
-  --dash-muted: #b5b5b9;
-  --dash-accent: #0baff5;
-  --dash-accent-2: #22d3ee;
-  --dash-focus: #22d3ee;
-  --dash-success: #22c55e;
-  --dash-danger: #ef4444;
-  --dash-shadow: rgba(0, 0, 0, 0.5);
-  --dash-radius: 16px;
-  --dash-radius-sm: 12px;
-  --dash-gap: 14px;
-  --dash-gap-lg: 18px;
-  --dash-max-w: 1280px;
+  --bg-0: #06080d;
+  --bg-1: #0b0f17;
+  --bg-2: #101826;
+  --surface: rgba(20, 30, 50, 0.65);
+  --surface-strong: rgba(20, 30, 50, 0.9);
+  --line: rgba(130, 180, 255, 0.18);
+  --line-strong: rgba(130, 180, 255, 0.35);
+  --text: #e6f4ff;
+  --muted: #8fa6cc;
+  --primary: #6ef0ff;
+  --accent: #00ffc6;
+  --warning: #ffcc66;
+  --danger: #ff6b6b;
+  --success: #6dff98;
+  --info: #4fd1ff;
+  --radius: 18px;
+  --blur: saturate(160%) blur(12px);
+  --shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line) inset;
 }
 
-/* ===============================
-   Reset e layout base
-   =============================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
+/* Base Layout */
 .dashboard-root {
-  background: var(--dash-bg);
-  color: var(--dash-text);
+  background: radial-gradient(1000px 700px at 15% 20%, #0c1528 0%, #060a10 70%, #000 100%);
+  color: var(--text);
   min-height: 100vh;
-  font-family: "Inter", "Segoe UI", sans-serif;
   overflow-x: hidden;
+  font-family: "Inter", "Roboto", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-
-/* ===============================
-   Containers e títulos
-   =============================== */
 .dashboard-container {
-  padding: clamp(12px, 2vw, 22px);
-  width: min(98%, var(--dash-max-w));
+  padding: clamp(14px, 2vw, 32px);
+  max-width: 1800px;
   margin: 0 auto;
 }
 
+/* Header */
 .header-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--dash-gap-lg);
+  gap: 12px;
+  padding: 18px 22px;
+  background: linear-gradient(180deg, rgba(20, 30, 50, 0.8), rgba(10, 18, 30, 0.5));
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
 }
-
 .header-bar__title {
-  font-weight: 800;
-  font-size: clamp(18px, 3vw, 26px);
-  color: var(--dash-text);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-shadow: 0 0 18px color-mix(in oklab, var(--dash-accent), transparent 85%);
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(100, 200, 255, 0.15);
 }
-
 .header-bar__actions {
   display: flex;
-  gap: 16px;
   align-items: center;
-}
-
-.header-bar__muted {
-  color: var(--dash-muted);
-  font-size: 0.9rem;
-}
-
-/* ===============================
-   Cards de vidro e KPIs
-   =============================== */
-.glass-card {
-  background: linear-gradient(180deg, #17171a, #121214);
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-  transition: all 0.25s ease;
-}
-.glass-card:hover {
-  border-color: color-mix(in oklab, var(--dash-accent), transparent 60%);
-  box-shadow: 0 22px 60px color-mix(in oklab, var(--dash-accent), black 85%),
-    0 18px 50px rgba(0, 0, 0, 0.55);
-  transform: translateY(-2px);
-}
-
-.kpi-card {
-  background: linear-gradient(180deg, #18181a, #121214);
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius);
-  text-align: center;
-  padding: 12px 0;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
-}
-
-.kpi-title {
-  color: var(--dash-muted);
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  margin-bottom: 4px;
-  letter-spacing: 0.8px;
-}
-
-.kpi-value {
-  font-weight: 900;
-  font-size: clamp(20px, 2vw, 36px);
-  color: var(--dash-accent-2);
-  text-shadow: 0 0 20px color-mix(in oklab, var(--dash-accent-2), transparent 80%);
-}
-
-/* ===============================
-   Próximo e Último Agendamento
-   =============================== */
-.row-info {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
+  gap: 12px;
   flex-wrap: wrap;
 }
-.row-info__label {
-  color: var(--dash-muted);
-  font-size: 0.85rem;
+.btn-reload {
+  border: 1px solid var(--line) !important;
+  border-radius: 999px !important;
+  transition: 0.2s ease;
 }
-.row-info__value {
-  color: var(--dash-text);
-  font-weight: 500;
-  font-size: 0.9rem;
+.btn-reload:hover {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 10px rgba(110, 230, 255, 0.4);
 }
-.card-title-underline {
-  font-weight: 700;
-  font-size: 1.05rem;
-  margin-bottom: 14px;
+
+/* Cards Base */
+.dashboard-root .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  backdrop-filter: var(--blur);
+  box-shadow: var(--shadow);
+}
+.dashboard-root .card .card-body {
+  padding: clamp(12px, 1.2vw, 22px);
+}
+
+/* KPI Cards */
+.kpi-card {
   position: relative;
+  overflow: hidden;
 }
-.card-title-underline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: 48px;
-  height: 2px;
-  background: var(--dash-accent);
-  border-radius: 2px;
-}
-
-/* ===============================
-   Recentes
-   =============================== */
-.card-recents .recent-item {
-  padding: 8px 0;
-  border-bottom: 1px dashed var(--dash-border);
-}
-.recent-item__head {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-}
-.recent-item__client {
-  color: var(--dash-text);
-}
-.recent-item__body {
-  font-size: 0.85rem;
-  color: var(--dash-muted);
-}
-.recent-item__status {
-  margin-top: 4px;
+.kpi-value {
+  font-size: clamp(1.8rem, 2.2vw, 2.8rem);
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 25px rgba(120, 255, 255, 0.2);
 }
 
-/* ===============================
-   Filtros
-   =============================== */
+/* Filters */
 .filters-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 20px;
   align-items: center;
   justify-content: space-between;
 }
-
-.filters-bar__label {
-  color: var(--dash-muted);
-  font-size: 0.9rem;
+.filters-bar__block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.btn-chip {
-  border: 1px solid var(--dash-border);
-  color: var(--dash-text);
-  background: linear-gradient(180deg, #19191c, #121214);
-  border-radius: var(--dash-radius-sm);
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
+/* --- Time Filter Responsive Fix --- */
+.filters-time {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 200, 255, 0.4) transparent;
 }
-.btn-chip:hover {
-  background: color-mix(in oklab, var(--dash-accent), transparent 90%);
+.filters-time::-webkit-scrollbar {
+  height: 6px;
+}
+.filters-time::-webkit-scrollbar-thumb {
+  background: rgba(120, 200, 255, 0.3);
+  border-radius: 6px;
+}
+.filters-time::-webkit-scrollbar-track {
+  background: transparent;
+}
+.filters-time .btn {
+  white-space: nowrap;
+  border-radius: 999px !important;
+  border: 1px solid var(--line) !important;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-weight: 600;
+  transition: 0.2s;
+}
+.filters-time .btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 8px rgba(110, 230, 255, 0.25);
 }
 .btn-chip--active {
-  background: var(--dash-accent);
-  color: #fff;
-  border-color: transparent;
+  background: linear-gradient(180deg, rgba(110, 240, 255, 0.15), rgba(0, 255, 200, 0.15)) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 10px rgba(110, 240, 255, 0.25);
 }
 
-/* ===============================
-   Cards de Agendamentos
-   =============================== */
+/* Search Input */
+.filters-bar__search input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  width: 100%;
+}
+.filters-bar__search input::placeholder {
+  color: var(--muted);
+}
+.filters-bar__search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 10px rgba(110, 230, 255, 0.2);
+}
+
+/* Appointment Cards */
 .appointment-card {
-  background: var(--dash-panel);
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-sm);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
+  background: linear-gradient(180deg, rgba(15, 25, 40, 0.8), rgba(10, 18, 30, 0.6));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  transition: 0.25s ease;
 }
 .appointment-card:hover {
-  border-color: color-mix(in oklab, var(--dash-accent), transparent 60%);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: var(--primary);
+  box-shadow: 0 0 30px rgba(120, 220, 255, 0.15);
 }
-
 .appointment-card__head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
 .appointment-card__client {
   font-weight: 700;
-  color: var(--dash-text);
 }
 .appointment-card__row {
-  display: flex;
-  justify-content: space-between;
-  color: var(--dash-muted);
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-top: 6px;
+}
+.appointment-card__label {
+  color: var(--muted);
   font-size: 0.9rem;
 }
 .appointment-card__value {
-  color: var(--dash-text);
-}
-
-/* ===============================
-   Badges de status
-   =============================== */
-.badge.status-pendente {
-  background: var(--dash-warning, #facc15);
-  color: #111;
-}
-.badge.status-confirmado {
-  background: var(--dash-accent);
-  color: #fff;
-}
-.badge.status-atendido {
-  background: var(--dash-success);
-  color: #111;
-}
-.badge.status-nao-atendido {
-  background: var(--dash-danger);
-  color: #fff;
-}
-.badge.status-cancelado {
-  background: #555;
-  color: var(--dash-muted);
-}
-
-/* ===============================
-   Botões e ações
-   =============================== */
-.btn {
-  border-radius: var(--dash-radius-sm);
   font-weight: 600;
 }
-.btn-outline-light {
-  color: var(--dash-text);
-  border-color: var(--dash-border);
-  background: transparent;
-}
-.btn-outline-light:hover {
-  background: color-mix(in oklab, var(--dash-accent), transparent 80%);
-  color: #fff;
-  border-color: transparent;
-}
-.btn-success {
-  background: var(--dash-success);
-  border: none;
-}
-.btn-danger {
-  background: var(--dash-danger);
-  border: none;
-}
 
-/* ===============================
-   Notificações
-   =============================== */
+/* Notifications */
 .notif-stack {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
+  right: 16px;
+  bottom: 16px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: column-reverse;
+  gap: 10px;
+  z-index: 9999;
 }
 .notif {
-  background: var(--dash-panel);
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-sm);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-  padding: 10px 14px;
-  animation: fadeIn 0.4s ease;
+  background: rgba(10, 18, 28, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-width: min(92vw, 420px);
+  box-shadow: var(--shadow);
+  animation: notifEnter 0.25s ease;
 }
-.notif__title {
-  font-weight: 700;
-  color: var(--dash-accent-2);
-}
-.notif__body {
-  color: var(--dash-muted);
-  font-size: 0.85rem;
-}
-.notif--success {
-  border-left: 4px solid var(--dash-success);
-}
-.notif--error {
-  border-left: 4px solid var(--dash-danger);
-}
-.notif--info {
-  border-left: 4px solid var(--dash-accent);
+@keyframes notifEnter {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-/* ===============================
-   Loader
-   =============================== */
-.page-loader-dark {
-  min-height: 100vh;
-  background: var(--dash-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.page-loader-dark__gif {
-  filter: drop-shadow(0 0 30px var(--dash-accent));
-}
-
-/* ===============================
-   Efeitos visuais e animações
-   =============================== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.pulse-card {
-  animation: pulseGlow 1.2s ease-in-out infinite;
-}
-@keyframes pulseGlow {
-  0% {
-    box-shadow: 0 0 0px transparent;
-  }
-  50% {
-    box-shadow: 0 0 20px color-mix(in oklab, var(--dash-accent), transparent 70%);
-  }
-  100% {
-    box-shadow: 0 0 0px transparent;
-  }
-}
-
-/* ===============================
-   Responsividade
-   =============================== */
-@media (max-width: 991px) {
-  .header-bar {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
-  }
-  .filters-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-@media (max-width: 768px) {
-  .kpi-card {
-    margin-bottom: 12px;
-  }
-  .filters-bar__block {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .btn-chip {
-    width: 100%;
-  }
+/* Responsive Tweaks */
+@media (max-width: 992px) {
+  .header-bar { flex-direction: column; align-items: flex-start; }
+  .filters-bar { flex-direction: column; align-items: stretch; }
+  .filters-bar__block { width: 100%; justify-content: flex-start; }
+  .filters-time { width: 100%; overflow-x: auto; }
 }
 @media (max-width: 576px) {
-  .dashboard-container {
-    padding: 10px;
-  }
-  .header-bar__title {
-    font-size: 1.2rem;
-  }
-  .kpi-value {
-    font-size: 1.4rem;
-  }
+  .dashboard-container { padding: 10px; }
+  .header-bar { padding: 12px; }
+  .kpi-value { font-size: 1.8rem; }
+  .appointment-card { font-size: 0.95rem; }
+  .filters-time .btn { padding: 6px 10px !important; font-size: 0.9rem; }
+  .filters-bar__search input { font-size: 0.9rem; }
+}
+@media (min-width: 1800px) {
+  .dashboard-container { max-width: 2200px; }
+  .kpi-value { font-size: 3rem; }
+  .header-bar__title { font-size: 2rem; }
 }

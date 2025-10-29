@@ -407,13 +407,7 @@ export default function EmployerDashboardPage() {
   /* ==============================
      Render
      ============================== */
-  if (localLoading) {
-    return (
-      <div className="page-loader-dark">
-        <img src="/images/logo.gif" alt="Carregando..." width="120" className="page-loader-dark__gif" />
-      </div>
-    );
-  }
+
 
   return (
     <div className="dashboard-root">
