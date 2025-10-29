@@ -10,7 +10,6 @@ import {
   Card,
   Button,
   Badge,
-  Spinner,
 } from "react-bootstrap";
 import NavlogComponent from "../../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../../config";
@@ -458,9 +457,6 @@ const start = new Date(year, month - 1, day, h, m, 0);
     return (
       <div className="estv-root">
         <NavlogComponent />
-        <Container className="text-center mt-5">
-          <Spinner animation="border" variant="warning" />
-        </Container>
       </div>
     );
 

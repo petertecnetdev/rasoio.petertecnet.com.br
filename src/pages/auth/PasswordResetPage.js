@@ -16,6 +16,7 @@ export default function PasswordResetPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (password !== passwordConfirmation) {
       Swal.fire({
         title: "Erro",
@@ -32,15 +33,14 @@ export default function PasswordResetPage() {
     }
 
     setLoading(true);
+
     try {
-      const { data } = await axios.post(
-        `${apiBaseUrl}/auth/password-reset`,
-        {
-          email,
-          reset_password_code: resetCode,
-          password,
-        }
-      );
+      const { data } = await axios.post(`${apiBaseUrl}/auth/password-reset`, {
+        email,
+        reset_password_code: resetCode,
+        password,
+      });
+
       Swal.fire({
         title: "Sucesso",
         text: data.message || "Senha alterada com sucesso!",
@@ -52,7 +52,7 @@ export default function PasswordResetPage() {
           content: "custom-swal-text",
         },
       }).then(() => {
-        window.location.href = "/login";
+        window.location.replace("/login");
       });
     } catch (err) {
       Swal.fire({
@@ -69,6 +69,7 @@ export default function PasswordResetPage() {
           content: "custom-swal-text",
         },
       });
+    } finally {
       setLoading(false);
     }
   };
@@ -88,7 +89,7 @@ export default function PasswordResetPage() {
                 <Card.Body className="text-center">
                   <img
                     src="/images/logo.png"
-                    alt="Buddy’s Royale"
+                    alt="Rasoio"
                     className="logo"
                   />
                   <p className="mt-3 mb-4 text-uppercase custom-swal-title">

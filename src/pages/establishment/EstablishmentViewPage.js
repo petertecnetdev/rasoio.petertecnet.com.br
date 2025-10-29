@@ -6,7 +6,6 @@ import {
   Col,
   Card,
   Button,
-  Spinner,
   Badge,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -230,9 +229,7 @@ export default function EstablishmentViewPage() {
     return (
       <div className="estv-root">
         <NavlogComponent />
-        <Container className="text-center mt-5">
-          <Spinner animation="border" variant="warning" />
-        </Container>
+       
       </div>
     );
   }

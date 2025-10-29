@@ -192,13 +192,16 @@ export default function NavlogComponent() {
                   >
                     Gerenciar Conta
                   </Link>
-                  <Link
-                    to="/dashboard"
-                    onClick={handleToggleMobileMenu}
-                    className="navlog__link"
-                  >
-                    Dashboard
-                  </Link>
+                 {user.establishments.length > 0 && (
+  <Link
+    to="/dashboard"
+    onClick={handleToggleMobileMenu}
+    className="navlog__link"
+  >
+    Dashboard
+  </Link>
+)}
+
 
                   {user.establishments.filter(
                     (est) => est.category === "barbershop"

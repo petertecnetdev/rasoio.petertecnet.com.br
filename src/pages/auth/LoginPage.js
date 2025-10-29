@@ -27,7 +27,7 @@ export default function LoginPage() {
       const token = extractToken(data);
       if (!token) throw new Error("Token nÃ£o recebido");
       setToken(token);
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (err) {
       let msg = "Ocorreu um erro.";
       if (err.response) msg = err.response.data.error || err.response.data.message || msg;

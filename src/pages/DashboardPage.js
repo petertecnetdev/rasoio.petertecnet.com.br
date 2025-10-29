@@ -1,6 +1,5 @@
-// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -27,7 +26,10 @@ export default function DashboardPage() {
           ests = data;
         } else if (Array.isArray(data.establishments)) {
           ests = data.establishments;
-        } else if (data.establishments && Array.isArray(data.establishments.data)) {
+        } else if (
+          data.establishments &&
+          Array.isArray(data.establishments.data)
+        ) {
           ests = data.establishments.data;
         } else if (Array.isArray(data.data)) {
           ests = data.data;
@@ -45,12 +47,13 @@ export default function DashboardPage() {
             try {
               const res = await axios.get(`${apiBaseUrl}/order/listbyentity`, {
                 params: {
-                  app_id: 3,
+                  app_id: 2,
                   entity_name: "establishment",
                   entity_id: est.id,
                 },
                 headers: { Authorization: `Bearer ${token}` },
               });
+
               rawOrders = Array.isArray(res.data.orders) ? res.data.orders : [];
             } catch (err) {
               if (err.response?.status === 404) {
@@ -61,9 +64,12 @@ export default function DashboardPage() {
             }
 
             const orders = rawOrders.filter((o) => {
-              const date = new Date(o.order_datetime).toLocaleDateString("en-CA", {
-                timeZone: "America/Sao_Paulo",
-              });
+              const date = new Date(o.order_datetime).toLocaleDateString(
+                "en-CA",
+                {
+                  timeZone: "America/Sao_Paulo",
+                }
+              );
               return date === today;
             });
 
@@ -74,7 +80,9 @@ export default function DashboardPage() {
                 (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
-                    const prod = (it.modifiers || []).find((p) => p.id === m.modifier_id);
+                    const prod = (it.modifiers || []).find(
+                      (p) => p.id === m.modifier_id
+                    );
                     sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
                   });
                 return s + sub;
@@ -102,7 +110,9 @@ export default function DashboardPage() {
                 (it.modifiers || [])
                   .filter((m) => m.type === "addition")
                   .forEach((m) => {
-                    const prod = (it.modifiers || []).find((p) => p.id === m.modifier_id);
+                    const prod = (it.modifiers || []).find(
+                      (p) => p.id === m.modifier_id
+                    );
                     sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
                   });
                 return s + sub;
@@ -121,7 +131,9 @@ export default function DashboardPage() {
             const now = new Date();
             const hoursElapsed = Math.max((now - start) / 36e5, 1);
             const avgOrdersPerHour = (totalOrders / hoursElapsed).toFixed(2);
-            const avgTicket = totalOrders ? (totalValue / totalOrders).toFixed(2) : "0.00";
+            const avgTicket = totalOrders
+              ? (totalValue / totalOrders).toFixed(2)
+              : "0.00";
 
             return [
               est.id,
@@ -155,18 +167,12 @@ export default function DashboardPage() {
   }, []);
 
   const handleLogoError = (e) => {
-    // eslint-disable-next-line no-param-reassign
     e.target.onerror = null;
-    // eslint-disable-next-line no-param-reassign
     e.target.src = "/images/logo.png";
   };
 
   if (isLoading) {
-    return (
-      <Container className="text-center mt-5">
-        <Spinner animation="border" variant="warning" />
-      </Container>
-    );
+    return <Container className="text-center mt-5"></Container>;
   }
 
   return (
@@ -174,13 +180,15 @@ export default function DashboardPage() {
       <NavlogComponent />
       <Container fluid className="dashboard-main">
         <div className="dashboard-section">
-          <h3 className="dashboard-section-title" />
+          <h3 className="dashboard-section-title">Meus Estabelecimentos</h3>
           <Row className="dashboard-establishments-list gx-3 gy-4">
             {establishments.length === 0 && (
               <Col md={12}>
                 <Card className="dashboard-empty-card">
                   <Card.Body className="text-center">
-                    <div className="dashboard-empty mb-3">Nenhum estabelecimento encontrado.</div>
+                    <div className="dashboard-empty mb-3">
+                      Nenhum estabelecimento encontrado.
+                    </div>
                     <Button
                       as={Link}
                       to="/establishment/create"
@@ -207,8 +215,12 @@ export default function DashboardPage() {
                           onError={handleLogoError}
                         />
                         <div>
-                          <div className="dashboard-establishment-name">{est.name}</div>
-                          <div className="dashboard-establishment-slug">@{est.slug}</div>
+                          <div className="dashboard-establishment-name">
+                            {est.name}
+                          </div>
+                          <div className="dashboard-establishment-slug">
+                            @{est.slug}
+                          </div>
                           <Button
                             as={Link}
                             to={`/establishment/view/${est.slug}`}
@@ -294,15 +306,21 @@ export default function DashboardPage() {
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Atendimentos</Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">{m.totalOrders || 0}</Card.Text>
+                                  <Card.Title className="fs-6">
+                                    Atendimentos
+                                  </Card.Title>
+                                  <Card.Text className="fs-5 fw-bold">
+                                    {m.totalOrders || 0}
+                                  </Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Faturamento</Card.Title>
+                                  <Card.Title className="fs-6">
+                                    Faturamento
+                                  </Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
                                     R{String.fromCharCode(36)}
                                     {(m.totalValue || "0.00").replace(".", ",")}
@@ -313,31 +331,45 @@ export default function DashboardPage() {
                             <Col md={3}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Mais pedido</Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">{m.mostOrderedItem}</Card.Text>
+                                  <Card.Title className="fs-6">
+                                    Mais pedido
+                                  </Card.Title>
+                                  <Card.Text className="fs-6 fw-bold">
+                                    {m.mostOrderedItem}
+                                  </Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={3}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Cliente top</Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">{m.topCustomer}</Card.Text>
+                                  <Card.Title className="fs-6">
+                                    Cliente top
+                                  </Card.Title>
+                                  <Card.Text className="fs-6 fw-bold">
+                                    {m.topCustomer}
+                                  </Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Média/hora</Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">{m.avgOrdersPerHour}</Card.Text>
+                                  <Card.Title className="fs-6">
+                                    Média/hora
+                                  </Card.Title>
+                                  <Card.Text className="fs-5 fw-bold">
+                                    {m.avgOrdersPerHour}
+                                  </Card.Text>
                                 </Card.Body>
                               </Card>
                             </Col>
                             <Col md={2}>
                               <Card bg="black" text="light" className="mb-2">
                                 <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">Ticket médio</Card.Title>
+                                  <Card.Title className="fs-6">
+                                    Ticket médio
+                                  </Card.Title>
                                   <Card.Text className="fs-5 fw-bold">
                                     R{String.fromCharCode(36)}
                                     {(m.avgTicket || "0.00").replace(".", ",")}
