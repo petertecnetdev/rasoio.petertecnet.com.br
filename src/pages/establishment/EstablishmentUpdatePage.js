@@ -96,54 +96,68 @@ export default function EstablishmentUpdatePage() {
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, navigate, reset]);
 
-  const handleResizeImage = (file, setPreview, width, height, key) => {
+  const processAndResizeImage = async (file, maxWidth, maxHeight, setPreview, key) => {
     return new Promise((resolve, reject) => {
-      if (!file || !file.type || !file.type.startsWith("image/")) {
+      if (!file || !file.type.startsWith("image/")) {
         Swal.fire("Formato inválido", "Selecione uma imagem válida.", "error");
-        reject(new Error("invalid file"));
-        return;
+        return reject(new Error("invalid file"));
       }
+
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onload = (event) => {
         const img = new Image();
-        img.src = reader.result;
+        img.src = event.target.result;
         img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          const aspect = width / height;
+
+          if (width > maxWidth) {
+            width = maxWidth;
+            height = Math.round(width / aspect);
+          }
+          if (height > maxHeight) {
+            height = maxHeight;
+            width = Math.round(height * aspect);
+          }
+
           const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
-          const previewDataURL = canvas.toDataURL("image/png");
-          setPreview(previewDataURL);
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              reject(new Error("could not create blob"));
-              return;
-            }
-            const filename = (file.name || "image").replace(/\.[^/.]+$/, "") + ".png";
-            const resizedFile = new File([blob], filename, { type: "image/png" });
-            setFiles((prev) => ({ ...prev, [key]: resizedFile }));
-            resolve(resizedFile);
-          }, "image/png", 0.95);
+
+          const dataURL = canvas.toDataURL("image/png");
+          setPreview(dataURL);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return reject(new Error("Erro ao criar imagem tratada."));
+              const resizedFile = new File([blob], "upload.png", { type: "image/png" });
+              setFiles((prev) => ({ ...prev, [key]: resizedFile }));
+              resolve(resizedFile);
+            },
+            "image/png",
+            0.9
+          );
         };
-        img.onerror = () => reject(new Error("image load error"));
+        img.onerror = () => reject(new Error("Erro ao carregar imagem."));
       };
-      reader.onerror = () => reject(new Error("reader error"));
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo."));
       reader.readAsDataURL(file);
     });
   };
 
   const handleLogoChange = async (e) => {
     const file = e.target.files && e.target.files[0];
-    if (file) await handleResizeImage(file, setLogoPreview, 150, 150, "logo");
+    if (file) await processAndResizeImage(file, 150, 150, setLogoPreview, "logo");
   };
 
   const handleBackgroundChange = async (e) => {
     const file = e.target.files && e.target.files[0];
-    if (file) await handleResizeImage(file, setBackgroundPreview, 1920, 600, "background");
+    if (file) await processAndResizeImage(file, 1920, 600, setBackgroundPreview, "background");
   };
 
   const handleSegmentsChange = (e) => {
@@ -404,7 +418,10 @@ export default function EstablishmentUpdatePage() {
                         checked={segments.includes(opt.value)}
                         onChange={handleSegmentsChange}
                       />
-                      <label className="form-check-label mr-2" htmlFor={`segment-${opt.value}`}>
+                      <label
+                        className="form-check-label mr-2"
+                        htmlFor={`segment-${opt.value}`}
+                      >
                         {opt.label}
                       </label>
                     </div>

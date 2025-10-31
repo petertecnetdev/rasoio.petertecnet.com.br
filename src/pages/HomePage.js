@@ -139,7 +139,7 @@ export default function HomePage() {
             <Form.Group controlId="hp-search">
               <Form.Label className="hp-label">Buscar</Form.Label>
               <div className="hp-search-wrap">
-                <FaSearch className="hp-search-icon" />
+               
                 <Form.Control
                   type="search"
                   placeholder="Nome, endereço ou cidade…"
@@ -163,24 +163,6 @@ export default function HomePage() {
                 {cities.map((c) => (
                   <option key={c} value={c}>
                     {c}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
-          <Col xs={6} md={3} lg={2}>
-            <Form.Group controlId="hp-seg">
-              <Form.Label className="hp-label">Segmento</Form.Label>
-              <Form.Select
-                value={segFilter}
-                onChange={(e) => setSegFilter(e.target.value)}
-                className="hp-select"
-              >
-                <option value="">Todos</option>
-                {segments.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
                   </option>
                 ))}
               </Form.Select>
@@ -275,8 +257,8 @@ export default function HomePage() {
                       {(shop.address || shop.city) && (
                         <div className="hp-address">
                           <FaMapMarkerAlt />{" "}
-                          {(shop.address || "") +
-                            (shop.city ? `, ${shop.city}` : "")}
+                          {
+                            (shop.city ? ` ${shop.city}` : "")}
                         </div>
                       )}
 
@@ -284,7 +266,7 @@ export default function HomePage() {
                         <div className="hp-badges">
                           {segs.map((seg) => (
                             <Badge key={seg} bg="warning" text="dark">
-                              {seg}
+                            
                             </Badge>
                           ))}
                         </div>

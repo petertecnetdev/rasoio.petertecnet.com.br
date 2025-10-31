@@ -32,8 +32,8 @@ import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
 
 import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
-import ItemUpdatePage from "./pages/item/ItemUpdatePage";
 import ItemViewPage from "./pages/item/ItemViewPage";
+import ItemUpdatePage from "./pages/item/ItemUpdatePage";
 
 import EmployerListPage from "./pages/employer/EmployerListPage";
 import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
@@ -149,6 +149,7 @@ function AppInner() {
 
           <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
           <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
+          <Route path="/item/view/:slug" element={protectedRoute(<ItemViewPage />)} />
           <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
           <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
@@ -157,6 +158,7 @@ function AppInner() {
           <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
           <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
           <Route path="/employer/dashboard" element={protectedRoute(<EmployerDashboardPage />)} />
+          <Route path="/employer/view/:user_name" element={protectedRoute(<EmployerViewPage />)} />
 
 
           <Route path="/establishment" element={protectedRoute(<EstablishmentListPage />)} />

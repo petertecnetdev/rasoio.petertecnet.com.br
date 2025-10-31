@@ -1,17 +1,10 @@
 // src/pages/establishment/EstablishmentViewPage.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Badge,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaMapMarkedAlt, FaInstagram } from "react-icons/fa";
 import NavlogComponent from "../../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../../config";
 import "./EstablishmentView.css";
@@ -19,21 +12,26 @@ import "./EstablishmentView.css";
 export default function EstablishmentViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+
   const [establishment, setEstablishment] = useState(null);
   const [items, setItems] = useState([]);
-  const [barbers, setBarbers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [employers, setEmployers] = useState([]);
   const [metrics, setMetrics] = useState(null);
+  const [interactionSummary, setInteractionSummary] = useState(null);
+  const [otherEstablishments, setOtherEstablishments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
+  const ph = "/images/logo.png";
+
   const fmtPrice = useCallback(
     (v) =>
       `R$ ${Number(v || 0)
         .toFixed(2)
-        .replace(".", ",")}`,
+        .replace(".", ",")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
     []
   );
-  const ph = "/images/logo.png";
 
   const parseSegments = useCallback((seg) => {
     if (!seg) return [];
@@ -48,14 +46,6 @@ export default function EstablishmentViewPage() {
       .filter(Boolean);
   }, []);
 
-  const todayKey = useMemo(
-    () =>
-      new Date().toLocaleDateString("en-CA", {
-        timeZone: "America/Sao_Paulo",
-      }),
-    []
-  );
-
   const handleImgError = useCallback((e) => {
     e.currentTarget.onerror = null;
     e.currentTarget.src = ph;
@@ -67,153 +57,67 @@ export default function EstablishmentViewPage() {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
     (async () => {
       try {
-        const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`);
+        const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!active) return;
+
         const est = res.data?.establishment || null;
         const its = Array.isArray(res.data?.items) ? res.data.items : [];
         const cols = Array.isArray(res.data?.collaborators)
           ? res.data.collaborators
           : [];
-        if (!est || String(est.category || "").toLowerCase() !== "barbershop") {
-          navigate("/404");
-          return;
-        }
-        if (!isMounted) return;
+
         setEstablishment(est);
         setItems(its);
-        setBarbers(cols);
+        setEmployers(cols);
+        setMetrics(res.data?.metrics || null);
+        setInteractionSummary(res.data?.interaction_summary || null);
+        setOtherEstablishments(res.data?.other_establishments || []);
       } catch (err) {
-        const status = err.response?.status;
         Swal.fire({
           icon: "error",
           title: "Erro",
           text:
-            status === 404
-              ? "Barbearia não encontrada."
-              : "Não foi possível carregar.",
+            err.response?.status === 404
+              ? "Estabelecimento não encontrado."
+              : "Não foi possível carregar os dados do estabelecimento.",
         }).then(() => navigate("/404"));
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     })();
     return () => {
-      isMounted = false;
+      active = false;
     };
-  }, [slug, navigate]);
-
-  useEffect(() => {
-    if (!token || !establishment?.id) return;
-    let isMounted = true;
-    (async () => {
-      try {
-        const { data: res } = await axios.get(
-          `${apiBaseUrl}/order/listbyentity`,
-          {
-            params: {
-              app_id: 3,
-              entity_name: "establishment",
-              entity_id: establishment.id,
-            },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const rawOrders = Array.isArray(res.orders) ? res.orders : [];
-        const dayOrders = rawOrders.filter((o) => {
-          const d = new Date(o.order_datetime).toLocaleDateString("en-CA", {
-            timeZone: "America/Sao_Paulo",
-          });
-          return d === todayKey;
-        });
-        const totalOrders = dayOrders.length;
-        const totalValue = dayOrders.reduce((sum, o) => {
-          const orderSum = (o.items || []).reduce((s, it) => {
-            let sub = Number(it.subtotal || 0);
-            (it.modifiers || [])
-              .filter((m) => m.type === "addition")
-              .forEach((m) => {
-                const prod = (it.modifiers || []).find(
-                  (p) => p.id === m.modifier_id
-                );
-                sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
-              });
-            return s + sub;
-          }, 0);
-          return sum + orderSum;
-        }, 0);
-        const itemCounts = {};
-        dayOrders.forEach((o) =>
-          (o.items || []).forEach((it) => {
-            const nm = it.item?.name || "-";
-            itemCounts[nm] = (itemCounts[nm] || 0) + (it.quantity || 0);
-          })
-        );
-        const mostOrderedItem = Object.entries(itemCounts).reduce(
-          (max, [name, qty]) => (qty > max[1] ? [name, qty] : max),
-          ["-", 0]
-        )[0];
-        const customerSums = {};
-        dayOrders.forEach((o) => {
-          const sum = (o.items || []).reduce((s, it) => {
-            let sub = Number(it.subtotal || 0);
-            (it.modifiers || [])
-              .filter((m) => m.type === "addition")
-              .forEach((m) => {
-                const prod = (it.modifiers || []).find(
-                  (p) => p.id === m.modifier_id
-                );
-                sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
-              });
-            return s + sub;
-          }, 0);
-          const cname = o.customer_name || "-";
-          customerSums[cname] = (customerSums[cname] || 0) + sum;
-        });
-        const topCustomer = Object.entries(customerSums).reduce(
-          (max, [name, sum]) => (sum > max[1] ? [name, sum] : max),
-          ["-", 0]
-        )[0];
-        const start = new Date();
-        start.setHours(0, 0, 0, 0);
-        const now = new Date();
-        const hoursElapsed = Math.max((now - start) / 36e5, 1);
-        const avgOrdersPerHour = (totalOrders / hoursElapsed).toFixed(2);
-        const avgTicket = totalOrders
-          ? (totalValue / totalOrders).toFixed(2)
-          : "0.00";
-        if (isMounted) {
-          setMetrics({
-            totalOrders,
-            totalValue: totalValue.toFixed(2),
-            mostOrderedItem,
-            topCustomer,
-            avgOrdersPerHour,
-            avgTicket,
-          });
-        }
-      } catch {}
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, [token, establishment, todayKey]);
+  }, [slug, navigate, token]);
 
   const segs = useMemo(
     () => parseSegments(establishment?.segments),
     [establishment, parseSegments]
   );
+
   const services = useMemo(
     () =>
       items.filter(
-        (i) => String(i.status) === "1" && String(i.type) === "service"
+        (i) =>
+          String(i.status) === "1" &&
+          (String(i.type).toLowerCase().includes("serv") ||
+            String(i.type).toLowerCase() === "serviço")
       ),
     [items]
   );
+
   const products = useMemo(
     () =>
       items.filter(
-        (i) => String(i.status) === "1" && String(i.type) === "product"
+        (i) =>
+          String(i.status) === "1" &&
+          !(String(i.type).toLowerCase().includes("serv") ||
+            String(i.type).toLowerCase() === "serviço")
       ),
     [items]
   );
@@ -229,7 +133,6 @@ export default function EstablishmentViewPage() {
     return (
       <div className="estv-root">
         <NavlogComponent />
-       
       </div>
     );
   }
@@ -239,6 +142,8 @@ export default function EstablishmentViewPage() {
   return (
     <div className="estv-root">
       <NavlogComponent />
+
+      {/* HERO */}
       <div
         className="estv-hero"
         style={{
@@ -270,7 +175,7 @@ export default function EstablishmentViewPage() {
                   size="sm"
                   className="bg-black me-2"
                 >
-                  WhatsApp
+                  <FaWhatsapp /> WhatsApp
                 </Button>
               )}
               {establishment.instagram_url && (
@@ -282,7 +187,7 @@ export default function EstablishmentViewPage() {
                   size="sm"
                   className="bg-black me-2"
                 >
-                  Instagram
+                  <FaInstagram /> Instagram
                 </Button>
               )}
               {establishment.location && (
@@ -294,88 +199,52 @@ export default function EstablishmentViewPage() {
                   size="sm"
                   className="bg-black me-2"
                 >
-                  Como chegar
+                  <FaMapMarkedAlt /> Como chegar
                 </Button>
-              )}<Button
-  onClick={() =>
-    navigate(`/establishment/${establishment.slug}/schedule`)
-  }
-  size="sm"
-  className="bg-black"
->
-  Agendar
-</Button>
-
+              )}
+              <Button
+                onClick={() =>
+                  navigate(`/establishment/${establishment.slug}/schedule`)
+                }
+                size="sm"
+                className="bg-black"
+              >
+                Agendar
+              </Button>
             </div>
           </div>
         </Container>
       </div>
 
+      {/* MAIN */}
       <Container fluid className="estv-main">
-        {token && metrics && (
-          <Card bg="dark" text="light" className="mb-4">
-            <Card.Header className="bg-dark text-light">
-              <strong>Retrato de hoje</strong>
-            </Card.Header>
-            <Card.Body className="p-2">
-              <Row className="gx-2 gy-2 text-center">
-                <Col md={3} sm={6} xs={12}>
-                  <Card bg="black" text="light">
-                    <Card.Body className="p-2">
-                      <div className="fs-6">Mais pedido</div>
-                      <div className="fs-6 fw-bold">
-                        {metrics.mostOrderedItem}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col md={3} sm={6} xs={12}>
-                  <Card bg="black" text="light">
-                    <Card.Body className="p-2">
-                      <div className="fs-6">Cliente top</div>
-                      <div className="fs-6 fw-bold">{metrics.topCustomer}</div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col md={1} sm={6} xs={6}>
-                  <Card bg="black" text="light">
-                    <Card.Body className="p-2">
-                      <div className="fs-6">Média/h</div>
-                      <div className="fs-5 fw-bold">
-                        {metrics.avgOrdersPerHour}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        )}
-
         <Row className="gx-3 gy-4">
           <Col md={8}>
+            {/* SERVIÇOS */}
             {services.length > 0 && (
               <Card bg="dark" text="light" className="mb-4">
-                <Card.Header className="bg-dark text-light">
+                <Card.Header>
                   <strong>Serviços</strong>
                 </Card.Header>
                 <Card.Body>
                   <Row className="gx-3 gy-3">
                     {services.map((sv) => (
-                      <Col key={`sv-${sv.id}`} lg={4} md={6} sm={6} xs={12}>
+                      <Col key={sv.id} lg={4} md={6} sm={6} xs={12}>
                         <Card
-                          className="estv-card h-100"
+                          className="estv-card h-100 clickable"
                           bg="black"
                           text="light"
+                          onClick={() =>
+                            navigate(`/item/view/${sv.slug || ""}`)
+                          }
                         >
                           {sv.image && (
                             <div className="estv-media-wrap">
                               <img
-                                src={`${storageUrl}/${sv.image}`}
+                                src={imageUrl(sv.image)}
                                 alt={sv.name}
                                 className="estv-media"
                                 onError={handleImgError}
-                                loading="lazy"
                               />
                             </div>
                           )}
@@ -386,14 +255,13 @@ export default function EstablishmentViewPage() {
                                 {fmtPrice(sv.price)}
                               </div>
                               {sv.duration && (
-                                <Badge
-                                  bg="warning"
-                                  text="dark"
-                                >{`${sv.duration} min`}</Badge>
+                                <Badge bg="warning" text="dark">
+                                  {sv.duration} min
+                                </Badge>
                               )}
                             </div>
                             {sv.description && (
-                              <div className="estv-item-desc mt-2">
+                              <div className="estv-item-desc mt-2 text-truncate">
                                 {sv.description}
                               </div>
                             )}
@@ -406,53 +274,41 @@ export default function EstablishmentViewPage() {
               </Card>
             )}
 
+            {/* PRODUTOS */}
             {products.length > 0 && (
               <Card bg="dark" text="light" className="mb-4">
-                <Card.Header className="bg-dark text-light">
+                <Card.Header>
                   <strong>Produtos</strong>
                 </Card.Header>
                 <Card.Body>
                   <Row className="gx-3 gy-3">
                     {products.map((pd) => (
-                      <Col key={`pd-${pd.id}`} lg={4} md={6} sm={6} xs={12}>
+                      <Col key={pd.id} lg={4} md={6} sm={6} xs={12}>
                         <Card
-                          className="estv-card h-100"
+                          className="estv-card h-100 clickable"
                           bg="black"
                           text="light"
+                          onClick={() =>
+                            navigate(`/item/view/${pd.slug || ""}`)
+                          }
                         >
                           {pd.image && (
                             <div className="estv-media-wrap">
                               <img
-                                src={`${storageUrl}/${pd.image}`}
+                                src={imageUrl(pd.image)}
                                 alt={pd.name}
                                 className="estv-media"
                                 onError={handleImgError}
-                                loading="lazy"
                               />
                             </div>
                           )}
                           <Card.Body className="p-3">
                             <div className="estv-item-name">{pd.name}</div>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="estv-item-price">
-                                {fmtPrice(pd.price)}
-                              </div>
-                              {pd.stock !== undefined && pd.stock !== null && (
-                                <Badge
-                                  bg={
-                                    Number(pd.stock) > 0
-                                      ? "success"
-                                      : "secondary"
-                                  }
-                                >
-                                  {Number(pd.stock) > 0
-                                    ? "Em estoque"
-                                    : "Indisponível"}
-                                </Badge>
-                              )}
+                            <div className="estv-item-price">
+                              {fmtPrice(pd.price)}
                             </div>
                             {pd.description && (
-                              <div className="estv-item-desc mt-2">
+                              <div className="estv-item-desc mt-2 text-truncate">
                                 {pd.description}
                               </div>
                             )}
@@ -464,11 +320,54 @@ export default function EstablishmentViewPage() {
                 </Card.Body>
               </Card>
             )}
+
+            {/* OUTROS ESTABELECIMENTOS */}
+            {otherEstablishments?.length > 0 && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Outros Estabelecimentos</strong>
+                </Card.Header>
+                <Card.Body>
+                  <Row className="gx-3 gy-3">
+                    {otherEstablishments.map((o) => (
+                      <Col key={o.id} lg={6} md={12}>
+                        <Card
+                          className="estv-other clickable"
+                          bg="black"
+                          text="light"
+                          onClick={() => navigate(`/establishment/${o.slug}`)}
+                        >
+                          <div className="d-flex align-items-center p-2">
+                            <img
+                              src={o.logo ? `${storageUrl}/${o.logo}` : ph}
+                              alt={o.name}
+                              className="rounded-circle me-3"
+                              style={{
+                                width: 50,
+                                height: 50,
+                                objectFit: "cover",
+                              }}
+                              onError={handleImgError}
+                            />
+                            <div>
+                              <div className="fw-bold">{o.name}</div>
+                              <div className="text-muted small">{o.city}</div>
+                            </div>
+                          </div>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                </Card.Body>
+              </Card>
+            )}
           </Col>
 
+          {/* LATERAL */}
           <Col md={4}>
+            {/* INFORMAÇÕES */}
             <Card bg="dark" text="light" className="mb-4">
-              <Card.Header className="bg-dark text-light">
+              <Card.Header>
                 <strong>Informações</strong>
               </Card.Header>
               <Card.Body>
@@ -489,71 +388,235 @@ export default function EstablishmentViewPage() {
               </Card.Body>
             </Card>
 
-            {barbers.length > 0 && (
+            {/* MÉTRICAS */}
+            {metrics && (
               <Card bg="dark" text="light" className="mb-4">
-                <Card.Header className="bg-dark text-light">
-                  <strong>Colaboradores</strong>
+                <Card.Header>
+                  <strong>Desempenho</strong>
                 </Card.Header>
                 <Card.Body>
-                  <Row className="gx-3 gy-3">
-                    {barbers.map((b, idx) => {
-                      const nm =
-                        `${b.user?.first_name || ""} ${
-                          b.user?.last_name || ""
-                        }`.trim() || "Colaborador";
-                      return (
-                        <Col key={`br-${idx}`} md={12}>
-                          <div className="estv-collab">
-                            <img
-                              src={imageUrl(b.user?.avatar)}
-                              alt={nm}
-                              className="estv-collab-avatar"
-                              onError={handleImgError}
-                              loading="lazy"
-                            />
-                            <div className="estv-collab-meta">
-                              <div className="estv-collab-name">{nm}</div>
-                              {b.role && (
-                                <div className="estv-collab-role">{b.role}</div>
-                              )}
-                            </div>
-                          </div>
-                        </Col>
-                      );
-                    })}
-                  </Row>
+                  <div className="d-flex flex-wrap justify-content-between text-center">
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.total_views}</h5>
+                      <div className="text-white small">Visualizações</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.unique_users}</h5>
+                      <div className="text-white small">Usuários únicos</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.total_items}</h5>
+                      <div className="text-white small">Itens totais</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.total_services}</h5>
+                      <div className="text-white small">Serviços</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.total_products}</h5>
+                      <div className="text-white small">Produtos</div>
+                    </div>
+                  </div>
                 </Card.Body>
               </Card>
             )}
 
-            {establishment.description && (
+            {/* INTERAÇÕES */}
+            {interactionSummary && (
               <Card bg="dark" text="light" className="mb-4">
-                <Card.Header className="bg-dark text-light">
-                  <strong>Sobre</strong>
+                <Card.Header>
+                  <strong>Interações Recentes</strong>
                 </Card.Header>
-                <Card.Body>{establishment.description}</Card.Body>
+                <Card.Body>
+                  {interactionSummary.most_active_user ? (
+                    <>
+                      <div className="mb-2">
+                        <strong>Mais ativo:</strong>{" "}
+                        {interactionSummary.most_active_user.name} (
+                        {interactionSummary.most_active_user.views} views)
+                      </div>
+                      <div className="mb-2">
+                        <strong>Último visitante:</strong>{" "}
+                        {interactionSummary.last_view_user?.name}
+                      </div>
+                      <div className="text-white small">
+                        Última visita:{" "}
+                        {interactionSummary.last_view_user?.last_view
+                          ? new Date(
+                              interactionSummary.last_view_user.last_view
+                            ).toLocaleString("pt-BR")
+                          : "—"}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-muted small">
+                      Sem interações registradas ainda.
+                    </div>
+                  )}
+                </Card.Body>
               </Card>
             )}
 
+            {/* EQUIPE */}
+            {employers.length > 0 && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Equipe</strong>
+                </Card.Header>
+                <Card.Body>
+                  {employers.map((emp, idx) => {
+                    const user = emp.user || {};
+                    const nome = `${user.first_name || ""} ${
+                      user.last_name || ""
+                    }`.trim();
+                    const avatar = user.avatar ? imageUrl(user.avatar) : ph;
+                    const slugUser = user.user_name;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="estv-collab d-flex align-items-center mb-2 clickable"
+                        onClick={() =>
+                          slugUser &&
+                          navigate(`/employer/view/${slugUser || ""}`)
+                        }
+                      >
+                        <img
+                          src={avatar}
+                          alt={nome}
+                          className="rounded-circle me-3"
+                          onError={handleImgError}
+                          style={{
+                            width: 50,
+                            height: 50,
+                            objectFit: "cover",
+                            border: "2px solid #333",
+                          }}
+                        />
+                        <div>
+                          <div className="fw-bold text-light">{nome}</div>
+                          {emp.role && (
+                            <div className="text-white small">{emp.role}</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </Card.Body>
+              </Card>
+            )}
+
+            {/* LOCALIZAÇÃO */}
+            {establishment.location && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Localização</strong>
+                </Card.Header>
+                <Card.Body>
+                  {establishment.location.includes("<iframe") ? (
+                    (() => {
+                      const fixedIframe = establishment.location
+                        .replace(/width="[^"]*"/g, 'width="100%"')
+                        .replace(/height="[^"]*"/g, 'height="300"')
+                        .replace(
+                          /style="[^"]*"/g,
+                          'style="border:0; width:100%; height:300px; border-radius:12px;"'
+                        );
+
+                      return (
+                        <div
+                          className="estv-map-wrap"
+                          dangerouslySetInnerHTML={{ __html: fixedIframe }}
+                        />
+                      );
+                    })()
+                  ) : establishment.location.includes("embed") ? (
+                    <div className="estv-map-wrap">
+                      <iframe
+                        title="Mapa"
+                        src={establishment.location}
+                        className="estv-map-frame"
+                        allowFullScreen
+                        loading="lazy"
+                        style={{
+                          border: "0",
+                          width: "100%",
+                          height: "300px",
+                          borderRadius: "12px",
+                        }}
+                      ></iframe>
+                    </div>
+                  ) : (
+                    <Button
+                      as="a"
+                      href={establishment.location}
+                      target="_blank"
+                      rel="noreferrer"
+                      size="sm"
+                      className="bg-black"
+                    >
+                      Ver localização no mapa
+                    </Button>
+                  )}
+                </Card.Body>
+              </Card>
+            )}
+
+            {/* INFORMAÇÕES ADICIONAIS */}
             <Card bg="dark" text="light" className="mb-4">
-              <Card.Header className="bg-dark text-light">
-                <strong>Seguimentos</strong>
+              <Card.Header>
+                <strong>Informações adicionais</strong>
               </Card.Header>
-              {segs.map((s) => (
-                <Badge
-                  bg="warning"
-                  text="white"
-                  key={s}
-                  className="me-2 mb-2 estv-badge"
-                >
-                  {s}
-                </Badge>
-              ))}
+              <Card.Body>
+                {establishment.created_since && (
+                  <div className="text-whtie small mb-1">
+                    Criado há {establishment.created_since}
+                  </div>
+                )}
+                {establishment.last_updated_at && (
+                  <div className="text-whtie small mb-1">
+                    Última atualização: {establishment.last_updated_at}
+                  </div>
+                )}
+                {establishment.creator && (
+                  <div className="text-whtie small mb-1">
+                    Criado por: {establishment.creator.first_name}{" "}
+                    {establishment.creator.last_name}
+                  </div>
+                )}
+                {establishment.updater && (
+                  <div className="text-whtie small mb-1">
+                    Atualizado por: {establishment.updater.first_name}{" "}
+                    {establishment.updater.last_name}
+                  </div>
+                )}
+              </Card.Body>
             </Card>
+
+            {/* SEGMENTOS */}
+            {segs.length > 0 && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Segmentos</strong>
+                </Card.Header>
+                <Card.Body>
+                  {segs.map((s) => (
+                    <Badge
+                      bg="primary"
+                      key={s}
+                      className="me-2 text-white mb-2"
+                    >
+                      {s}
+                    </Badge>
+                  ))}
+                </Card.Body>
+              </Card>
+            )}
           </Col>
         </Row>
       </Container>
 
+      {/* WHATSAPP FLOATING BUTTON */}
       {whatsappLink && (
         <a
           href={whatsappLink}
