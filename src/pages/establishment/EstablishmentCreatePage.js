@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl } from "../../config";
+import { apiBaseUrl,appId  } from "../../config";
 import NavlogComponent from "../../components/NavlogComponent";
 import { Button, Col, Row, Form, Badge } from "react-bootstrap";
 import "./Establishment.css";
@@ -85,9 +85,10 @@ export default function EstablishmentCreatePage() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("category", "barbershop");
-    formData.append("type", "");
+   const formData = new FormData();
+formData.append("app_id", appId); // ✅ adiciona automaticamente o ID do app
+formData.append("category", "barbershop");
+formData.append("type", "");
 
     Object.keys(dataInput).forEach(key => {
       if (key === "segments") {

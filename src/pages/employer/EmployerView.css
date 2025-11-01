@@ -1,0 +1,281 @@
+/* ==============================
+   EmployerViewPage.css
+   ============================== */
+
+.employerv-root {
+  background: #0b0b0c;
+  color: #fff;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* ==============================
+   HERO SECTION
+   ============================== */
+.employerv-hero {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+}
+
+.employerv-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.employerv-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40px 5%;
+}
+
+.employerv-hero-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employerv-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  object-fit: cover;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.employerv-hero-right {
+  flex: 1;
+  margin-left: 40px;
+}
+
+.employerv-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+}
+
+.employerv-role {
+  margin-bottom: 14px;
+}
+
+.employerv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ==============================
+   MAIN CONTENT
+   ============================== */
+.employerv-main {
+  max-width: 1250px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+/* ==============================
+   BUTTONS
+   ============================== */
+.btn-action {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #e9e9ea !important;
+  background: linear-gradient(180deg, #19191c 0%, #141417 100%) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-weight: 500;
+  transition: all 0.25s ease !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+.btn-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(11, 175, 245, 0.6) !important;
+  box-shadow: 0 16px 44px rgba(11, 175, 245, 0.2) !important;
+  color: #fff !important;
+}
+
+.btn-establishment {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: linear-gradient(180deg, #19191c 0%, #141417 100%) !important;
+  color: #e9e9ea !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+  transition: all 0.25s ease !important;
+  min-width: 200px;
+  text-align: left;
+}
+
+.btn-establishment:hover {
+  border-color: rgba(11, 175, 245, 0.6) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(11, 175, 245, 0.2) !important;
+  color: #fff !important;
+}
+
+.estv-mini-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid #222;
+  flex-shrink: 0;
+}
+
+.estv-mini-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.estv-mini-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.estv-mini-address {
+  font-size: 0.7rem;
+  color: #b5b5b9;
+}
+
+/* ==============================
+   APPOINTMENTS LIST
+   ============================== */
+.employerv-appointment {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.employerv-appointment:hover {
+  border-color: rgba(11, 175, 245, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ==============================
+   USER INTERACTIONS
+   ============================== */
+.employerv-user {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px;
+  transition: all 0.2s ease;
+}
+
+.employerv-user:hover {
+  border-color: rgba(11, 175, 245, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ==============================
+   FLOATING WHATSAPP BUTTON
+   ============================== */
+.employerv-whatsapp-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #25d366;
+  color: #fff;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employerv-whatsapp-fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.4);
+}
+
+.employerv-whatsapp-icon {
+  font-size: 28px;
+}
+
+/* ==============================
+   RESPONSIVE DESIGN
+   ============================== */
+@media (max-width: 991.98px) {
+  .employerv-hero-content {
+    flex-direction: column;
+    text-align: center;
+    padding: 30px 16px;
+  }
+
+  .employerv-hero-right {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+
+  .employerv-avatar {
+    width: 120px;
+    height: 120px;
+  }
+
+  .employerv-title {
+    font-size: 2rem;
+  }
+
+  .btn-establishment {
+    min-width: unset;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .employerv-title {
+    font-size: 1.7rem;
+  }
+
+  .btn-action,
+  .btn-establishment {
+    font-size: 0.82rem !important;
+    padding-inline: 8px !important;
+  }
+
+  .estv-mini-logo {
+    width: 26px;
+    height: 26px;
+  }
+
+  .estv-mini-name {
+    font-size: 0.85rem;
+  }
+
+  .estv-mini-address {
+    font-size: 0.65rem;
+  }
+
+  .employerv-whatsapp-fab {
+    width: 48px;
+    height: 48px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .employerv-whatsapp-icon {
+    font-size: 24px;
+  }
+}

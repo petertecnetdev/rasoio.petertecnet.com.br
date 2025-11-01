@@ -1,388 +1,230 @@
 // src/pages/employer/EmployerViewPage.jsx
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  useCallback,
-  useRef,
-} from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-  Spinner,
-  Badge,
-  Table,
-} from "react-bootstrap";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
-import {
-  FaUserTie,
-  FaChartBar,
-  FaUsers,
-  FaCalendarCheck,
-  FaRegCalendarAlt,
-  FaEye,
-  FaClock,
-  FaStore,
-  FaWhatsapp,
-  FaInfoCircle,
-  FaMapMarkerAlt,
-  FaPhone,
-  FaChartPie,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaRegClock,
-  FaExternalLinkAlt,
-  FaIdBadge,
-} from "react-icons/fa";
+import { FaWhatsapp, FaMapMarkedAlt, FaInstagram, FaStore } from "react-icons/fa";
 import NavlogComponent from "../../components/NavlogComponent";
 import { apiBaseUrl, storageUrl } from "../../config";
-import "./EmployerViewPage.css";
+import "./EmployerView.css";
 
 export default function EmployerViewPage() {
   const { user_name } = useParams();
   const navigate = useNavigate();
-  const token = useMemo(() => localStorage.getItem("token"), []);
 
-  const [loading, setLoading] = useState(true);
   const [employer, setEmployer] = useState(null);
   const [establishment, setEstablishment] = useState(null);
-  const [interactions, setInteractions] = useState([]);
-  const [metrics, setMetrics] = useState({});
-  const [appointments, setAppointments] = useState([]);
-  const topRef = useRef(null);
+  const [interactionSummary, setInteractionSummary] = useState(null);
+  const [userInteractions, setUserInteractions] = useState([]);
+  const [appointmentsRecent, setAppointmentsRecent] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  const token = useMemo(() => localStorage.getItem("token"), []);
   const ph = "/images/logo.png";
-  const imageUrl = useCallback((path) => {
-    if (!path) return ph;
-    return `${storageUrl}/${path}`;
-  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [user_name]);
+
   const handleImgError = useCallback((e) => {
     e.currentTarget.onerror = null;
     e.currentTarget.src = ph;
   }, []);
-  const fmtDate = (d) => (!d ? "—" : new Date(d).toLocaleString("pt-BR"));
-  const fmtPrice = (v) =>
-    `R$ ${Number(v || 0)
-      .toFixed(2)
-      .replace(".", ",")
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+
+  const imageUrl = useCallback((path) => {
+    if (!path) return ph;
+    return `${storageUrl}/${path}`;
+  }, []);
+
+  const fmtPrice = useCallback(
+    (v) =>
+      `R$ ${Number(v || 0)
+        .toFixed(2)
+        .replace(".", ",")
+        .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`,
+    []
+  );
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    const fetchEmployer = async () => {
+    let active = true;
+    (async () => {
       try {
         const res = await axios.get(`${apiBaseUrl}/employer/view/${user_name}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        const data = res.data;
-        setEmployer(data.employer);
-        setEstablishment(data.establishment);
-        setInteractions(data.user_interactions || []);
-        setMetrics(data.metrics || {});
-        setAppointments(data.appointments_recent || []);
+        if (!active) return;
+
+        setEmployer(res.data?.employer || null);
+        setEstablishment(res.data?.establishment || null);
+        setInteractionSummary(res.data?.interaction_summary || null);
+        setUserInteractions(res.data?.user_interactions || []);
+        setAppointmentsRecent(res.data?.appointments_recent || []);
+        setMetrics(res.data?.metrics || null);
       } catch (err) {
         Swal.fire({
           icon: "error",
           title: "Erro",
           text:
-            err.response?.data?.error ||
-            "Não foi possível carregar as informações do colaborador.",
-        }).then(() => navigate(-1));
+            err.response?.status === 404
+              ? "Colaborador não encontrado."
+              : "Não foi possível carregar os dados do colaborador.",
+        }).then(() => navigate("/404"));
       } finally {
-        setLoading(false);
+        if (active) setIsLoading(false);
       }
+    })();
+    return () => {
+      active = false;
     };
-    fetchEmployer();
-  }, [user_name, token, navigate]);
+  }, [user_name, navigate, token]);
 
-  if (loading)
+  const whatsappLink = useMemo(() => {
+    const raw = String(employer?.user?.phone || "").replace(/\D/g, "");
+    if (!raw) return null;
+    const withCc = raw.startsWith("55") ? raw : `55${raw}`;
+    const msg = encodeURIComponent(
+      `Olá ${employer?.user?.first_name || ""}! Gostaria de agendar um atendimento com você.`
+    );
+    return `https://wa.me/${withCc}?text=${msg}`;
+  }, [employer]);
+
+  if (isLoading) {
     return (
-      <div className="evp-loading">
-        <Spinner animation="border" variant="light" />
+      <div className="employerv-root">
+        <NavlogComponent />
       </div>
     );
+  }
 
-  if (!employer) return null;
+  if (!employer || !employer.user || !establishment) return null;
 
-  const user = employer.user || {};
-  const avatarUrl = user.avatar ? imageUrl(user.avatar) : ph;
-  const backgroundUrl = establishment?.background
-    ? imageUrl(establishment.background)
-    : null;
-  const logoUrl = establishment?.logo ? imageUrl(establishment.logo) : ph;
-
-  const whatsappUrl = establishment?.phone
-    ? `https://wa.me/55${establishment.phone.replace(/\D/g, "")}?text=Olá, estou entrando em contato pelo perfil de ${user.first_name}`
-    : null;
+  const user = employer.user;
+  const nome = `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
   return (
-    <div className="evp-root" ref={topRef}>
+    <div className="employerv-root">
       <NavlogComponent />
 
+      {/* HERO */}
       <div
-        className="evp-hero"
-        style={{
-          backgroundImage: backgroundUrl ? `url("${backgroundUrl}")` : "none",
-        }}
+        className="employerv-hero"
+        style={{ backgroundImage: `url("${imageUrl(establishment.background)}")` }}
       >
-        <div className="evp-overlay">
-          <Container>
-            <Row className="align-items-center">
-              <Col md={4} className="text-center mb-4 mb-md-0">
-                <img
-                  src={avatarUrl}
-                  alt={user.first_name}
-                  className="evp-avatar"
-                  onError={handleImgError}
-                />
-              </Col>
-              <Col md={8}>
-                <h1 className="evp-title d-flex align-items-center">
-                  <FaUserTie className="me-2 text-warning" />
-                  {user.first_name} {user.last_name || ""}
-                </h1>
-                <p className="evp-role mb-2">
-                  {employer.role || "Colaborador"} em{" "}
-                  <strong>{establishment?.name}</strong>
-                </p>
-                {user.user_name && (
-                  <p className="text-muted small">
-                    <FaIdBadge className="me-2 text-info" />
-                    <strong>user_name:</strong> @{user.user_name}
-                  </p>
-                )}
+        <div className="employerv-hero-overlay" />
+        <Container fluid className="employerv-hero-content">
+          <div className="employerv-hero-left">
+            <img
+              src={imageUrl(user.avatar)}
+              alt={nome}
+              className="employerv-avatar"
+              onError={handleImgError}
+            />
+          </div>
+          <div className="employerv-hero-right">
+            <h1 className="employerv-title">{nome}</h1>
+            {employer.role && (
+              <div className="employerv-role">
+                <Badge bg="primary">{employer.role}</Badge>
+              </div>
+            )}
 
-                <div className="evp-actions mt-3">
-                  {whatsappUrl && (
-                    <Button
-                      variant="success"
-                      href={whatsappUrl}
-                      target="_blank"
-                      className="me-2"
-                    >
-                      <FaWhatsapp className="me-2" />
-                      Contatar via WhatsApp
-                    </Button>
-                  )}
-                  {establishment && (
-                    <Button
-                      variant="dark"
-                      as={Link}
-                      to={`/establishment/view/${establishment.slug}`}
-                    >
-                      <FaStore className="me-2" />
-                      Ver Estabelecimento
-                    </Button>
-                  )}
-                </div>
-              </Col>
-            </Row>
-          </Container>
-        </div>
+            <div className="employerv-actions">
+              {whatsappLink && (
+                <Button as="a" href={whatsappLink} target="_blank" rel="noreferrer" size="sm" className="btn-action">
+                  <FaWhatsapp /> WhatsApp
+                </Button>
+              )}
+              {establishment.instagram_url && (
+                <Button as="a" href={establishment.instagram_url} size="sm" className="btn-action">
+                  <FaInstagram /> Instagram
+                </Button>
+              )}
+              {establishment.location && (
+                <Button as="a" href={establishment.location} size="sm" className="btn-action">
+                  <FaMapMarkedAlt /> Como chegar
+                </Button>
+              )}
+              {establishment && (
+                <Button
+                  onClick={() => navigate(`/establishment/view/${establishment.slug}`)}
+                  size="sm"
+                  className="btn-establishment"
+                >
+                  <img
+                    src={imageUrl(establishment.logo)}
+                    alt={establishment.name}
+                    onError={handleImgError}
+                    className="estv-mini-logo"
+                  />
+                  <div className="estv-mini-info">
+                    <div className="estv-mini-name">{establishment.name}</div>
+                    {establishment.address && (
+                      <div className="estv-mini-address">{establishment.address}</div>
+                    )}
+                  </div>
+                </Button>
+              )}
+            </div>
+          </div>
+        </Container>
       </div>
 
-      <Container className="evp-content py-5">
-        <Row className="gy-4">
+      {/* MAIN */}
+      <Container fluid className="employerv-main">
+        <Row className="gx-3 gy-4">
           <Col md={8}>
-            <Card className="evp-card glass">
-              <Card.Header>
-                <h4 className="m-0 d-flex align-items-center">
-                  <FaInfoCircle className="me-2 text-info" />
-                  Detalhes do Colaborador
-                </h4>
-              </Card.Header>
-              <Card.Body>
-                <Row>
-                  <Col md={6}>
-                    <p>
-                      <FaChartBar className="me-2 text-info" />
-                      <strong>Visualizações Totais:</strong>{" "}
-                      {employer.views_total ?? 0}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaUsers className="me-2 text-light" />
-                      <strong>Usuários Únicos:</strong>{" "}
-                      {employer.views_unique ?? 0}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaCalendarCheck className="me-2 text-success" />
-                      <strong>Total de Atendimentos:</strong>{" "}
-                      {metrics.total_appointments ?? 0}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaChartPie className="me-2 text-warning" />
-                      <strong>Valor Total:</strong>{" "}
-                      {fmtPrice(metrics.total_value ?? 0)}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaCheckCircle className="me-2 text-success" />
-                      <strong>Concluídos:</strong> {metrics.attended ?? 0}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaTimesCircle className="me-2 text-danger" />
-                      <strong>Cancelados:</strong> {metrics.cancelled ?? 0}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaRegCalendarAlt className="me-2 text-primary" />
-                      <strong>Cadastrado há:</strong>{" "}
-                      {employer.created_since || "—"}
-                    </p>
-                  </Col>
-                  <Col md={6}>
-                    <p>
-                      <FaClock className="me-2 text-primary" />
-                      <strong>Última atualização:</strong>{" "}
-                      {employer.last_updated_at || "—"}
-                    </p>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-
-            {interactions.length > 0 && (
-              <Card className="evp-card glass mt-4">
+            {appointmentsRecent.length > 0 && (
+              <Card bg="dark" text="light" className="mb-4">
                 <Card.Header>
-                  <h4 className="m-0 d-flex align-items-center">
-                    <FaEye className="me-2 text-warning" />
-                    Interações dos Usuários
-                  </h4>
+                  <strong>Últimos Atendimentos</strong>
                 </Card.Header>
                 <Card.Body>
-                  <Table striped hover responsive variant="dark" size="sm">
-                    <thead>
-                      <tr>
-                        <th>Usuário</th>
-                        <th>Visualizações</th>
-                        <th>Primeiro Acesso</th>
-                        <th>Último Acesso</th>
-                        <th>IP</th>
-                        <th>Navegador</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {interactions.map((i, idx) => (
-                        <tr key={idx}>
-                          <td className="d-flex align-items-center">
-                            <img
-                              src={i.user_avatar ? imageUrl(i.user_avatar) : ph}
-                              alt={i.user_name}
-                              className="rounded-circle me-2"
-                              style={{
-                                width: 26,
-                                height: 26,
-                                objectFit: "cover",
-                              }}
-                              onError={handleImgError}
-                            />
-                            {i.user_name || "Visitante"}
-                          </td>
-                          <td>{i.total_views}</td>
-                          <td>{fmtDate(i.first_view)}</td>
-                          <td>{fmtDate(i.last_view)}</td>
-                          <td>{i.ip || "—"}</td>
-                          <td
-                            className="text-truncate"
-                            title={i.user_agent || ""}
-                          >
-                            {i.user_agent
-                              ? i.user_agent.slice(0, 45) + "..."
-                              : "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card>
-            )}
-          </Col>
-
-          <Col md={4}>
-            {establishment && (
-              <Card className="evp-card glass">
-                <Card.Header>
-                  <h4 className="m-0 d-flex align-items-center">
-                    <FaStore className="me-2" />
-                    Estabelecimento
-                  </h4>
-                </Card.Header>
-                <Card.Body className="text-center">
-                  <img
-                    src={logoUrl}
-                    alt={establishment.name}
-                    className="rounded-circle mb-3"
-                    style={{ width: 80, height: 80, objectFit: "cover" }}
-                    onError={handleImgError}
-                  />
-                  <h5 className="fw-bold">{establishment.name}</h5>
-                  <p className="small text-muted">
-                    <FaMapMarkerAlt className="me-2" />
-                    {establishment.address}
-                  </p>
-                  <p className="small text-muted">
-                    <FaPhone className="me-2" />
-                    {establishment.phone}
-                  </p>
-                  {whatsappUrl && (
-                    <Button
-                      href={whatsappUrl}
-                      target="_blank"
-                      variant="success"
-                      className="mt-2"
-                    >
-                      <FaWhatsapp className="me-2" />
-                      WhatsApp
-                    </Button>
-                  )}
-                </Card.Body>
-              </Card>
-            )}
-
-            {appointments.length > 0 && (
-              <Card className="evp-card glass mt-4">
-                <Card.Header>
-                  <h4 className="m-0 d-flex align-items-center">
-                    <FaRegClock className="me-2" />
-                    Últimos Atendimentos
-                  </h4>
-                </Card.Header>
-                <Card.Body>
-                  {appointments.map((a) => (
-                    <div key={a.id} className="mb-3 border-bottom pb-2">
-                      <div className="fw-bold">{a.customer_name}</div>
-                      <div className="small text-muted">
-                        {fmtDate(a.order_datetime)}
+                  {appointmentsRecent.map((a) => (
+                    <div key={a.id} className="employerv-appointment mb-3 p-2 rounded">
+                      <div className="fw-bold text-light">{a.customer_name}</div>
+                      <div className="text-white-50 small">
+                        {new Date(a.order_datetime).toLocaleString("pt-BR")}
                       </div>
-                      <div className="small">
-                        <Badge
-                          bg={
-                            a.appointment_status === "pending"
-                              ? "secondary"
-                              : a.appointment_status === "attended"
-                              ? "success"
-                              : "danger"
-                          }
-                        >
+                      <div className="text-white small mt-1">
+                        Nº {a.order_number} -{" "}
+                        <Badge bg="info" className="me-1">
                           {a.appointment_status}
                         </Badge>{" "}
-                        {fmtPrice(a.total_price)}
+                      </div>
+                    </div>
+                  ))}
+                </Card.Body>
+              </Card>
+            )}
+
+            {userInteractions.length > 0 && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Usuários que visualizaram</strong>
+                </Card.Header>
+                <Card.Body>
+                  {userInteractions.map((ui, i) => (
+                    <div key={i} className="employerv-user d-flex align-items-center mb-3">
+                      <img
+                        src={ui.user_avatar ? imageUrl(ui.user_avatar) : ph}
+                        alt={ui.user_name}
+                        className="rounded-circle me-3"
+                        onError={handleImgError}
+                        style={{
+                          width: 45,
+                          height: 45,
+                          objectFit: "cover",
+                          border: "2px solid #333",
+                        }}
+                      />
+                      <div>
+                        <div className="fw-bold text-light">{ui.user_name}</div>
+                        <div className="text-white-50 small">
+                          {ui.total_views} views - Última:{" "}
+                          {new Date(ui.last_view).toLocaleString("pt-BR")}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -390,8 +232,105 @@ export default function EmployerViewPage() {
               </Card>
             )}
           </Col>
+
+          <Col md={4}>
+            {metrics && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Métricas</strong>
+                </Card.Header>
+                <Card.Body>
+                  <div className="d-flex flex-wrap justify-content-between text-center">
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.total_appointments}</h5>
+                      <div className="text-white small">Atendimentos</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.attended}</h5>
+                      <div className="text-white small">Concluídos</div>
+                    </div>
+                    <div className="p-2 flex-fill">
+                      <h5>{metrics.cancelled}</h5>
+                      <div className="text-white small">Cancelados</div>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+
+            {interactionSummary && (
+              <Card bg="dark" text="light" className="mb-4">
+                <Card.Header>
+                  <strong>Interações</strong>
+                </Card.Header>
+                <Card.Body>
+                  <div className="text-white small mb-2">
+                    Visualizações totais: {interactionSummary.total_views}
+                  </div>
+                  <div className="text-white small mb-2">
+                    Usuários únicos: {interactionSummary.unique_users}
+                  </div>
+                  {interactionSummary.most_active_user && (
+                    <div className="text-white small mb-2">
+                      Mais ativo: {interactionSummary.most_active_user.name} (
+                      {interactionSummary.most_active_user.views} views)
+                    </div>
+                  )}
+                  {interactionSummary.last_view_user && (
+                    <div className="text-white small">
+                      Última visita: {interactionSummary.last_view_user.name} em{" "}
+                      {new Date(
+                        interactionSummary.last_view_user.last_view
+                      ).toLocaleString("pt-BR")}
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            )}
+
+            <Card bg="dark" text="light" className="mb-4">
+              <Card.Header>
+                <strong>Informações adicionais</strong>
+              </Card.Header>
+              <Card.Body>
+                {employer.created_since && (
+                  <div className="text-white small mb-1">
+                    Criado há {employer.created_since}
+                  </div>
+                )}
+                {employer.last_updated_at && (
+                  <div className="text-white small mb-1">
+                    Última atualização: {employer.last_updated_at}
+                  </div>
+                )}
+                {employer.creator && (
+                  <div className="text-white small mb-1">
+                    Criado por: {employer.creator.first_name} {employer.creator.last_name}
+                  </div>
+                )}
+                {employer.updater && (
+                  <div className="text-white small mb-1">
+                    Atualizado por: {employer.updater.first_name} {employer.updater.last_name}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
       </Container>
+
+      {whatsappLink && (
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="employerv-whatsapp-fab"
+          aria-label={`Chamar ${nome} no WhatsApp`}
+          title="Chamar no WhatsApp"
+        >
+          <FaWhatsapp className="employerv-whatsapp-icon" />
+        </a>
+      )}
     </div>
   );
 }

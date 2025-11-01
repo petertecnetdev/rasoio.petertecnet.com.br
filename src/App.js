@@ -5,6 +5,8 @@ import axios from "axios";
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
 import { apiBaseUrl } from "./config";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -164,6 +166,7 @@ function AppInner() {
           <Route path="/establishment" element={protectedRoute(<EstablishmentListPage />)} />
           <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
           <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
+          <Route path="/establishment/schedule/:slug"  element={<EstablishmentSchedulePage />} />
 
           <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
           <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
@@ -178,7 +181,6 @@ function AppInner() {
 
           <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
 
-          <Route path="/establishment/:slug/schedule"  element={<EstablishmentSchedulePage />} />
 
 
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -191,7 +193,9 @@ function AppInner() {
 export default function App() {
   return (
     <LoadingProvider>
-      <AppInner />
+      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID} locale="pt-BR">
+        <AppInner />
+      </GoogleOAuthProvider>
     </LoadingProvider>
   );
 }
