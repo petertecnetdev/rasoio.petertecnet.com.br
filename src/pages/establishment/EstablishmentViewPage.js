@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Carousel, Badge } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -25,6 +25,7 @@ export default function EstablishmentViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const token = useMemo(() => localStorage.getItem("token"), []);
+    const [serviceIndex, setServiceIndex] = useState(0); // ✅ mover pra cá
   const [establishment, setEstablishment] = useState(null);
   const [metrics, setMetrics] = useState(null);
 const [interactionSummary, setInteractionSummary] = useState(null);
@@ -90,15 +91,27 @@ useEffect(() => {
   };
 }, [slug, navigate, token]);
 
-  const services = useMemo(
-    () =>
-      items.filter(
-        (i) =>
-          String(i.status) === "1" &&
-          String(i.type).toLowerCase().includes("serv")
-      ),
-    [items]
-  );
+  // 🧩 Filtra serviços e produtos
+const services = useMemo(
+  () =>
+    items.filter(
+      (i) =>
+        String(i.status) === "1" &&
+        String(i.type).toLowerCase().includes("serv")
+    ),
+  [items]
+);
+
+const products = useMemo(
+  () =>
+    items.filter(
+      (i) =>
+        String(i.status) === "1" &&
+        String(i.type).toLowerCase().includes("prod")
+    ),
+  [items]
+);
+
 
   const whatsappLink = useMemo(() => {
     const raw = String(establishment?.phone || "").replace(/\D/g, "");
@@ -450,197 +463,173 @@ useEffect(() => {
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
-          <Col md={8}>
-            {services.length > 0 && (
-              <Card bg="dark" text="light" className="mb-4">
-                <Card.Header>
-                  <strong>Serviços</strong>
-                </Card.Header>
-                <Card.Body>
-                  <Row className="gx-3 gy-3">
-                    {services.map((sv) => (
-                      <Col key={sv.id} lg={4} md={6} sm={6} xs={12}>
-                        <Card
-                          className="estv-card h-100"
-                          bg="black"
-                          text="light"
-                        >
-                          {sv.image && (
-                            <div className="estv-media-wrap">
-                              <img
-                                src={imageUrl(sv.image)}
-                                alt={sv.name}
-                                className="estv-media"
-                                onError={handleImgError}
-                              />
-                            </div>
-                          )}
-                          <Card.Body className="p-3">
-                            <div className="estv-item-name">{sv.name}</div>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div className="estv-item-price">
-                                {fmtBRL(sv.price)}
-                              </div>
-                              {sv.duration && (
-                                <Badge bg="warning" text="dark">
-                                  {sv.duration} min
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="mt-3 d-flex gap-2">
-                              <Button
-                                size="sm"
-                                className="bg-black flex-fill"
-                                onClick={async () => {
-                                  let token = localStorage.getItem("token");
+         <Col md={8}>
+   <Col md={12}>
+              {services.length > 0 && (
+                <Card bg="dark" text="light" className="mb-4 shadow-lg border-0 rounded-4">
+                  <Card.Header className="bg-black text-center py-3 border-0">
+                    <strong className="text-uppercase">Serviços</strong>
+                  </Card.Header>
+                  <Card.Body className="p-0">
+                    <Carousel
+                      activeIndex={serviceIndex}
+                      onSelect={(selected) => setServiceIndex(selected)}
+                      controls={true}
+                      indicators={false}
+                      interval={null}
+                      fade={false}
+                      pause="hover"
+                      touch={true}
+                      slide={true}
+                    >
+                      {services.map((sv, idx) => (
+                        <Carousel.Item key={sv.id ? `sv-${sv.id}` : `sv-${idx}`}>
+                          <div className="d-flex justify-content-center">
+                            <Card
+                              bg="black"
+                              text="light"
+                              className="estv-card border-0 rounded-4 shadow w-100"
+                              style={{ maxWidth: "22rem" }}
+                            >
+                              {sv.image ? (
+                                <div className="estv-media-wrap">
+                                  <img
+                                    src={imageUrl(sv.image)}
+                                    alt={sv.name}
+                                    className="estv-media"
+                                    onError={handleImgError}
+                                  />
+                                </div>
+                              ) : null}
 
-                                  if (!token) {
-                                    await MySwal.fire({
-                                      width: "400px",
-                                      background: "#0a0a0c",
-                                      title: "Entrar para agendar",
-                                      html: `
-          <div style="text-align:center;">
-            <img src="/images/logo.png" alt="Rasoio" style="width:120px;margin-bottom:10px;" />
-            <input id="swal-username" class="swal2-input" placeholder="Usuário ou e-mail" />
-            <input id="swal-password" type="password" class="swal2-input" placeholder="Senha" />
-            <button id="swal-login-btn" class="swal2-confirm swal2-styled" style="width:100%;margin-top:10px;background:#00bcd4;border:none;">
-              Entrar
-            </button>
-            <div id="swal-google" style="margin-top:10px;"></div>
-            <a href="/register" style="display:block;margin-top:10px;color:#00ffff;">Registrar-se</a>
-            <a href="/password-email" style="display:block;margin-top:4px;color:#888;">Esqueceu a senha?</a>
-          </div>
-        `,
-                                      showConfirmButton: false,
-                                      didOpen: () => {
-                                        const container =
-                                          MySwal.getHtmlContainer();
-                                        const loginBtn =
-                                          container.querySelector(
-                                            "#swal-login-btn"
-                                          );
-                                        const googleDiv =
-                                          container.querySelector(
-                                            "#swal-google"
-                                          );
+                              <Card.Body className="p-3">
+                                <div className="estv-item-name fw-bold text-center mb-2">
+                                  {sv.name}
+                                </div>
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                  <div className="estv-item-price">{fmtBRL(sv.price)}</div>
+                                  {sv.duration ? (
+                                    <Badge bg="warning" text="dark">
+                                      {sv.duration} min
+                                    </Badge>
+                                  ) : null}
+                                </div>
+                                <div className="d-flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-fill button"
+                                    onClick={async () => {
+                                      const tk = localStorage.getItem("token");
+                                      if (!tk) {
+                                        await MySwal.fire({
+                                          width: "400px",
+                                          background: "#0a0a0c",
+                                          title: "Entrar para agendar",
+                                          html: `
+                                            <div style="text-align:center;">
+                                              <img src="/images/logo.png" alt="Rasoio" style="width:120px;margin-bottom:10px;" />
+                                              <input id="swal-username" class="swal2-input" placeholder="Usuário ou e-mail" />
+                                              <input id="swal-password" type="password" class="swal2-input" placeholder="Senha" />
+                                              <button id="swal-login-btn" class="swal2-confirm swal2-styled" style="width:100%;margin-top:10px;background:#00bcd4;border:none;">
+                                                Entrar
+                                              </button>
+                                              <div id="swal-google" style="margin-top:10px;"></div>
+                                              <a href="/register" style="display:block;margin-top:10px;color:#00ffff;">Registrar-se</a>
+                                              <a href="/password-email" style="display:block;margin-top:4px;color:#888;">Esqueceu a senha?</a>
+                                            </div>
+                                          `,
+                                          showConfirmButton: false,
+                                          didOpen: () => {
+                                            const container = MySwal.getHtmlContainer();
+                                            const loginBtn =
+                                              container.querySelector("#swal-login-btn");
+                                            const googleDiv =
+                                              container.querySelector("#swal-google");
 
-                                        loginBtn.addEventListener(
-                                          "click",
-                                          async () => {
-                                            const username =
-                                              container.querySelector(
-                                                "#swal-username"
-                                              ).value;
-                                            const password =
-                                              container.querySelector(
-                                                "#swal-password"
-                                              ).value;
-                                            if (!username || !password) {
-                                              Swal.showValidationMessage(
-                                                "Informe usuário e senha"
-                                              );
-                                              return;
-                                            }
-                                            try {
-                                              const { data } = await axios.post(
-                                                `${apiBaseUrl}/auth/login`,
-                                                {
-                                                  username,
-                                                  password,
-                                                }
-                                              );
-                                              const tk =
-                                                data.token?.access_token ||
-                                                data.token?.original
-                                                  ?.access_token ||
-                                                data.access_token ||
-                                                data.token;
-                                              if (!tk)
-                                                throw new Error(
-                                                  "Token não recebido"
+                                            loginBtn.addEventListener("click", async () => {
+                                              const username =
+                                                container.querySelector("#swal-username").value;
+                                              const password =
+                                                container.querySelector("#swal-password").value;
+                                              if (!username || !password) {
+                                                Swal.showValidationMessage("Informe usuário e senha");
+                                                return;
+                                              }
+                                              try {
+                                                const { data } = await axios.post(
+                                                  `${apiBaseUrl}/auth/login`,
+                                                  {
+                                                    username,
+                                                    password,
+                                                  }
                                                 );
-                                              localStorage.setItem("token", tk);
-                                              localStorage.setItem(
-                                                "user",
-                                                JSON.stringify(data.user || {})
-                                              );
-                                              Swal.close();
-                                              window.location.reload();
-                                            } catch (err) {
-                                              Swal.showValidationMessage(
-                                                err.response?.data?.error ||
-                                                  err.response?.data?.message ||
-                                                  "Falha ao autenticar"
-                                              );
-                                            }
-                                          }
-                                        );
+                                                const tokenFromApi =
+                                                  data.token?.access_token ||
+                                                  data.token?.original?.access_token ||
+                                                  data.access_token ||
+                                                  data.token;
+                                                if (!tokenFromApi)
+                                                  throw new Error("Token não recebido");
+                                                localStorage.setItem("token", tokenFromApi);
+                                                localStorage.setItem(
+                                                  "user",
+                                                  JSON.stringify(data.user || {})
+                                                );
+                                                Swal.close();
+                                                window.location.reload();
+                                              } catch (err) {
+                                                Swal.showValidationMessage(
+                                                  err.response?.data?.error ||
+                                                    err.response?.data?.message ||
+                                                    "Falha ao autenticar"
+                                                );
+                                              }
+                                            });
 
-                                        import("@react-oauth/google").then(
-                                          ({
-                                            GoogleLogin,
-                                            GoogleOAuthProvider,
-                                          }) => {
-                                            const root =
-                                              document.createElement("div");
-                                            googleDiv.appendChild(root);
-                                            const React = require("react");
-                                            const ReactDOM = require("react-dom/client");
-                                            const rootInstance =
-                                              ReactDOM.createRoot(root);
+                                            import("@react-oauth/google").then(
+                                              ({ GoogleLogin, GoogleOAuthProvider }) => {
+                                                const root = document.createElement("div");
+                                                googleDiv.appendChild(root);
+                                                const React = require("react");
+                                                const ReactDOM = require("react-dom/client");
+                                                const rootInstance = ReactDOM.createRoot(root);
 
-                                            rootInstance.render(
-                                              React.createElement(
-                                                GoogleOAuthProvider,
-                                                {
-                                                  clientId:
-                                                    process.env
-                                                      .REACT_APP_GOOGLE_CLIENT_ID,
-                                                  children: React.createElement(
-                                                    GoogleLogin,
-                                                    {
-                                                      onSuccess: async ({
-                                                        credential,
-                                                      }) => {
+                                                rootInstance.render(
+                                                  React.createElement(GoogleOAuthProvider, {
+                                                    clientId:
+                                                      process.env.REACT_APP_GOOGLE_CLIENT_ID,
+                                                    children: React.createElement(GoogleLogin, {
+                                                      onSuccess: async ({ credential }) => {
                                                         try {
-                                                          const { data } =
-                                                            await axios.post(
-                                                              `${apiBaseUrl}/auth/google`,
-                                                              {
-                                                                token_id:
-                                                                  credential,
-                                                              }
-                                                            );
-                                                          const tk =
-                                                            data.token
-                                                              ?.access_token ||
-                                                            data.token?.original
-                                                              ?.access_token ||
+                                                          const { data } = await axios.post(
+                                                            `${apiBaseUrl}/auth/google`,
+                                                            {
+                                                              token_id: credential,
+                                                            }
+                                                          );
+                                                          const tokenFromApi =
+                                                            data.token?.access_token ||
+                                                            data.token?.original?.access_token ||
                                                             data.access_token ||
                                                             data.token;
-                                                          if (!tk)
+                                                          if (!tokenFromApi)
                                                             throw new Error(
                                                               "Token Google não recebido"
                                                             );
                                                           localStorage.setItem(
                                                             "token",
-                                                            tk
+                                                            tokenFromApi
                                                           );
                                                           localStorage.setItem(
                                                             "user",
-                                                            JSON.stringify(
-                                                              data.user || {}
-                                                            )
+                                                            JSON.stringify(data.user || {})
                                                           );
                                                           Swal.close();
                                                           window.location.reload();
                                                         } catch (err) {
                                                           Swal.showValidationMessage(
-                                                            err.response?.data
-                                                              ?.error ||
-                                                              err.response?.data
-                                                                ?.message ||
+                                                            err.response?.data?.error ||
+                                                              err.response?.data?.message ||
                                                               "Falha no login com Google"
                                                           );
                                                         }
@@ -650,44 +639,108 @@ useEffect(() => {
                                                           "Falha no login com Google"
                                                         );
                                                       },
-                                                    }
-                                                  ),
-                                                }
-                                              )
+                                                    }),
+                                                  })
+                                                );
+                                              }
                                             );
-                                          }
-                                        );
-                                      },
-                                    });
-                                    return;
-                                  }
+                                          },
+                                        });
+                                        return;
+                                      }
+                                      openSchedulePopup(sv);
+                                    }}
+                                  >
+                                    Agendar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline-light"
+                                    className="flex-fill button"
+                                    onClick={() => navigate(`/item/view/${sv.slug || ""}`)}
+                                  >
+                                    Detalhes
+                                  </Button>
+                                </div>
+                              </Card.Body>
+                            </Card>
+                          </div>
+                        </Carousel.Item>
+                      ))}
+                    </Carousel>
+                  </Card.Body>
+                </Card>
+              )}
+            </Col>
 
-                                  openSchedulePopup(sv);
-                                }}
-                              >
-                                Agendar
-                              </Button>
+  <Col md={12}>
+    {products.length > 0 && (
+      <Card bg="dark" text="light" className="mb-4 shadow-lg border-0 rounded-4">
+        <Card.Header className="bg-black text-center py-3 border-0">
+          <strong className="text-uppercase">Produtos</strong>
+        </Card.Header>
+        <Card.Body className="p-0">
+          <Carousel
+            controls={true}
+            indicators={false}
+            interval={null}
+            fade={false}
+            pause="hover"
+            touch={true}
+          >
+            {products.map((pd, idx) => (
+              <Carousel.Item key={`${pd.id}-${idx}`}>
+                <div className="d-flex justify-content-center">
+                  <Card
+                    bg="black"
+                    text="light"
+                    className="estv-card border-0 rounded-4 shadow w-100"
+                    style={{ maxWidth: "22rem" }}
+                  >
+                    {pd.image && (
+                      <div className="estv-media-wrap">
+                        <img
+                          src={imageUrl(pd.image)}
+                          alt={pd.name}
+                          className="estv-media"
+                          onError={handleImgError}
+                        />
+                      </div>
+                    )}
+                    <Card.Body className="p-3">
+                      <div className="estv-item-name fw-bold text-center mb-2">
+                        {pd.name}
+                      </div>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div className="estv-item-price">{fmtBRL(pd.price)}</div>
+                        {pd.stock && (
+                          <Badge bg="info" text="dark">
+                            {pd.stock} unid.
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline-light"
+                          className="flex-fill button"
+                          onClick={() => navigate(`/item/view/${pd.slug || ""}`)}
+                        >
+                          Detalhes
+                        </Button>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </div>
+              </Carousel.Item>
+            ))}
+          </Carousel>
+        </Card.Body>
+      </Card>
+    )}
+  </Col>
+</Col>
 
-                              <Button
-                                size="sm"
-                                variant="outline-light"
-                                className="flex-fill"
-                                onClick={() =>
-                                  navigate(`/item/view/${sv.slug || ""}`)
-                                }
-                              >
-                                Detalhes
-                              </Button>
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                </Card.Body>
-              </Card>
-            )}
-          </Col>
 
           <Col md={4}>
             {employers.length > 0 && (
@@ -970,6 +1023,11 @@ useEffect(() => {
                   ))}
                 </Card.Body>
               </Card>
+
+
+
+
+
             )}
             {/* 📍 LOCALIZAÇÃO NO MAPA */}
 {establishment?.location && (
