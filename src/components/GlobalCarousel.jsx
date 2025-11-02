@@ -8,8 +8,6 @@ export default function GlobalCarousel({
   title,
   items,
   itemsInteractions,
-  imageUrl,
-  handleImgError,
   carouselActive,
   handleScroll,
   trackRef,
@@ -19,7 +17,6 @@ export default function GlobalCarousel({
   navigate,
   showSchedule,
 }) {
-  const PLACEHOLDER = "/images/logo.png";
   const [visibleCount, setVisibleCount] = useState(10);
 
   const getItemInteractions = useMemo(
@@ -29,16 +26,6 @@ export default function GlobalCarousel({
         unique_users: 0,
       },
     [itemsInteractions]
-  );
-
-  const resolveImage = useMemo(
-    () => (it) => {
-      if (it?.image) return imageUrl(it.image);
-      if (it?.entity?.logo) return imageUrl(it.entity.logo);
-      if (it?.establishment?.logo) return imageUrl(it.establishment.logo);
-      return PLACEHOLDER;
-    },
-    [imageUrl]
   );
 
   const visibleItems = useMemo(
@@ -53,7 +40,6 @@ export default function GlobalCarousel({
     }
   };
 
-  // ❗ o return condicional vem DEPOIS dos hooks
   if (!items || items.length === 0) return null;
 
   return (
@@ -72,7 +58,6 @@ export default function GlobalCarousel({
             carouselActive ? "running" : "stopped"
           }`}
         >
-          {/* CONTROLES */}
           <div className="carousel-controls-wrapper">
             <div className="carousel-controls">
               <button
@@ -94,26 +79,19 @@ export default function GlobalCarousel({
             </div>
           </div>
 
-          {/* ITENS */}
-          <div ref={trackRef} className="carousel-track">
+          <div ref={trackRef} className="carousel-track no-image">
             {visibleItems.map((it, idx) => {
               const inter = getItemInteractions(it.id);
-              const imgSrc = resolveImage(it);
 
               return (
-                <div key={`it-${it.id || idx}`} className="carousel-card">
-                  <div className="carousel-image-wrap">
-                    <img
-                      src={imgSrc}
-                      alt={it.name}
-                      className="carousel-image"
-                      onError={handleImgError}
-                      loading="lazy"
-                    />
+                <div key={`it-${it.id || idx}`} className="carousel-card text-only">
+                  <div className="carousel-item-name fw-bold text-light">
+                    {it.name}
                   </div>
 
-                  <div className="carousel-item-name">{it.name}</div>
-                  <div className="carousel-item-price">{fmtBRL(it.price)}</div>
+                  <div className="carousel-item-price text-info">
+                    {fmtBRL(it.price)}
+                  </div>
 
                   {it.user && (
                     <div className="carousel-user text-muted small mb-2">
@@ -164,8 +142,6 @@ GlobalCarousel.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.array.isRequired,
   itemsInteractions: PropTypes.array,
-  imageUrl: PropTypes.func.isRequired,
-  handleImgError: PropTypes.func.isRequired,
   carouselActive: PropTypes.bool.isRequired,
   handleScroll: PropTypes.func.isRequired,
   trackRef: PropTypes.object.isRequired,
