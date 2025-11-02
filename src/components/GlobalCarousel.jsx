@@ -19,10 +19,8 @@ export default function GlobalCarousel({
   navigate,
   showSchedule,
 }) {
-  if (!items || items.length === 0) return null;
-
-  const [visibleCount, setVisibleCount] = useState(10);
   const PLACEHOLDER = "/images/logo.png";
+  const [visibleCount, setVisibleCount] = useState(10);
 
   const getItemInteractions = useMemo(
     () => (itemId) =>
@@ -44,16 +42,19 @@ export default function GlobalCarousel({
   );
 
   const visibleItems = useMemo(
-    () => items.slice(0, visibleCount),
+    () => (items ? items.slice(0, visibleCount) : []),
     [items, visibleCount]
   );
 
   const handleNext = (dir) => {
     handleScroll(dir);
-    if (visibleCount < items.length) {
+    if (visibleCount < (items?.length || 0)) {
       setVisibleCount((prev) => Math.min(prev + 5, items.length));
     }
   };
+
+  // ❗ o return condicional vem DEPOIS dos hooks
+  if (!items || items.length === 0) return null;
 
   return (
     <Card
