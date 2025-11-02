@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Card, Button, Badge } from "react-bootstrap";
 import PropTypes from "prop-types";
 import ScheduleButton from "./ScheduleButton";
@@ -21,25 +21,45 @@ export default function GlobalCarousel({
 }) {
   if (!items || items.length === 0) return null;
 
+  const [visibleCount, setVisibleCount] = useState(10);
   const PLACEHOLDER = "/images/logo.png";
 
-  const getItemInteractions = (itemId) => {
-    const found = itemsInteractions?.find((i) => i.item_id === itemId);
-    return found || { total_views: 0, unique_users: 0 };
-  };
+  const getItemInteractions = useMemo(
+    () => (itemId) =>
+      itemsInteractions?.find((i) => i.item_id === itemId) || {
+        total_views: 0,
+        unique_users: 0,
+      },
+    [itemsInteractions]
+  );
 
-  const resolveImage = (it) => {
-    if (it?.image) return imageUrl(it.image);
-    if (it?.entity?.logo) return imageUrl(it.entity.logo);
-    if (it?.establishment?.logo) return imageUrl(it.establishment.logo);
-    return PLACEHOLDER;
+  const resolveImage = useMemo(
+    () => (it) => {
+      if (it?.image) return imageUrl(it.image);
+      if (it?.entity?.logo) return imageUrl(it.entity.logo);
+      if (it?.establishment?.logo) return imageUrl(it.establishment.logo);
+      return PLACEHOLDER;
+    },
+    [imageUrl]
+  );
+
+  const visibleItems = useMemo(
+    () => items.slice(0, visibleCount),
+    [items, visibleCount]
+  );
+
+  const handleNext = (dir) => {
+    handleScroll(dir);
+    if (visibleCount < items.length) {
+      setVisibleCount((prev) => Math.min(prev + 5, items.length));
+    }
   };
 
   return (
     <Card
       bg="dark"
       text="light"
-      className="mb-5 shadow-lg border-0 rounded-4 overflow-hidden global-carousel"
+      className="mb-5 shadow border-0 rounded-4 overflow-hidden global-carousel"
     >
       <Card.Header className="bg-black text-center py-3 border-0 position-relative">
         <h5 className="fw-bold text-uppercase mb-0 text-neon">{title}</h5>
@@ -57,7 +77,7 @@ export default function GlobalCarousel({
               <button
                 type="button"
                 className="carousel-arrow left"
-                onClick={() => handleScroll(-1)}
+                onClick={() => handleNext(-1)}
                 title="Anterior"
               >
                 ⏪
@@ -65,7 +85,7 @@ export default function GlobalCarousel({
               <button
                 type="button"
                 className="carousel-arrow right"
-                onClick={() => handleScroll(1)}
+                onClick={() => handleNext(1)}
                 title="Próximo"
               >
                 ⏩
@@ -75,7 +95,7 @@ export default function GlobalCarousel({
 
           {/* ITENS */}
           <div ref={trackRef} className="carousel-track">
-            {items.map((it, idx) => {
+            {visibleItems.map((it, idx) => {
               const inter = getItemInteractions(it.id);
               const imgSrc = resolveImage(it);
 
@@ -87,6 +107,7 @@ export default function GlobalCarousel({
                       alt={it.name}
                       className="carousel-image"
                       onError={handleImgError}
+                      loading="lazy"
                     />
                   </div>
 
@@ -107,8 +128,8 @@ export default function GlobalCarousel({
                   </div>
 
                   <div className="d-flex justify-content-center gap-2 mt-3">
-                    <Badge bg="secondary">👁️ {inter.total_views || 0}</Badge>
-                    <Badge bg="info">👤 {inter.unique_users || 0}</Badge>
+                    <Badge bg="secondary">👁️ {inter.total_views}</Badge>
+                    <Badge bg="info">👤 {inter.unique_users}</Badge>
                   </div>
 
                   <div className="d-flex gap-2 mt-3">
