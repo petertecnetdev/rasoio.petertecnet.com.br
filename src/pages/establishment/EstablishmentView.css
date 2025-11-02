@@ -1,228 +1,263 @@
-/* ============================================
-   RASOIO - ESTABLISHMENT VIEW PAGE (NEON THEME)
-   ============================================ */
+/* ============================================================
+   RASOIO - ESTABLISHMENT VIEW PAGE
+   Neon Futurista 3D Carousel — Peter Tecnet Signature
+   ============================================================ */
 
+:root {
+  --neon-cyan: #00ffff;
+  --neon-blue: #007bff;
+  --neon-pink: #ff00ff;
+  --dark-bg: #05060a;
+  --card-bg: rgba(10, 12, 18, 0.95);
+  --text-light: #e5f1ff;
+  --text-muted: #9ca9b9;
+  --radius: 1.5rem;
+  --transition-fast: 0.3s ease;
+}
+
+/* ===== ROOT ===== */
 .estv-root {
-  background: #05060a;
-  color: #e5f1ff;
+  background: radial-gradient(circle at top left, #04050a, #0b0d16);
+  color: var(--text-light);
   min-height: 100vh;
-  overflow-x: hidden;
   font-family: "Poppins", sans-serif;
+  overflow-x: hidden;
+  padding-bottom: 80px;
 }
 
 /* ===== HERO ===== */
 .estv-hero {
   position: relative;
+  min-height: 420px;
   background-size: cover;
   background-position: center;
-  min-height: 380px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid rgba(0, 200, 255, 0.05);
-  animation: hero-fade 1s ease-in-out;
-}
-
-@keyframes hero-fade {
-  from { opacity: 0; transform: scale(1.05); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 .estv-hero-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.15), rgba(0, 0, 0, 0.85));
-  backdrop-filter: blur(35px);
+  background: linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.95));
+  backdrop-filter: blur(25px);
+  z-index: 1;
 }
 
 .estv-hero-content {
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 1200px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 40px 20px;
   flex-wrap: wrap;
-}
-
-.estv-hero-left {
-  flex: 0 0 180px;
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  padding: 2rem 3rem;
 }
 
 .estv-logo {
-  width: 160px;
-  height: 160px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
+  border: 3px solid var(--neon-cyan);
+  box-shadow: 0 0 25px var(--neon-cyan);
   object-fit: cover;
-  border: 2px solid rgba(0, 255, 255, 0.4);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
-  animation: logo-pulse 3s infinite ease-in-out;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-
-@keyframes logo-pulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); transform: scale(1); }
-  50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.6); transform: scale(1.04); }
-}
-
-.estv-hero-right {
-  flex: 1;
-  text-align: left;
-  padding-left: 40px;
+.estv-logo:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 45px var(--neon-cyan);
 }
 
 .estv-title {
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  color: #00ffff;
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-blue);
 }
 
 .estv-desc {
   font-size: 1rem;
-  color: #b4c6d4;
-  margin-top: 8px;
-  line-height: 1.5;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  max-width: 600px;
 }
 
 /* ===== MAIN ===== */
 .estv-main {
-  padding: 40px 20px;
-  max-width: 1300px;
-  margin: 0 auto;
+  padding: 3rem 2rem;
 }
 
-/* ===== SECTIONS ===== */
-.estv-card-wrapper {
-  background: linear-gradient(180deg, rgba(10, 20, 30, 0.9), rgba(5, 8, 15, 0.9));
-  border: 1px solid rgba(0, 255, 255, 0.08);
-  border-radius: 20px;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.08);
+/* ===== 3D WRAPPER ===== */
+.estv-3d-wrapper {
+  position: relative;
+  width: 100%;
   overflow: hidden;
-  transition: all 0.4s ease;
-  margin-bottom: 40px;
+  perspective: 1800px;
+  cursor: grab;
+}
+.estv-3d-wrapper:active {
+  cursor: grabbing;
 }
 
-.estv-card-wrapper:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.15);
-}
-
-.estv-card-header {
-  background: rgba(0, 0, 0, 0.7);
-  text-align: center;
-  padding: 14px;
-  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
-}
-
-.estv-section-title {
-  color: #00ffff;
-  text-transform: uppercase;
-  font-weight: 700;
-  margin: 0;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
-}
-
-/* ===== SCROLL CAROUSEL ===== */
-.estv-scroll {
+/* ===== TRACK ===== */
+.estv-3d-track {
   display: flex;
-  gap: 24px;
-  overflow-x: auto;
-  padding: 20px;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  align-items: center;
+  gap: 2.2rem;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.estv-3d-wrapper:hover .estv-3d-track {
+  animation-play-state: paused;
 }
 
-.estv-scroll::-webkit-scrollbar {
-  height: 8px;
+/* ===== CARD ===== */
+.estv-3d-card {
+  flex: 0 0 300px;
+  background: var(--card-bg);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.05);
+  transition: transform 0.6s ease, box-shadow 0.4s ease;
+}
+.estv-3d-card:hover {
+  transform: scale(1.05) rotateY(4deg);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
 }
 
-.estv-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #00ffff, #007bff);
-  border-radius: 4px;
-}
-
-.estv-item {
-  flex: 0 0 auto;
-  width: 280px;
-  scroll-snap-align: start;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.08);
-  transition: all 0.4s ease;
+/* ===== MEDIA ===== */
+.estv-media-wrap {
+  width: 100%;
+  height: 220px;
   overflow: hidden;
+  border-radius: var(--radius);
 }
-
-.estv-item:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 35px rgba(0, 255, 255, 0.3);
-}
-
-.estv-img-box {
-  height: 200px;
-  overflow: hidden;
-}
-
-.estv-img {
+.estv-media {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 1.2s ease;
 }
-
-.estv-item:hover .estv-img {
+.estv-3d-card:hover .estv-media {
   transform: scale(1.1);
 }
 
-.estv-inner-body {
-  padding: 15px;
-  text-align: center;
-}
-
+/* ===== TEXT ===== */
 .estv-item-name {
-  font-weight: 700;
+  margin-top: 1rem;
+  color: var(--neon-cyan);
   font-size: 1.1rem;
-  color: #fff;
-  margin-bottom: 6px;
-}
-
-.estv-price-duration {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.estv-price {
   font-weight: 600;
-  color: #00ffff;
-  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+.estv-item-price {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px var(--neon-cyan);
 }
 
-.estv-btn-group {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.estv-btn-primary {
-  background: linear-gradient(135deg, #00ffff, #007bff);
+/* ===== BUTTON ===== */
+.button {
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
   border: none;
+  border-radius: 10px;
   color: #000;
   font-weight: 600;
-  border-radius: 8px;
-  padding: 5px 12px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-fast);
+}
+.button:hover {
+  background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan));
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px var(--neon-cyan);
+}
+.estv-3d-track {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  scroll-behavior: smooth;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.estv-3d-track::-webkit-scrollbar {
+  display: none;
 }
 
-.estv-btn-primary:hover {
-  filter: brightness(1.2);
-  transform: scale(1.05);
+/* ===== CONTROLS ===== */
+.estv-carousel-controls {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.estv-arrow {
+  pointer-events: auto;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: var(--neon-cyan);
+  font-size: 1.6rem;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+.estv-arrow:hover {
+  background: rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+/* ===== PLAY/PAUSE BUTTON ===== */
+.estv-carousel-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 255, 255, 0.15);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+  font-size: 1.3rem;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 6;
+  box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
+}
+.estv-carousel-toggle:hover {
+  background: rgba(0, 255, 255, 0.35);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+}
+.estv-carousel-toggle.paused {
+  color: var(--neon-pink);
+  border-color: rgba(255, 0, 255, 0.4);
+}
+
+/* ===== RUNNING / STOPPED STATES ===== */
+.estv-3d-wrapper.running .estv-3d-track {
+  animation-play-state: running !important;
+}
+.estv-3d-wrapper.stopped .estv-3d-track {
+  animation-play-state: paused !important;
 }
 
 /* ===== WHATSAPP FAB ===== */
@@ -230,77 +265,40 @@
   position: fixed;
   bottom: 22px;
   right: 22px;
-  width: 65px;
-  height: 65px;
-  background: linear-gradient(135deg, #00ffff, #007bff);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: var(--neon-cyan);
   color: #000;
-  font-size: 1.8rem;
-  text-decoration: none;
-  z-index: 1000;
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-  animation: pulse 2.5s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.4); transform: scale(1); }
-  50% { box-shadow: 0 0 0 15px rgba(0, 255, 255, 0); transform: scale(1.08); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 255, 255, 0); transform: scale(1); }
-}
-
-/* ===== RESPONSIVO ===== */
-@media (max-width: 992px) {
-  .estv-hero-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  .estv-hero-right { padding-left: 0; margin-top: 15px; }
-  .estv-title { font-size: 1.8rem; }
-  .estv-logo { width: 130px; height: 130px; }
-}
-
-@media (max-width: 576px) {
-  .estv-item { width: 85%; margin: 0 auto; }
-  .estv-scroll { gap: 16px; padding: 12px; }
-}
-.button {
-  background: radial-gradient(circle at 20% 20%, #00fff6 0%, #00bcd4 40%, #0082ff 80%);
-  color: #0a0a0c;
-  border: 1px solid rgba(0, 255, 255, 0.35);
-  border-radius: 14px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.3);
-  transition: all 0.2s ease-out;
-  display: inline-flex;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  backdrop-filter: blur(8px);
+  box-shadow: 0 0 25px var(--neon-cyan);
+  z-index: 1000;
+  transition: all var(--transition-fast);
+}
+.estv-whatsapp-fab:hover {
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 0 0 45px var(--neon-cyan);
+}
+.estv-whatsapp-icon {
+  font-size: 2rem;
 }
 
-.button:hover,
-.button:focus {
-  background: radial-gradient(circle at 80% 20%, #00fff6 0%, #00e1ff 30%, #00bcd4 70%);
-  border-color: rgba(0, 255, 255, 0.7);
-  color: #020617;
-  transform: translateY(-1px);
-  box-shadow: 0 0 22px rgba(0, 255, 255, 0.6);
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+  .estv-3d-card { flex: 0 0 260px; }
 }
-
-.button:active {
-  transform: translateY(0);
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.45);
+@media (max-width: 992px) {
+  .estv-3d-card { flex: 0 0 220px; }
+  .estv-media-wrap { height: 200px; }
 }
-
-.button:disabled,
-.button[disabled] {
-  opacity: 0.4;
-  cursor: not-allowed;
-  filter: grayscale(0.4);
-  box-shadow: none;
+@media (max-width: 768px) {
+  .estv-3d-card { flex: 0 0 180px; }
+  .estv-media-wrap { height: 180px; }
+}
+@media (max-width: 576px) {
+  .estv-3d-card { flex: 0 0 85%; }
+  .estv-logo { width: 100px; height: 100px; }
+  .estv-title { font-size: 1.4rem; }
 }
