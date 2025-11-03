@@ -23,14 +23,8 @@ import OrderCreatePage from "./pages/order/OrderCreatePage";
 import OrderListPage from "./pages/order/OrderListPage";
 import OrderEditPage from "./pages/order/OrderEditPage";
 
-import UserListPage from "./pages/admin/user/UserListPage";
-import UserCreatePage from "./pages/admin/user/UserCreatePage";
 import UserViewPage from "./pages/user/UserViewPage";
 import UserUpdatePage from "./pages/user/UserUpdatePage";
-
-import ProfileCreatePage from "./pages/admin/profile/ProfileCreatePage";
-import ProfileListPage from "./pages/admin/profile/ProfileListPage";
-import ProfileUpdatePage from "./pages/admin/profile/ProfileUpdatePage";
 
 import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
@@ -44,22 +38,11 @@ import EmployerViewPage from "./pages/employer/EmployerViewPage";
 import EmployerDashboardPage from "./pages/employer/EmployerDashboardPage";
 
 
-import EstablishmentListPage from "./pages/corp/establishment/EstablishmentListPage";
 import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
 import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
-
-import AppointmentListPage from "./pages/appointment/AppointmentListPage";
-import AppointmentCreatePage from "./pages/appointment/AppointmentCreatePage";
-
-import ServiceRecordListPage from "./pages/serviceRecord/ServiceRecordListPage";
-import ServiceRecordCreatePage from "./pages/serviceRecord/ServiceRecordCreatePage";
-import ServiceRecordViewPage from "./pages/serviceRecord/ServiceRecordViewPage";
-
 import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
 
-
-import ReportOrderPage from "./pages/report/ReportOrderPage";
 
 import "./index.css";
 
@@ -141,13 +124,7 @@ function AppInner() {
           <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
 
           <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
-          <Route path="/user/list" element={protectedRoute(<UserListPage />)} />
-          <Route path="/user/create" element={protectedRoute(<UserCreatePage />)} />
           <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
-
-          <Route path="/profile/create" element={protectedRoute(<ProfileCreatePage />)} />
-          <Route path="/profile/list" element={protectedRoute(<ProfileListPage />)} />
-          <Route path="/profile/update/:id" element={protectedRoute(<ProfileUpdatePage />)} />
 
           <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
           <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
@@ -163,23 +140,9 @@ function AppInner() {
           <Route path="/employer/view/:user_name" element={protectedRoute(<EmployerViewPage />)} />
 
 
-          <Route path="/establishment" element={protectedRoute(<EstablishmentListPage />)} />
           <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
           <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
           <Route path="/establishment/schedule/:slug"  element={<EstablishmentSchedulePage />} />
-
-          <Route path="/appointment/create/:slug" element={protectedRoute(<AppointmentCreatePage />)} />
-          <Route path="/appointment/my" element={protectedRoute(<AppointmentListPage />)} />
-          <Route path="/appointment/barbershop/:slug" element={protectedRoute(<AppointmentListPage />)} />
-          <Route path="/appointment/barber/:username" element={protectedRoute(<AppointmentListPage />)} />
-
-          <Route path="/service-record/create/:slug" element={protectedRoute(<ServiceRecordCreatePage />)} />
-          <Route path="/service-record/my" element={protectedRoute(<ServiceRecordListPage />)} />
-          <Route path="/service-record/barbershop/:slug" element={protectedRoute(<ServiceRecordListPage />)} />
-          <Route path="/service-record/barber/:username" element={protectedRoute(<ServiceRecordListPage />)} />
-          <Route path="/service-record/view/:id" element={protectedRoute(<ServiceRecordViewPage />)} />
-
-          <Route path="/report/order/:entityId" element={protectedRoute(<ReportOrderPage />)} />
 
 
 

@@ -1,25 +1,26 @@
 // src/hooks/useItemsFilter.js
-import { useMemo } from "react";
+export default function useItemsFilter(items = []) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { services: [], products: [] };
+  }
 
-export default function useItemsFilter(items) {
-  const services = useMemo(
-    () =>
-      items.filter(
-        (i) =>
-          String(i.status) === "1" &&
-          String(i.type).toLowerCase().includes("serv")
-      ),
-    [items]
+  const normalizeType = (type) => {
+    if (!type) return "";
+    const t = type.toString().toLowerCase().trim();
+
+    // Padroniza diferentes variações para "service" e "product"
+    if (["service", "servico", "serviço"].includes(t)) return "service";
+    if (["product", "produto"].includes(t)) return "product";
+
+    return t;
+  };
+
+  const services = items.filter(
+    (it) => normalizeType(it.type) === "service"
   );
 
-  const products = useMemo(
-    () =>
-      items.filter(
-        (i) =>
-          String(i.status) === "1" &&
-          String(i.type).toLowerCase().includes("prod")
-      ),
-    [items]
+  const products = items.filter(
+    (it) => normalizeType(it.type) === "product"
   );
 
   return { services, products };

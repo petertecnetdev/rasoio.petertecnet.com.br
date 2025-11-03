@@ -1,0 +1,67 @@
+.step-container {
+  text-align: center;
+  color: #fff;
+  padding: 15px;
+}
+
+.step-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.step-card {
+  background: #111;
+  border: 1px solid #00ffff55;
+  border-radius: 10px;
+  padding: 15px;
+  width: 150px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.step-card:hover {
+  background: #00ffff22;
+}
+
+.step-card.active {
+  background: #00ffff;
+  color: #000;
+  box-shadow: 0 0 12px #00ffffaa;
+}
+
+.step-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+  object-fit: cover;
+}
+
+.step-times {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.step-time-btn {
+  background: #111;
+  border: 1px solid #00ffff55;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #00ffff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.step-time-btn.active,
+.step-time-btn:hover {
+  background: #00ffff;
+  color: #000;
+}
+
+.step-empty {
+  color: #888;
+}

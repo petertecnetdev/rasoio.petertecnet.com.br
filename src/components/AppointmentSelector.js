@@ -1,156 +1,277 @@
-// src/components/AppointmentSelector.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Form, Button, Spinner, Row, Col, Card } from "react-bootstrap";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { FaCalendarAlt, FaClock, FaUser } from "react-icons/fa";
 
 const MySwal = withReactContent(Swal);
 const PLACEHOLDER = "/images/logo.png";
 const TZ = "America/Sao_Paulo";
 
-const toDateKey = (d) =>
-  new Date(d).toLocaleDateString("en-CA", { timeZone: TZ });
-
 export default function AppointmentSelector({
-  service,
-  employers,
+  employers = [],
+  services = [],
   loadAvailableTimes,
   handleCreateAppointment,
   imageUrl,
 }) {
-  const open = async (preselectedService = null) => {
-    const days = [];
-    const now = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() + i);
-      const key = toDateKey(d);
-      const label = d.toLocaleDateString("pt-BR", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-      });
-      days.push({ key, label });
-    }
+  const [selectedEmployer, setSelectedEmployer] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [loadingTimes, setLoadingTimes] = useState(false);
 
-    let selectedDateKey = null;
-    let selectedEmployer = null;
-    let availableTimes = [];
+  const today = new Date().toISOString().split("T")[0];
 
-    await MySwal.fire({
-      width: "850px",
-      background: "#0a0a0c",
-      title: `<div style="font-size:20px;font-weight:700;color:#fff;">Agendar ${
-        preselectedService ? preselectedService.name : "serviço"
-      }</div>`,
-      html: `
-        <style>
-          .swl-container{color:#fff;text-align:center}
-          .swl-days{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-          .swl-day{background:#111;color:#fff;border:1px solid #00aaff;border-radius:8px;padding:8px 10px;cursor:pointer;min-width:65px;transition:0.3s}
-          .swl-day:hover{background:#00aaff;color:#000}
-          .swl-day.active{background:#00aaff;color:#000}
-          .swl-emps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px;margin-top:10px}
-          .swl-emp{width:90px;padding:5px;background:#111;border-radius:10px;cursor:pointer;color:#fff;transition:0.3s}
-          .swl-emp.active{border:2px solid #00ffff;box-shadow:0 0 10px rgba(0,255,255,0.5)}
-          .swl-times{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
-          .swl-time{background:#111;color:#fff;border:1px solid #00aaff;border-radius:8px;padding:6px 12px;cursor:pointer;transition:0.3s}
-          .swl-time:hover{background:#00ffff;color:#000}
-        </style>
-        <div class="swl-container">
-          <div class="swl-days">
-            ${days
-              .map(
-                (d) =>
-                  `<button class="swl-day" data-key="${d.key}">${d.label}</button>`
-              )
-              .join("")}
-          </div>
-          <div style="margin-top:15px;">Selecione um profissional</div>
-          <div class="swl-emps">
-            ${employers
-              .map(
-                (e) => `
-              <div class="swl-emp" data-id="${e.id}">
-                <img src="${imageUrl(
-                  e.user?.avatar
-                )}" onerror="this.src='${PLACEHOLDER}'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:4px;"/>
-                <div style="font-size:13px;">${
-                  e.user?.first_name || "Profissional"
-                }</div>
-              </div>`
-              )
-              .join("")}
-          </div>
-          <div style="margin-top:10px;">Horários disponíveis</div>
-          <div id="swl-times" class="swl-times"></div>
-        </div>
-      `,
-      showConfirmButton: false,
-      didOpen: () => {
-        const root = MySwal.getHtmlContainer();
-        const daysBtns = root.querySelectorAll(".swl-day");
-        const empBtns = root.querySelectorAll(".swl-emp");
-        const timesDiv = root.querySelector("#swl-times");
+  const fmtBRL = (v) =>
+    `R$ ${Number(v || 0)
+      .toFixed(2)
+      .replace(".", ",")}`;
 
-        const renderTimes = async () => {
-          timesDiv.innerHTML =
-            '<div class="text-muted small">Carregando horários...</div>';
-          if (!selectedDateKey || !selectedEmployer) {
-            timesDiv.innerHTML =
-              '<div class="text-muted small">Selecione data e profissional.</div>';
-            return;
-          }
-          availableTimes = await loadAvailableTimes(
-            selectedDateKey,
-            selectedEmployer,
-            preselectedService?.duration || 30
-          );
-          timesDiv.innerHTML = availableTimes.length
-            ? availableTimes
-                .map(
-                  (t) =>
-                    `<button class="swl-time" data-time="${t}">${t}</button>`
-                )
-                .join("")
-            : '<div class="text-muted small">Nenhum horário disponível.</div>';
-
-          timesDiv.querySelectorAll(".swl-time").forEach((btn) =>
-            btn.addEventListener("click", async () => {
-              await handleCreateAppointment(
-                preselectedService,
-                selectedEmployer,
-                selectedDateKey,
-                btn.getAttribute("data-time")
-              );
-            })
-          );
-        };
-
-        const updateAndRender = async () => {
-          if (selectedDateKey && selectedEmployer) await renderTimes();
-        };
-
-        daysBtns.forEach((btn) =>
-          btn.addEventListener("click", async () => {
-            daysBtns.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            selectedDateKey = btn.getAttribute("data-key");
-            await updateAndRender();
-          })
-        );
-
-        empBtns.forEach((btn) =>
-          btn.addEventListener("click", async () => {
-            empBtns.forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            const id = Number(btn.getAttribute("data-id"));
-            selectedEmployer = employers.find((e) => e.id === id);
-            await updateAndRender();
-          })
-        );
-      },
-    });
+  const toDateKey = (d) => {
+    const date = new Date(d);
+    return date.toISOString().split("T")[0];
   };
 
-  return { open };
+  const totalDuration = selectedServices.reduce(
+    (sum, s) => sum + (parseInt(s.duration) || 0),
+    0
+  );
+
+  const handleServiceToggle = (service) => {
+    const exists = selectedServices.find((s) => s.id === service.id);
+    if (exists) {
+      setSelectedServices(selectedServices.filter((s) => s.id !== service.id));
+    } else {
+      setSelectedServices([...selectedServices, service]);
+    }
+  };
+
+  const fetchTimes = async () => {
+    if (!selectedEmployer || !selectedDate || !selectedServices.length) return;
+    try {
+      setLoadingTimes(true);
+
+      const duration = totalDuration > 0 ? totalDuration : 30;
+      const payload = {
+        employer_id: selectedEmployer?.id,
+        date: toDateKey(selectedDate),
+        duration,
+      };
+
+      console.log("📤 Enviando para backend:", payload);
+      const times = await loadAvailableTimes(payload.date, selectedEmployer, payload.duration);
+
+      console.log("📥 Resposta de horários disponíveis:", times);
+      setAvailableTimes(Array.isArray(times) ? times : []);
+    } catch (err) {
+      console.error("❌ Erro ao carregar horários disponíveis:", err);
+      setAvailableTimes([]);
+    } finally {
+      setLoadingTimes(false);
+    }
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedEmployer || !selectedDate || !selectedTime || !selectedServices.length) {
+      await MySwal.fire({
+        background: "#0a0a0c",
+        color: "#fff",
+        icon: "warning",
+        title: "Dados incompletos",
+        text: "Selecione profissional, serviços, data e horário.",
+        confirmButtonColor: "#00ffff",
+      });
+      return;
+    }
+
+    await handleCreateAppointment(
+      selectedServices,
+      selectedEmployer,
+      toDateKey(selectedDate),
+      selectedTime
+    );
+  };
+
+  useEffect(() => {
+    if (selectedEmployer && selectedDate && selectedServices.length) {
+      fetchTimes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEmployer, selectedDate, selectedServices]);
+
+  return (
+    <Card className="bg-dark text-light border-0 rounded-4 shadow-lg mt-4">
+      <Card.Header className="bg-black text-center py-3 border-0">
+        <strong className="text-uppercase">Agendar Atendimento</strong>
+      </Card.Header>
+
+      <Card.Body className="p-4">
+        <Form>
+          {/* PROFISSIONAL */}
+          <Form.Group className="mb-4">
+            <Form.Label>
+              <FaUser className="me-2 text-info" />
+              Profissional
+            </Form.Label>
+            <div className="d-flex flex-wrap gap-2 justify-content-center">
+              {employers.map((e) => (
+                <div
+                  key={e.id}
+                  className={`p-2 text-center rounded-3 ${
+                    selectedEmployer?.id === e.id
+                      ? "bg-info text-dark"
+                      : "bg-secondary text-light"
+                  }`}
+                  style={{
+                    cursor: "pointer",
+                    width: "110px",
+                    border: "1px solid #00ffff44",
+                    transition: "0.3s",
+                  }}
+                  onClick={() => setSelectedEmployer(e)}
+                >
+                  <img
+                    src={imageUrl(e.user?.avatar)}
+                    onError={(ev) => (ev.target.src = PLACEHOLDER)}
+                    alt={e.user?.first_name}
+                    className="rounded-circle mb-2"
+                    width={60}
+                    height={60}
+                    style={{ objectFit: "cover" }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      lineHeight: "14px",
+                    }}
+                  >
+                    {e.user?.first_name || "Profissional"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Form.Group>
+
+          {/* SERVIÇOS */}
+          <Form.Group className="mb-4">
+            <Form.Label>
+              <FaCalendarAlt className="me-2 text-info" />
+              Serviços
+            </Form.Label>
+            <div className="d-flex flex-wrap gap-2 justify-content-center">
+              {services.map((s) => (
+                <div
+                  key={s.id}
+                  className={`p-2 rounded-3 ${
+                    selectedServices.find((x) => x.id === s.id)
+                      ? "bg-info text-dark"
+                      : "bg-secondary text-light"
+                  }`}
+                  style={{
+                    cursor: "pointer",
+                    width: "150px",
+                    border: "1px solid #00ffff44",
+                    transition: "0.3s",
+                  }}
+                  onClick={() => handleServiceToggle(s)}
+                >
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      lineHeight: "14px",
+                    }}
+                  >
+                    {s.name}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#00ffff" }}>
+                    {fmtBRL(s.price)}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#999" }}>
+                    {s.duration || 30} min
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Form.Group>
+
+          {/* DATA */}
+          <Form.Group className="mb-4">
+            <Form.Label>
+              <FaCalendarAlt className="me-2 text-info" />
+              Data
+            </Form.Label>
+            <Form.Control
+              type="date"
+              value={selectedDate}
+              min={today}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-black text-light border-0"
+            />
+          </Form.Group>
+
+          {/* HORÁRIOS */}
+          <Form.Group className="mb-4">
+            <Form.Label>
+              <FaClock className="me-2 text-info" />
+              Horário
+            </Form.Label>
+            {loadingTimes ? (
+              <div className="text-center my-3">
+                <Spinner animation="border" variant="info" />
+              </div>
+            ) : (
+              <Row className="g-2">
+                {availableTimes.length > 0 ? (
+                  availableTimes.map((t) => (
+                    <Col xs={4} md={3} key={t}>
+                      <Button
+                        size="sm"
+                        className={`w-100 ${
+                          selectedTime === t
+                            ? "btn-info text-dark"
+                            : "btn-outline-info"
+                        }`}
+                        onClick={() => setSelectedTime(t)}
+                      >
+                        {t}
+                      </Button>
+                    </Col>
+                  ))
+                ) : (
+                  <Col>
+                    <div className="text-muted small text-center">
+                      {selectedEmployer && selectedDate && selectedServices.length
+                        ? "Nenhum horário disponível."
+                        : "Selecione profissional, serviços e data."}
+                    </div>
+                  </Col>
+                )}
+              </Row>
+            )}
+          </Form.Group>
+
+          {/* DURAÇÃO TOTAL */}
+          <div className="text-center mb-4 text-info">
+            Tempo estimado total: <strong>{totalDuration || 0} min</strong>
+          </div>
+
+          {/* CONFIRMAR */}
+          <div className="text-center">
+            <Button
+              size="lg"
+              variant="info"
+              className="text-dark fw-bold px-4 py-2 rounded-pill"
+              onClick={handleConfirm}
+            >
+              Confirmar Agendamento
+            </Button>
+          </div>
+        </Form>
+      </Card.Body>
+    </Card>
+  );
 }

@@ -26,6 +26,7 @@
     "axios": "^1.11.0",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.4",
+    "dayjs": "^1.11.19",
     "express": "^4.19.2",
     "framer-motion": "^12.4.2",
     "html2canvas": "^1.4.1",

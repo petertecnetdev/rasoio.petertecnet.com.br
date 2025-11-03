@@ -33,7 +33,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         };
 
         setEstablishment(estData);
-        setItems(Array.isArray(estData.items) ? estData.items : []);
+        setItems(Array.isArray(d.items) ? d.items : []);
         setEmployers(Array.isArray(estData.employers) ? estData.employers : []);
         setMetrics(d.metrics || null);
         setInteractionSummary(d.interaction_summary || null);

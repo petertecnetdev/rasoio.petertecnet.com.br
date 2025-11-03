@@ -1,42 +1,30 @@
-import React, { useMemo, useState, useEffect } from "react";
+// src/pages/establishment/EstablishmentViewPage.jsx
+import React, { useMemo, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
-
 import NavlogComponent from "../../components/NavlogComponent";
-import { apiBaseUrl } from "../../config";
-
-import "./EstablishmentView.css";
 import GlobalHero from "../../components/GlobalHero";
 import GlobalSidebar from "../../components/GlobalSidebar";
 import GlobalCarousel from "../../components/GlobalCarousel";
-
-import AppointmentSelector from "../../components/AppointmentSelector";
-import useAppointment from "../../components/useAppointment";
-
+import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
+import { apiBaseUrl } from "../../config";
+import useAppointment from "../../hooks/useAppointment";
 import useEstablishmentView from "../../hooks/useEstablishmentView";
 import useItemsFilter from "../../hooks/useItemsFilter";
 import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
+import "./EstablishmentView.css";
 
 const PLACEHOLDER = "/images/logo.png";
 const APP_ID = 3;
-
-const fmtBRL = (v) =>
-  `R$ ${Number(v || 0)
-    .toFixed(2)
-    .replace(".", ",")}`;
 
 export default function EstablishmentViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const token = useMemo(() => localStorage.getItem("token"), []);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [slug]);
 
   const {
     establishment,
@@ -46,12 +34,17 @@ export default function EstablishmentViewPage() {
     otherEstablishments,
     items,
     employers,
-    itemsInteractions,
     isLoading,
   } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
   const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(establishment);
+  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
+  const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
+  const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
+
+  useAuthPrompt();
+
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
     APP_ID,
@@ -59,19 +52,17 @@ export default function EstablishmentViewPage() {
     establishment
   );
 
-  const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
-  const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardOptions, setWizardOptions] = useState({});
 
-  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
-  useAuthPrompt();
+  const openSchedulePopup = (target) => {
+    setWizardOptions(target || {});
+    setShowWizard(true);
+  };
 
-  const appointmentSelector = AppointmentSelector({
-    service: null,
-    employers,
-    loadAvailableTimes,
-    handleCreateAppointment,
-    imageUrl,
-  });
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [slug]);
 
   if (isLoading)
     return (
@@ -89,16 +80,7 @@ export default function EstablishmentViewPage() {
 
   if (!establishment) return null;
 
-  // 🔧 injeta o estabelecimento dentro de cada item
-  const servicesWithEstablishment = services.map((s) => ({
-    ...s,
-    establishment,
-  }));
-
-  const productsWithEstablishment = products.map((p) => ({
-    ...p,
-    establishment,
-  }));
+  const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="estv-root">
@@ -119,48 +101,34 @@ export default function EstablishmentViewPage() {
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
           <Col md={8}>
-            {/* ===== SERVIÇOS ===== */}
-            {servicesWithEstablishment.length > 0 && (
-              <div className="mb-4">
-                <GlobalCarousel
-                  title="Serviços"
-                  items={servicesWithEstablishment}
-                  itemsInteractions={itemsInteractions}
-                  imageUrl={imageUrl}
-                  handleImgError={handleImgError}
-                  carouselActive={true}
-                  handleScroll={handleServiceScroll}
-                  trackRef={serviceRef}
-                  fmtBRL={fmtBRL}
-                  apiBaseUrl={apiBaseUrl}
-                  openSchedulePopup={(service) =>
-                    appointmentSelector.open(service)
-                  }
-                  navigate={navigate}
-                  showSchedule={true}
-                />
-              </div>
+            {services.length > 0 && (
+              <GlobalCarousel
+                title="Serviços"
+                items={services}
+                carouselActive
+                trackRef={serviceRef}
+                handleScroll={handleServiceScroll}
+                fmtBRL={fmtBRL}
+                apiBaseUrl={apiBaseUrl}
+                openSchedulePopup={openSchedulePopup}
+                navigate={navigate}
+                showSchedule
+              />
             )}
 
-            {/* ===== PRODUTOS ===== */}
-            {productsWithEstablishment.length > 0 && (
-              <div className="mb-4">
-                <GlobalCarousel
-                  title="Produtos"
-                  items={productsWithEstablishment}
-                  itemsInteractions={itemsInteractions}
-                  imageUrl={imageUrl}
-                  handleImgError={handleImgError}
-                  carouselActive={true}
-                  handleScroll={handleProductScroll}
-                  trackRef={productRef}
-                  fmtBRL={fmtBRL}
-                  apiBaseUrl={apiBaseUrl}
-                  openSchedulePopup={() => {}}
-                  navigate={navigate}
-                  showSchedule={false}
-                />
-              </div>
+            {products.length > 0 && (
+              <GlobalCarousel
+                title="Produtos"
+                items={products}
+                carouselActive
+                trackRef={productRef}
+                handleScroll={handleProductScroll}
+                fmtBRL={fmtBRL}
+                apiBaseUrl={apiBaseUrl}
+                openSchedulePopup={() => {}}
+                navigate={navigate}
+                showSchedule={false}
+              />
             )}
           </Col>
 
@@ -174,10 +142,21 @@ export default function EstablishmentViewPage() {
               imageUrl={imageUrl}
               handleImgError={handleImgError}
               navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
             />
           </Col>
         </Row>
       </Container>
+
+      <AppointmentWizardModal
+        show={showWizard}
+        onHide={() => setShowWizard(false)}
+        employers={employers}
+        services={services}
+        loadAvailableTimes={loadAvailableTimes}
+        handleCreateAppointment={handleCreateAppointment}
+        imageUrl={imageUrl}
+      />
 
       {whatsappLink && (
         <a
@@ -185,7 +164,6 @@ export default function EstablishmentViewPage() {
           target="_blank"
           rel="noreferrer"
           className="estv-whatsapp-fab"
-          aria-label={`Chamar ${establishment.name} no WhatsApp`}
           title="Chamar no WhatsApp"
         >
           <FaWhatsapp className="estv-whatsapp-icon" />

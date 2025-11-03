@@ -1,0 +1,97 @@
+.gdc-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: transparent;
+  padding: 10px;
+}
+
+.gdc-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  scroll-behavior: smooth;
+  max-width: 600px;
+  padding: 5px;
+}
+
+.gdc-container::-webkit-scrollbar {
+  display: none;
+}
+
+.gdc-day {
+  background: #111;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  color: #fff;
+  border: 1px solid #00ffff55;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.gdc-day:hover {
+  background: #00ffff22;
+  transform: scale(1.05);
+}
+
+.gdc-day.active {
+  background: #00ffff;
+  color: #000;
+  box-shadow: 0 0 15px #00ffff;
+  transform: scale(1.1);
+}
+
+.gdc-week {
+  font-size: 12px;
+  text-transform: lowercase;
+}
+
+.gdc-daynum {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gdc-month {
+  font-size: 12px;
+  text-transform: lowercase;
+}
+
+.gdc-nav {
+  background: #00ffff22;
+  color: #00ffff;
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.gdc-nav:hover {
+  background: #00ffff55;
+  color: #000;
+  box-shadow: 0 0 10px #00ffff;
+}
+
+@media (max-width: 600px) {
+  .gdc-day {
+    width: 65px;
+    height: 65px;
+    min-width: 65px;
+  }
+
+  .gdc-nav {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+}
