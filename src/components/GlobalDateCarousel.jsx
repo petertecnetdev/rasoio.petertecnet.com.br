@@ -15,10 +15,29 @@ export default function GlobalCarousel({
 
   if (!Array.isArray(items) || items.length === 0) return null;
 
+  // Cria duplicata dos itens para simular loop infinito
+  const loopItems = [...items, ...items];
+
   const scroll = (direction) => {
     if (!trackRef.current) return;
-    const offset = direction === "left" ? -250 : 250;
+    const offset = direction === "left" ? -260 : 260;
     trackRef.current.scrollBy({ left: offset, behavior: "smooth" });
+
+    const el = trackRef.current;
+    const maxScroll = el.scrollWidth / 2;
+    if (direction === "right" && el.scrollLeft >= maxScroll) {
+      el.scrollTo({ left: 0 });
+    } else if (direction === "left" && el.scrollLeft <= 0) {
+      el.scrollTo({ left: maxScroll });
+    }
+  };
+
+  const handleScrollLoop = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth / 2;
+    if (el.scrollLeft >= maxScroll) el.scrollTo({ left: 0 });
+    if (el.scrollLeft <= 0) el.scrollTo({ left: maxScroll });
   };
 
   return (
@@ -35,23 +54,29 @@ export default function GlobalCarousel({
         <div className="carousel-controls-wrapper">
           <button
             type="button"
-            className="carousel-arrow left"
+            className="carousel-arrow left visible"
             onClick={() => scroll("left")}
+            title="Anterior"
           >
             ‹
           </button>
           <button
             type="button"
-            className="carousel-arrow right"
+            className="carousel-arrow right visible"
             onClick={() => scroll("right")}
+            title="Próximo"
           >
             ›
           </button>
         </div>
 
-        <div ref={trackRef} className="carousel-track-simple">
-          {items.map((it, idx) => (
-            <div key={it.id || idx} className="carousel-card">
+        <div
+          ref={trackRef}
+          className="carousel-track-touch"
+          onScroll={handleScrollLoop}
+        >
+          {loopItems.map((it, idx) => (
+            <div key={`${it.id || idx}-${idx}`} className="carousel-card">
               {it.image && (
                 <div className="carousel-image-wrap">
                   <img
