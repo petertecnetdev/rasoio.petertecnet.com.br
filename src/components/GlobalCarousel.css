@@ -13,6 +13,7 @@
   background: var(--bg-dark);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius);
+  position: relative;
 }
 
 /* HEADER */
@@ -120,7 +121,7 @@
   transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
-  z-index: 5;
+  z-index: 10;
   pointer-events: none;
 }
 .carousel-arrow {
@@ -140,6 +141,7 @@
   transition: all 0.25s ease;
   opacity: 0.9;
   box-shadow: 0 0 14px rgba(0, 123, 255, 0.6);
+  z-index: 999;
 }
 .carousel-arrow:hover {
   background: #0062cc;
@@ -156,9 +158,21 @@
   .carousel-image-wrap {
     height: 140px;
   }
+
+  /* ✅ Mantém setas visíveis e clicáveis */
+  .carousel-controls-wrapper {
+    top: 40%;
+    width: 100%;
+    z-index: 15;
+    pointer-events: none;
+  }
   .carousel-arrow {
-    width: 58px;
-    height: 58px;
+    width: 54px;
+    height: 54px;
     font-size: 2rem;
+    opacity: 1;
+    background: rgba(0, 123, 255, 0.9);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    pointer-events: all;
   }
 }
