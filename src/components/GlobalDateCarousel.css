@@ -22,11 +22,11 @@
   letter-spacing: 1px;
 }
 
-/* TRACK COM TOUCH E LOOP SUAVE */
+/* TRACK TOUCH */
 .carousel-track-touch {
   display: flex;
   gap: 1rem;
-  overflow-x: scroll;
+  overflow-x: auto;
   scroll-behavior: smooth;
   padding: 1rem 0.5rem;
   -webkit-overflow-scrolling: touch;
@@ -105,7 +105,7 @@
 /* CONTROLS */
 .carousel-controls-wrapper {
   position: absolute;
-  top: 50%;
+  top: 45%;
   width: 100%;
   transform: translateY(-50%);
   display: flex;
@@ -115,23 +115,25 @@
 }
 .carousel-arrow {
   pointer-events: all;
-  background: rgba(0, 123, 255, 0.8);
+  background: rgba(0, 123, 255, 0.95);
   border: none;
   color: #fff;
-  font-size: 2rem;
+  font-size: 2.4rem;
+  font-weight: bold;
   border-radius: 50%;
-  width: 54px;
-  height: 54px;
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+  transition: all 0.25s ease;
+  box-shadow: 0 0 12px rgba(0, 123, 255, 0.7);
 }
 .carousel-arrow:hover {
-  background: rgba(0, 123, 255, 1);
+  background: #0062cc;
   transform: scale(1.1);
+  box-shadow: 0 0 18px rgba(0, 123, 255, 0.9);
 }
 
 /* MOBILE */
@@ -142,10 +144,11 @@
   .carousel-image-wrap {
     height: 140px;
   }
+
+  /* setas menores porém visíveis */
   .carousel-arrow {
-    width: 48px;
-    height: 48px;
-    font-size: 1.8rem;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
+    width: 56px;
+    height: 56px;
+    font-size: 2.2rem;
   }
 }
