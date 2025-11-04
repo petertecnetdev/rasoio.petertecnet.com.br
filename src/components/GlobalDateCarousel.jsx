@@ -49,7 +49,7 @@ export default function GlobalCarousel({
           </button>
         </div>
 
-        <div ref={trackRef} className="carousel-track-touch">
+        <div ref={trackRef} className="carousel-track-static">
           {items.map((it, idx) => (
             <div key={it.id || idx} className="carousel-card">
               {it.image && (

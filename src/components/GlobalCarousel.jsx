@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from "react";
+// src/components/GlobalCarousel.jsx
+import React, { useRef, useLayoutEffect } from "react";
 import { Card, Button } from "react-bootstrap";
 import PropTypes from "prop-types";
 import "./GlobalCarousel.css";
@@ -12,35 +13,22 @@ export default function GlobalCarousel({
   showSchedule,
 }) {
   const trackRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
 
-  // 🧠 Auto-scroll effect — executado sempre
-  useEffect(() => {
-    if (!trackRef.current) return;
-    let autoScroll;
+  // 🔒 Garante 100% de estabilidade visual
+  useLayoutEffect(() => {
+    const t = setTimeout(() => {
+      if (trackRef.current) trackRef.current.scrollLeft = 0;
+    }, 50);
+    return () => clearTimeout(t);
+  }, []);
 
-    if (!isHovered) {
-      autoScroll = setInterval(() => {
-        if (!trackRef.current) return;
-        trackRef.current.scrollBy({ left: 1, behavior: "smooth" });
-        const maxScroll =
-          trackRef.current.scrollWidth - trackRef.current.clientWidth;
-        if (trackRef.current.scrollLeft >= maxScroll - 2) {
-          trackRef.current.scrollTo({ left: 0, behavior: "smooth" });
-        }
-      }, 50);
-    }
-
-    return () => clearInterval(autoScroll);
-  }, [isHovered]);
+  if (!Array.isArray(items) || items.length === 0) return null;
 
   const scroll = (direction) => {
     if (!trackRef.current) return;
-    const offset = direction === "left" ? -300 : 300;
+    const offset = direction === "left" ? -260 : 260;
     trackRef.current.scrollBy({ left: offset, behavior: "smooth" });
   };
-
-  if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
     <Card
@@ -52,32 +40,26 @@ export default function GlobalCarousel({
         <h5 className="fw-bold text-uppercase mb-0 text-light">{title}</h5>
       </Card.Header>
 
-      <Card.Body
-        className="p-3 position-relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
+      <Card.Body className="p-3 position-relative">
         <div className="carousel-controls-wrapper">
           <button
             type="button"
-            className={`carousel-arrow left ${isHovered ? "visible" : ""}`}
+            className="carousel-arrow left"
             onClick={() => scroll("left")}
-            title="Anterior"
           >
-            ‹
+            ⮜
           </button>
           <button
             type="button"
-            className={`carousel-arrow right ${isHovered ? "visible" : ""}`}
+            className="carousel-arrow right"
             onClick={() => scroll("right")}
-            title="Próximo"
           >
-            ›
+            ⮞
           </button>
         </div>
 
-        <div ref={trackRef} className="carousel-track-flat">
-          {items.slice(0, 12).map((it, idx) => (
+        <div ref={trackRef} className="carousel-track-static">
+          {items.map((it, idx) => (
             <div key={it.id || idx} className="carousel-card">
               {it.image && (
                 <div className="carousel-image-wrap">
@@ -89,16 +71,19 @@ export default function GlobalCarousel({
                   />
                 </div>
               )}
-
               <div className="carousel-item-content">
-                <div className="carousel-item-name">{it.name || "Item sem nome"}</div>
+                <div className="carousel-item-name">
+                  {it.name || "Item sem nome"}
+                </div>
                 <div className="carousel-item-price">{fmtBRL(it.price)}</div>
 
                 {showSchedule && (
                   <Button
                     size="sm"
                     className="w-100 mb-2 btn-flat-primary"
-                    onClick={() => openSchedulePopup({ ...it, type: "service" })}
+                    onClick={() =>
+                      openSchedulePopup({ ...it, type: "service" })
+                    }
                   >
                     Agendar
                   </Button>

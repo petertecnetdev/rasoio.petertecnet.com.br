@@ -22,21 +22,28 @@
   letter-spacing: 1px;
 }
 
-/* TRACK TOUCH */
-.carousel-track-touch {
+.carousel-track-static {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
-  scroll-behavior: smooth;
+  overflow-y: hidden;
   padding: 1rem 0.5rem;
-  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto !important;
+  /* desativa suavização */
+  -webkit-overflow-scrolling: auto !important;
+  overscroll-behavior-x: none !important;
+  /* impede rolagem externa */
+  overflow-anchor: none !important;
+  /* bloqueia "scroll anchoring" */
   touch-action: pan-x;
   scrollbar-width: none;
   scroll-snap-type: x mandatory;
 }
-.carousel-track-touch::-webkit-scrollbar {
+
+.carousel-track-static::-webkit-scrollbar {
   display: none;
 }
+
 
 /* CARD */
 .carousel-card {
@@ -49,6 +56,7 @@
   transition: background 0.3s ease;
   scroll-snap-align: start;
 }
+
 .carousel-card:hover {
   background: var(--bg-hover);
 }
@@ -61,6 +69,7 @@
   border-radius: var(--radius);
   margin-bottom: 0.8rem;
 }
+
 .carousel-image {
   width: 100%;
   height: 100%;
@@ -72,6 +81,7 @@
   font-size: 1rem;
   font-weight: 600;
 }
+
 .carousel-item-price {
   font-size: 1.05rem;
   font-weight: 700;
@@ -87,9 +97,11 @@
   font-weight: 600;
   border-radius: 8px;
 }
+
 .btn-flat-primary:hover {
   background: #0056b3;
 }
+
 .btn-flat-outline {
   border: 1px solid var(--primary);
   color: var(--primary);
@@ -97,6 +109,7 @@
   border-radius: 8px;
   font-weight: 600;
 }
+
 .btn-flat-outline:hover {
   background: var(--primary);
   color: #fff;
@@ -113,27 +126,29 @@
   z-index: 5;
   pointer-events: none;
 }
+
 .carousel-arrow {
   pointer-events: all;
-  background: rgba(0, 123, 255, 0.95);
+  background: rgba(0, 123, 255, 1);
   border: none;
   color: #fff;
-  font-size: 2.4rem;
+  font-size: 2.6rem;
   font-weight: bold;
   border-radius: 50%;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 0 12px rgba(0, 123, 255, 0.7);
+  box-shadow: 0 0 18px rgba(0, 123, 255, 0.7);
 }
+
 .carousel-arrow:hover {
   background: #0062cc;
   transform: scale(1.1);
-  box-shadow: 0 0 18px rgba(0, 123, 255, 0.9);
+  box-shadow: 0 0 24px rgba(0, 123, 255, 0.9);
 }
 
 /* MOBILE */
@@ -141,14 +156,15 @@
   .carousel-card {
     flex: 0 0 80%;
   }
+
   .carousel-image-wrap {
     height: 140px;
   }
 
-  /* setas menores porém visíveis */
   .carousel-arrow {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     font-size: 2.2rem;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
   }
 }

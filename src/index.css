@@ -76,7 +76,8 @@ html, body, #root {
   color: var(--r-text);
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: auto !important; }
+
 
 body {
   margin: 0;

@@ -1,13 +1,14 @@
+/* src/components/GlobalCarousel.css */
 :root {
   --bg-dark: #0f1116;
   --bg-card: #1a1c22;
   --bg-hover: #22252e;
   --text-light: #f2f4f8;
   --primary: #007bff;
-  --radius: 1rem;
+  --radius: 0.8rem;
 }
 
-/* WRAPPER */
+/* CONTAINER */
 .global-carousel {
   background: var(--bg-dark);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -23,38 +24,47 @@
 }
 
 /* TRACK */
-.carousel-track-flat {
+.carousel-track-static {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
-  scroll-behavior: smooth;
+  overflow-y: hidden;
   padding: 1rem 0.5rem;
+  scroll-behavior: auto !important;
+  -webkit-overflow-scrolling: auto !important;
+  overscroll-behavior-x: none !important;
+  overflow-anchor: none !important;
+  touch-action: pan-x;
   scrollbar-width: none;
+  scroll-snap-type: none !important;
+  transform: none !important;
+  animation: none !important;
+  scroll-margin: 0 !important;
+  scroll-padding: 0 !important;
 }
-.carousel-track-flat::-webkit-scrollbar {
+.carousel-track-static::-webkit-scrollbar {
   display: none;
 }
 
 /* CARD */
 .carousel-card {
-  flex: 0 0 240px;
-  min-height: 300px;
+  flex: 0 0 230px;
   background: var(--bg-card);
   border-radius: var(--radius);
   padding: 1rem;
   color: var(--text-light);
   text-align: center;
-  transition: background 0.3s ease, transform 0.3s ease;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 .carousel-card:hover {
   background: var(--bg-hover);
-  transform: translateY(-4px);
+  transform: translateY(-2px);
 }
 
 /* IMAGE */
 .carousel-image-wrap {
   width: 100%;
-  height: 180px;
+  height: 160px;
   overflow: hidden;
   border-radius: var(--radius);
   margin-bottom: 0.8rem;
@@ -63,20 +73,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
-}
-.carousel-card:hover .carousel-image {
-  transform: scale(1.05);
 }
 
-/* TEXTS */
+/* TEXT */
 .carousel-item-name {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: var(--text-light);
 }
 .carousel-item-price {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--primary);
   margin-bottom: 0.8rem;
@@ -88,8 +93,8 @@
   color: #fff;
   border: none;
   font-weight: 600;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  transition: background 0.2s ease;
 }
 .btn-flat-primary:hover {
   background: #0056b3;
@@ -98,9 +103,9 @@
   border: 1px solid var(--primary);
   color: var(--primary);
   background: transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 .btn-flat-outline:hover {
   background: var(--primary);
@@ -110,7 +115,7 @@
 /* CONTROLS */
 .carousel-controls-wrapper {
   position: absolute;
-  top: 50%;
+  top: 45%;
   width: 100%;
   transform: translateY(-50%);
   display: flex;
@@ -120,42 +125,40 @@
 }
 .carousel-arrow {
   pointer-events: all;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 123, 255, 1);
   border: none;
-  color: var(--text-light);
-  font-size: 1.6rem;
+  color: #fff;
+  font-size: 2.4rem;
+  font-weight: bold;
   border-radius: 50%;
-  width: 46px;
-  height: 46px;
+  width: 68px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
   cursor: pointer;
-  opacity: 0;
-  transform: scale(0.9);
-}
-.carousel-arrow.visible {
-  opacity: 1;
-  transform: scale(1);
+  transition: all 0.25s ease;
+  opacity: 0.9;
+  box-shadow: 0 0 14px rgba(0, 123, 255, 0.6);
 }
 .carousel-arrow:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #0062cc;
   transform: scale(1.1);
+  opacity: 1;
+  box-shadow: 0 0 22px rgba(0, 123, 255, 0.9);
 }
 
-/* RESPONSIVE */
+/* MOBILE */
 @media (max-width: 768px) {
   .carousel-card {
-    flex: 0 0 85%;
-    min-height: 260px;
+    flex: 0 0 78%;
   }
   .carousel-image-wrap {
-    height: 150px;
+    height: 140px;
   }
   .carousel-arrow {
-    width: 40px;
-    height: 40px;
-    font-size: 1.3rem;
+    width: 58px;
+    height: 58px;
+    font-size: 2rem;
   }
 }
