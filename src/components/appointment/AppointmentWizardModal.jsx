@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from "react";
-import { Modal, Button } from "react-bootstrap";
+import React, { useState, useMemo, useLayoutEffect } from "react";
+import { Modal, Button, Form } from "react-bootstrap";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import GlobalDateCarousel from "../GlobalDateCarousel";
 import { apiBaseUrl } from "../../config";
 import "./AppointmentWizardModal.css";
@@ -10,14 +12,17 @@ import tz from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(tz);
 
+const MySwal = withReactContent(Swal);
+
 export default function AppointmentWizardModal({
   show,
   onHide,
   employers = [],
   services = [],
   loadAvailableTimes,
-  handleCreateAppointment,
   imageUrl,
+  preselectedService = null,
+  preselectedEmployer = null,
 }) {
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -26,6 +31,35 @@ export default function AppointmentWizardModal({
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [customerCpf, setCustomerCpf] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+
+  useLayoutEffect(() => {
+    if (!show) return;
+
+    setSelectedDate(null);
+    setAvailableTimes([]);
+    setSelectedTime(null);
+    setCustomerCpf("");
+    setCustomerPhone("");
+    setLoading(false);
+
+    requestAnimationFrame(() => {
+      if (preselectedService) {
+        setSelectedServices([preselectedService]);
+      } else {
+        setSelectedServices([]);
+      }
+
+      if (preselectedEmployer) {
+        setSelectedEmployer(preselectedEmployer);
+        setStep(1);
+      } else {
+        setSelectedEmployer(null);
+        setStep(1);
+      }
+    });
+  }, [show, preselectedService, preselectedEmployer]);
 
   const totalDuration = useMemo(
     () => selectedServices.reduce((sum, s) => sum + (parseInt(s.duration) || 30), 0),
@@ -41,107 +75,177 @@ export default function AppointmentWizardModal({
     const id = service.id || service.item_id;
     setSelectedServices((prev) => {
       const exists = prev.some((s) => (s.id || s.item_id) === id);
-      if (exists) return prev.filter((s) => (s.id || s.item_id) !== id);
-      return [...prev, service];
+      return exists
+        ? prev.filter((s) => (s.id || s.item_id) !== id)
+        : [...prev, service];
     });
   };
 
   const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
-  const handleNext = async () => {
-    if (loading) return;
+ const handleNext = async () => {
+  if (loading) return;
 
-    if (step === 1 && !selectedServices.length) return;
-    if (step === 2 && !selectedEmployer) return;
-    if (step === 3 && selectedDate) {
-      const times = await loadAvailableTimes(selectedDate, selectedEmployer, totalDuration);
-      setAvailableTimes(times || []);
-    }
-    if (step === 4 && !selectedTime) return;
+  console.log("👉 STEP:", step);
+  console.log("🧩 preselectedEmployer:", preselectedEmployer);
+  console.log("🧩 selectedEmployer:", selectedEmployer);
 
-    if (step === 5) {
-      try {
-        setLoading(true);
+  if (step === 1 && selectedServices.length === 0) {
+    console.warn("Nenhum serviço selecionado — não avança");
+    return;
+  }
 
-        const dateString = `${selectedDate} ${selectedTime}`;
-        const datetimeSP = dayjs.tz(dateString, "YYYY-MM-DD HH:mm", "America/Sao_Paulo");
-        const isoDatetime = datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ");
+  if ((step === 2 && !preselectedEmployer) && !selectedEmployer) {
+    console.warn("Nenhum profissional selecionado — não avança");
+    return;
+  }
 
-        const payload = {
-          app_id: 2,
-          entity_name: "establishment",
-          entity_id: selectedEmployer?.establishment_id || 7,
-          items: selectedServices.map((s) => ({
-            item_id: s.id || s.item_id,
-            quantity: 1,
-          })),
-          customer_name: localStorage.getItem("user_name") || "Cliente App",
-          origin: "App",
-          fulfillment: "dine-in",
-          payment_status: "pending",
-          payment_method: "Pix",
-          notes: "Agendamento feito pelo aplicativo.",
-          customer_phone: localStorage.getItem("user_phone") || "62999999999",
-          customer_cpf: localStorage.getItem("user_cpf") || "12345678900",
-          order_datetime: isoDatetime,
-          attendant_id: selectedEmployer?.id,
-        };
+  if (step === (preselectedEmployer ? 2 : 3) && selectedDate) {
+    const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
+    const times = await loadAvailableTimes(
+      dateSP,
+      selectedEmployer || preselectedEmployer,
+      totalDuration
+    );
+    setAvailableTimes(times || []);
+  }
 
-        console.log("📅 Payload sendo enviado:", payload);
+  if (step === (preselectedEmployer ? 3 : 4) && !selectedTime) {
+    console.warn("Nenhum horário selecionado — não avança");
+    return;
+  }
 
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${apiBaseUrl}/order`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          alert("✅ Agendamento registrado com sucesso!");
-          onHide();
-          setStep(1);
-          setSelectedServices([]);
-          setSelectedEmployer(null);
-          setSelectedDate(null);
-          setSelectedTime(null);
-        } else {
-          console.error("Erro ao agendar:", data);
-          alert(data?.message || "Erro ao criar agendamento. Verifique os dados e tente novamente.");
-        }
-      } catch (error) {
-        console.error("Erro ao criar agendamento:", error);
-        alert("Erro inesperado ao enviar o agendamento.");
-      } finally {
-        setLoading(false);
-      }
+  if (step === (preselectedEmployer ? 4 : 5)) {
+    if (!customerPhone || !customerCpf) {
+      MySwal.fire({
+        icon: "warning",
+        title: "Preencha os campos",
+        text: "Informe seu CPF e telefone para continuar.",
+        background: "#0a0a0c",
+        color: "#fff",
+        confirmButtonColor: "#00bcd4",
+      });
       return;
     }
 
-    setStep((prev) => Math.min(5, prev + 1));
-  };
+    try {
+      setLoading(true);
+      const dateString = `${selectedDate} ${selectedTime}`;
+      const datetimeSP = dayjs.tz(dateString, "YYYY-MM-DD HH:mm", "America/Sao_Paulo");
+      const isoDatetime = datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ");
+
+      let customerName = "Cliente App";
+      let clientId = null;
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        clientId = parsed.id || null;
+        customerName =
+          `${parsed.first_name || ""} ${parsed.last_name || ""}`.trim() ||
+          parsed.user_name ||
+          "Cliente App";
+      }
+
+      const payload = {
+        app_id: 2,
+        entity_name: "establishment",
+        entity_id:
+          selectedEmployer?.establishment_id ||
+          preselectedEmployer?.establishment_id ||
+          7,
+        items: selectedServices.map((s) => ({
+          item_id: s.id || s.item_id,
+          quantity: 1,
+        })),
+        client_id: clientId,
+        customer_name: customerName,
+        origin: "App",
+        fulfillment: "dine-in",
+        payment_status: "pending",
+        payment_method: "Pix",
+        notes: "Agendamento feito pelo aplicativo.",
+        customer_phone: customerPhone,
+        customer_cpf: customerCpf,
+        order_datetime: isoDatetime,
+        attendant_id: selectedEmployer?.id || preselectedEmployer?.id,
+      };
+
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${apiBaseUrl}/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        await MySwal.fire({
+          icon: "success",
+          title: "Agendamento registrado com sucesso!",
+          text: "Seu pedido foi enviado para o profissional.",
+          background: "#0a0a0c",
+          color: "#fff",
+          confirmButtonColor: "#00bcd4",
+        });
+        onHide();
+      } else {
+        MySwal.fire({
+          icon: "error",
+          title: "Erro ao agendar",
+          text: data?.message || "Não foi possível criar o agendamento.",
+          background: "#0a0a0c",
+          color: "#fff",
+          confirmButtonColor: "#00bcd4",
+        });
+      }
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+    } finally {
+      setLoading(false);
+    }
+    return;
+  }
+
+  const maxStep = preselectedEmployer ? 4 : 5;
+  setStep((prev) => Math.min(maxStep, prev + 1));
+};
+
 
   const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
+  const showEmployerHeader = !!preselectedEmployer;
 
   return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      centered
-      size="lg"
-      backdrop="static"
-      className="neon-modal"
-    >
+    <Modal show={show} onHide={onHide} centered size="lg" backdrop="static" className="neon-modal">
       <Modal.Body className="wizard-body">
         <div className="wizard-steps">
-          {[1, 2, 3, 4, 5].map((n) => (
+          {[1, 2, 3, 4].map((n) => (
             <div key={n} className={`step-dot ${step >= n ? "active" : ""}`} />
           ))}
         </div>
+
+        {showEmployerHeader && (
+          <div className="employer-selected-header">
+            <div className="d-flex align-items-center gap-3 mb-3">
+              <img
+                src={imageUrl(preselectedEmployer?.user?.avatar)}
+                alt={preselectedEmployer?.user?.first_name}
+                className="rounded-circle"
+                width="60"
+                height="60"
+                onError={(e) => (e.currentTarget.src = "/images/logo.png")}
+              />
+              <div>
+                <h5 className="mb-0 text-light">{preselectedEmployer?.user?.first_name}</h5>
+                <small className="text-muted">Profissional selecionado</small>
+              </div>
+            </div>
+            <hr className="mb-4" />
+          </div>
+        )}
 
         {step === 1 && (
           <div className="wizard-step fade-in">
@@ -166,7 +270,7 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === 2 && (
+        {!preselectedEmployer && step === 2 && (
           <div className="wizard-step fade-in">
             <h4>Escolha o Profissional</h4>
             <div className="grid">
@@ -188,7 +292,7 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === 3 && (
+        {step === (preselectedEmployer ? 2 : 3) && (
           <div className="wizard-step fade-in">
             <h4>Escolha a Data</h4>
             <GlobalDateCarousel
@@ -199,7 +303,7 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === 4 && (
+        {step === (preselectedEmployer ? 3 : 4) && (
           <div className="wizard-step fade-in">
             <h4>Escolha o Horário</h4>
             <div className="grid-times">
@@ -220,13 +324,34 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === 5 && (
+        {step === (preselectedEmployer ? 4 : 5) && (
           <div className="wizard-step fade-in">
             <h4>Confirmar Agendamento</h4>
             <div className="confirm-box">
-              <p><b>Profissional:</b> {selectedEmployer?.user?.first_name}</p>
-              <p><b>Data:</b> {selectedDate ? new Date(selectedDate).toLocaleDateString("pt-BR") : ""}</p>
+              <p><b>Profissional:</b> {selectedEmployer?.user?.first_name || preselectedEmployer?.user?.first_name}</p>
+              <p><b>Data:</b> {selectedDate?.split("-").reverse().join("/")}</p>
               <p><b>Horário:</b> {selectedTime}</p>
+
+              <Form.Group className="mb-2">
+                <Form.Label>CPF</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Digite seu CPF"
+                  value={customerCpf}
+                  onChange={(e) => setCustomerCpf(e.target.value)}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Telefone</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Digite seu telefone"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </Form.Group>
+
               <ul>
                 {selectedServices.map((s) => (
                   <li key={s.id}>{s.name} - {fmtBRL(s.price)}</li>
@@ -243,7 +368,7 @@ export default function AppointmentWizardModal({
         <Button variant="secondary" onClick={onHide}>Cancelar</Button>
         {step > 1 && <Button variant="dark" onClick={handleBack}>Voltar</Button>}
         <Button variant="info" onClick={handleNext} disabled={loading}>
-          {loading ? "Enviando..." : step === 5 ? "Confirmar" : "Avançar"}
+          {loading ? "Enviando..." : step === (preselectedEmployer ? 4 : 5) ? "Confirmar" : "Avançar"}
         </Button>
       </Modal.Footer>
     </Modal>

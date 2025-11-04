@@ -21,10 +21,10 @@ export default function GlobalCarousel({
     <Card
       bg="dark"
       text="light"
-      className="mb-4 shadow-sm border-0 rounded-4 overflow-hidden global-carousel"
+      className="mb-4 shadow-lg border-0 rounded-4 overflow-hidden global-carousel"
     >
       <Card.Header className="bg-black text-center py-3 border-0 position-relative">
-        <h5 className="fw-bold text-uppercase mb-0 text-neon">{title}</h5>
+        <h5 className="fw-bold text-uppercase mb-0 text-neon-glow">{title}</h5>
       </Card.Header>
 
       <Card.Body className="p-3 position-relative">
@@ -40,7 +40,7 @@ export default function GlobalCarousel({
               onClick={() => handleScroll(-1)}
               title="Anterior"
             >
-              ⏪
+              ‹
             </button>
             <button
               type="button"
@@ -48,39 +48,40 @@ export default function GlobalCarousel({
               onClick={() => handleScroll(1)}
               title="Próximo"
             >
-              ⏩
+              ›
             </button>
           </div>
 
           <div ref={trackRef} className="carousel-track text-only">
             {items.slice(0, 10).map((it, idx) => (
               <div key={it.id || idx} className="carousel-card text-only">
-                <div className="carousel-item-name fw-bold text-light mb-1">
-                  {it.name || "Item sem nome"}
-                </div>
-                <div className="carousel-item-price text-info mb-2">
-                  {fmtBRL(it.price)}
-                </div>
+                <div className="carousel-item-content">
+                  <div className="carousel-item-name fw-bold mb-2 text-gradient">
+                    {it.name || "Item sem nome"}
+                  </div>
+                  <div className="carousel-item-price text-neon mb-3">
+                    {fmtBRL(it.price)}
+                  </div>
 
-                {showSchedule ? (
+                  {showSchedule && (
+                    <Button
+                      size="sm"
+                      className="w-100 mb-2 btn-schedule"
+                      onClick={() => openSchedulePopup({ ...it, type: "service" })}
+                    >
+                      Agendar
+                    </Button>
+                  )}
+
                   <Button
                     size="sm"
-                    className="w-100 mb-2"
-                    variant="outline-warning"
-                    onClick={() => openSchedulePopup(it)}
+                    variant="outline-light"
+                    className="w-100 btn-details"
+                    onClick={() => navigate(`/item/view/${it.slug}`)}
                   >
-                    Agendar
+                    Detalhes
                   </Button>
-                ) : null}
-
-                <Button
-                  size="sm"
-                  variant="outline-light"
-                  className="w-100"
-                  onClick={() => navigate(`/item/view/${it.slug}`)}
-                >
-                  Detalhes
-                </Button>
+                </div>
               </div>
             ))}
           </div>

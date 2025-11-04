@@ -10,22 +10,32 @@ dayjs.extend(tz);
 export default function StepConfirm({ services, employer, date, time, total, duration }) {
   const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
-  // 🕒 Força exibição no fuso de São Paulo
-  let formattedDate = "";
-  try {
-    if (date) {
-      // Se vier como "2025-11-03" (sem hora)
-      if (!date.includes("T")) {
-        formattedDate = dayjs.tz(`${date}T12:00:00`, "America/Sao_Paulo").format("DD/MM/YYYY");
-      } 
-      // Se vier com hora ISO completa
-      else {
-        formattedDate = dayjs(date).tz("America/Sao_Paulo").format("DD/MM/YYYY");
-      }
+ // 🕒 Força exibição exata sem alterar o dia
+// 🕒 Força exibição exata sem alterar o dia escolhido
+// 🕒 Corrige completamente o deslocamento de dia
+let formattedDate = "";
+try {
+  if (date) {
+    let localDate;
+
+    if (typeof date === "string") {
+      // 🔹 Se for string, forçamos a interpretar como data local pura
+      const [y, m, d] = date.split("-");
+      localDate = new Date(Number(y), Number(m) - 1, Number(d));
+    } else if (date instanceof Date) {
+      // 🔹 Se já for objeto Date, clonamos sem UTC
+      localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    } else {
+      localDate = new Date(date);
     }
-  } catch (err) {
-    console.error("❌ Erro ao formatar data:", err);
+
+    formattedDate = localDate.toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+    });
   }
+} catch (err) {
+  console.error("❌ Erro ao formatar data:", err);
+}
 
   // 🔍 Log pra confirmar o que está vindo
   useEffect(() => {

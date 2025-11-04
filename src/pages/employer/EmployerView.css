@@ -1,32 +1,26 @@
-/* ==============================
-   EmployerViewPage.css
-   ============================== */
-
+/* src/pages/employer/EmployerView.css */
 .employerv-root {
-  background: #0b0b0c;
+  background-color: #0a0a0a;
   color: #fff;
   min-height: 100vh;
   font-family: "Inter", sans-serif;
 }
 
-/* ==============================
-   HERO SECTION
-   ============================== */
 .employerv-hero {
   position: relative;
-  width: 100%;
-  height: 380px;
   background-size: cover;
   background-position: center;
+  height: 340px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid #111;
 }
 
 .employerv-hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), #000);
 }
 
 .employerv-hero-content {
@@ -35,247 +29,171 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 40px 5%;
+  padding: 30px;
+  max-width: 1100px;
 }
 
 .employerv-hero-left {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
 }
 
 .employerv-avatar {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.12);
+  width: 160px;
+  height: 160px;
   object-fit: cover;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  border: 4px solid #222;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 .employerv-hero-right {
   flex: 1;
-  margin-left: 40px;
+  padding-left: 30px;
 }
 
 .employerv-title {
-  font-size: 2.4rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-weight: 700;
   color: #fff;
-  margin-bottom: 10px;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .employerv-role {
-  margin-bottom: 14px;
+  margin-top: 8px;
 }
 
 .employerv-actions {
+  margin-top: 20px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 14px;
 }
 
-/* ==============================
-   MAIN CONTENT
-   ============================== */
-.employerv-main {
-  max-width: 1250px;
-  margin: 40px auto;
-  padding: 0 16px;
-}
-
-/* ==============================
-   BUTTONS
-   ============================== */
 .btn-action {
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #e9e9ea !important;
-  background: linear-gradient(180deg, #19191c 0%, #141417 100%) !important;
-  border-radius: 12px !important;
-  padding: 8px 12px !important;
-  font-weight: 500;
-  transition: all 0.25s ease !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+  background-color: #1b1b1b !important;
+  border: 1px solid #333 !important;
+  color: #eee !important;
+  border-radius: 8px !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
 }
 
 .btn-action:hover {
-  transform: translateY(-1px);
-  border-color: rgba(11, 175, 245, 0.6) !important;
-  box-shadow: 0 16px 44px rgba(11, 175, 245, 0.2) !important;
-  color: #fff !important;
+  background-color: #222 !important;
+  border-color: #555 !important;
+  transform: scale(1.03);
 }
 
 .btn-establishment {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px;
-  border-radius: 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  background: linear-gradient(180deg, #19191c 0%, #141417 100%) !important;
-  color: #e9e9ea !important;
-  padding: 8px 12px !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
-  transition: all 0.25s ease !important;
-  min-width: 200px;
-  text-align: left;
+  background-color: #111 !important;
+  border: 1px solid #2d2d2d !important;
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px !important;
+  transition: 0.2s ease;
 }
 
 .btn-establishment:hover {
-  border-color: rgba(11, 175, 245, 0.6) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 18px 44px rgba(11, 175, 245, 0.2) !important;
-  color: #fff !important;
+  background-color: #191919 !important;
 }
 
 .estv-mini-logo {
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   object-fit: cover;
   border-radius: 50%;
-  border: 1px solid #222;
-  flex-shrink: 0;
+  margin-right: 10px;
+  border: 2px solid #333;
 }
 
 .estv-mini-info {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
 }
 
 .estv-mini-name {
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: 600;
   color: #fff;
+  font-size: 0.95rem;
 }
 
 .estv-mini-address {
-  font-size: 0.7rem;
-  color: #b5b5b9;
+  color: #aaa;
+  font-size: 0.8rem;
 }
 
-/* ==============================
-   APPOINTMENTS LIST
-   ============================== */
+.employerv-main {
+  padding: 40px 30px;
+  background-color: #0a0a0a;
+}
+
 .employerv-appointment {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  background-color: #111;
+  border: 1px solid #222;
 }
 
-.employerv-appointment:hover {
-  border-color: rgba(11, 175, 245, 0.5);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* ==============================
-   USER INTERACTIONS
-   ============================== */
 .employerv-user {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #111;
+  padding: 10px;
   border-radius: 10px;
-  padding: 8px;
-  transition: all 0.2s ease;
+  border: 1px solid #222;
 }
 
-.employerv-user:hover {
-  border-color: rgba(11, 175, 245, 0.5);
-  background: rgba(255, 255, 255, 0.05);
+.employerv-card {
+  border: none;
 }
 
-/* ==============================
-   FLOATING WHATSAPP BUTTON
-   ============================== */
 .employerv-whatsapp-fab {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 25px;
+  right: 25px;
   background-color: #25d366;
-  color: #fff;
   border-radius: 50%;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  text-decoration: none;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease-in-out;
   z-index: 999;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .employerv-whatsapp-fab:hover {
-  transform: scale(1.05);
-  box-shadow: 0 12px 28px rgba(37, 211, 102, 0.4);
+  transform: scale(1.08);
 }
 
 .employerv-whatsapp-icon {
-  font-size: 28px;
+  color: #fff;
+  font-size: 30px;
 }
 
-/* ==============================
-   RESPONSIVE DESIGN
-   ============================== */
-@media (max-width: 991.98px) {
+@media (max-width: 768px) {
   .employerv-hero-content {
     flex-direction: column;
     text-align: center;
-    padding: 30px 16px;
+    padding: 20px;
   }
 
   .employerv-hero-right {
-    margin-left: 0;
+    padding-left: 0;
     margin-top: 20px;
   }
 
   .employerv-avatar {
-    width: 120px;
-    height: 120px;
+    width: 130px;
+    height: 130px;
   }
 
   .employerv-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
-  .btn-establishment {
-    min-width: unset;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .employerv-title {
-    font-size: 1.7rem;
-  }
-
-  .btn-action,
-  .btn-establishment {
-    font-size: 0.82rem !important;
-    padding-inline: 8px !important;
-  }
-
-  .estv-mini-logo {
-    width: 26px;
-    height: 26px;
-  }
-
-  .estv-mini-name {
-    font-size: 0.85rem;
-  }
-
-  .estv-mini-address {
-    font-size: 0.65rem;
-  }
-
-  .employerv-whatsapp-fab {
-    width: 48px;
-    height: 48px;
-    bottom: 16px;
-    right: 16px;
-  }
-
-  .employerv-whatsapp-icon {
-    font-size: 24px;
+  .employerv-actions {
+    justify-content: center;
   }
 }

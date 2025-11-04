@@ -5,7 +5,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
 import NavlogComponent from "../../components/NavlogComponent";
 import GlobalHero from "../../components/GlobalHero";
-import GlobalSidebar from "../../components/GlobalSidebar";
+import EstablishmentSidebar from "../../components/establishment/EstablishmentSidebar";
+
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import { apiBaseUrl } from "../../config";
@@ -34,6 +35,7 @@ export default function EstablishmentViewPage() {
     otherEstablishments,
     items,
     employers,
+    ordersSummary,
     isLoading,
   } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
@@ -42,22 +44,21 @@ export default function EstablishmentViewPage() {
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
   const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
   const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
+  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(apiBaseUrl, APP_ID, token, establishment);
 
   useAuthPrompt();
-
-  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
-    apiBaseUrl,
-    APP_ID,
-    token,
-    establishment
-  );
 
   const [showWizard, setShowWizard] = useState(false);
   const [wizardOptions, setWizardOptions] = useState({});
 
-  const openSchedulePopup = (target) => {
-    setWizardOptions(target || {});
-    setShowWizard(true);
+  const openSchedulePopup = (target = {}) => {
+    const opts = {};
+    if (target?.type === "service" || target?.price || target?.duration)
+      opts.preselectedService = target;
+    if (target?.user || (target?.id && target?.establishment_id))
+      opts.preselectedEmployer = target;
+    setWizardOptions(opts);
+    setTimeout(() => setShowWizard(true), 50);
   };
 
   useEffect(() => {
@@ -66,10 +67,7 @@ export default function EstablishmentViewPage() {
 
   if (isLoading)
     return (
-      <div
-        className="estv-root d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh" }}
-      >
+      <div className="estv-root d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
         <NavlogComponent />
         <div className="text-center text-light mt-5">
           <div className="spinner-border text-info" role="status"></div>
@@ -87,16 +85,18 @@ export default function EstablishmentViewPage() {
       <NavlogComponent />
 
       <GlobalHero
-        title={establishment.name}
-        description={establishment.description}
-        background={establishment.background}
-        logo={establishment.logo}
-        imageUrl={imageUrl}
-        handleImgError={handleImgError}
-        user={establishment.user}
-        establishment={establishment}
-        interactionSummary={interactionSummary}
-      />
+  entity="establishment"
+  title={establishment.name}
+  description={establishment.description}
+  background={establishment.background}
+  logo={establishment.logo}
+  imageUrl={imageUrl}
+  handleImgError={handleImgError}
+  user={establishment.user}
+  establishment={establishment}
+  interactionSummary={interactionSummary}
+/>
+
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
@@ -133,17 +133,18 @@ export default function EstablishmentViewPage() {
           </Col>
 
           <Col md={4}>
-            <GlobalSidebar
-              entity={establishment}
-              metrics={metrics}
-              interactionSummary={interactionSummary}
-              userInteractions={userInteractions}
-              relatedEntities={otherEstablishments}
-              imageUrl={imageUrl}
-              handleImgError={handleImgError}
-              navigate={navigate}
-              openSchedulePopup={openSchedulePopup}
-            />
+            <EstablishmentSidebar
+  establishment={establishment}
+  metrics={metrics}
+  ordersSummary={ordersSummary}
+  userInteractions={userInteractions}
+  otherEstablishments={otherEstablishments}
+  imageUrl={imageUrl}
+  handleImgError={handleImgError}
+  navigate={navigate}
+  openSchedulePopup={openSchedulePopup}
+/>
+
           </Col>
         </Row>
       </Container>
@@ -156,16 +157,12 @@ export default function EstablishmentViewPage() {
         loadAvailableTimes={loadAvailableTimes}
         handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}
+        preselectedService={wizardOptions.preselectedService || null}
+        preselectedEmployer={wizardOptions.preselectedEmployer || null}
       />
 
       {whatsappLink && (
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noreferrer"
-          className="estv-whatsapp-fab"
-          title="Chamar no WhatsApp"
-        >
+        <a href={whatsappLink} target="_blank" rel="noreferrer" className="estv-whatsapp-fab" title="Chamar no WhatsApp">
           <FaWhatsapp className="estv-whatsapp-icon" />
         </a>
       )}

@@ -1,7 +1,7 @@
 // src/components/GlobalHero.jsx
 import React from "react";
 import PropTypes from "prop-types";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col, Badge } from "react-bootstrap";
 import {
   FaUser,
   FaEye,
@@ -13,6 +13,11 @@ import {
   FaFacebook,
   FaCheckCircle,
   FaStar,
+  FaStore,
+  FaCalendarAlt,
+  FaTag,
+  FaBox,
+  FaInfoCircle,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./GlobalHero.css";
@@ -27,9 +32,11 @@ export default function GlobalHero({
   imageUrl,
   handleImgError,
   overlay = true,
+  entity = "generic",
   user,
   interactionSummary,
   establishment,
+  extraInfo,
   children,
 }) {
   const navigate = useNavigate();
@@ -46,6 +53,25 @@ export default function GlobalHero({
     if (url && url !== "#") window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  // 🌍 Define ícones e textos conforme o tipo de entidade
+  const iconByEntity = {
+    establishment: <FaStore className="me-2 text-info" />,
+    employer: <FaUser className="me-2 text-warning" />,
+    item: <FaBox className="me-2 text-success" />,
+    order: <FaCalendarAlt className="me-2 text-primary" />,
+    user: <FaUser className="me-2 text-light" />,
+    generic: <FaInfoCircle className="me-2 text-secondary" />,
+  };
+
+  const labelByEntity = {
+    establishment: "Estabelecimento",
+    employer: "Colaborador",
+    item: "Item",
+    order: "Pedido",
+    user: "Usuário",
+    generic: "Informação",
+  };
+
   return (
     <div
       className="global-hero"
@@ -54,9 +80,10 @@ export default function GlobalHero({
       }}
     >
       {overlay && <div className="global-hero-overlay" />}
+
       <Container fluid className="global-hero-content">
         <Row className="align-items-center">
-          {/* ===== LOGO ===== */}
+          {/* ===== LOGO / AVATAR ===== */}
           <Col md="auto" className="text-center mb-3 mb-md-0">
             <img
               src={imageUrl(logo || PLACEHOLDER)}
@@ -68,18 +95,22 @@ export default function GlobalHero({
 
           {/* ===== MAIN INFO ===== */}
           <Col>
-            <h1 className="global-hero-title">{title}</h1>
+            <h1 className="global-hero-title d-flex align-items-center">
+              {iconByEntity[entity]} {title}
+            </h1>
+
             {description && <p className="global-hero-desc">{description}</p>}
 
             <div className="global-hero-details mt-3">
-              {user && (
+              {/* 🔹 EXIBE INFO CONFORME O TIPO */}
+              {entity === "employer" && user && (
                 <div
                   className="detail-item owner-link"
-                  onClick={() => navigate(`/user/view/${user.id}`)}
+                  onClick={() => navigate(`/user/view/${user.user_name || user.id}`)}
                 >
                   <FaUser className="detail-icon" />
                   <span>
-                    Proprietário:{" "}
+                    Profissional:{" "}
                     <strong>
                       {user.first_name} {user.last_name}
                     </strong>
@@ -87,13 +118,28 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {establishment?.category && (
+              {entity === "establishment" && establishment?.category && (
                 <div className="detail-item">
-                  <FaStar className="detail-icon" />
+                  <FaTag className="detail-icon" />
                   <span>Categoria: {establishment.category}</span>
                 </div>
               )}
 
+              {entity === "item" && extraInfo?.category && (
+                <div className="detail-item">
+                  <FaTag className="detail-icon" />
+                  <span>Categoria: {extraInfo.category}</span>
+                </div>
+              )}
+
+              {entity === "order" && extraInfo?.order_number && (
+                <div className="detail-item">
+                  <FaCalendarAlt className="detail-icon" />
+                  <span>Pedido nº {extraInfo.order_number}</span>
+                </div>
+              )}
+
+              {/* 🔹 Telefone / Localização / Rede Social */}
               {establishment?.phone && (
                 <div className="detail-item">
                   <FaPhoneAlt className="detail-icon" />
@@ -107,11 +153,12 @@ export default function GlobalHero({
                   <span>
                     {establishment.address}
                     {establishment.city ? ` - ${establishment.city}` : ""}
+                    {establishment.uf ? `/${establishment.uf}` : ""}
                   </span>
                 </div>
               )}
 
-              {/* ===== SOCIALS ===== */}
+              {/* 🔹 Social links */}
               {socials.some((s) => s.url) && (
                 <div className="social-links mt-2">
                   {socials.map(
@@ -129,33 +176,39 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {/* ===== STATUS ===== */}
-              <div className="status-flags mt-3">
-                {establishment?.is_published && (
-                  <span className="status-badge published">
-                    <FaCheckCircle /> Publicado
-                  </span>
-                )}
-                {establishment?.is_featured && (
-                  <span className="status-badge featured">
-                    <FaStar /> Destaque
-                  </span>
-                )}
-                {establishment?.is_approved && (
-                  <span className="status-badge approved">
-                    <FaCheckCircle /> Aprovado
-                  </span>
-                )}
-              </div>
+              {/* 🔹 Status (publicação, destaque etc.) */}
+              {establishment && (
+                <div className="status-flags mt-3">
+                  {establishment.is_published && (
+                    <span className="status-badge published">
+                      <FaCheckCircle /> Publicado
+                    </span>
+                  )}
+                  {establishment.is_featured && (
+                    <span className="status-badge featured">
+                      <FaStar /> Destaque
+                    </span>
+                  )}
+                  {establishment.is_approved && (
+                    <span className="status-badge approved">
+                      <FaCheckCircle /> Aprovado
+                    </span>
+                  )}
+                </div>
+              )}
 
-              {/* ===== INTERACTION METRICS ===== */}
+              {/* 🔹 Métricas */}
               <div className="interaction-metrics mt-4">
                 <div className="metric-box glow-cyan">
-                  <div className="metric-value">{totalViews.toLocaleString()}</div>
+                  <div className="metric-value">
+                    {totalViews.toLocaleString()}
+                  </div>
                   <div className="metric-label">Visualizações</div>
                 </div>
                 <div className="metric-box glow-purple">
-                  <div className="metric-value">{uniqueUsers.toLocaleString()}</div>
+                  <div className="metric-value">
+                    {uniqueUsers.toLocaleString()}
+                  </div>
                   <div className="metric-label">Usuários únicos</div>
                 </div>
               </div>
@@ -177,9 +230,11 @@ GlobalHero.propTypes = {
   imageUrl: PropTypes.func.isRequired,
   handleImgError: PropTypes.func.isRequired,
   overlay: PropTypes.bool,
+  entity: PropTypes.oneOf(["establishment", "employer", "item", "order", "user", "generic"]),
   user: PropTypes.object,
   establishment: PropTypes.object,
   interactionSummary: PropTypes.object,
+  extraInfo: PropTypes.object,
   children: PropTypes.node,
 };
 
@@ -189,4 +244,6 @@ GlobalHero.defaultProps = {
   user: null,
   establishment: null,
   interactionSummary: null,
+  extraInfo: null,
+  entity: "generic",
 };

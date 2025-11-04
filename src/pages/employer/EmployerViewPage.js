@@ -14,11 +14,11 @@ export default function EmployerViewPage() {
   const navigate = useNavigate();
 
   const [employer, setEmployer] = useState(null);
-  const [establishment, setEstablishment] = useState(null);
+  const [metrics, setMetrics] = useState(null);
   const [interactionSummary, setInteractionSummary] = useState(null);
   const [userInteractions, setUserInteractions] = useState([]);
   const [appointmentsRecent, setAppointmentsRecent] = useState([]);
-  const [metrics, setMetrics] = useState(null);
+  const [establishment, setEstablishment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
@@ -38,7 +38,7 @@ export default function EmployerViewPage() {
     return `${storageUrl}/${path}`;
   }, []);
 
-  const fmtPrice = useCallback(
+  const fmtBRL = useCallback(
     (v) =>
       `R$ ${Number(v || 0)
         .toFixed(2)
@@ -55,13 +55,14 @@ export default function EmployerViewPage() {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!active) return;
+        const data = res.data?.employer || null;
 
-        setEmployer(res.data?.employer || null);
-        setEstablishment(res.data?.establishment || null);
-        setInteractionSummary(res.data?.interaction_summary || null);
-        setUserInteractions(res.data?.user_interactions || []);
-        setAppointmentsRecent(res.data?.appointments_recent || []);
-        setMetrics(res.data?.metrics || null);
+        setEmployer(data);
+        setMetrics(data?.metrics || null);
+        setInteractionSummary(data?.interaction_summary || null);
+        setUserInteractions(data?.user_interactions || []);
+        setAppointmentsRecent(data?.appointments_recent || []);
+        setEstablishment(data?.establishment || null);
       } catch (err) {
         Swal.fire({
           icon: "error",
@@ -98,7 +99,7 @@ export default function EmployerViewPage() {
     );
   }
 
-  if (!employer || !employer.user || !establishment) return null;
+  if (!employer || !employer.user) return null;
 
   const user = employer.user;
   const nome = `${user.first_name || ""} ${user.last_name || ""}`.trim();
@@ -110,7 +111,11 @@ export default function EmployerViewPage() {
       {/* HERO */}
       <div
         className="employerv-hero"
-        style={{ backgroundImage: `url("${imageUrl(establishment.background)}")` }}
+        style={{
+          backgroundImage: `url("${imageUrl(
+            establishment?.background || user.cover_image
+          )}")`,
+        }}
       >
         <div className="employerv-hero-overlay" />
         <Container fluid className="employerv-hero-content">
@@ -132,17 +137,34 @@ export default function EmployerViewPage() {
 
             <div className="employerv-actions">
               {whatsappLink && (
-                <Button as="a" href={whatsappLink} target="_blank" rel="noreferrer" size="sm" className="btn-action">
+                <Button
+                  as="a"
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  size="sm"
+                  className="btn-action"
+                >
                   <FaWhatsapp /> WhatsApp
                 </Button>
               )}
-              {establishment.instagram_url && (
-                <Button as="a" href={establishment.instagram_url} size="sm" className="btn-action">
+              {user.instagram_url && (
+                <Button
+                  as="a"
+                  href={user.instagram_url}
+                  size="sm"
+                  className="btn-action"
+                >
                   <FaInstagram /> Instagram
                 </Button>
               )}
-              {establishment.location && (
-                <Button as="a" href={establishment.location} size="sm" className="btn-action">
+              {establishment?.location && (
+                <Button
+                  as="a"
+                  href={establishment.location}
+                  size="sm"
+                  className="btn-action"
+                >
                   <FaMapMarkedAlt /> Como chegar
                 </Button>
               )}
@@ -161,7 +183,9 @@ export default function EmployerViewPage() {
                   <div className="estv-mini-info">
                     <div className="estv-mini-name">{establishment.name}</div>
                     {establishment.address && (
-                      <div className="estv-mini-address">{establishment.address}</div>
+                      <div className="estv-mini-address">
+                        {establishment.address}
+                      </div>
                     )}
                   </div>
                 </Button>
@@ -206,7 +230,10 @@ export default function EmployerViewPage() {
                 </Card.Header>
                 <Card.Body>
                   {userInteractions.map((ui, i) => (
-                    <div key={i} className="employerv-user d-flex align-items-center mb-3">
+                    <div
+                      key={i}
+                      className="employerv-user d-flex align-items-center mb-3"
+                    >
                       <img
                         src={ui.user_avatar ? imageUrl(ui.user_avatar) : ph}
                         alt={ui.user_name}
@@ -287,34 +314,6 @@ export default function EmployerViewPage() {
                 </Card.Body>
               </Card>
             )}
-
-            <Card bg="dark" text="light" className="mb-4">
-              <Card.Header>
-                <strong>Informações adicionais</strong>
-              </Card.Header>
-              <Card.Body>
-                {employer.created_since && (
-                  <div className="text-white small mb-1">
-                    Criado há {employer.created_since}
-                  </div>
-                )}
-                {employer.last_updated_at && (
-                  <div className="text-white small mb-1">
-                    Última atualização: {employer.last_updated_at}
-                  </div>
-                )}
-                {employer.creator && (
-                  <div className="text-white small mb-1">
-                    Criado por: {employer.creator.first_name} {employer.creator.last_name}
-                  </div>
-                )}
-                {employer.updater && (
-                  <div className="text-white small mb-1">
-                    Atualizado por: {employer.updater.first_name} {employer.updater.last_name}
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
           </Col>
         </Row>
       </Container>
