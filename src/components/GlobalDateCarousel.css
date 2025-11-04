@@ -30,6 +30,9 @@
   scroll-behavior: smooth;
   padding: 1rem 0.5rem;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-snap-type: x mandatory;
 }
 .carousel-track-simple::-webkit-scrollbar {
   display: none;
@@ -44,6 +47,7 @@
   color: var(--text-light);
   text-align: center;
   transition: background 0.3s ease;
+  scroll-snap-align: start;
 }
 .carousel-card:hover {
   background: var(--bg-hover);
@@ -126,12 +130,23 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* RESPONSIVO */
+/* MOBILE */
 @media (max-width: 768px) {
   .carousel-card {
     flex: 0 0 80%;
   }
   .carousel-image-wrap {
     height: 140px;
+  }
+
+  /* melhora o arrasto com dedo */
+  .carousel-track-simple {
+    gap: 0.8rem;
+    scroll-padding: 1rem;
+  }
+
+  /* desativa setas no mobile (opcional) */
+  .carousel-controls-wrapper {
+    display: none;
   }
 }
