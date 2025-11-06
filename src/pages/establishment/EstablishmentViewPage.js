@@ -1,4 +1,3 @@
-// src/pages/establishment/EstablishmentViewPage.jsx
 import React, { useMemo, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -6,6 +5,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import NavlogComponent from "../../components/NavlogComponent";
 import GlobalHero from "../../components/GlobalHero";
 import EstablishmentSidebar from "../../components/establishment/EstablishmentSidebar";
+import EstablishmentMetrics from "../../components/establishment/EstablishmentMetrics";
 
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
@@ -42,9 +42,16 @@ export default function EstablishmentViewPage() {
   const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(establishment);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
-  const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
-  const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
-  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(apiBaseUrl, APP_ID, token, establishment);
+  const { ref: serviceRef, handleScroll: handleServiceScroll } =
+    useScrollControl();
+  const { ref: productRef, handleScroll: handleProductScroll } =
+    useScrollControl();
+  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
+    apiBaseUrl,
+    APP_ID,
+    token,
+    establishment
+  );
 
   useAuthPrompt();
 
@@ -65,28 +72,29 @@ export default function EstablishmentViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-
   if (!establishment) return null;
 
-  const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+  const fmtBRL = (v) =>
+    `R$ ${Number(v || 0)
+      .toFixed(2)
+      .replace(".", ",")}`;
 
   return (
     <div className="estv-root">
       <NavlogComponent />
 
       <GlobalHero
-  entity="establishment"
-  title={establishment.name}
-  description={establishment.description}
-  background={establishment.background}
-  logo={establishment.logo}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-  user={establishment.user}
-  establishment={establishment}
-  interactionSummary={interactionSummary}
-/>
-
+        entity="establishment"
+        title={establishment.name}
+        description={establishment.description}
+        background={establishment.background}
+        logo={establishment.logo}
+        imageUrl={imageUrl}
+        handleImgError={handleImgError}
+        user={establishment.user}
+        establishment={establishment}
+        interactionSummary={interactionSummary}
+      />
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
@@ -123,18 +131,21 @@ export default function EstablishmentViewPage() {
           </Col>
 
           <Col md={4}>
-            <EstablishmentSidebar
-  establishment={establishment}
-  metrics={metrics}
-  ordersSummary={ordersSummary}
-  userInteractions={userInteractions}
-  otherEstablishments={otherEstablishments}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-  navigate={navigate}
-  openSchedulePopup={openSchedulePopup}
-/>
+            {/* ✅ Novo componente de métricas */}
 
+            {/* Sidebar padrão com colaboradores, interações, etc. */}
+            <EstablishmentSidebar
+              establishment={establishment}
+              metrics={metrics}
+              ordersSummary={ordersSummary}
+              userInteractions={userInteractions}
+              otherEstablishments={otherEstablishments}
+              imageUrl={imageUrl}
+              handleImgError={handleImgError}
+              navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
+            />
+             {metrics && <EstablishmentMetrics metrics={metrics} />}
           </Col>
         </Row>
       </Container>
@@ -152,7 +163,13 @@ export default function EstablishmentViewPage() {
       />
 
       {whatsappLink && (
-        <a href={whatsappLink} target="_blank" rel="noreferrer" className="estv-whatsapp-fab" title="Chamar no WhatsApp">
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noreferrer"
+          className="estv-whatsapp-fab"
+          title="Chamar no WhatsApp"
+        >
           <FaWhatsapp className="estv-whatsapp-icon" />
         </a>
       )}

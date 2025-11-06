@@ -17,8 +17,8 @@ export default function StepDate({ onChange }) {
       <GlobalDateCarousel
         selectedDate={date}
         onChange={(d) => {
-          // ✅ Força o formato fixo e fuso de São Paulo
-          // ✅ Força data exata local, sem fuso, sem UTC
+          // âœ… ForÃ§a o formato fixo e fuso de SÃ£o Paulo
+          // âœ… ForÃ§a data exata local, sem fuso, sem UTC
 const normalized = dayjs(d).format("YYYY-MM-DD");
 
           setDate(normalized);

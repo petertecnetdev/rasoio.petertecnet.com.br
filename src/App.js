@@ -108,6 +108,7 @@ function AppInner() {
           <Route path="/" element={<HomePage />} />
 
           <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
+          <Route path="/employer/view/:user_name" element={<EmployerViewPage  />} />
 
           <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
           <Route path="/login" element={restrictedRoute(<LoginPage />)} />
@@ -137,7 +138,6 @@ function AppInner() {
           <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
           <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
           <Route path="/employer/dashboard" element={protectedRoute(<EmployerDashboardPage />)} />
-          <Route path="/employer/view/:user_name" element={protectedRoute(<EmployerViewPage />)} />
 
 
           <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />

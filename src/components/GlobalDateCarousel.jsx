@@ -1,108 +1,70 @@
-import React, { useRef } from "react";
-import { Card, Button } from "react-bootstrap";
-import PropTypes from "prop-types";
-import "./GlobalCarousel.css";
+import React, { useEffect, useState, useRef } from "react";
+import "./GlobalDateCarousel.css";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import tz from "dayjs/plugin/timezone";
 
-export default function GlobalCarousel({
-  title,
-  items,
-  fmtBRL,
-  openSchedulePopup,
-  navigate,
-  showSchedule,
-}) {
+dayjs.extend(utc);
+dayjs.extend(tz);
+
+export default function GlobalDateCarousel({ selectedDate, onChange, daysToShow = 14 }) {
+  const TZ = "America/Sao_Paulo";
+  const [days, setDays] = useState([]);
   const trackRef = useRef(null);
 
-  if (!Array.isArray(items) || items.length === 0) return null;
+  useEffect(() => {
+    const today = dayjs().tz(TZ).startOf("day");
+    const arr = Array.from({ length: daysToShow }, (_, i) => {
+      const d = today.add(i, "day");
+      return {
+        key: d.format("YYYY-MM-DD"),
+        week: d.format("ddd").toUpperCase(),
+        day: d.date(),
+        month: d.format("MMM").toUpperCase(),
+      };
+    });
+    console.log("📅 Dias gerados:", arr);
+    setDays(arr);
+  }, [daysToShow]);
 
-  const scroll = (direction) => {
-    if (!trackRef.current) return;
-    const offset = direction === "left" ? -260 : 260;
-    trackRef.current.scrollBy({ left: offset, behavior: "smooth" });
-  };
+  useEffect(() => {
+    if (!selectedDate && days.length > 0) {
+      const todayKey = dayjs().tz(TZ).format("YYYY-MM-DD");
+      onChange(todayKey);
+    }
+  }, [selectedDate, days, onChange]);
+
+  useEffect(() => {
+    if (!trackRef.current || !selectedDate) return;
+    const idx = days.findIndex((d) => d.key === selectedDate);
+    if (idx >= 0) {
+      const child = trackRef.current.children[idx];
+      if (child) child.scrollIntoView({ behavior: "smooth", inline: "center" });
+    }
+  }, [selectedDate, days]);
 
   return (
-    <Card
-      bg="dark"
-      text="light"
-      className="mb-4 shadow-sm border-0 rounded-4 overflow-hidden global-carousel"
-    >
-      <Card.Header className="bg-black text-center py-3 border-0">
-        <h5 className="fw-bold text-uppercase mb-0 text-light">{title}</h5>
-      </Card.Header>
-
-      <Card.Body className="p-3 position-relative">
-        <div className="carousel-controls-wrapper">
-          <button
-            type="button"
-            className="carousel-arrow left"
-            onClick={() => scroll("left")}
-          >
-            ⮜
-          </button>
-          <button
-            type="button"
-            className="carousel-arrow right"
-            onClick={() => scroll("right")}
-          >
-            ⮞
-          </button>
+    <div className="date-carousel-container">
+      {days.length === 0 ? (
+        <div className="date-loading">Carregando datas...</div>
+      ) : (
+        <div className="date-carousel-track" ref={trackRef}>
+          {days.map((d) => {
+            const isActive = selectedDate === d.key;
+            return (
+              <button
+                key={d.key}
+                className={`date-item ${isActive ? "active" : ""}`}
+                onClick={() => onChange(d.key)}
+              >
+                <span className="date-week">{d.week}</span>
+                <span className="date-day">{d.day}</span>
+                <span className="date-month">{d.month}</span>
+              </button>
+            );
+          })}
         </div>
-
-        <div ref={trackRef} className="carousel-track-static">
-          {items.map((it, idx) => (
-            <div key={it.id || idx} className="carousel-card">
-              {it.image && (
-                <div className="carousel-image-wrap">
-                  <img
-                    loading="lazy"
-                    src={it.image}
-                    alt={it.name}
-                    className="carousel-image"
-                  />
-                </div>
-              )}
-
-              <div className="carousel-item-content">
-                <div className="carousel-item-name">{it.name || "Item sem nome"}</div>
-                <div className="carousel-item-price">{fmtBRL(it.price)}</div>
-
-                {showSchedule && (
-                  <Button
-                    size="sm"
-                    className="w-100 mb-2 btn-flat-primary"
-                    onClick={() => openSchedulePopup({ ...it, type: "service" })}
-                  >
-                    Agendar
-                  </Button>
-                )}
-
-                <Button
-                  size="sm"
-                  variant="outline-light"
-                  className="w-100 btn-flat-outline"
-                  onClick={() => navigate(`/item/view/${it.slug}`)}
-                >
-                  Detalhes
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card.Body>
-    </Card>
+      )}
+    </div>
   );
 }
-
-GlobalCarousel.propTypes = {
-  title: PropTypes.string.isRequired,
-  items: PropTypes.array.isRequired,
-  fmtBRL: PropTypes.func.isRequired,
-  openSchedulePopup: PropTypes.func.isRequired,
-  navigate: PropTypes.func.isRequired,
-  showSchedule: PropTypes.bool,
-};
-
-GlobalCarousel.defaultProps = {
-  showSchedule: false,
-};

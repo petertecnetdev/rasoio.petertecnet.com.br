@@ -28,6 +28,7 @@ export default function NavlogComponent() {
 
   useEffect(() => {
     let cancelled = false;
+
     const loadUser = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -38,6 +39,7 @@ export default function NavlogComponent() {
         }
         return;
       }
+
       try {
         const headers = { Authorization: `Bearer ${token}` };
         const { data } = await axios.get(`${apiBaseUrl}/auth/me`, { headers });
@@ -63,9 +65,16 @@ export default function NavlogComponent() {
         }
       }
     };
+
     loadUser();
+
+    // 🔥 Reage ao login/logout em tempo real
+    const handleAuthChanged = () => loadUser();
+    window.addEventListener("authChanged", handleAuthChanged);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("authChanged", handleAuthChanged);
     };
   }, [location.pathname]);
 
@@ -78,6 +87,13 @@ export default function NavlogComponent() {
     setShowMobileMenu((prev) => !prev);
     setShowAdminSubmenu(false);
     setShowEstSubmenu(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event("authChanged"));
+    window.location.replace("/");
   };
 
   const renderAdminMenu = () => (
@@ -192,16 +208,16 @@ export default function NavlogComponent() {
                   >
                     Gerenciar Conta
                   </Link>
-                 {user.establishments.length > 0 && (
-  <Link
-    to="/dashboard"
-    onClick={handleToggleMobileMenu}
-    className="navlog__link"
-  >
-    Dashboard
-  </Link>
-)}
 
+                  {user.establishments.length > 0 && (
+                    <Link
+                      to="/dashboard"
+                      onClick={handleToggleMobileMenu}
+                      className="navlog__link"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
 
                   {user.establishments.filter(
                     (est) => est.category === "barbershop"
@@ -253,9 +269,7 @@ export default function NavlogComponent() {
                     to="/logout"
                     onClick={() => {
                       handleToggleMobileMenu();
-                      localStorage.removeItem("token");
-                      localStorage.removeItem("user");
-                      window.location.replace("/logout");
+                      handleLogout();
                     }}
                     className="navlog__link"
                   >

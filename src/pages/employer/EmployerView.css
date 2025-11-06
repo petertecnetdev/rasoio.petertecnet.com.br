@@ -1,199 +1,51 @@
 /* src/pages/employer/EmployerView.css */
-.employerv-root {
-  background-color: #0a0a0a;
-  color: #fff;
+
+.empv-root {
+  background-color: #0f172a;
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
-}
-
-.employerv-hero {
-  position: relative;
-  background-size: cover;
-  background-position: center;
-  height: 340px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 2px solid #111;
-}
-
-.employerv-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), #000);
-}
-
-.employerv-hero-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 30px;
-  max-width: 1100px;
-}
-
-.employerv-hero-left {
-  flex-shrink: 0;
-}
-
-.employerv-avatar {
-  width: 160px;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 4px solid #222;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-}
-
-.employerv-hero-right {
-  flex: 1;
-  padding-left: 30px;
-}
-
-.employerv-title {
-  font-size: 2.2rem;
-  font-weight: 700;
   color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-.employerv-role {
-  margin-top: 8px;
+.empv-main {
+  padding: 2rem 1.5rem;
 }
 
-.employerv-actions {
-  margin-top: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.btn-action {
-  background-color: #1b1b1b !important;
-  border: 1px solid #333 !important;
-  color: #eee !important;
-  border-radius: 8px !important;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease-in-out;
-}
-
-.btn-action:hover {
-  background-color: #222 !important;
-  border-color: #555 !important;
-  transform: scale(1.03);
-}
-
-.btn-establishment {
-  background-color: #111 !important;
-  border: 1px solid #2d2d2d !important;
-  display: flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 10px !important;
-  transition: 0.2s ease;
-}
-
-.btn-establishment:hover {
-  background-color: #191919 !important;
-}
-
-.estv-mini-logo {
-  width: 35px;
-  height: 35px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-right: 10px;
-  border: 2px solid #333;
-}
-
-.estv-mini-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.estv-mini-name {
-  font-weight: 600;
-  color: #fff;
-  font-size: 0.95rem;
-}
-
-.estv-mini-address {
-  color: #aaa;
-  font-size: 0.8rem;
-}
-
-.employerv-main {
-  padding: 40px 30px;
-  background-color: #0a0a0a;
-}
-
-.employerv-appointment {
-  background-color: #111;
-  border: 1px solid #222;
-}
-
-.employerv-user {
-  background-color: #111;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #222;
-}
-
-.employerv-card {
-  border: none;
-}
-
-.employerv-whatsapp-fab {
+.empv-whatsapp-fab {
   position: fixed;
   bottom: 25px;
   right: 25px;
-  background-color: #25d366;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff;
   border-radius: 50%;
   width: 60px;
   height: 60px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2000;
+  transition: all 0.3s ease-in-out;
   text-decoration: none;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease-in-out;
-  z-index: 999;
 }
 
-.employerv-whatsapp-fab:hover {
-  transform: scale(1.08);
+.empv-whatsapp-fab:hover {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #1ebe5d, #0d6f63);
 }
 
-.employerv-whatsapp-icon {
-  color: #fff;
-  font-size: 30px;
+.empv-whatsapp-icon {
+  font-size: 1.9rem;
 }
 
 @media (max-width: 768px) {
-  .employerv-hero-content {
-    flex-direction: column;
-    text-align: center;
-    padding: 20px;
+  .empv-whatsapp-fab {
+    width: 52px;
+    height: 52px;
+    bottom: 20px;
+    right: 20px;
   }
 
-  .employerv-hero-right {
-    padding-left: 0;
-    margin-top: 20px;
-  }
-
-  .employerv-avatar {
-    width: 130px;
-    height: 130px;
-  }
-
-  .employerv-title {
-    font-size: 1.8rem;
-  }
-
-  .employerv-actions {
-    justify-content: center;
+  .empv-whatsapp-icon {
+    font-size: 1.6rem;
   }
 }

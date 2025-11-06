@@ -1,4 +1,3 @@
-// src/hooks/useEmployerView.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -27,7 +26,24 @@ export default function useEmployerView(apiBaseUrl, user_name, token, navigate) 
 
         setEmployer(d.employer || null);
         setEstablishment(d.establishment || null);
-        setMetrics(d.metrics || null);
+
+        setMetrics(() => {
+          const m = d.metrics || null;
+          if (!m || typeof m !== "object") return null;
+          const clean = {};
+          for (const [k, v] of Object.entries(m)) {
+            if (
+              v !== null &&
+              v !== undefined &&
+              typeof v !== "object" &&
+              typeof v !== "function"
+            ) {
+              clean[k] = v;
+            }
+          }
+          return clean;
+        });
+
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(Array.isArray(d.user_interactions) ? d.user_interactions : []);
         setOtherEmployers(Array.isArray(d.other_employers) ? d.other_employers : []);

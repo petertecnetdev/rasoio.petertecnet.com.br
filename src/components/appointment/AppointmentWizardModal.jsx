@@ -36,7 +36,6 @@ export default function AppointmentWizardModal({
 
   useLayoutEffect(() => {
     if (!show) return;
-
     setSelectedDate(null);
     setAvailableTimes([]);
     setSelectedTime(null);
@@ -45,11 +44,8 @@ export default function AppointmentWizardModal({
     setLoading(false);
 
     requestAnimationFrame(() => {
-      if (preselectedService) {
-        setSelectedServices([preselectedService]);
-      } else {
-        setSelectedServices([]);
-      }
+      if (preselectedService) setSelectedServices([preselectedService]);
+      else setSelectedServices([]);
 
       if (preselectedEmployer) {
         setSelectedEmployer(preselectedEmployer);
@@ -75,145 +71,138 @@ export default function AppointmentWizardModal({
     const id = service.id || service.item_id;
     setSelectedServices((prev) => {
       const exists = prev.some((s) => (s.id || s.item_id) === id);
-      return exists
-        ? prev.filter((s) => (s.id || s.item_id) !== id)
-        : [...prev, service];
+      return exists ? prev.filter((s) => (s.id || s.item_id) !== id) : [...prev, service];
     });
   };
 
   const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
- const handleNext = async () => {
-  if (loading) return;
+  const handleNext = async () => {
+    if (loading) return;
 
-  console.log("👉 STEP:", step);
-  console.log("🧩 preselectedEmployer:", preselectedEmployer);
-  console.log("🧩 selectedEmployer:", selectedEmployer);
-
-  if (step === 1 && selectedServices.length === 0) {
-    console.warn("Nenhum serviço selecionado — não avança");
-    return;
-  }
-
-  if ((step === 2 && !preselectedEmployer) && !selectedEmployer) {
-    console.warn("Nenhum profissional selecionado — não avança");
-    return;
-  }
-
-  if (step === (preselectedEmployer ? 2 : 3) && selectedDate) {
-    const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
-    const times = await loadAvailableTimes(
-      dateSP,
-      selectedEmployer || preselectedEmployer,
-      totalDuration
-    );
-    setAvailableTimes(times || []);
-  }
-
-  if (step === (preselectedEmployer ? 3 : 4) && !selectedTime) {
-    console.warn("Nenhum horário selecionado — não avança");
-    return;
-  }
-
-  if (step === (preselectedEmployer ? 4 : 5)) {
-    if (!customerPhone || !customerCpf) {
-      MySwal.fire({
-        icon: "warning",
-        title: "Preencha os campos",
-        text: "Informe seu CPF e telefone para continuar.",
-        background: "#0a0a0c",
-        color: "#fff",
-        confirmButtonColor: "#00bcd4",
-      });
+    if (step === 1 && selectedServices.length === 0) {
+      console.warn("Nenhum serviço selecionado — não avançar");
       return;
     }
 
-    try {
-      setLoading(true);
-      const dateString = `${selectedDate} ${selectedTime}`;
-      const datetimeSP = dayjs.tz(dateString, "YYYY-MM-DD HH:mm", "America/Sao_Paulo");
-      const isoDatetime = datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ");
-
-      let customerName = "Cliente App";
-      let clientId = null;
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        const parsed = JSON.parse(userData);
-        clientId = parsed.id || null;
-        customerName =
-          `${parsed.first_name || ""} ${parsed.last_name || ""}`.trim() ||
-          parsed.user_name ||
-          "Cliente App";
-      }
-
-      const payload = {
-        app_id: 2,
-        entity_name: "establishment",
-        entity_id:
-          selectedEmployer?.establishment_id ||
-          preselectedEmployer?.establishment_id ||
-          7,
-        items: selectedServices.map((s) => ({
-          item_id: s.id || s.item_id,
-          quantity: 1,
-        })),
-        client_id: clientId,
-        customer_name: customerName,
-        origin: "App",
-        fulfillment: "dine-in",
-        payment_status: "pending",
-        payment_method: "Pix",
-        notes: "Agendamento feito pelo aplicativo.",
-        customer_phone: customerPhone,
-        customer_cpf: customerCpf,
-        order_datetime: isoDatetime,
-        attendant_id: selectedEmployer?.id || preselectedEmployer?.id,
-      };
-
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${apiBaseUrl}/order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        await MySwal.fire({
-          icon: "success",
-          title: "Agendamento registrado com sucesso!",
-          text: "Seu pedido foi enviado para o profissional.",
-          background: "#0a0a0c",
-          color: "#fff",
-          confirmButtonColor: "#00bcd4",
-        });
-        onHide();
-      } else {
-        MySwal.fire({
-          icon: "error",
-          title: "Erro ao agendar",
-          text: data?.message || "Não foi possível criar o agendamento.",
-          background: "#0a0a0c",
-          color: "#fff",
-          confirmButtonColor: "#00bcd4",
-        });
-      }
-    } catch (error) {
-      console.error("Erro inesperado:", error);
-    } finally {
-      setLoading(false);
+    if ((step === 2 && !preselectedEmployer) && !selectedEmployer) {
+      console.warn("Nenhum profissional selecionado — não avançar");
+      return;
     }
-    return;
-  }
 
-  const maxStep = preselectedEmployer ? 4 : 5;
-  setStep((prev) => Math.min(maxStep, prev + 1));
-};
+    if (step === (preselectedEmployer ? 2 : 3) && selectedDate) {
+      const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
+      const times = await loadAvailableTimes(
+        dateSP,
+        selectedEmployer || preselectedEmployer,
+        totalDuration
+      );
+      setAvailableTimes(times || []);
+    }
 
+    if (step === (preselectedEmployer ? 3 : 4) && !selectedTime) {
+      console.warn("Nenhum horário selecionado — não avançar");
+      return;
+    }
+
+    if (step === (preselectedEmployer ? 4 : 5)) {
+      if (!customerPhone || !customerCpf) {
+        MySwal.fire({
+          icon: "warning",
+          title: "Preencha os campos",
+          text: "Informe seu CPF e telefone para continuar.",
+          background: "#0a0a0c",
+          color: "#fff",
+          confirmButtonColor: "#00bcd4",
+        });
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const dateString = `${selectedDate} ${selectedTime}`;
+        const datetimeSP = dayjs.tz(dateString, "YYYY-MM-DD HH:mm", "America/Sao_Paulo");
+        const isoDatetime = datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ");
+
+        let customerName = "Cliente App";
+        let clientId = null;
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          clientId = parsed.id || null;
+          customerName =
+            `${parsed.first_name || ""} ${parsed.last_name || ""}`.trim() ||
+            parsed.user_name ||
+            "Cliente App";
+        }
+
+        const payload = {
+          app_id: 2,
+          entity_name: "establishment",
+          entity_id:
+            selectedEmployer?.establishment_id ||
+            preselectedEmployer?.establishment_id ||
+            7,
+          items: selectedServices.map((s) => ({
+            item_id: s.id || s.item_id,
+            quantity: 1,
+          })),
+          client_id: clientId,
+          customer_name: customerName,
+          origin: "App",
+          fulfillment: "dine-in",
+          payment_status: "pending",
+          payment_method: "Pix",
+          notes: "Agendamento feito pelo aplicativo.",
+          customer_phone: customerPhone,
+          customer_cpf: customerCpf,
+          order_datetime: isoDatetime,
+          attendant_id: selectedEmployer?.id || preselectedEmployer?.id,
+        };
+
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${apiBaseUrl}/order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          await MySwal.fire({
+            icon: "success",
+            title: "Agendamento registrado com sucesso!",
+            text: "Seu pedido foi enviado para o profissional.",
+            background: "#0a0a0c",
+            color: "#fff",
+            confirmButtonColor: "#00bcd4",
+          });
+          onHide();
+        } else {
+          MySwal.fire({
+            icon: "error",
+            title: "Erro ao agendar",
+            text: data?.message || "Não foi possível criar o agendamento.",
+            background: "#0a0a0c",
+            color: "#fff",
+            confirmButtonColor: "#00bcd4",
+          });
+        }
+      } catch (error) {
+        console.error("Erro inesperado:", error);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    const maxStep = preselectedEmployer ? 4 : 5;
+    setStep((prev) => Math.min(maxStep, prev + 1));
+  };
 
   const handleBack = () => setStep((prev) => Math.max(1, prev - 1));
   const showEmployerHeader = !!preselectedEmployer;
