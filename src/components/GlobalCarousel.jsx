@@ -1,6 +1,7 @@
 // src/components/GlobalCarousel.jsx
 import React, { useRef, useLayoutEffect } from "react";
 import { Card, Button } from "react-bootstrap";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import PropTypes from "prop-types";
 import "./GlobalCarousel.css";
 
@@ -14,7 +15,6 @@ export default function GlobalCarousel({
 }) {
   const trackRef = useRef(null);
 
-  // 🔒 Garante 100% de estabilidade visual
   useLayoutEffect(() => {
     const t = setTimeout(() => {
       if (trackRef.current) trackRef.current.scrollLeft = 0;
@@ -41,22 +41,21 @@ export default function GlobalCarousel({
       </Card.Header>
 
       <Card.Body className="p-3 position-relative">
-        <div className="carousel-controls-wrapper">
-          <button
-            type="button"
-            className="carousel-arrow left"
-            onClick={() => scroll("left")}
-          >
-            ⮜
-          </button>
-          <button
-            type="button"
-            className="carousel-arrow right"
-            onClick={() => scroll("right")}
-          >
-            ⮞
-          </button>
-        </div>
+        <button
+          type="button"
+          className="carousel-arrow left"
+          onClick={() => scroll("left")}
+        >
+          <FaChevronLeft />
+        </button>
+
+        <button
+          type="button"
+          className="carousel-arrow right"
+          onClick={() => scroll("right")}
+        >
+          <FaChevronRight />
+        </button>
 
         <div ref={trackRef} className="carousel-track-static">
           {items.map((it, idx) => (

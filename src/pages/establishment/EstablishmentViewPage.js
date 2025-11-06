@@ -65,16 +65,6 @@ export default function EstablishmentViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  if (isLoading)
-    return (
-      <div className="estv-root d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
-        <NavlogComponent />
-        <div className="text-center text-light mt-5">
-          <div className="spinner-border text-info" role="status"></div>
-          <p className="mt-3">Carregando estabelecimento...</p>
-        </div>
-      </div>
-    );
 
   if (!establishment) return null;
 

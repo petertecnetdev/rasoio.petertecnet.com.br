@@ -146,41 +146,6 @@ export default function EstablishmentSidebar({
         </Card>
       )}
 
-      {(services.length > 0 || products.length > 0) && (
-        <Card className="est-card">
-          <Card.Header>🧾 Serviços / Produtos</Card.Header>
-          <Card.Body>
-            {[...services.slice(0, 3), ...products.slice(0, 3)].map((it) => (
-              <div
-                key={it.id}
-                className="est-item-card mb-3 cursor-pointer"
-                onClick={() => navigate(`/item/view/${it.slug}`)}
-              >
-                <div className="d-flex align-items-center justify-content-between">
-                  <div className="flex-grow-1">
-                    <div className="fw-semibold text-light">{it.name}</div>
-                    {it.price && (
-                      <div className="text-info small">{fmtBRL.format(it.price)}</div>
-                    )}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline-warning"
-                    title="Agendar este serviço"
-                    className="est-employee-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openSchedulePopup(it);
-                    }}
-                  >
-                    Agendar
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </Card.Body>
-        </Card>
-      )}
 
       {metrics && (
         <Card className="est-card">
