@@ -3,10 +3,14 @@ import GlobalDateCarousel from "../GlobalDateCarousel";
 import dayjs from "dayjs";
 import tz from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import localeData from "dayjs/plugin/localeData";
+import "dayjs/locale/pt-br";
 import "./steps.css";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
+dayjs.extend(localeData);
+dayjs.locale("pt-br");
 
 export default function StepDate({ onChange }) {
   const [date, setDate] = useState(null);
@@ -17,14 +21,12 @@ export default function StepDate({ onChange }) {
       <GlobalDateCarousel
         selectedDate={date}
         onChange={(d) => {
-          // âœ… ForÃ§a o formato fixo e fuso de SÃ£o Paulo
-          // âœ… ForÃ§a data exata local, sem fuso, sem UTC
-const normalized = dayjs(d).format("YYYY-MM-DD");
-
+          const normalized = dayjs(d).format("YYYY-MM-DD");
           setDate(normalized);
           onChange(normalized);
         }}
         daysToShow={14}
+        locale="pt-br"
       />
     </div>
   );

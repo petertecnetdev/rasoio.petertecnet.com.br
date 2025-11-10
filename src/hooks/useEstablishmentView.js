@@ -1,4 +1,3 @@
-// src/hooks/useEstablishmentView.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -9,9 +8,11 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
   const [interactionSummary, setInteractionSummary] = useState(null);
   const [userInteractions, setUserInteractions] = useState([]);
   const [otherEstablishments, setOtherEstablishments] = useState([]);
+  const [otherEmployers, setOtherEmployers] = useState([]);
+  const [otherItems, setOtherItems] = useState([]);
   const [items, setItems] = useState([]);
   const [employers, setEmployers] = useState([]);
-  const [itemsInteractions, setItemsInteractions] = useState([]);
+  const [ordersSummary, setOrdersSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -26,25 +27,25 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
 
         const d = res.data || {};
 
-        // ✅ Inclui o orders_summary dentro do objeto establishment
-        const estData = {
-          ...(d.establishment || {}),
-          orders_summary: d.orders_summary || null,
-        };
-
-        setEstablishment(estData);
-        setItems(Array.isArray(d.items) ? d.items : []);
-        setEmployers(Array.isArray(estData.employers) ? estData.employers : []);
+        setEstablishment(d.establishment || null);
         setMetrics(d.metrics || null);
         setInteractionSummary(d.interaction_summary || null);
-        setUserInteractions(Array.isArray(d.user_interactions) ? d.user_interactions : []);
-        setOtherEstablishments(Array.isArray(d.other_establishments) ? d.other_establishments : []);
-        setItemsInteractions(Array.isArray(d.items_interactions) ? d.items_interactions : []);
-      } catch {
+        setUserInteractions(d.user_interactions || []);
+        setOtherEstablishments(d.other_establishments || []);
+        setOtherEmployers(d.other_employers || []);
+        setOtherItems(d.other_items || []);
+        setItems(d.items || []);
+        setEmployers(d.establishment?.employers || []);
+        setOrdersSummary(d.orders_summary || null);
+      } catch (err) {
+        const msg =
+          err?.response?.data?.error ||
+          err?.message ||
+          "Erro ao carregar o estabelecimento.";
         Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Não foi possível carregar o estabelecimento.",
+          text: msg,
         }).then(() => navigate("/"));
       } finally {
         if (active) setIsLoading(false);
@@ -56,15 +57,18 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
     };
   }, [slug, token, navigate]);
 
-  return {
-    establishment,
-    metrics,
-    interactionSummary,
-    userInteractions,
-    otherEstablishments,
-    items,
-    employers,
-    itemsInteractions,
-    isLoading,
-  };
+ return {
+  establishment,
+  metrics,
+  interactionSummary,
+  userInteractions,
+  otherEstablishments,
+  otherEmployers,
+  otherItems, // 👈 ESSENCIAL
+  items,
+  employers,
+  ordersSummary,
+  isLoading,
+};
+
 }

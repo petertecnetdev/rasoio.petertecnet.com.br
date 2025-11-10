@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useLayoutEffect } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import React, { useState, useMemo, useLayoutEffect, useEffect } from "react";
+
+import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import GlobalDateCarousel from "../GlobalDateCarousel";
@@ -56,6 +57,29 @@ export default function AppointmentWizardModal({
       }
     });
   }, [show, preselectedService, preselectedEmployer]);
+
+
+  useEffect(() => {
+  const userData = localStorage.getItem("user");
+  if (userData) {
+    try {
+      const parsed = JSON.parse(userData);
+      const profile = parsed.profile || {};
+
+      // 🔹 Preenche CPF e Telefone automaticamente se existirem
+      if (profile.cpf || parsed.cpf) {
+        setCustomerCpf(profile.cpf || parsed.cpf || "");
+      }
+      if (profile.phone || parsed.phone) {
+        setCustomerPhone(profile.phone || parsed.phone || "");
+      }
+    } catch (err) {
+      console.error("Erro ao carregar dados do usuário:", err);
+    }
+  }
+}, [show]);
+
+
 
   const totalDuration = useMemo(
     () => selectedServices.reduce((sum, s) => sum + (parseInt(s.duration) || 30), 0),
@@ -292,26 +316,37 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === (preselectedEmployer ? 3 : 4) && (
-          <div className="wizard-step fade-in">
-            <h4>Escolha o Horário</h4>
-            <div className="grid-times">
-              {availableTimes.length ? (
-                availableTimes.map((t) => (
-                  <button
-                    key={t}
-                    className={`time-btn ${selectedTime === t ? "active" : ""}`}
-                    onClick={() => setSelectedTime(t)}
-                  >
-                    {t}
-                  </button>
-                ))
-              ) : (
-                <p className="empty-text">Nenhum horário disponível.</p>
-              )}
-            </div>
-          </div>
-        )}
+       {step === (preselectedEmployer ? 3 : 4) && (
+  <div className="wizard-step fade-in">
+    <h4>Escolha o Horário</h4>
+
+    {availableTimes.length ? (
+      <div className="grid-times">
+        {availableTimes.map((t) => (
+          <button
+            key={t}
+            className={`time-btn ${selectedTime === t ? "active" : ""}`}
+            onClick={() => setSelectedTime(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+    ) : (
+      <div className="step-empty">
+        <p>Nenhum horário disponível para esta data.</p>
+        <Button
+          variant="dark"
+          onClick={handleBack}
+          className="mt-3"
+        >
+          Voltar
+        </Button>
+      </div>
+    )}
+  </div>
+)}
+
 
         {step === (preselectedEmployer ? 4 : 5) && (
           <div className="wizard-step fade-in">
@@ -321,25 +356,32 @@ export default function AppointmentWizardModal({
               <p><b>Data:</b> {selectedDate?.split("-").reverse().join("/")}</p>
               <p><b>Horário:</b> {selectedTime}</p>
 
-              <Form.Group className="mb-2">
-                <Form.Label>CPF</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Digite seu CPF"
-                  value={customerCpf}
-                  onChange={(e) => setCustomerCpf(e.target.value)}
-                />
-              </Form.Group>
+             <Row className="mb-3">
+  <Col md={6}>
+    <Form.Group>
+      <Form.Label>CPF</Form.Label>
+      <Form.Control
+        type="text"
+        placeholder="Digite seu CPF"
+        value={customerCpf}
+        onChange={(e) => setCustomerCpf(e.target.value)}
+      />
+    </Form.Group>
+  </Col>
 
-              <Form.Group className="mb-3">
-                <Form.Label>Telefone</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Digite seu telefone"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                />
-              </Form.Group>
+  <Col md={6}>
+    <Form.Group>
+      <Form.Label>Telefone</Form.Label>
+      <Form.Control
+        type="text"
+        placeholder="Digite seu telefone"
+        value={customerPhone}
+        onChange={(e) => setCustomerPhone(e.target.value)}
+      />
+    </Form.Group>
+  </Col>
+</Row>
+
 
               <ul>
                 {selectedServices.map((s) => (

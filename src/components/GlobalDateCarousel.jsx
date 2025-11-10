@@ -1,11 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
-import "./GlobalDateCarousel.css";
+import React, { useState, useEffect, useRef } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
+import "dayjs/locale/pt-br";
+import "./GlobalDateCarousel.css";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
+dayjs.locale("pt-br");
 
 export default function GlobalDateCarousel({ selectedDate, onChange, daysToShow = 14 }) {
   const TZ = "America/Sao_Paulo";
@@ -13,58 +16,56 @@ export default function GlobalDateCarousel({ selectedDate, onChange, daysToShow 
   const trackRef = useRef(null);
 
   useEffect(() => {
-    const today = dayjs().tz(TZ).startOf("day");
+    const hoje = dayjs().tz(TZ).startOf("day");
+
+    const diasPT = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+    const mesesPT = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+
     const arr = Array.from({ length: daysToShow }, (_, i) => {
-      const d = today.add(i, "day");
+      const d = hoje.add(i, "day");
       return {
         key: d.format("YYYY-MM-DD"),
-        week: d.format("ddd").toUpperCase(),
+        week: diasPT[d.day()],
         day: d.date(),
-        month: d.format("MMM").toUpperCase(),
+        month: mesesPT[d.month()],
       };
     });
-    console.log("📅 Dias gerados:", arr);
+
     setDays(arr);
   }, [daysToShow]);
 
-  useEffect(() => {
-    if (!selectedDate && days.length > 0) {
-      const todayKey = dayjs().tz(TZ).format("YYYY-MM-DD");
-      onChange(todayKey);
-    }
-  }, [selectedDate, days, onChange]);
-
-  useEffect(() => {
-    if (!trackRef.current || !selectedDate) return;
-    const idx = days.findIndex((d) => d.key === selectedDate);
-    if (idx >= 0) {
-      const child = trackRef.current.children[idx];
-      if (child) child.scrollIntoView({ behavior: "smooth", inline: "center" });
-    }
-  }, [selectedDate, days]);
+  const scroll = (direction) => {
+    if (!trackRef.current) return;
+    const offset = direction === "left" ? -300 : 300;
+    trackRef.current.scrollBy({ left: offset, behavior: "smooth" });
+  };
 
   return (
-    <div className="date-carousel-container">
-      {days.length === 0 ? (
-        <div className="date-loading">Carregando datas...</div>
-      ) : (
-        <div className="date-carousel-track" ref={trackRef}>
-          {days.map((d) => {
-            const isActive = selectedDate === d.key;
-            return (
-              <button
-                key={d.key}
-                className={`date-item ${isActive ? "active" : ""}`}
-                onClick={() => onChange(d.key)}
-              >
-                <span className="date-week">{d.week}</span>
-                <span className="date-day">{d.day}</span>
-                <span className="date-month">{d.month}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+    <div className="date-carousel">
+      <button className="date-btn left" onClick={() => scroll("left")}>
+        <FaChevronLeft />
+      </button>
+
+      <div className="date-track" ref={trackRef}>
+        {days.map((d) => {
+          const isActive = selectedDate === d.key;
+          return (
+            <div
+              key={d.key}
+              className={`date-item ${isActive ? "active" : ""}`}
+              onClick={() => onChange(d.key)}
+            >
+              <div className="date-week">{d.week}</div>
+              <div className="date-day">{d.day}</div>
+              <div className="date-month">{d.month}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <button className="date-btn right" onClick={() => scroll("right")}>
+        <FaChevronRight />
+      </button>
     </div>
   );
 }

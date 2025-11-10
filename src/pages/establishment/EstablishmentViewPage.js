@@ -6,9 +6,9 @@ import NavlogComponent from "../../components/NavlogComponent";
 import GlobalHero from "../../components/GlobalHero";
 import EstablishmentSidebar from "../../components/establishment/EstablishmentSidebar";
 import EstablishmentMetrics from "../../components/establishment/EstablishmentMetrics";
-
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
+import GlobalRotativity from "../../components/GlobalRotativity";
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
 import useEstablishmentView from "../../hooks/useEstablishmentView";
@@ -28,24 +28,24 @@ export default function EstablishmentViewPage() {
   const token = useMemo(() => localStorage.getItem("token"), []);
 
   const {
-    establishment,
-    metrics,
-    interactionSummary,
-    userInteractions,
-    otherEstablishments,
-    items,
-    employers,
-    ordersSummary,
-    isLoading,
-  } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
+  establishment,
+  metrics,
+  interactionSummary,
+  userInteractions,
+  otherEstablishments,
+  otherEmployers,   // 👈 ADICIONE
+  otherItems,       // 👈 ADICIONE
+  items,
+  employers,
+  ordersSummary,
+  isLoading,
+} = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
   const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(establishment);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
-  const { ref: serviceRef, handleScroll: handleServiceScroll } =
-    useScrollControl();
-  const { ref: productRef, handleScroll: handleProductScroll } =
-    useScrollControl();
+  const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
+  const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
     APP_ID,
@@ -131,9 +131,6 @@ export default function EstablishmentViewPage() {
           </Col>
 
           <Col md={4}>
-            {/* ✅ Novo componente de métricas */}
-
-            {/* Sidebar padrão com colaboradores, interações, etc. */}
             <EstablishmentSidebar
               establishment={establishment}
               metrics={metrics}
@@ -145,7 +142,21 @@ export default function EstablishmentViewPage() {
               navigate={navigate}
               openSchedulePopup={openSchedulePopup}
             />
-             {metrics && <EstablishmentMetrics metrics={metrics} />}
+            {metrics && <EstablishmentMetrics metrics={metrics} />}
+          </Col>
+
+          {/* 🔹 Seção de Rotatividade Global */}
+          <Col md={12}>
+          <GlobalRotativity
+  otherEstablishments={otherEstablishments}
+  otherEmployers={otherEmployers}
+  otherItems={otherItems}
+  navigate={navigate}
+  openSchedulePopup={openSchedulePopup}
+  fmtBRL={fmtBRL}
+/>
+
+
           </Col>
         </Row>
       </Container>

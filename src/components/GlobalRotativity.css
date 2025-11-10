@@ -1,0 +1,94 @@
+/* src/components/GlobalRotativity.css */
+
+.global-rotativity {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.rotativity-card {
+  background: #0b0c0e;
+  border: 1px solid #00ffff22;
+  border-radius: 18px;
+  box-shadow: 0 0 20px #00ffff11;
+  padding: 20px;
+  transition: 0.3s ease;
+}
+
+.rotativity-card:hover {
+  box-shadow: 0 0 35px #00ffff33;
+}
+
+.rotativity-card h4 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #00ffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px #00ffff55;
+  margin-bottom: 20px;
+}
+
+.rotativity-card .mb-4 {
+  margin-bottom: 30px !important;
+}
+
+/* Adaptação para escuro */
+@media (prefers-color-scheme: dark) {
+  .rotativity-card {
+    background: #0a0b0c;
+    color: #e5e5e5;
+  }
+}
+
+/* Ajustes de layout */
+.global-rotativity .card {
+  background: transparent;
+  border: none;
+}
+
+.global-rotativity .global-carousel {
+  background: transparent;
+  border: none;
+}
+
+/* Título interno do carrossel */
+.global-rotativity .card-header h5 {
+  color: #00ffff;
+  text-shadow: 0 0 6px #00ffff88;
+  font-weight: 600;
+}
+
+/* Efeito neon suave nos contornos */
+.global-rotativity .rotativity-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.global-rotativity .rotativity-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, #00ffff22 0%, transparent 70%);
+  opacity: 0.2;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.global-rotativity .rotativity-card:hover::before {
+  opacity: 0.35;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .rotativity-card {
+    padding: 15px;
+  }
+
+  .rotativity-card h4 {
+    font-size: 1.2rem;
+  }
+}

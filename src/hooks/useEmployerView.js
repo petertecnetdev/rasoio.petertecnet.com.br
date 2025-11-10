@@ -2,14 +2,16 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function useEmployerView(apiBaseUrl, user_name, token, navigate) {
-  const [employer, setEmployer] = useState(null);
+export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) {
   const [establishment, setEstablishment] = useState(null);
+  const [items, setItems] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [interactionSummary, setInteractionSummary] = useState(null);
   const [userInteractions, setUserInteractions] = useState([]);
-  const [otherEmployers, setOtherEmployers] = useState([]);
   const [ordersSummary, setOrdersSummary] = useState(null);
+  const [otherEstablishments, setOtherEstablishments] = useState([]);
+  const [otherEmployers, setOtherEmployers] = useState([]);
+  const [otherItems, setOtherItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -17,15 +19,15 @@ export default function useEmployerView(apiBaseUrl, user_name, token, navigate) 
 
     (async () => {
       try {
-        const res = await axios.get(`${apiBaseUrl}/employer/view/${user_name}`, {
+        const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!active) return;
 
         const d = res.data || {};
 
-        setEmployer(d.employer || null);
         setEstablishment(d.establishment || null);
+        setItems(Array.isArray(d.items) ? d.items : []);
 
         setMetrics(() => {
           const m = d.metrics || null;
@@ -46,13 +48,15 @@ export default function useEmployerView(apiBaseUrl, user_name, token, navigate) 
 
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(Array.isArray(d.user_interactions) ? d.user_interactions : []);
-        setOtherEmployers(Array.isArray(d.other_employers) ? d.other_employers : []);
         setOrdersSummary(d.orders_summary || null);
+        setOtherEstablishments(Array.isArray(d.other_establishments) ? d.other_establishments : []);
+        setOtherEmployers(Array.isArray(d.other_employers) ? d.other_employers : []);
+        setOtherItems(Array.isArray(d.other_items) ? d.other_items : []);
       } catch (err) {
         const msg =
           err?.response?.data?.details ||
           err?.response?.data?.error ||
-          "Não foi possível carregar o colaborador.";
+          "Não foi possível carregar o estabelecimento.";
         Swal.fire({
           icon: "error",
           title: "Erro",
@@ -66,16 +70,18 @@ export default function useEmployerView(apiBaseUrl, user_name, token, navigate) 
     return () => {
       active = false;
     };
-  }, [user_name, token, navigate]);
+  }, [slug, token, navigate]);
 
   return {
-    employer,
     establishment,
+    items,
     metrics,
     interactionSummary,
     userInteractions,
-    otherEmployers,
     ordersSummary,
+    otherEstablishments,
+    otherEmployers,
+    otherItems,
     isLoading,
   };
 }

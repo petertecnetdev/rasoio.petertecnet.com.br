@@ -1,279 +1,155 @@
 /* =========================================================
-   🌌 ESTILO GERAL DO MODAL DE AGENDAMENTO
+   ⚡ ESTILO BASE DO CONTAINER
    ========================================================= */
-.neon-modal .modal-dialog {
-  max-width: 700px;
-}
-
-.neon-modal .modal-content {
-  background: radial-gradient(circle at top, #0a0a0c 0%, #111 80%);
-  border: 1px solid #00ffff33;
-  border-radius: 18px;
-  color: #fff;
-  box-shadow: 0 0 25px #00ffff33, 0 0 60px #00ffff11 inset;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  height: 90vh;
-}
-
-.wizard-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 25px 20px 90px;
-  scroll-behavior: smooth;
-}
-
-.wizard-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+.step-container {
   background: #0d0d0f;
-  border-top: 1px solid #00ffff44;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 24px;
-  z-index: 10;
-}
-
-/* =========================================================
-   🌟 INDICADOR DE ETAPAS
-   ========================================================= */
-.wizard-steps {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.step-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid #00ffff44;
-  transition: 0.3s;
-}
-
-.step-dot.active {
-  background: #00ffff;
-  box-shadow: 0 0 10px #00ffffaa;
-}
-
-/* =========================================================
-   🎞 ANIMAÇÕES
-   ========================================================= */
-.fade-in {
+  border: 1px solid #00ffff33;
+  border-radius: 14px;
+  padding: 26px 28px;
+  color: #fff;
+  box-shadow: 0 0 25px #00ffff22;
+  text-align: left;
   animation: fadeIn 0.4s ease-in-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* =========================================================
-   💈 ETAPA 1 - SERVIÇOS
-   ========================================================= */
-.grid {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #00ffff44 transparent;
-}
-
-.grid::-webkit-scrollbar {
-  height: 6px;
-}
-.grid::-webkit-scrollbar-thumb {
-  background: #00ffff66;
-  border-radius: 10px;
-}
-
-.card-service {
-  flex: 0 0 160px;
-  background: #151515;
-  border: 1px solid #00ffff33;
-  border-radius: 14px;
-  padding: 14px;
-  cursor: pointer;
-  text-align: center;
-  color: #ccc;
-  transition: 0.3s;
-}
-
-.card-service:hover {
-  background: #00ffff11;
-  transform: translateY(-3px);
-}
-
-.card-service.active {
-  background: #00ffff;
-  color: #000;
-  box-shadow: 0 0 16px #00ffffaa;
-  font-weight: 600;
-}
-
-/* =========================================================
-   👤 ETAPA 2 - PROFISSIONAIS
-   ========================================================= */
-.grid .card-emp {
-  flex: 0 0 150px;
-  background: #151515;
-  border: 1px solid #00ffff33;
-  border-radius: 14px;
-  padding: 14px;
-  text-align: center;
-  transition: 0.3s;
-  cursor: pointer;
-}
-
-.card-emp:hover {
-  border-color: #00ffffaa;
-  transform: translateY(-3px);
-}
-
-.card-emp.active {
-  background: #00ffff;
-  color: #000;
-  font-weight: 600;
-  box-shadow: 0 0 16px #00ffffaa;
-}
-
-.card-emp img {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  margin-bottom: 8px;
-  object-fit: cover;
-  border: 2px solid #00ffff44;
-}
-
-/* =========================================================
-   📅 ETAPA 3 - DATA
-   ========================================================= */
-.global-date-carousel {
-  margin-top: 10px;
-}
-
-/* =========================================================
-   ⏰ ETAPA 4 - HORÁRIOS
-   ========================================================= */
-.grid-times {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.time-btn {
-  background: #111;
-  border: 1px solid #00ffff55;
-  border-radius: 8px;
-  padding: 10px 16px;
+.step-container h4 {
+  font-size: 1.45rem;
   color: #00ffff;
-  cursor: pointer;
-  transition: 0.3s;
+  margin-bottom: 18px;
+  text-shadow: 0 0 8px #00ffff99;
+  text-align: center;
 }
 
-.time-btn:hover,
-.time-btn.active {
-  background: #00ffff;
-  color: #000;
-  box-shadow: 0 0 12px #00ffffaa;
-}
-
-/* =========================================================
-   ✅ ETAPA 5 - CONFIRMAÇÃO
-   ========================================================= */
-.confirm-box {
-  background: #0d0d0f;
-  border-radius: 12px;
-  border: 1px solid #00ffff33;
-  padding: 20px;
-  text-align: left;
-}
-
-.confirm-box ul {
-  list-style: none;
-  padding: 0;
-  margin: 12px 0;
-}
-
-.confirm-box li {
-  border-bottom: 1px solid #00ffff22;
-  padding: 6px 0;
-}
-
-.confirm-box p {
+.step-container p,
+.step-container li {
+  color: #ccc;
+  font-size: 0.95rem;
   margin: 4px 0;
 }
 
-/* =========================================================
-   🧠 CABEÇALHO DO PROFISSIONAL
-   ========================================================= */
-.employer-selected-header {
-  background: #0e0e10;
-  padding: 15px 20px;
-  border-radius: 10px;
-  border: 1px solid #00ffff22;
-  margin-bottom: 18px;
+.step-container hr {
+  border: none;
+  border-top: 1px solid #00ffff22;
+  margin: 12px 0 18px;
 }
 
-.employer-selected-header img {
-  border: 2px solid #00ffffaa;
-  box-shadow: 0 0 12px #00ffff55;
+/* =========================================================
+   🧾 CAMPOS DE ENTRADA (CPF / TELEFONE)
+   ========================================================= */
+.step-container .confirm-inputs {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.step-container .confirm-inputs input {
+  flex: 1;
+  background: #121214;
+  border: 1px solid #00ffff33;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1rem;
+  padding: 12px 16px;
+  outline: none;
+  transition: all 0.25s ease;
+  box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.05);
+}
+
+.step-container .confirm-inputs input::placeholder {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.step-container .confirm-inputs input:focus {
+  border-color: #00ffffcc;
+  box-shadow: 0 0 10px #00ffff66, inset 0 0 6px #00ffff22;
+  background: #18181b;
+}
+
+/* =========================================================
+   🧩 CONFIRMAÇÃO DE SERVIÇOS
+   ========================================================= */
+.step-container .confirm-box {
+  background: #101012;
+  border: 1px solid #00ffff22;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 10px;
+}
+
+.step-container .confirm-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.step-container .confirm-box li {
+  border-bottom: 1px solid #00ffff22;
+  padding: 6px 0;
+  color: #ccc;
+}
+
+.step-container .confirm-box p {
+  color: #bbb;
+  font-size: 0.95rem;
 }
 
 /* =========================================================
    🎨 BOTÕES
    ========================================================= */
-.btn-info {
-  background: #00ffff;
-  border: none;
-  color: #000;
+.step-container .btn {
+  border-radius: 8px;
+  padding: 10px 18px;
   font-weight: 600;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
-.btn-info:hover {
-  background: #00cccc;
+.step-container .btn-dark {
+  background: #111;
+  color: #00ffff;
+  border: 1px solid #00ffff66;
+}
+
+.step-container .btn-dark:hover {
+  background: #00ffff;
+  color: #000;
   box-shadow: 0 0 12px #00ffffaa;
 }
 
-.btn-dark {
-  background: #111;
-  border: 1px solid #00ffff55;
-  color: #00ffff;
-}
-
-.btn-dark:hover {
+.step-container .btn-info {
   background: #00ffff;
   color: #000;
+  border: none;
+}
+
+.step-container .btn-info:hover {
+  background: #00cccc;
+  box-shadow: 0 0 10px #00ffffaa;
+}
+
+/* =========================================================
+   ✨ ANIMAÇÃO
+   ========================================================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =========================================================
    📱 RESPONSIVIDADE
    ========================================================= */
 @media (max-width: 576px) {
-  .neon-modal .modal-dialog {
-    max-width: 95%;
-    margin: 0 auto;
-  }
-
-  .card-service, .card-emp {
-    flex: 0 0 120px;
-  }
-
-  .wizard-footer {
+  .step-container .confirm-inputs {
     flex-direction: column;
-    gap: 8px;
   }
 
-  .wizard-body {
-    padding: 20px 15px 100px;
+  .step-container {
+    padding: 20px 18px;
   }
 }

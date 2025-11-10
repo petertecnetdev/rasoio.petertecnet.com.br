@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useState } from "react";
 import { Card, Button, Modal, Badge } from "react-bootstrap";
-import { FaChevronLeft, FaChevronRight, FaEye, FaUser } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import PropTypes from "prop-types";
 import LoginFormComponent from "./auth/LoginFormComponent";
 import "./GlobalCarousel.css";
@@ -53,6 +53,29 @@ export default function GlobalCarousel({
 
   if (!Array.isArray(items) || items.length === 0) return null;
 
+  const handleImgError = (e) => {
+    e.target.onerror = null;
+    e.target.src = "/images/logo.png";
+  };
+
+  const handleDetails = (it) => {
+    if (!it.slug) return;
+    switch (it.type) {
+      case "establishment":
+        navigate(`/establishment/view/${it.slug}`);
+        break;
+      case "employer":
+        navigate(`/employer/view/${it.slug}`);
+        break;
+      case "item":
+        navigate(`/item/view/${it.slug}`);
+        break;
+      default:
+        navigate(`/item/view/${it.slug}`);
+        break;
+    }
+  };
+
   return (
     <>
       <Card
@@ -84,32 +107,37 @@ export default function GlobalCarousel({
           <div ref={trackRef} className="carousel-track-static">
             {items.map((it, idx) => (
               <div key={it.id || idx} className="carousel-card">
-                {it.image && (
-                  <div className="carousel-image-wrap">
-                    <img
-                      loading="lazy"
-                      src={it.image}
-                      alt={it.name}
-                      className="carousel-image"
-                    />
-                  </div>
-                )}
+                <div
+                  className="carousel-image-wrap cursor-pointer"
+                  onClick={() => handleDetails(it)}
+                >
+                  <img
+                    loading="lazy"
+                    src={it.image || "/images/logo.png"}
+                    alt={it.name}
+                    className="carousel-image"
+                    onError={handleImgError}
+                  />
+                </div>
 
                 <div className="carousel-item-content">
-                  <div className="carousel-item-name">
+                  <div
+                    className="carousel-item-name cursor-pointer"
+                    onClick={() => handleDetails(it)}
+                  >
                     {it.name || "Item sem nome"}
                   </div>
 
-                  <div className="carousel-item-price">
-                    {fmtBRL(it.price)}
-                  </div>
+                  {it.price && (
+                    <div className="carousel-item-price">
+                      {fmtBRL(it.price)}
+                    </div>
+                  )}
 
-                  {/* 👁️ Visualizações e usuários únicos */}
                   <div className="d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
-                    <Badge bg="secondary" className="px-2 py-1 rounded-pill"> {it.total_views ?? 0}{" "}
-                      {it.total_views === 1
-                        ? "View"
-                        : "Views"}
+                    <Badge bg="secondary" className="px-2 py-1 rounded-pill">
+                      {it.total_views ?? 0}{" "}
+                      {it.total_views === 1 ? "View" : "Views"}
                     </Badge>
                   </div>
 
@@ -127,7 +155,7 @@ export default function GlobalCarousel({
                     size="sm"
                     variant="outline-light"
                     className="w-100 btn-flat-outline"
-                    onClick={() => navigate(`/item/view/${it.slug}`)}
+                    onClick={() => handleDetails(it)}
                   >
                     Detalhes
                   </Button>

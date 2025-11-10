@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Modal, Button } from "react-bootstrap";
 import GlobalDateCarousel from "../GlobalDateCarousel";
-import "./AppointmentWizardModal.css";
+import "./AppointmentWizard.css";
 
 export default function AppointmentWizardModal({
   show,
