@@ -1,9 +1,9 @@
 import React from "react";
 import { Card } from "react-bootstrap";
 import PropTypes from "prop-types";
-import "./EmployerMetrics.css";
+import "./ItemMetrics.css";
 
-export default function EmployerMetrics({ metrics }) {
+export default function ItemMetrics({ metrics }) {
   if (!metrics) return null;
 
   const isValid = (v) =>
@@ -14,12 +14,12 @@ export default function EmployerMetrics({ metrics }) {
     !(typeof v === "number" && isNaN(v));
 
   return (
-    <Card className="emp-card m-3">
-      <Card.Header>📊 Métricas do Colaborador</Card.Header>
+    <Card className="item-card m-3">
+      <Card.Header>📊 Métricas do Item</Card.Header>
       <Card.Body className="text-white">
 
-        {/* === 💈 Atendimentos === */}
-        <h6 className="text-info mb-2">💈 Atendimentos</h6>
+        {/* === 🧩 Estrutura Geral === */}
+        <h6 className="text-info mb-2">🛒 Estrutura Geral</h6>
         {[
           ["total_orders", "Pedidos Totais"],
           ["completed_orders", "Pedidos Concluídos"],
@@ -52,7 +52,6 @@ export default function EmployerMetrics({ metrics }) {
           ["unique_users", "Usuários Únicos"],
           ["avg_views_per_day", "Média de Views por Dia"],
           ["days_active", "Dias Ativo"],
-          ["return_rate", "Clientes Recorrentes (%)"],
           ["engagement_score", "Pontuação de Engajamento"],
         ]
           .filter(([key]) => isValid(metrics[key]))
@@ -79,6 +78,7 @@ export default function EmployerMetrics({ metrics }) {
           ["cancellation_rate", "Taxa de Cancelamento (%)"],
           ["pending_rate", "Pedidos Pendentes (%)"],
           ["efficiency_rate", "Eficiência Operacional (%)"],
+          ["return_rate", "Clientes Recorrentes (%)"],
         ]
           .filter(([key]) => isValid(metrics[key]))
           .map(([key, label]) => (
@@ -90,9 +90,13 @@ export default function EmployerMetrics({ metrics }) {
               <div className="progress progress-sm bg-secondary">
                 <div
                   className={`progress-bar ${
-                    key.includes("cancel") ? "bg-danger" :
-                    key.includes("efficiency") ? "bg-info" :
-                    "bg-success"
+                    key.includes("cancel")
+                      ? "bg-danger"
+                      : key.includes("return")
+                      ? "bg-warning"
+                      : key.includes("efficiency")
+                      ? "bg-info"
+                      : "bg-success"
                   }`}
                   role="progressbar"
                   style={{ width: `${metrics[key]}%` }}
@@ -105,6 +109,6 @@ export default function EmployerMetrics({ metrics }) {
   );
 }
 
-EmployerMetrics.propTypes = {
+ItemMetrics.propTypes = {
   metrics: PropTypes.object,
 };

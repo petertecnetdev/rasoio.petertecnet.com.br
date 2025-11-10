@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
-  const [employer, setEmployer] = useState(null);
-  const [establishment, setEstablishment] = useState(null);
+export default function useItemView(apiBaseUrl, slug, token, navigate) {
+  const [item, setItem] = useState(null);
+  const [entity, setEntity] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [interactionSummary, setInteractionSummary] = useState(null);
   const [userInteractions, setUserInteractions] = useState([]);
-  const [items, setItems] = useState([]);
   const [ordersSummary, setOrdersSummary] = useState(null);
   const [otherEstablishments, setOtherEstablishments] = useState([]);
   const [otherEmployers, setOtherEmployers] = useState([]);
@@ -20,19 +19,18 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
 
     (async () => {
       try {
-        const res = await axios.get(`${apiBaseUrl}/employer/view/${userName}`, {
+        const res = await axios.get(`${apiBaseUrl}/item/view/${slug}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!active) return;
 
         const d = res.data || {};
 
-        setEmployer(d.employer || null);
-        setEstablishment(d.establishment || null);
+        setItem(d.item || null);
+        setEntity(d.entity || null);
         setMetrics(d.metrics || null);
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(d.user_interactions || []);
-        setItems(d.items || []);
         setOrdersSummary(d.orders_summary || null);
         setOtherEstablishments(d.other_establishments || []);
         setOtherEmployers(d.other_employers || []);
@@ -41,7 +39,7 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
         const msg =
           err?.response?.data?.error ||
           err?.message ||
-          "Erro ao carregar o colaborador.";
+          "Erro ao carregar o item.";
         Swal.fire({
           icon: "error",
           title: "Erro",
@@ -55,15 +53,14 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
     return () => {
       active = false;
     };
-  }, [userName, token, navigate]);
+  }, [slug, token, navigate]);
 
   return {
-    employer,
-    establishment,
+    item,
+    entity,
     metrics,
     interactionSummary,
     userInteractions,
-    items,
     ordersSummary,
     otherEstablishments,
     otherEmployers,

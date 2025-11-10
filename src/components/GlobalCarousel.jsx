@@ -53,27 +53,34 @@ export default function GlobalCarousel({
 
   if (!Array.isArray(items) || items.length === 0) return null;
 
-  const handleImgError = (e) => {
-    e.target.onerror = null;
-    e.target.src = "/images/logo.png";
-  };
-
   const handleDetails = (it) => {
-    if (!it.slug) return;
+    if (!it.slug && !it.user_name) return;
     switch (it.type) {
       case "establishment":
         navigate(`/establishment/view/${it.slug}`);
         break;
       case "employer":
-        navigate(`/employer/view/${it.slug}`);
+        navigate(`/employer/view/${it.user?.user_name || it.slug}`);
         break;
       case "item":
+      case "service":
         navigate(`/item/view/${it.slug}`);
         break;
       default:
-        navigate(`/item/view/${it.slug}`);
+        if (it.slug) navigate(`/item/view/${it.slug}`);
         break;
     }
+  };
+
+  const getImageForItem = (it, title) => {
+    const lower = (title || "").toLowerCase();
+    if (lower.includes("outros estabelecimentos")) {
+      return it.logo || it.image || null;
+    }
+    if (lower.includes("outros colaboradores")) {
+      return it.user?.avatar || it.image || null;
+    }
+    return null;
   };
 
   return (
@@ -105,63 +112,80 @@ export default function GlobalCarousel({
           </button>
 
           <div ref={trackRef} className="carousel-track-static">
-            {items.map((it, idx) => (
-              <div key={it.id || idx} className="carousel-card">
-                <div
-                  className="carousel-image-wrap cursor-pointer"
-                  onClick={() => handleDetails(it)}
-                >
-                  <img
-                    loading="lazy"
-                    src={it.image || "/images/logo.png"}
-                    alt={it.name}
-                    className="carousel-image"
-                    onError={handleImgError}
-                  />
-                </div>
+            {items.map((it, idx) => {
+              const imgSrc = getImageForItem(it, title);
+              const showImage = !!imgSrc;
 
-                <div className="carousel-item-content">
-                  <div
-                    className="carousel-item-name cursor-pointer"
-                    onClick={() => handleDetails(it)}
-                  >
-                    {it.name || "Item sem nome"}
-                  </div>
-
-                  {it.price && (
-                    <div className="carousel-item-price">
-                      {fmtBRL(it.price)}
+              return (
+                <div key={it.id || idx} className="carousel-card">
+                  {showImage && (
+                    <div
+                      className="carousel-image-wrap cursor-pointer"
+                      onClick={() => handleDetails(it)}
+                    >
+                      <img
+                        loading="lazy"
+                        src={imgSrc}
+                        alt={it.name || it.user?.first_name || "Sem nome"}
+                        className="carousel-image"
+                      />
                     </div>
                   )}
 
-                  <div className="d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
-                    <Badge bg="secondary" className="px-2 py-1 rounded-pill">
-                      {it.total_views ?? 0}{" "}
-                      {it.total_views === 1 ? "View" : "Views"}
-                    </Badge>
-                  </div>
+                  <div className="carousel-item-content">
+                    <div
+                      className="carousel-item-name cursor-pointer"
+                      onClick={() => handleDetails(it)}
+                    >
+                      {it.name ||
+                        `${it.user?.first_name || ""} ${it.user?.last_name || ""}`.trim() ||
+                        "Sem nome"}
+                    </div>
 
-                  {showSchedule && (
+                    {it.price && (
+                      <div className="carousel-item-price">
+                        {fmtBRL(it.price)}
+                      </div>
+                    )}
+
+                    <div className="d-flex justify-content-center align-items-center gap-2 mt-2 flex-wrap">
+                      <Badge bg="secondary" className="px-2 py-1 rounded-pill">
+                        {it.total_views ?? 0}{" "}
+                        {it.total_views === 1 ? "View" : "Views"}
+                      </Badge>
+
+                      {"completed_appointments" in it && (
+                        <Badge bg="success" className="px-2 py-1 rounded-pill">
+                          {it.completed_appointments ?? 0}{" "}
+                          {it.completed_appointments === 1
+                            ? "Concluído"
+                            : "Concluídos"}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {showSchedule && it.type === "service" && (
+                      <Button
+                        size="sm"
+                        className="w-100 mb-2 btn-flat-primary mt-2"
+                        onClick={() => handleScheduleClick(it)}
+                      >
+                        Agendar
+                      </Button>
+                    )}
+
                     <Button
                       size="sm"
-                      className="w-100 mb-2 btn-flat-primary mt-2"
-                      onClick={() => handleScheduleClick(it)}
+                      variant="outline-light"
+                      className="w-100 btn-flat-outline"
+                      onClick={() => handleDetails(it)}
                     >
-                      Agendar
+                      Detalhes
                     </Button>
-                  )}
-
-                  <Button
-                    size="sm"
-                    variant="outline-light"
-                    className="w-100 btn-flat-outline"
-                    onClick={() => handleDetails(it)}
-                  >
-                    Detalhes
-                  </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card.Body>
       </Card>

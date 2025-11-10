@@ -13,7 +13,7 @@ export default function GlobalRotativity({
   openSchedulePopup,
   fmtBRL,
 }) {
-  const { imageUrl, handleImgError } = useImageUtils("/images/logo.png");
+  const { imageUrl } = useImageUtils("/images/logo.png");
 
   const valid = (v) => v && v !== "null" && v !== "undefined";
 
@@ -49,6 +49,8 @@ export default function GlobalRotativity({
           slug: e.slug,
           image: getEstImage(e.logo, e.background),
           total_views: e.total_views || 0,
+          completed_appointments: e.completed_appointments || 0, // ✅ novo campo
+          type: "establishment",
         }))
       : [];
 
@@ -62,6 +64,8 @@ export default function GlobalRotativity({
             slug: u.user_name,
             image: getEmployerImage(emp),
             total_views: emp.total_views || 0,
+            completed_appointments: emp.completed_appointments || 0, // ✅ novo campo
+            type: "employer",
           };
         })
       : [];
@@ -73,8 +77,9 @@ export default function GlobalRotativity({
           name: i.name,
           slug: i.slug,
           price: i.price,
-          type: i.type,
+          type: i.type || "item",
           total_views: i.total_views || 0,
+          completed_appointments: i.completed_appointments || 0, // ✅ novo campo
           image: getItemImage(i),
         }))
       : [];
@@ -86,13 +91,12 @@ export default function GlobalRotativity({
       <Card className="rotativity-card p-3 bg-dark text-light border-0 shadow-sm">
         <h4 className="mb-3 text-center text-info">Descubra Mais</h4>
 
-        {/* 🔹 Outros Estabelecimentos */}
         {ests.length > 0 && (
           <div className="mb-4">
             <GlobalCarousel
               title="Outros Estabelecimentos"
               items={ests}
-              navigate={(slug) => navigate(`/establishment/view/${slug}`)}
+              navigate={navigate}
               showSchedule={false}
               openSchedulePopup={() => {}}
               fmtBRL={fmtBRL}
@@ -100,13 +104,12 @@ export default function GlobalRotativity({
           </div>
         )}
 
-        {/* 🔹 Outros Colaboradores */}
         {emps.length > 0 && (
           <div className="mb-4">
             <GlobalCarousel
               title="Outros Colaboradores"
               items={emps}
-              navigate={(slug) => navigate(`/employer/view/${slug}`)}
+              navigate={navigate}
               showSchedule={false}
               openSchedulePopup={() => {}}
               fmtBRL={fmtBRL}
@@ -114,13 +117,12 @@ export default function GlobalRotativity({
           </div>
         )}
 
-        {/* 🔹 Outros Itens */}
         {items.length > 0 && (
           <div className="mb-4">
             <GlobalCarousel
               title="Outros Itens"
               items={items}
-              navigate={(slug) => navigate(`/item/view/${slug}`)}
+              navigate={navigate}
               showSchedule={false}
               openSchedulePopup={() => {}}
               fmtBRL={fmtBRL}

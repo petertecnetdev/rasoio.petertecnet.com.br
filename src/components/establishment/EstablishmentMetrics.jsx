@@ -14,7 +14,7 @@ export default function EstablishmentMetrics({ metrics }) {
     !(typeof v === "number" && isNaN(v));
 
   return (
-    <Card className="est-card">
+    <Card className="est-card m-3">
       <Card.Header>📊 Métricas do Estabelecimento</Card.Header>
       <Card.Body className="text-white">
 

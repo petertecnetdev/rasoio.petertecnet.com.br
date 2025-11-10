@@ -128,9 +128,6 @@ export default function EstablishmentViewPage() {
                 showSchedule={false}
               />
             )}
-          </Col>
-
-          <Col md={4}>
             <EstablishmentSidebar
               establishment={establishment}
               metrics={metrics}

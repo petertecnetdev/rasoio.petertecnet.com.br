@@ -1,4 +1,3 @@
-// src/pages/employer/EmployerViewPage.jsx
 import React, { useMemo, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,12 +8,15 @@ import EmployerSidebar from "../../components/employer/EmployerSidebar";
 import EmployerMetrics from "../../components/employer/EmployerMetrics";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
+import GlobalRotativity from "../../components/GlobalRotativity";
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
+import useEmployerView from "../../hooks/useEmployerView";
+import useItemsFilter from "../../hooks/useItemsFilter";
+import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
-import useWhatsappLink from "../../hooks/useWhatsappLink";
 import "./EmployerView.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -25,56 +27,21 @@ export default function EmployerViewPage() {
   const navigate = useNavigate();
   const token = useMemo(() => localStorage.getItem("token"), []);
 
-  const [employer, setEmployer] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [interactionSummary, setInteractionSummary] = useState(null);
-  const [userInteractions, setUserInteractions] = useState([]);
-  const [relatedEmployers, setRelatedEmployers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    employer,
+    metrics,
+    interactionSummary,
+    userInteractions,
+    otherEstablishments,
+    otherEmployers,
+    otherItems,
+    establishment,
+    ordersSummary,
+    isLoading,
+  } = useEmployerView(apiBaseUrl, user_name, token, navigate);
 
-  useAuthPrompt();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${apiBaseUrl}/employer/view/${user_name}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        const data = await res.json();
-        if (data?.employer) {
-          const cleanedMetrics = {};
-          if (data.metrics && typeof data.metrics === "object") {
-            for (const [k, v] of Object.entries(data.metrics)) {
-              if (
-                v !== null &&
-                v !== undefined &&
-                typeof v !== "object" &&
-                typeof v !== "function"
-              ) {
-                cleanedMetrics[k] = v;
-              }
-            }
-          }
-          setEmployer(data.employer);
-          setMetrics(cleanedMetrics);
-          setInteractionSummary(data.interaction_summary);
-          setUserInteractions(data.user_interactions || []);
-          setRelatedEmployers(data.related_employers || []);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar colaborador:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [user_name, token]);
-
-  const establishment = employer?.establishment || {};
   const items = establishment?.items || [];
-  const services = items.filter((i) => i.type === "service");
-  const products = items.filter((i) => i.type === "product");
-
+  const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(employer?.user || employer);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
   const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
@@ -85,6 +52,8 @@ export default function EmployerViewPage() {
     token,
     establishment
   );
+
+  useAuthPrompt();
 
   const [showWizard, setShowWizard] = useState(false);
   const [wizardOptions, setWizardOptions] = useState({});
@@ -103,12 +72,15 @@ export default function EmployerViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [user_name]);
 
-  if (!employer || isLoading) return null;
+  if (!employer) return null;
 
   const fmtBRL = (v) =>
     `R$ ${Number(v || 0)
       .toFixed(2)
       .replace(".", ",")}`;
+
+  const u = employer.user || {};
+  const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
 
   return (
     <div className="empv-root">
@@ -116,13 +88,13 @@ export default function EmployerViewPage() {
 
       <GlobalHero
         entity="employer"
-        title={`${employer?.user?.first_name || ""} ${employer?.user?.last_name || ""}`}
-        description={establishment?.name || "Colaborador do estabelecimento"}
+        title={fullName || "Colaborador"}
+        description={establishment?.name}
         background={establishment?.background}
-        logo={employer?.user?.avatar || establishment?.logo}
+        logo={u.avatar || establishment?.logo}
         imageUrl={imageUrl}
         handleImgError={handleImgError}
-        user={employer?.user}
+        user={u}
         establishment={establishment}
         interactionSummary={interactionSummary}
       />
@@ -159,15 +131,23 @@ export default function EmployerViewPage() {
                 showSchedule={false}
               />
             )}
+
+            <GlobalRotativity
+              otherEstablishments={otherEstablishments}
+              otherEmployers={otherEmployers}
+              otherItems={otherItems}
+              navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
+              fmtBRL={fmtBRL}
+            />
           </Col>
 
           <Col md={4}>
             <EmployerSidebar
               employer={employer}
               metrics={metrics}
-              interactionSummary={interactionSummary}
+              ordersSummary={ordersSummary}
               userInteractions={userInteractions}
-              relatedEmployers={relatedEmployers}
               imageUrl={imageUrl}
               handleImgError={handleImgError}
               navigate={navigate}
@@ -196,7 +176,7 @@ export default function EmployerViewPage() {
           target="_blank"
           rel="noreferrer"
           className="empv-whatsapp-fab"
-          title={`Conversar com ${employer?.user?.first_name || "colaborador"} no WhatsApp`}
+          title="Chamar no WhatsApp"
         >
           <FaWhatsapp className="empv-whatsapp-icon" />
         </a>

@@ -2,15 +2,16 @@ import React, { useCallback, useState } from "react";
 import { Card, Button, Badge, Modal } from "react-bootstrap";
 import PropTypes from "prop-types";
 import LoginFormComponent from "../auth/LoginFormComponent";
-import "./EmployerSidebar.css";
+import "./ItemSidebar.css";
 
 const fmtBRL = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
 });
 
-export default function EmployerSidebar({
-  employer,
+export default function ItemSidebar({
+  item,
+  entity,
   metrics,
   ordersSummary,
   userInteractions,
@@ -30,14 +31,14 @@ export default function EmployerSidebar({
       setShowLoginModal(true);
       return;
     }
-    openSchedulePopup(employer);
+    openSchedulePopup(item);
   };
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
     if (pendingAction === "schedule") {
       setTimeout(() => {
-        openSchedulePopup(employer);
+        openSchedulePopup(item);
         setPendingAction(null);
       }, 300);
     }
@@ -53,29 +54,25 @@ export default function EmployerSidebar({
     []
   );
 
-  if (!employer) return <div className="sidebar-loading-skeleton"></div>;
+  if (!item) return <div className="sidebar-loading-skeleton"></div>;
 
-  const u = employer.user || {};
-  const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
-  const establishment = employer.establishment || {};
+  const entityName = entity?.name || "Estabelecimento";
 
   return (
     <>
-      <div className="emp-sidebar">
-        <Card className="emp-card">
+      <div className="item-sidebar">
+        <Card className="item-card">
           <Card.Header className="d-flex align-items-center justify-content-between">
-            <span>💈 Colaborador</span>
-            {establishment?.name && (
+            <span>🛍️ Item</span>
+            {entity?.slug && (
               <Badge
                 bg="info"
                 className="cursor-pointer"
                 onClick={() =>
-                  establishment.slug
-                    ? navigate(`/establishment/view/${establishment.slug}`)
-                    : null
+                  navigate(`/establishment/view/${entity.slug}`)
                 }
               >
-                {establishment.name}
+                {entityName}
               </Badge>
             )}
           </Card.Header>
@@ -83,47 +80,32 @@ export default function EmployerSidebar({
           <Card.Body>
             <div className="d-flex align-items-center mb-3">
               <div className="position-relative me-3">
-                <div className="emp-avatar-frame">
-                  {isValid(u.avatar) ? (
+                <div className="item-avatar-frame">
+                  {isValid(item.image) ? (
                     <img
-                      src={imageUrl(u.avatar)}
+                      src={imageUrl(item.image)}
                       onError={handleImgError}
-                      className="emp-avatar-img"
-                      alt={fullName}
+                      className="item-avatar-img"
+                      alt={item.name}
                     />
                   ) : (
-                    <div className="emp-avatar-placeholder">
-                      {u.first_name?.charAt(0) || "?"}
+                    <div className="item-avatar-placeholder">
+                      {item.name?.charAt(0) || "?"}
                     </div>
                   )}
                 </div>
-                <div
-                  className={`emp-status-dot ${
-                    employer.is_available ? "online" : "offline"
-                  }`}
-                ></div>
               </div>
 
               <div>
-                <div className="fw-semibold text-light fs-5">{fullName}</div>
-                {isValid(employer.role) && (
-                  <div className="text-info small mb-1">{employer.role}</div>
-                )}
+                <div className="fw-semibold text-light fs-5">{item.name}</div>
+                <div className="text-info small mb-1">{item.type}</div>
+                <div className="text-secondary small mb-1">
+                  {fmtBRL.format(item.price || 0)}
+                </div>
                 <div className="text-secondary small">
-  👁️ {(metrics?.total_views ?? employer.total_views ?? 0)} visualizações • 👤{" "}
-  {(metrics?.unique_users ?? employer.unique_users ?? 0)} usuários únicos
-</div>
-
-                {employer.total_appointments > 0 && (
-                  <div className="text-success small">
-                    💇 {employer.total_appointments} atendimentos realizados
-                  </div>
-                )}
-                {u.about && (
-                  <div className="text-secondary small mt-1 text-truncate">
-                    {u.about}
-                  </div>
-                )}
+                  👁️ {(metrics?.total_views ?? item.total_views ?? 0)} visualizações • 👤{" "}
+                  {(metrics?.unique_users ?? item.unique_users ?? 0)} usuários únicos
+                </div>
               </div>
             </div>
 
@@ -132,7 +114,7 @@ export default function EmployerSidebar({
               className="w-100"
               onClick={handleScheduleClick}
             >
-              Agendar com {u.first_name || "o colaborador"}
+              Adquirir {item.name}
             </Button>
 
             {metrics && (
@@ -152,7 +134,7 @@ export default function EmployerSidebar({
             {ordersSummary && (
               <div className="mt-3">
                 <div className="text-light small">
-                  <strong>Atendimentos</strong>
+                  <strong>Pedidos</strong>
                 </div>
                 <div className="text-secondary small">
                   Confirmados: {ordersSummary.confirmed || 0}
@@ -205,8 +187,9 @@ export default function EmployerSidebar({
   );
 }
 
-EmployerSidebar.propTypes = {
-  employer: PropTypes.object,
+ItemSidebar.propTypes = {
+  item: PropTypes.object,
+  entity: PropTypes.object,
   metrics: PropTypes.object,
   ordersSummary: PropTypes.object,
   userInteractions: PropTypes.array,
