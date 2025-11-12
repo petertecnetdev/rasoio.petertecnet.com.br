@@ -13,6 +13,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
   const [items, setItems] = useState([]);
   const [employers, setEmployers] = useState([]);
   const [ordersSummary, setOrdersSummary] = useState(null);
+  const [completedAppointments, setCompletedAppointments] = useState([]); // ✅ novo estado
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setItems(d.items || []);
         setEmployers(d.establishment?.employers || []);
         setOrdersSummary(d.orders_summary || null);
+        setCompletedAppointments(d.completed_appointments || []); // ✅ captura os atendimentos concluídos
       } catch (err) {
         const msg =
           err?.response?.data?.error ||
@@ -57,18 +59,18 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
     };
   }, [slug, token, navigate]);
 
- return {
-  establishment,
-  metrics,
-  interactionSummary,
-  userInteractions,
-  otherEstablishments,
-  otherEmployers,
-  otherItems, // 👈 ESSENCIAL
-  items,
-  employers,
-  ordersSummary,
-  isLoading,
-};
-
+  return {
+    establishment,
+    metrics,
+    interactionSummary,
+    userInteractions,
+    otherEstablishments,
+    otherEmployers,
+    otherItems,
+    items,
+    employers,
+    ordersSummary,
+    completedAppointments, // ✅ exporta para uso no front
+    isLoading,
+  };
 }

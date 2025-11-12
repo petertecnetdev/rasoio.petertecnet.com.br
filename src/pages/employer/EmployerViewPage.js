@@ -18,6 +18,7 @@ import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
 import "./EmployerView.css";
+import ShareButton from "../../components/ShareButton";
 
 const PLACEHOLDER = "/images/logo.png";
 const APP_ID = 3;
@@ -80,8 +81,8 @@ export default function EmployerViewPage() {
 
   const u = employer.user || {};
   const whatsappLink = u.phone
-    ? `https://wa.me/${u.phone.replace(/\D/g, "")}?text=Olá, gostaria de agendar um horário com você!`
-    : null;
+  ? `https://wa.me/${u.phone.replace(/\D/g, "")}?text=Olá! Encontrei seu perfil no Rasoio e gostaria de agendar um horário com você. Podemos conversar?`
+  : null;
 
   return (
     <div className="empv-root">
@@ -132,15 +133,6 @@ export default function EmployerViewPage() {
                 showSchedule={false}
               />
             )}
-
-            <GlobalRotativity
-              otherEstablishments={otherEstablishments}
-              otherEmployers={otherEmployers}
-              otherItems={otherItems}
-              navigate={navigate}
-              openSchedulePopup={openSchedulePopup}
-              fmtBRL={fmtBRL}
-            />
           </Col>
 
           <Col md={4}>
@@ -156,6 +148,18 @@ export default function EmployerViewPage() {
             />
             {metrics && <EmployerMetrics metrics={metrics} />}
           </Col>
+
+          
+          <Col md={12}> <GlobalRotativity
+              otherEstablishments={otherEstablishments}
+              otherEmployers={otherEmployers}
+              otherItems={otherItems}
+              navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
+              fmtBRL={fmtBRL}
+            /></Col>
+
+           
         </Row>
       </Container>
 
@@ -182,6 +186,7 @@ export default function EmployerViewPage() {
           <FaWhatsapp className="empv-whatsapp-icon" />
         </a>
       )}
+      <ShareButton />
     </div>
   );
 }

@@ -17,6 +17,8 @@ import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
+
+import ShareButton from "../../components/ShareButton";
 import "./EstablishmentView.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -28,18 +30,20 @@ export default function EstablishmentViewPage() {
   const token = useMemo(() => localStorage.getItem("token"), []);
 
   const {
-    establishment,
-    metrics,
-    interactionSummary,
-    userInteractions,
-    otherEstablishments,
-    otherEmployers,
-    otherItems,
-    items,
-    employers,
-    ordersSummary,
-    isLoading,
-  } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
+  establishment,
+  metrics,
+  interactionSummary,
+  userInteractions,
+  otherEstablishments,
+  otherEmployers,
+  otherItems,
+  items,
+  employers,
+  ordersSummary,
+  completedAppointments, // ✅ ADICIONAR AQUI
+  isLoading,
+} = useEstablishmentView(apiBaseUrl, slug, token, navigate);
+
 
   const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(establishment);
@@ -128,14 +132,26 @@ export default function EstablishmentViewPage() {
               />
             )}
 
-            <GlobalRotativity
-              otherEstablishments={otherEstablishments}
-              otherEmployers={otherEmployers}
-              otherItems={otherItems}
-              navigate={navigate}
-              openSchedulePopup={openSchedulePopup}
-              fmtBRL={fmtBRL}
-            />
+          {completedAppointments?.length > 0 && (
+  <GlobalCarousel
+    title="Atendimentos Concluídos"
+    items={completedAppointments.map((a) => ({
+      id: a.order_id,
+      name: `${a.client?.name || "Cliente"} com ${a.attendant?.name || "Colaborador"}`,
+      price: a.total_price,
+      image: a.attendant?.avatar || "/images/default-avatar.png",
+      description: `${a.item_list.join(", ")} • ${a.attended_at}`,
+      type: "appointment",
+    }))}
+    carouselActive
+    fmtBRL={fmtBRL}
+    apiBaseUrl={apiBaseUrl}
+    openSchedulePopup={() => {}}
+    navigate={navigate}
+    showSchedule={false}
+  />
+)}
+
           </Col>
 
           <Col md={4}>
@@ -152,6 +168,16 @@ export default function EstablishmentViewPage() {
             />
             {metrics && <EstablishmentMetrics metrics={metrics} />}
           </Col>
+<Col md={12}> <GlobalRotativity
+              otherEstablishments={otherEstablishments}
+              otherEmployers={otherEmployers}
+              otherItems={otherItems}
+              navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
+              fmtBRL={fmtBRL}
+            /></Col>
+
+           
         </Row>
       </Container>
 
@@ -178,6 +204,7 @@ export default function EstablishmentViewPage() {
           <FaWhatsapp className="estv-whatsapp-icon" />
         </a>
       )}
+      <ShareButton /> 
     </div>
   );
 }
