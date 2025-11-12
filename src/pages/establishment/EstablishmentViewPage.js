@@ -28,18 +28,18 @@ export default function EstablishmentViewPage() {
   const token = useMemo(() => localStorage.getItem("token"), []);
 
   const {
-  establishment,
-  metrics,
-  interactionSummary,
-  userInteractions,
-  otherEstablishments,
-  otherEmployers,   // 👈 ADICIONE
-  otherItems,       // 👈 ADICIONE
-  items,
-  employers,
-  ordersSummary,
-  isLoading,
-} = useEstablishmentView(apiBaseUrl, slug, token, navigate);
+    establishment,
+    metrics,
+    interactionSummary,
+    userInteractions,
+    otherEstablishments,
+    otherEmployers,
+    otherItems,
+    items,
+    employers,
+    ordersSummary,
+    isLoading,
+  } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
   const { services, products } = useItemsFilter(items);
   const whatsappLink = useWhatsappLink(establishment);
@@ -91,7 +91,6 @@ export default function EstablishmentViewPage() {
         logo={establishment.logo}
         imageUrl={imageUrl}
         handleImgError={handleImgError}
-        user={establishment.user}
         establishment={establishment}
         interactionSummary={interactionSummary}
       />
@@ -128,6 +127,18 @@ export default function EstablishmentViewPage() {
                 showSchedule={false}
               />
             )}
+
+            <GlobalRotativity
+              otherEstablishments={otherEstablishments}
+              otherEmployers={otherEmployers}
+              otherItems={otherItems}
+              navigate={navigate}
+              openSchedulePopup={openSchedulePopup}
+              fmtBRL={fmtBRL}
+            />
+          </Col>
+
+          <Col md={4}>
             <EstablishmentSidebar
               establishment={establishment}
               metrics={metrics}
@@ -140,20 +151,6 @@ export default function EstablishmentViewPage() {
               openSchedulePopup={openSchedulePopup}
             />
             {metrics && <EstablishmentMetrics metrics={metrics} />}
-          </Col>
-
-          {/* 🔹 Seção de Rotatividade Global */}
-          <Col md={12}>
-          <GlobalRotativity
-  otherEstablishments={otherEstablishments}
-  otherEmployers={otherEmployers}
-  otherItems={otherItems}
-  navigate={navigate}
-  openSchedulePopup={openSchedulePopup}
-  fmtBRL={fmtBRL}
-/>
-
-
           </Col>
         </Row>
       </Container>

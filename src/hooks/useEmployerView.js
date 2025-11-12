@@ -13,6 +13,9 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
   const [otherEstablishments, setOtherEstablishments] = useState([]);
   const [otherEmployers, setOtherEmployers] = useState([]);
   const [otherItems, setOtherItems] = useState([]);
+  const [colleagues, setColleagues] = useState([]);
+  const [averageEngagement, setAverageEngagement] = useState(0);
+  const [topItemAndClient, setTopItemAndClient] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,8 +26,8 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
         const res = await axios.get(`${apiBaseUrl}/employer/view/${userName}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!active) return;
 
+        if (!active) return;
         const d = res.data || {};
 
         setEmployer(d.employer || null);
@@ -37,11 +40,16 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
         setOtherEstablishments(d.other_establishments || []);
         setOtherEmployers(d.other_employers || []);
         setOtherItems(d.other_items || []);
+
+        setColleagues(d.colleagues || []);
+        setAverageEngagement(d.average_engagement_score || 0);
+        setTopItemAndClient(d.top_item_and_client || null);
       } catch (err) {
         const msg =
           err?.response?.data?.error ||
           err?.message ||
           "Erro ao carregar o colaborador.";
+
         Swal.fire({
           icon: "error",
           title: "Erro",
@@ -68,6 +76,9 @@ export default function useEmployerView(apiBaseUrl, userName, token, navigate) {
     otherEstablishments,
     otherEmployers,
     otherItems,
+    colleagues,
+    averageEngagement,
+    topItemAndClient,
     isLoading,
   };
 }

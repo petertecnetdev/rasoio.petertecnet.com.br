@@ -12,6 +12,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
   const [otherEstablishments, setOtherEstablishments] = useState([]);
   const [otherEmployers, setOtherEmployers] = useState([]);
   const [otherItems, setOtherItems] = useState([]);
+  const [topEmployer, setTopEmployer] = useState(null); // ✅ novo estado
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
         setOtherEstablishments(d.other_establishments || []);
         setOtherEmployers(d.other_employers || []);
         setOtherItems(d.other_items || []);
+        setTopEmployer(d.top_employer || null); // ✅ adiciona o colaborador destaque
       } catch (err) {
         const msg =
           err?.response?.data?.error ||
@@ -65,6 +67,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
     otherEstablishments,
     otherEmployers,
     otherItems,
+    topEmployer, // ✅ retorna também
     isLoading,
   };
 }

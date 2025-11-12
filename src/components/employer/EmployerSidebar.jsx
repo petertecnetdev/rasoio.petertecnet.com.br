@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { Card, Button, Badge, Modal } from "react-bootstrap";
 import PropTypes from "prop-types";
 import LoginFormComponent from "../auth/LoginFormComponent";
@@ -14,31 +14,32 @@ export default function EmployerSidebar({
   metrics,
   ordersSummary,
   userInteractions,
+  otherEmployers,
   imageUrl,
   handleImgError,
   navigate,
   openSchedulePopup,
 }) {
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
+  const [pendingEmployer, setPendingEmployer] = useState(null);
 
   const isAuthenticated = () => !!localStorage.getItem("token");
 
-  const handleScheduleClick = () => {
+  const handleScheduleClick = (emp) => {
     if (!isAuthenticated()) {
-      setPendingAction("schedule");
+      setPendingEmployer(emp);
       setShowLoginModal(true);
       return;
     }
-    openSchedulePopup(employer);
+    openSchedulePopup(emp);
   };
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
-    if (pendingAction === "schedule") {
+    if (pendingEmployer) {
       setTimeout(() => {
-        openSchedulePopup(employer);
-        setPendingAction(null);
+        openSchedulePopup(pendingEmployer);
+        setPendingEmployer(null);
       }, 300);
     }
   };
@@ -53,11 +54,19 @@ export default function EmployerSidebar({
     []
   );
 
+  const establishment = employer?.establishment || {};
+  const colleagues = useMemo(
+    () =>
+      establishment?.employers?.filter(
+        (emp) => emp?.user && emp?.id !== employer?.id
+      ) || [],
+    [establishment, employer]
+  );
+
   if (!employer) return <div className="sidebar-loading-skeleton"></div>;
 
   const u = employer.user || {};
   const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
-  const establishment = employer.establishment || {};
 
   return (
     <>
@@ -65,19 +74,6 @@ export default function EmployerSidebar({
         <Card className="emp-card">
           <Card.Header className="d-flex align-items-center justify-content-between">
             <span>💈 Colaborador</span>
-            {establishment?.name && (
-              <Badge
-                bg="info"
-                className="cursor-pointer"
-                onClick={() =>
-                  establishment.slug
-                    ? navigate(`/establishment/view/${establishment.slug}`)
-                    : null
-                }
-              >
-                {establishment.name}
-              </Badge>
-            )}
           </Card.Header>
 
           <Card.Body>
@@ -110,10 +106,9 @@ export default function EmployerSidebar({
                   <div className="text-info small mb-1">{employer.role}</div>
                 )}
                 <div className="text-secondary small">
-  👁️ {(metrics?.total_views ?? employer.total_views ?? 0)} visualizações • 👤{" "}
-  {(metrics?.unique_users ?? employer.unique_users ?? 0)} usuários únicos
-</div>
-
+                  👁️ {(metrics?.total_views ?? employer.total_views ?? 0)} visualizações • 👤{" "}
+                  {(metrics?.unique_users ?? employer.unique_users ?? 0)} usuários únicos
+                </div>
                 {employer.total_appointments > 0 && (
                   <div className="text-success small">
                     💇 {employer.total_appointments} atendimentos realizados
@@ -127,10 +122,36 @@ export default function EmployerSidebar({
               </div>
             </div>
 
+            {establishment?.name && (
+              <div
+                className="emp-establishment-highlight mb-3 p-2 rounded-3 text-center cursor-pointer"
+                onClick={() =>
+                  establishment.slug
+                    ? navigate(`/establishment/view/${establishment.slug}`)
+                    : null
+                }
+              >
+                <div className="d-flex flex-column align-items-center">
+                  <img
+                    src={imageUrl(establishment.logo)}
+                    onError={handleImgError}
+                    alt={establishment.name}
+                    className="emp-establishment-logo mb-2"
+                  />
+                  <div className="emp-establishment-name text-light fw-semibold">
+                    {establishment.name}
+                  </div>
+                  <div className="emp-establishment-location text-secondary small">
+                    {establishment.city} - {establishment.state}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Button
               variant="outline-warning"
-              className="w-100"
-              onClick={handleScheduleClick}
+              className="w-100 emp-schedule-btn"
+              onClick={() => handleScheduleClick(employer)}
             >
               Agendar com {u.first_name || "o colaborador"}
             </Button>
@@ -186,6 +207,83 @@ export default function EmployerSidebar({
             )}
           </Card.Body>
         </Card>
+
+        {colleagues.length > 0 && (
+          <Card className="emp-card mt-3">
+            <Card.Header className="d-flex align-items-center justify-content-between">
+              <span>💈 Outros Colaboradores</span>
+              <Badge bg="info" className="px-2 py-1">
+                {colleagues.length}
+              </Badge>
+            </Card.Header>
+            <Card.Body>
+              {colleagues.map((col) => {
+                const cu = col.user || {};
+                const name = `${cu.first_name || ""} ${cu.last_name || ""}`.trim();
+                return (
+                  <div key={col.id} className="est-employee-card mb-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div
+                        className="d-flex align-items-center flex-grow-1 cursor-pointer"
+                        onClick={() =>
+                          cu.user_name ? navigate(`/employer/view/${cu.user_name}`) : null
+                        }
+                      >
+                        <div className="position-relative me-3">
+                          <div className="est-avatar-frame">
+                            {isValid(cu.avatar) ? (
+                              <img
+                                src={imageUrl(cu.avatar)}
+                                onError={handleImgError}
+                                className="est-avatar-img"
+                                alt={name}
+                              />
+                            ) : (
+                              <div className="est-avatar-placeholder">
+                                {cu.first_name?.charAt(0) || "?"}
+                              </div>
+                            )}
+                          </div>
+                          <div
+                            className={`est-status-dot ${
+                              col.is_available ? "online" : "offline"
+                            }`}
+                          ></div>
+                        </div>
+
+                        <div>
+                          <div className="fw-semibold text-light fs-6">{name}</div>
+                          {isValid(col.role) && (
+                            <div className="text-info small">{col.role}</div>
+                          )}
+                          <div className="text-secondary small mt-1">
+                            👁️ {col.total_views || 0} visualizações • 👤{" "}
+                            {col.unique_users || 0} usuários únicos
+                          </div>
+                          {col.total_appointments > 0 && (
+                            <div className="text-success small">
+                              💇 {col.total_appointments} atendimentos
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="outline-warning"
+                        title="Agendar horário"
+                        className="est-employee-btn"
+                        onClick={() => handleScheduleClick(col)}
+                      >
+                        Agendar
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </Card.Body>
+          </Card>
+        )}
       </div>
 
       <Modal
@@ -210,6 +308,7 @@ EmployerSidebar.propTypes = {
   metrics: PropTypes.object,
   ordersSummary: PropTypes.object,
   userInteractions: PropTypes.array,
+  otherEmployers: PropTypes.array,
   imageUrl: PropTypes.func.isRequired,
   handleImgError: PropTypes.func.isRequired,
   navigate: PropTypes.func.isRequired,

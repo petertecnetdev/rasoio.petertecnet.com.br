@@ -56,7 +56,7 @@ export default function ItemSidebar({
 
   if (!item) return <div className="sidebar-loading-skeleton"></div>;
 
-  const entityName = entity?.name || "Estabelecimento";
+  const establishment = entity || {};
 
   return (
     <>
@@ -64,17 +64,6 @@ export default function ItemSidebar({
         <Card className="item-card">
           <Card.Header className="d-flex align-items-center justify-content-between">
             <span>🛍️ Item</span>
-            {entity?.slug && (
-              <Badge
-                bg="info"
-                className="cursor-pointer"
-                onClick={() =>
-                  navigate(`/establishment/view/${entity.slug}`)
-                }
-              >
-                {entityName}
-              </Badge>
-            )}
           </Card.Header>
 
           <Card.Body>
@@ -98,7 +87,9 @@ export default function ItemSidebar({
 
               <div>
                 <div className="fw-semibold text-light fs-5">{item.name}</div>
-                <div className="text-info small mb-1">{item.type}</div>
+                {isValid(item.type) && (
+                  <div className="text-info small mb-1">{item.type}</div>
+                )}
                 <div className="text-secondary small mb-1">
                   {fmtBRL.format(item.price || 0)}
                 </div>
@@ -108,6 +99,32 @@ export default function ItemSidebar({
                 </div>
               </div>
             </div>
+
+            {establishment?.name && (
+              <div
+                className="item-establishment-highlight mb-3 p-2 rounded-3 text-center cursor-pointer"
+                onClick={() =>
+                  establishment.slug
+                    ? navigate(`/establishment/view/${establishment.slug}`)
+                    : null
+                }
+              >
+                <div className="d-flex flex-column align-items-center">
+                  <img
+                    src={imageUrl(establishment.logo)}
+                    onError={handleImgError}
+                    alt={establishment.name}
+                    className="item-establishment-logo mb-2"
+                  />
+                  <div className="item-establishment-name text-light fw-semibold">
+                    {establishment.name}
+                  </div>
+                  <div className="item-establishment-location text-secondary small">
+                    {establishment.city} - {establishment.state}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <Button
               variant="outline-warning"

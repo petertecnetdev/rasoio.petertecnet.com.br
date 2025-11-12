@@ -9,6 +9,8 @@ import EmployerMetrics from "../../components/employer/EmployerMetrics";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import GlobalRotativity from "../../components/GlobalRotativity";
+import EmployerColleaguesCarousel from "../../components/employer/EmployerColleaguesCarousel";
+import EmployerTopItemClientCard from "../../components/employer/EmployerTopItemClientCard";
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
 import useEmployerView from "../../hooks/useEmployerView";
@@ -37,6 +39,9 @@ export default function EmployerViewPage() {
     otherItems,
     establishment,
     ordersSummary,
+    colleagues,
+    averageEngagement,
+    topItemAndClient,
     isLoading,
   } = useEmployerView(apiBaseUrl, user_name, token, navigate);
 
@@ -72,7 +77,7 @@ export default function EmployerViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [user_name]);
 
-  if (!employer) return null;
+  if (!employer || isLoading) return null;
 
   const fmtBRL = (v) =>
     `R$ ${Number(v || 0)
@@ -132,6 +137,14 @@ export default function EmployerViewPage() {
               />
             )}
 
+            {colleagues && colleagues.length > 0 && (
+              <EmployerColleaguesCarousel
+                colleagues={colleagues}
+                navigate={navigate}
+                apiBaseUrl={apiBaseUrl}
+              />
+            )}
+
             <GlobalRotativity
               otherEstablishments={otherEstablishments}
               otherEmployers={otherEmployers}
@@ -153,6 +166,15 @@ export default function EmployerViewPage() {
               navigate={navigate}
               openSchedulePopup={openSchedulePopup}
             />
+
+            {topItemAndClient && (
+              <EmployerTopItemClientCard
+                data={topItemAndClient}
+                apiBaseUrl={apiBaseUrl}
+                navigate={navigate}
+              />
+            )}
+
             {metrics && <EmployerMetrics metrics={metrics} />}
           </Col>
         </Row>

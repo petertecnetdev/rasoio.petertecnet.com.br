@@ -73,15 +73,24 @@ export default function GlobalCarousel({
   };
 
   const getImageForItem = (it, title) => {
-    const lower = (title || "").toLowerCase();
-    if (lower.includes("outros estabelecimentos")) {
-      return it.logo || it.image || null;
-    }
-    if (lower.includes("outros colaboradores")) {
-      return it.user?.avatar || it.image || null;
-    }
-    return null;
-  };
+  const lower = (title || "").toLowerCase();
+
+  if (lower.includes("outros estabelecimentos")) {
+    return it.logo || it.image || null;
+  }
+
+  if (lower.includes("outros colaboradores")) {
+    return it.user?.avatar || it.image || null;
+  }
+
+  if (lower.includes("colegas") || lower.includes("colaboradores") || lower.includes("trabalho")) {
+    return it.avatar || it.user?.avatar || it.image || null;
+  }
+
+  // fallback geral
+  return it.image || it.logo || it.user?.avatar || null;
+};
+
 
   return (
     <>
