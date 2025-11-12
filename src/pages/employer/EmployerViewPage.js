@@ -91,18 +91,20 @@ export default function EmployerViewPage() {
     <div className="empv-root">
       <NavlogComponent />
 
-      <GlobalHero
-        entity="employer"
-        title={fullName || "Colaborador"}
-        description={establishment?.name}
-        background={establishment?.background}
-        logo={u.avatar || establishment?.logo}
-        imageUrl={imageUrl}
-        handleImgError={handleImgError}
-        user={u}
-        establishment={establishment}
-        interactionSummary={interactionSummary}
-      />
+<GlobalHero
+  entity="employer"
+  title={fullName || "Colaborador"}
+  description={u?.about || establishment?.description || " "} // ✅ usa o about do usuário
+  background={establishment?.background}
+  logo={u.avatar || establishment?.logo}
+  imageUrl={imageUrl}
+  handleImgError={handleImgError}
+  user={u}
+  establishment={establishment}
+  interactionSummary={interactionSummary}
+/>
+
+
 
       <Container fluid className="empv-main">
         <Row className="gx-3 gy-4">
