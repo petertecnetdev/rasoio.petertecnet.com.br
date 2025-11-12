@@ -9,8 +9,6 @@ import EmployerMetrics from "../../components/employer/EmployerMetrics";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import GlobalRotativity from "../../components/GlobalRotativity";
-import EmployerColleaguesCarousel from "../../components/employer/EmployerColleaguesCarousel";
-import EmployerTopItemClientCard from "../../components/employer/EmployerTopItemClientCard";
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
 import useEmployerView from "../../hooks/useEmployerView";
@@ -31,23 +29,19 @@ export default function EmployerViewPage() {
 
   const {
     employer,
+    establishment,
     metrics,
     interactionSummary,
     userInteractions,
     otherEstablishments,
     otherEmployers,
     otherItems,
-    establishment,
+    items,
     ordersSummary,
-    colleagues,
-    averageEngagement,
-    topItemAndClient,
     isLoading,
   } = useEmployerView(apiBaseUrl, user_name, token, navigate);
 
-  const items = establishment?.items || [];
   const { services, products } = useItemsFilter(items);
-  const whatsappLink = useWhatsappLink(employer?.user || employer);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
   const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
   const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
@@ -77,7 +71,7 @@ export default function EmployerViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [user_name]);
 
-  if (!employer || isLoading) return null;
+  if (!employer) return null;
 
   const fmtBRL = (v) =>
     `R$ ${Number(v || 0)
@@ -85,26 +79,26 @@ export default function EmployerViewPage() {
       .replace(".", ",")}`;
 
   const u = employer.user || {};
-  const fullName = `${u.first_name || ""} ${u.last_name || ""}`.trim();
+  const whatsappLink = u.phone
+    ? `https://wa.me/${u.phone.replace(/\D/g, "")}?text=Olá, gostaria de agendar um horário com você!`
+    : null;
 
   return (
     <div className="empv-root">
       <NavlogComponent />
 
-<GlobalHero
-  entity="employer"
-  title={fullName || "Colaborador"}
-  description={u?.about || establishment?.description || " "} // ✅ usa o about do usuário
-  background={establishment?.background}
-  logo={u.avatar || establishment?.logo}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-  user={u}
-  establishment={establishment}
-  interactionSummary={interactionSummary}
-/>
-
-
+      <GlobalHero
+        entity="employer"
+        title={`${u.first_name || ""} ${u.last_name || ""}`.trim() || "Colaborador"}
+        description={u.about || establishment?.description || ""}
+        background={establishment?.background}
+        logo={u.avatar || establishment?.logo}
+        imageUrl={imageUrl}
+        handleImgError={handleImgError}
+        user={u}
+        establishment={establishment}
+        interactionSummary={interactionSummary}
+      />
 
       <Container fluid className="empv-main">
         <Row className="gx-3 gy-4">
@@ -139,14 +133,6 @@ export default function EmployerViewPage() {
               />
             )}
 
-            {colleagues && colleagues.length > 0 && (
-              <EmployerColleaguesCarousel
-                colleagues={colleagues}
-                navigate={navigate}
-                apiBaseUrl={apiBaseUrl}
-              />
-            )}
-
             <GlobalRotativity
               otherEstablishments={otherEstablishments}
               otherEmployers={otherEmployers}
@@ -168,15 +154,6 @@ export default function EmployerViewPage() {
               navigate={navigate}
               openSchedulePopup={openSchedulePopup}
             />
-
-            {topItemAndClient && (
-              <EmployerTopItemClientCard
-                data={topItemAndClient}
-                apiBaseUrl={apiBaseUrl}
-                navigate={navigate}
-              />
-            )}
-
             {metrics && <EmployerMetrics metrics={metrics} />}
           </Col>
         </Row>
