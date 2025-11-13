@@ -17,43 +17,25 @@ export default function GlobalRotativity({
 
   const valid = (v) => v && v !== "null" && v !== "undefined";
 
-  const getEstImage = (logo, bg) =>
-    valid(logo)
-      ? imageUrl(logo)
-      : valid(bg)
-      ? imageUrl(bg)
-      : "/images/logo.png";
-
-  const getEmployerImage = (emp) => {
-    const u = emp.user || {};
-    const e = emp.establishment || {};
-    if (valid(u.avatar)) return imageUrl(u.avatar);
-    if (valid(e.logo)) return imageUrl(e.logo);
-    if (valid(e.background)) return imageUrl(e.background);
-    return "/images/logo.png";
-  };
-
-  const getItemImage = (item) => {
-    const ent = item.entity || {};
-    if (valid(item.image)) return imageUrl(item.image);
-    if (valid(ent.logo)) return imageUrl(ent.logo);
-    if (valid(ent.background)) return imageUrl(ent.background);
-    return "/images/logo.png";
-  };
-
+  // ========== ESTABLISHMENTS ==========
   const ests =
     Array.isArray(otherEstablishments) && otherEstablishments.length
       ? otherEstablishments.slice(0, 6).map((e) => ({
           id: e.id,
           name: e.name,
           slug: e.slug,
-          image: getEstImage(e.logo, e.background),
-          total_views: e.total_views || 0,
-          completed_appointments: e.completed_appointments || 0, // ✅ novo campo
           type: "establishment",
+
+          // 🔥 GlobalCard espera "logo"
+          logo: valid(e.logo) ? e.logo : null,
+          background: valid(e.background) ? e.background : null,
+
+          total_views: e.total_views || 0,
+          completed_appointments: e.completed_appointments || 0,
         }))
       : [];
 
+  // ========== EMPLOYERS ==========
   const emps =
     Array.isArray(otherEmployers) && otherEmployers.length
       ? otherEmployers.slice(0, 6).map((emp) => {
@@ -62,25 +44,47 @@ export default function GlobalRotativity({
             id: emp.id,
             name: `${u.first_name || ""} ${u.last_name || ""}`.trim() || "Colaborador",
             slug: u.user_name,
-            image: getEmployerImage(emp),
-            total_views: emp.total_views || 0,
-            completed_appointments: emp.completed_appointments || 0, // ✅ novo campo
             type: "employer",
+
+            // 🔥 GlobalCard espera item.user.avatar
+            user: {
+              avatar: valid(u.avatar) ? u.avatar : null,
+              first_name: u.first_name,
+              last_name: u.last_name,
+              user_name: u.user_name,
+            },
+
+            total_views: emp.total_views || 0,
+            completed_appointments: emp.completed_appointments || 0,
           };
         })
       : [];
 
+  // ========== ITEMS ==========
   const items =
     Array.isArray(otherItems) && otherItems.length
       ? otherItems.slice(0, 6).map((i) => ({
           id: i.id,
           name: i.name,
           slug: i.slug,
-          price: i.price,
-          type: i.type || "item",
+          price: i.price || 0,
+          type: i.type || "service",
+
+          // 🔥 GlobalCard espera "image"
+          image: valid(i.image) ? i.image : null,
+
+          // 🔥 Precisa entity para mostrar logo do estabelecimento
+          entity: i.entity
+            ? {
+                name: i.entity.name,
+                slug: i.entity.slug,
+                logo: valid(i.entity.logo) ? i.entity.logo : null,
+                background: valid(i.entity.background) ? i.entity.background : null,
+              }
+            : null,
+
           total_views: i.total_views || 0,
-          completed_appointments: i.completed_appointments || 0, // ✅ novo campo
-          image: getItemImage(i),
+          completed_appointments: i.completed_appointments || 0,
         }))
       : [];
 

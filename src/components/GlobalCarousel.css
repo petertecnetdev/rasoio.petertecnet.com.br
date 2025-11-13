@@ -1,17 +1,18 @@
-/* src/components/GlobalCarousel.css */
 :root {
   --bg-dark: #0b0d12;
   --bg-card: #171a20;
   --bg-hover: #1f222a;
   --text-light: #f2f4f8;
   --text-muted: #b4b6be;
-  --primary: #007bff;
-  --primary-glow: rgba(0, 123, 255, 0.65);
+  --primary: #00ffff;
+  --primary-glow: rgba(0, 255, 255, 0.45);
   --radius: 1rem;
   --transition: all 0.25s ease-in-out;
 }
 
-/* CONTAINER */
+/* ===============================================
+   CONTAINER DO CARROSSEL
+   =============================================== */
 .global-carousel {
   background: var(--bg-dark);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -20,7 +21,6 @@
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
 }
 
-/* HEADER */
 .global-carousel .card-header {
   background: linear-gradient(90deg, #000, #0d1117);
   color: var(--text-light);
@@ -43,7 +43,9 @@
   border-radius: 2px;
 }
 
-/* TRACK */
+/* ===============================================
+   TRACK DO CARROSSEL
+   =============================================== */
 .carousel-track-static {
   display: flex;
   gap: 1.2rem;
@@ -59,7 +61,9 @@
   display: none;
 }
 
-/* CARD */
+/* ===============================================
+   CARD DO ITEM
+   =============================================== */
 .carousel-card {
   flex: 0 0 240px;
   display: flex;
@@ -73,24 +77,61 @@
   transition: var(--transition);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
   height: 100%;
-  min-height: 340px; /* altura fixa p/ alinhar todos */
+  min-height: 340px;
   box-sizing: border-box;
 }
 .carousel-card:hover {
   background: var(--bg-hover);
   transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 0 18px rgba(0, 123, 255, 0.2);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.2);
 }
 
-/* IMAGE */
+/* ===============================================
+   ÁREA DA IMAGEM COM DIFERENÇA POR TIPO
+   =============================================== */
 .carousel-image-wrap {
   width: 100%;
   height: 150px;
   overflow: hidden;
-  border-radius: var(--radius);
   margin-bottom: 0.8rem;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* ------------ FORMATO: EMPLOYER (REDONDO) ---------------- */
+.img-round {
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #00ffff33;
+}
+
+/* ------------ FORMATO: ITEM/SERVICE/PRODUCT (QUADRADO) ---- */
+.img-square {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #00ffff22;
+}
+
+/* ------------ FORMATO: ESTABLISHMENT (HEXAGON NEON) ------- */
+.img-hex {
+  clip-path: polygon(
+    25% 0%,
+    75% 0%,
+    100% 50%,
+    75% 100%,
+    25% 100%,
+    0% 50%
+  );
+  border: 2px solid #00ffff55;
+  box-shadow: 0 0 12px #00ffff33;
+  overflow: hidden;
+}
+
+/* ===============================================
+   IMAGEM
+   =============================================== */
 .carousel-image {
   width: 100%;
   height: 100%;
@@ -101,7 +142,42 @@
   transform: scale(1.05);
 }
 
-/* CONTENT */
+/* ===============================================
+   PLACEHOLDER COM INICIAIS
+   =============================================== */
+.carousel-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #0a0f15;
+  color: var(--primary);
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* formas específicas */
+.carousel-placeholder.img-round {
+  border-radius: 50%;
+}
+.carousel-placeholder.img-square {
+  border-radius: 12px;
+}
+.carousel-placeholder.img-hex {
+  clip-path: polygon(
+    25% 0%,
+    75% 0%,
+    100% 50%,
+    75% 100%,
+    25% 100%,
+    0% 50%
+  );
+}
+
+/* ===============================================
+   CONTEÚDO
+   =============================================== */
 .carousel-item-content {
   flex: 1;
   display: flex;
@@ -115,7 +191,7 @@
   font-weight: 600;
   color: var(--text-light);
   line-height: 1.3;
-  min-height: 2.4em; /* garante alinhamento dos títulos */
+  min-height: 2.4em;
 }
 
 .carousel-item-price {
@@ -125,15 +201,20 @@
   margin-bottom: 0.5rem;
 }
 
+/* ===============================================
+   BADGES
+   =============================================== */
 .carousel-item-content .badge {
   font-size: 0.8rem;
   opacity: 0.9;
 }
 
-/* BUTTONS */
+/* ===============================================
+   BOTÕES
+   =============================================== */
 .btn-flat-primary {
   background: var(--primary);
-  color: #fff;
+  color: #000;
   border: none;
   font-weight: 600;
   border-radius: 8px;
@@ -141,9 +222,10 @@
   box-shadow: 0 0 8px var(--primary-glow);
 }
 .btn-flat-primary:hover {
-  background: #0062cc;
+  background: #00cccc;
   box-shadow: 0 0 16px var(--primary-glow);
 }
+
 .btn-flat-outline {
   border: 1px solid var(--primary);
   color: var(--primary);
@@ -154,11 +236,13 @@
 }
 .btn-flat-outline:hover {
   background: var(--primary);
-  color: #fff;
+  color: #000;
   box-shadow: 0 0 14px var(--primary-glow);
 }
 
-/* CONTROLS */
+/* ===============================================
+   SETAS
+   =============================================== */
 .carousel-arrow {
   pointer-events: all;
   position: absolute;
@@ -166,7 +250,7 @@
   transform: translateY(-50%);
   background: var(--primary);
   border: none;
-  color: #fff;
+  color: #000;
   font-size: 2.2rem;
   border-radius: 50%;
   width: 54px;
@@ -186,11 +270,13 @@
   right: -25px;
 }
 .carousel-arrow:hover {
-  background: #0062cc;
+  background: #00cccc;
   transform: translateY(-50%) scale(1.1);
 }
 
-/* MOBILE */
+/* ===============================================
+   RESPONSIVIDADE
+   =============================================== */
 @media (max-width: 768px) {
   .carousel-card {
     flex: 0 0 80%;
@@ -212,10 +298,59 @@
   }
 }
 
-/* SMALLER DEVICES */
 @media (max-width: 480px) {
   .carousel-card {
     flex: 0 0 90%;
     min-height: 300px;
   }
+}
+/* ---------------------------------------------
+   FORMATO DAS IMAGENS POR TIPO
+--------------------------------------------- */
+
+/* EMPLOYER → avatar circular menor */
+.img-round,
+.carousel-placeholder.img-round {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #00ffff55;
+  box-shadow: 0 0 8px #00ffff33;
+  margin: 0 auto;
+}
+
+/* ITEM / SERVICE / PRODUCT → quadrado (mantém igual) */
+.img-square,
+.carousel-placeholder.img-square {
+  width: 100% !important;
+  height: 150px !important;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #00ffff22;
+}
+
+/* ESTABLISHMENT → círculo elegante */
+.img-establishment,
+.carousel-placeholder.img-establishment {
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #00ffff66;
+  box-shadow: 0 0 10px #00ffff33;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------
+   PLACEHOLDER DE INICIAIS
+--------------------------------------------- */
+.carousel-placeholder {
+  background: #0a0f15;
+  color: #00ffff;
+  font-size: 26px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

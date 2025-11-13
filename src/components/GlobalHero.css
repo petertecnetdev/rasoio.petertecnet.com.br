@@ -1,319 +1,269 @@
-/* ============================================================
-   RASOIO - GLOBAL HERO (Quantum Horizon v7)
-   Peter Tecnet Design System | Neon-Glass Gradient Motion
-   ============================================================ */
+/* ======================================================================
+   GLOBAL HERO — ESTILO APLICATIVO DE BARBEARIA PREMIUM
+   Visual forte, masculino, moderno, neon + couro + aço escovado
+   ====================================================================== */
 
-:root {
-  --neon-cyan: #00eaff;
-  --neon-purple: #b966ff;
-  --neon-green: #00ffae;
-  --neon-pink: #ff80ff;
-  --neon-blue: #009dff;
-  --neon-yellow: #ffe873;
-  --text-light: #eaf7ff;
-  --text-muted: #98a5c7;
-  --dark-bg: #040509;
-  --radius: 1.2rem;
-  --transition: 0.35s ease;
-}
-
-/* ============================================================
-   HERO BASE
-   ============================================================ */
+/* ===== CONTAINER PRINCIPAL ===== */
 .global-hero {
   position: relative;
+  width: 100%;
+  min-height: 280px;
+  padding: 35px 20px;
+  display: flex;
+  align-items: center;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  min-height: 360px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-bottom: 3px solid rgba(0, 255, 255, 0.25);
   overflow: hidden;
-  color: var(--text-light);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.08);
 }
 
-.global-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 10% 10%,
-    rgba(0, 255, 255, 0.06),
-    transparent 70%
-  );
-  z-index: 1;
-}
-
+/* CAMADA ESCURA */
 .global-hero-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.85) 100%
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0.85),
+    rgba(0, 0, 0, 0.95)
   );
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(4px);
+  z-index: 1;
+}
+
+/* ==========================
+   LOGO / FOTO
+========================== */
+.global-hero-logo {
+  width: 140px;
+  height: 140px;
+  border-radius: 18px;
+  object-fit: cover;
+  border: 3px solid rgba(0, 255, 255, 0.4);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.22);
   z-index: 2;
 }
 
+/* Barbeiro (avatar redondo) */
+.hero-employer .global-hero-logo {
+  border-radius: 50%;
+  border: 3px solid rgba(160, 0, 255, 0.45);
+  box-shadow: 0 0 32px rgba(160, 0, 255, 0.25);
+}
+
+/* Estabelecimento (quadrado mais robusto) */
+.hero-establishment .global-hero-logo {
+  border: 3px solid rgba(0, 220, 255, 0.55);
+  box-shadow: 0 0 32px rgba(0, 220, 255, 0.25);
+}
+
+/* Item (produto/serviço — quadrado com borda mais clara) */
+.hero-item .global-hero-logo {
+  border-radius: 16px;
+  border: 3px solid rgba(255, 200, 0, 0.55);
+  box-shadow: 0 0 28px rgba(255, 200, 0, 0.25);
+}
+
+/* ==========================
+   TÍTULO E DESCRIÇÃO
+========================== */
 .global-hero-content {
   position: relative;
-  z-index: 3;
-  padding: 2rem 3%;
-  max-width: 1400px;
+  z-index: 2;
 }
 
-/* ============================================================
-   LOGO / AVATAR
-   ============================================================ */
-.global-hero-logo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(0, 255, 255, 0.5);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
-  transition: all var(--transition);
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.global-hero-logo:hover {
-  transform: scale(1.05);
-  border-color: var(--neon-green);
-  box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
-}
-
-/* ============================================================
-   TITLE / DESCRIPTION
-   ============================================================ */
 .global-hero-title {
-  font-size: 1.75rem;
+  font-size: 32px;
   font-weight: 700;
-  color: var(--neon-cyan);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  color: #ffffff;
+  margin-bottom: 10px;
+  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
 }
 
 .global-hero-desc {
-  font-size: 1rem;
-  color: var(--text-muted);
-  max-width: 700px;
-  text-shadow: 0 0 8px rgba(0, 255, 255, 0.1);
+  font-size: 16px;
+  color: #d6d6d6;
+  line-height: 1.4;
+  max-width: 500px;
 }
 
-/* ============================================================
-   DETAILS / META
-   ============================================================ */
+/* ==========================
+   DETALHES DO HERO
+========================== */
 .global-hero-details {
-  margin-top: 1rem;
+  margin-top: 15px;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  margin-bottom: 0.4rem;
-  color: var(--text-light);
-  transition: all var(--transition);
-}
-
-.detail-item:hover {
-  color: var(--neon-cyan);
-  text-shadow: 0 0 12px var(--neon-cyan);
+  color: #bfbfbf;
+  font-size: 15px;
+  margin-bottom: 6px;
+  cursor: default;
 }
 
 .detail-icon {
-  color: var(--neon-cyan);
-  min-width: 18px;
+  margin-right: 8px;
+  color: #00eaff;
 }
 
+/* Link (clicável) */
 .owner-link {
   cursor: pointer;
+  transition: 0.2s;
 }
 
+.owner-link:hover {
+  color: #00f6ff;
+}
+
+/* ==========================
+   REDES SOCIAIS
+========================== */
 .social-links {
   display: flex;
-  gap: 0.8rem;
-  margin-top: 0.5rem;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .social-icon {
-  font-size: 1.2rem;
-  color: var(--neon-cyan);
+  font-size: 22px;
+  color: #00f6ff;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: 0.2s ease;
 }
 
 .social-icon:hover {
-  color: var(--neon-green);
-  transform: scale(1.15);
-  text-shadow: 0 0 18px var(--neon-green);
+  transform: scale(1.2);
+  color: #fff;
 }
 
-/* ============================================================
-   STATUS FLAGS
-   ============================================================ */
+/* ==========================
+   STATUS DO ESTABELECIMENTO
+========================== */
 .status-flags {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
 }
 
 .status-badge {
-  display: inline-flex;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  display: flex;
+  gap: 6px;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 0.7rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: rgba(0, 255, 255, 0.08);
-  border: 1px solid rgba(0, 255, 255, 0.2);
-  color: var(--neon-cyan);
-  backdrop-filter: blur(6px);
-  transition: all var(--transition);
+  font-size: 13px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .status-badge.published {
-  color: var(--neon-green);
-  border-color: rgba(0, 255, 174, 0.3);
+  border-color: rgba(0, 255, 170, 0.4);
+  color: #00ffaa;
 }
 
 .status-badge.featured {
-  color: var(--neon-purple);
-  border-color: rgba(185, 102, 255, 0.3);
+  border-color: rgba(255, 200, 0, 0.4);
+  color: #ffcf40;
 }
 
 .status-badge.approved {
-  color: var(--neon-yellow);
-  border-color: rgba(255, 232, 115, 0.3);
+  border-color: rgba(0, 255, 255, 0.4);
+  color: #00eaff;
 }
 
-.status-badge:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px currentColor;
-}
-
-/* ============================================================
-   METRICS
-   ============================================================ */
+/* ==========================
+   MÉTRICAS
+========================== */
 .interaction-metrics {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  gap: 25px;
+  margin-top: 18px;
 }
 
 .metric-box {
-  flex: 0 0 150px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  min-width: 110px;
   text-align: center;
-  background: rgba(0, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 255, 0.15);
-  border-radius: 1rem;
-  padding: 0.9rem;
-  transition: all var(--transition);
-  backdrop-filter: blur(8px);
-}
-
-.metric-box:hover {
-  background: rgba(0, 255, 255, 0.08);
-  transform: translateY(-3px);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .metric-value {
-  font-size: 1.4rem;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+  color: #fff;
 }
 
 .metric-label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 12px;
+  color: #ccc;
 }
 
-/* Glow variants */
-.glow-cyan:hover {
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.4);
+/* Cores de glow */
+.glow-cyan {
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.25);
 }
 
-.glow-purple:hover {
-  border-color: var(--neon-purple);
-  box-shadow: 0 0 18px rgba(185, 102, 255, 0.4);
+.glow-purple {
+  box-shadow: 0 0 18px rgba(180, 0, 255, 0.25);
 }
 
-/* ============================================================
-   ANIMATIONS
-   ============================================================ */
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+/* ==========================
+   DIFERENÇAS POR TIPO — FUNDOS
+========================== */
+
+/* Estabelecimento — Azul, aço escovado + neon */
+.hero-establishment {
+  background-blend-mode: overlay;
+  background-color: #0a1f2a;
+  border-bottom-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Barbeiro (Colaborador) — Roxo + textura carbono */
+.hero-employer {
+  background-blend-mode: overlay;
+  background-color: #1b0a25;
+  border-bottom-color: rgba(180, 0, 255, 0.4);
+}
+
+/* Item (serviço/produto) — Dourado quente */
+.hero-item {
+  background-blend-mode: overlay;
+  background-color: #2a1c03;
+  border-bottom-color: rgba(255, 200, 0, 0.4);
+}
+
+/* Usuário / Genérico */
+.hero-user,
+.hero-generic {
+  background-color: #0d0d0d;
+}
+
+/* ==========================
+   RESPONSIVIDADE
+========================== */
+@media (max-width: 480px) {
+  .global-hero {
+    padding: 25px 12px;
+    min-height: 240px;
   }
-  50% {
-    box-shadow: 0 0 35px rgba(0, 255, 255, 0.4);
-  }
-}
 
-.global-hero-logo,
-.metric-box,
-.status-badge {
-  animation: glowPulse 5s ease-in-out infinite;
-}
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-@media (max-width: 992px) {
-  .global-hero-title {
-    font-size: 1.5rem;
-  }
-  .metric-box {
-    flex: 0 0 130px;
-  }
-}
-
-@media (max-width: 768px) {
   .global-hero-logo {
-    width: 90px;
-    height: 90px;
+    width: 110px;
+    height: 110px;
   }
-  .global-hero-title {
-    font-size: 1.3rem;
-  }
-  .global-hero-desc {
-    font-size: 0.95rem;
-  }
-  .metric-box {
-    flex: 0 0 110px;
-    padding: 0.8rem;
-  }
-}
 
-@media (max-width: 576px) {
-  .global-hero-content {
-    text-align: center;
+  .global-hero-title {
+    font-size: 24px;
   }
+
   .metric-box {
-    flex: 1 1 45%;
-  }
-  .status-flags {
-    justify-content: center;
-  }
-  .social-links {
-    justify-content: center;
+    min-width: 90px;
   }
 }

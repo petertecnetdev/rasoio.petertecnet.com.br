@@ -40,6 +40,7 @@ export default function GlobalHero({
   children,
 }) {
   const navigate = useNavigate();
+
   const totalViews = interactionSummary?.total_views || 0;
   const uniqueUsers = interactionSummary?.unique_users || 0;
 
@@ -53,7 +54,7 @@ export default function GlobalHero({
     if (url && url !== "#") window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  // 🌍 Define ícones e textos conforme o tipo de entidade
+  // Ícones por tipo
   const iconByEntity = {
     establishment: <FaStore className="me-2 text-info" />,
     employer: <FaUser className="me-2 text-warning" />,
@@ -63,18 +64,9 @@ export default function GlobalHero({
     generic: <FaInfoCircle className="me-2 text-secondary" />,
   };
 
-  const labelByEntity = {
-    establishment: "Estabelecimento",
-    employer: "Colaborador",
-    item: "Item",
-    order: "Pedido",
-    user: "Usuário",
-    generic: "Informação",
-  };
-
   return (
     <div
-      className="global-hero"
+      className={`global-hero hero-${entity}`}
       style={{
         backgroundImage: `url("${imageUrl(background)}")`,
       }}
@@ -83,7 +75,7 @@ export default function GlobalHero({
 
       <Container fluid className="global-hero-content">
         <Row className="align-items-center">
-          {/* ===== LOGO / AVATAR ===== */}
+          {/* ===== LOGO / AVATAR DO HERO ===== */}
           <Col md="auto" className="text-center mb-3 mb-md-0">
             <img
               src={imageUrl(logo || PLACEHOLDER)}
@@ -93,20 +85,26 @@ export default function GlobalHero({
             />
           </Col>
 
-          {/* ===== MAIN INFO ===== */}
+          {/* ===== INFORMAÇÕES PRINCIPAIS ===== */}
           <Col>
             <h1 className="global-hero-title d-flex align-items-center">
               {iconByEntity[entity]} {title}
             </h1>
 
-            {description && <p className="global-hero-desc">{description}</p>}
+            {description && (
+              <p className="global-hero-desc">{description}</p>
+            )}
 
             <div className="global-hero-details mt-3">
-              {/* 🔹 EXIBE INFO CONFORME O TIPO */}
+              {/* ===== Informações específicas por tipo ===== */}
+
+              {/* EMPLOYER → Nome do profissional */}
               {entity === "employer" && user && (
                 <div
                   className="detail-item owner-link"
-                  onClick={() => navigate(`/user/view/${user.user_name || user.id}`)}
+                  onClick={() =>
+                    navigate(`/user/view/${user.user_name || user.id}`)
+                  }
                 >
                   <FaUser className="detail-icon" />
                   <span>
@@ -118,6 +116,7 @@ export default function GlobalHero({
                 </div>
               )}
 
+              {/* ESTABLISHMENT → Categoria */}
               {entity === "establishment" && establishment?.category && (
                 <div className="detail-item">
                   <FaTag className="detail-icon" />
@@ -125,6 +124,7 @@ export default function GlobalHero({
                 </div>
               )}
 
+              {/* ITEM → Categoria do item */}
               {entity === "item" && extraInfo?.category && (
                 <div className="detail-item">
                   <FaTag className="detail-icon" />
@@ -132,6 +132,7 @@ export default function GlobalHero({
                 </div>
               )}
 
+              {/* ORDER → Número do pedido */}
               {entity === "order" && extraInfo?.order_number && (
                 <div className="detail-item">
                   <FaCalendarAlt className="detail-icon" />
@@ -139,7 +140,7 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {/* 🔹 Telefone / Localização / Rede Social */}
+              {/* TELEFONE */}
               {establishment?.phone && (
                 <div className="detail-item">
                   <FaPhoneAlt className="detail-icon" />
@@ -147,6 +148,7 @@ export default function GlobalHero({
                 </div>
               )}
 
+              {/* ENDEREÇO */}
               {establishment?.address && (
                 <div className="detail-item">
                   <FaMapMarkerAlt className="detail-icon" />
@@ -158,7 +160,7 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {/* 🔹 Social links */}
+              {/* REDES SOCIAIS */}
               {socials.some((s) => s.url) && (
                 <div className="social-links mt-2">
                   {socials.map(
@@ -176,7 +178,7 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {/* 🔹 Status (publicação, destaque etc.) */}
+              {/* STATUS (publicado, aprovado etc.) */}
               {establishment && (
                 <div className="status-flags mt-3">
                   {establishment.is_published && (
@@ -197,7 +199,7 @@ export default function GlobalHero({
                 </div>
               )}
 
-              {/* 🔹 Métricas */}
+              {/* MÉTRICAS */}
               <div className="interaction-metrics mt-4">
                 <div className="metric-box glow-cyan">
                   <div className="metric-value">
@@ -205,6 +207,7 @@ export default function GlobalHero({
                   </div>
                   <div className="metric-label">Visualizações</div>
                 </div>
+
                 <div className="metric-box glow-purple">
                   <div className="metric-value">
                     {uniqueUsers.toLocaleString()}
@@ -214,7 +217,10 @@ export default function GlobalHero({
               </div>
             </div>
 
-            {children && <div className="global-hero-extra mt-3">{children}</div>}
+            {/* Slot Extra */}
+            {children && (
+              <div className="global-hero-extra mt-3">{children}</div>
+            )}
           </Col>
         </Row>
       </Container>
@@ -230,7 +236,14 @@ GlobalHero.propTypes = {
   imageUrl: PropTypes.func.isRequired,
   handleImgError: PropTypes.func.isRequired,
   overlay: PropTypes.bool,
-  entity: PropTypes.oneOf(["establishment", "employer", "item", "order", "user", "generic"]),
+  entity: PropTypes.oneOf([
+    "establishment",
+    "employer",
+    "item",
+    "order",
+    "user",
+    "generic",
+  ]),
   user: PropTypes.object,
   establishment: PropTypes.object,
   interactionSummary: PropTypes.object,

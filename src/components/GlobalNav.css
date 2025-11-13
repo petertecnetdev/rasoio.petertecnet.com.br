@@ -1,0 +1,203 @@
+/* ============================
+   NAVBAR PRINCIPAL
+=============================== */
+
+.navlog__navbar {
+  padding: 0.6rem 1rem;
+  background: #111 !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navlog__brand {
+  display: flex;
+  align-items: center;
+}
+
+.navlog__logo-image {
+  height: 42px;
+  width: auto;
+  user-select: none;
+}
+
+/* ============================
+   BOTÃO MOBILE
+=============================== */
+
+.navlog__mobile-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.9rem;
+  cursor: pointer;
+  padding: 0 6px;
+  transition: opacity 0.2s ease;
+}
+
+.navlog__mobile-toggle-btn:hover {
+  opacity: 0.7;
+}
+
+/* ============================
+   BOTÃO LOGIN
+=============================== */
+
+.navlog__login-btn {
+  color: #fff;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 8px 16px;
+  border: 1px solid #fff3;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.navlog__login-btn:hover {
+  background: #fff2;
+  color: #fff;
+}
+
+/* ============================
+   MENU MOBILE
+=============================== */
+
+.navlog__mobile-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 82%;
+  max-width: 330px;
+  height: 100vh;
+  background: #111;
+  color: #fff;
+  z-index: 9999;
+  padding: 1.3rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  animation: navlogSlideIn 0.2s ease-out;
+}
+
+@keyframes navlogSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ============================
+   BOTÃO FECHAR
+=============================== */
+
+.navlog__mobile-close {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.navlog__close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ============================
+   CONTEÚDO MENU MOBILE
+=============================== */
+
+.navlog__mobile-content {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.navlog__avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 90px;
+  object-fit: cover;
+  border: 2px solid #333;
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+.navlog__user-name {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  color: #fff;
+}
+
+/* ============================
+   LINKS DO MENU
+=============================== */
+
+.navlog__mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navlog__link {
+  color: #e7e7e7;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #1a1a1a;
+  font-size: 1rem;
+  transition: background 0.2s ease;
+}
+
+.navlog__link:hover {
+  background: #222;
+}
+
+/* ============================
+   SUBMENUS
+=============================== */
+
+.navlog__admin-btn {
+  background: #1a1a1a;
+  border: none;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  width: 100%;
+  transition: background 0.2s ease;
+}
+
+.navlog__admin-btn:hover {
+  background: #222;
+}
+
+.navlog__submenu-link {
+  padding: 10px 12px;
+  display: block;
+  text-decoration: none;
+  color: #ddd;
+  font-size: 0.95rem;
+  background: #161616;
+  border-radius: 6px;
+  margin-top: 5px;
+  transition: background 0.2s ease;
+}
+
+.navlog__submenu-link:hover {
+  background: #222;
+}
+
+/* ============================
+   LOADING
+=============================== */
+
+.navlog__loading {
+  color: #ccc;
+  text-align: center;
+  margin-top: 20px;
+}

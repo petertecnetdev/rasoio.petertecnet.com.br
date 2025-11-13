@@ -1,0 +1,235 @@
+/* ============================================================
+   BASE DO CARD
+============================================================ */
+.carousel-card {
+  width: 100%;
+  min-height: 320px;
+  padding: 18px;
+  border-radius: 18px;
+  position: relative;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+  background: rgba(8, 10, 16, 0.55);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.12);
+  transition: transform 0.25s ease-out, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* Hover geral */
+.carousel-card:hover {
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.32);
+}
+
+/* ============================================================
+   PARALLAX INTELIGENTE
+============================================================ */
+.hologram-container {
+  perspective: 1200px;
+}
+
+/* ============================================================
+   HOLOGRAMA / IRIDESCÊNCIA
+============================================================ */
+.hologram-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    from 180deg,
+    rgba(0,255,255,0.10),
+    rgba(120,0,255,0.16),
+    rgba(0,180,255,0.12),
+    rgba(255,0,180,0.15),
+    rgba(0,255,255,0.12)
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateZ(40px) scale(1.3);
+  filter: blur(40px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+
+.carousel-card:hover .hologram-overlay {
+  opacity: 0.65;
+  transform: translateZ(70px) scale(1.6);
+}
+
+/* ============================================================
+   BACKGROUNDS POR TIPO — DIFERENÇA REAL
+============================================================ */
+
+/* ░░ ESTABLISHMENT — Azul Neon Profissional */
+.type-establishment {
+  background: linear-gradient(
+    145deg,
+    rgba(0, 90, 130, 0.55),
+    rgba(0, 40, 55, 0.55)
+  );
+  border-color: rgba(0, 220, 255, 0.6);
+  box-shadow: 0 0 32px rgba(0, 220, 255, 0.25);
+}
+
+/* ░░ EMPLOYER — Roxo Holográfico Futurista */
+.type-employer {
+  background: linear-gradient(
+    145deg,
+    rgba(120, 0, 200, 0.55),
+    rgba(60, 0, 110, 0.55)
+  );
+  border-color: rgba(180, 0, 255, 0.6);
+  box-shadow: 0 0 32px rgba(180, 0, 255, 0.25);
+}
+
+/* ░░ SERVICE — Verde Tech Neon */
+.type-service {
+  background: linear-gradient(
+    145deg,
+    rgba(0, 170, 120, 0.55),
+    rgba(0, 90, 60, 0.55)
+  );
+  border-color: rgba(0, 255, 170, 0.6);
+  box-shadow: 0 0 32px rgba(0, 255, 170, 0.25);
+}
+
+/* ░░ PRODUCT — Dourado Premium Quântico */
+.type-product {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 200, 0, 0.45),
+    rgba(140, 90, 0, 0.45)
+  );
+  border-color: rgba(255, 200, 0, 0.6);
+  box-shadow: 0 0 32px rgba(255, 200, 0, 0.25);
+}
+
+/* ============================================================
+   IMAGENS POR TIPO
+============================================================ */
+.carousel-image-wrap {
+  width: 100%;
+  height: 160px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ESTABLISHMENT — imagem quadrada */
+.img-establishment {
+  border-radius: 12px;
+  height: 160px;
+}
+
+/* EMPLOYER — avatar redondo */
+.img-round {
+  width: 140px !important;
+  height: 140px !important;
+  border-radius: 50%;
+  margin: 0 auto 12px auto;
+}
+
+/* SERVIÇO / PRODUTO — retangular */
+.img-square {
+  border-radius: 12px;
+  height: 160px;
+}
+
+/* PRODUTO — imagem mais destacada */
+.type-product .carousel-image-wrap img {
+  transform: scale(1.16);
+}
+
+/* ============================================================
+   PLACEHOLDERS
+============================================================ */
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-placeholder {
+  background: rgba(255,255,255,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: 700;
+  color: #00f6ff;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   CONTEÚDO
+============================================================ */
+.carousel-item-content {
+  text-align: center;
+  transform: translateZ(40px);
+}
+
+.carousel-item-name {
+  font-size: 20px;
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.carousel-item-price {
+  font-size: 17px;
+  color: #00f6ff;
+  margin-bottom: 10px;
+}
+
+/* Dono / Estabelecimento ligado */
+.globalcard-entity {
+  font-size: 14px;
+  color: #ccc;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.globalcard-entity:hover {
+  color: #00f6ff;
+}
+
+/* ============================================================
+   BOTÕES
+============================================================ */
+.btn-flat-outline {
+  border-radius: 10px !important;
+  border: 1px solid #00f6ff !important;
+  color: #00f6ff !important;
+  transition: 0.2s;
+}
+
+.btn-flat-outline:hover {
+  background: #00f6ff !important;
+  color: #000 !important;
+}
+
+/* ============================================================
+   RESPONSIVO
+============================================================ */
+@media (max-width: 480px) {
+  .carousel-card {
+    min-height: 300px;
+  }
+
+  .carousel-image-wrap {
+    height: 130px;
+  }
+
+  .img-round {
+    width: 110px !important;
+    height: 110px !important;
+  }
+
+  .carousel-item-name {
+    font-size: 18px;
+  }
+}
