@@ -13,7 +13,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
   const [items, setItems] = useState([]);
   const [employers, setEmployers] = useState([]);
   const [ordersSummary, setOrdersSummary] = useState(null);
-  const [completedAppointments, setCompletedAppointments] = useState([]); // ✅ novo estado
+  const [completedAppointments, setCompletedAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +24,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+
         if (!active) return;
 
         const d = res.data || {};
@@ -38,12 +39,13 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setItems(d.items || []);
         setEmployers(d.establishment?.employers || []);
         setOrdersSummary(d.orders_summary || null);
-        setCompletedAppointments(d.completed_appointments || []); // ✅ captura os atendimentos concluídos
+        setCompletedAppointments(d.completed_appointments || []);
       } catch (err) {
         const msg =
           err?.response?.data?.error ||
           err?.message ||
           "Erro ao carregar o estabelecimento.";
+
         Swal.fire({
           icon: "error",
           title: "Erro",
@@ -57,7 +59,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
     return () => {
       active = false;
     };
-  }, [slug, token, navigate]);
+  }, [slug, token, navigate, apiBaseUrl]);
 
   return {
     establishment,
@@ -70,7 +72,7 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
     items,
     employers,
     ordersSummary,
-    completedAppointments, // ✅ exporta para uso no front
+    completedAppointments,
     isLoading,
   };
 }

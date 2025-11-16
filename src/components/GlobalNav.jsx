@@ -18,6 +18,7 @@ export default function GlobalNav() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showAdminSubmenu, setShowAdminSubmenu] = useState(false);
   const [showEstSubmenu, setShowEstSubmenu] = useState(false);
+  const [showBarberSubmenu, setShowBarberSubmenu] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,6 +54,7 @@ export default function GlobalNav() {
             employer: data.employer,
             establishments: data.establishments || [],
             profile: data.profile || {},
+            is_barber: data.user?.is_barber ?? false, // 🔥 ADICIONADO
           };
 
           setUser(userData);
@@ -71,6 +73,7 @@ export default function GlobalNav() {
     };
 
     loadUser();
+
     const handleAuthChanged = () => loadUser();
     window.addEventListener("authChanged", handleAuthChanged);
 
@@ -84,6 +87,7 @@ export default function GlobalNav() {
     setShowMobileMenu((prev) => !prev);
     setShowAdminSubmenu(false);
     setShowEstSubmenu(false);
+    setShowBarberSubmenu(false);
   };
 
   const handleLogout = () => {
@@ -109,6 +113,8 @@ export default function GlobalNav() {
           setShowAdminSubmenu={setShowAdminSubmenu}
           showEstSubmenu={showEstSubmenu}
           setShowEstSubmenu={setShowEstSubmenu}
+          showBarberSubmenu={showBarberSubmenu}         // 🔥 ADICIONADO
+          setShowBarberSubmenu={setShowBarberSubmenu}   // 🔥 ADICIONADO
           handleToggleMobileMenu={handleToggleMobileMenu}
           handleLogout={handleLogout}
         />

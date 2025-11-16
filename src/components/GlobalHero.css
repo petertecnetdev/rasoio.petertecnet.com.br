@@ -1,269 +1,246 @@
-/* ======================================================================
-   GLOBAL HERO — ESTILO APLICATIVO DE BARBEARIA PREMIUM
-   Visual forte, masculino, moderno, neon + couro + aço escovado
-   ====================================================================== */
+/* ================================
+   GLOBAL HERO - NOVO ESTILO
+   Peter Tecnet / Rasoio
+================================ */
 
-/* ===== CONTAINER PRINCIPAL ===== */
-.global-hero {
-  position: relative;
+.gh-root {
   width: 100%;
-  min-height: 280px;
-  padding: 35px 20px;
-  display: flex;
-  align-items: center;
+  min-height: 220px;
+  padding: 40px 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  border-bottom: 3px solid rgba(0, 255, 255, 0.25);
-  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* CAMADA ESCURA */
-.global-hero-overlay {
+.gh-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.75),
-    rgba(0, 0, 0, 0.85),
-    rgba(0, 0, 0, 0.95)
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.85) 100%
   );
-  backdrop-filter: blur(4px);
   z-index: 1;
 }
 
-/* ==========================
-   LOGO / FOTO
-========================== */
-.global-hero-logo {
-  width: 140px;
-  height: 140px;
-  border-radius: 18px;
-  object-fit: cover;
-  border: 3px solid rgba(0, 255, 255, 0.4);
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.22);
-  z-index: 2;
-}
-
-/* Barbeiro (avatar redondo) */
-.hero-employer .global-hero-logo {
-  border-radius: 50%;
-  border: 3px solid rgba(160, 0, 255, 0.45);
-  box-shadow: 0 0 32px rgba(160, 0, 255, 0.25);
-}
-
-/* Estabelecimento (quadrado mais robusto) */
-.hero-establishment .global-hero-logo {
-  border: 3px solid rgba(0, 220, 255, 0.55);
-  box-shadow: 0 0 32px rgba(0, 220, 255, 0.25);
-}
-
-/* Item (produto/serviço — quadrado com borda mais clara) */
-.hero-item .global-hero-logo {
-  border-radius: 16px;
-  border: 3px solid rgba(255, 200, 0, 0.55);
-  box-shadow: 0 0 28px rgba(255, 200, 0, 0.25);
-}
-
-/* ==========================
-   TÍTULO E DESCRIÇÃO
-========================== */
-.global-hero-content {
+.gh-container {
   position: relative;
   z-index: 2;
 }
 
-.global-hero-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 10px;
-  text-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+.gh-grid {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.global-hero-desc {
-  font-size: 16px;
-  color: #d6d6d6;
-  line-height: 1.4;
-  max-width: 500px;
-}
-
-/* ==========================
-   DETALHES DO HERO
-========================== */
-.global-hero-details {
-  margin-top: 15px;
-}
-
-.detail-item {
+/* LOGO */
+.gh-logo-box {
+  width: 110px;
+  height: 110px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
   display: flex;
   align-items: center;
-  color: #bfbfbf;
-  font-size: 15px;
-  margin-bottom: 6px;
-  cursor: default;
+  justify-content: center;
 }
 
-.detail-icon {
-  margin-right: 8px;
+.gh-logo {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+/* INFO */
+.gh-info {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* TÍTULO */
+.gh-title {
+  display: flex;
+  align-items: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.gh-icon {
+  font-size: 26px;
+  margin-right: 10px;
   color: #00eaff;
 }
 
-/* Link (clicável) */
-.owner-link {
-  cursor: pointer;
-  transition: 0.2s;
+/* DESCRIÇÃO */
+.gh-desc {
+  font-size: 15px;
+  color: #e6e6e6;
+  margin-top: 6px;
+  max-width: 650px;
 }
 
-.owner-link:hover {
-  color: #00f6ff;
+/* LIST MODE */
+.gh-list-location {
+  font-size: 16px;
+  font-weight: 500;
+  color: #c5c5c5;
+  margin-top: 2px;
 }
 
-/* ==========================
-   REDES SOCIAIS
-========================== */
-.social-links {
+.gh-children {
+  margin-top: 15px;
+}
+
+/* DETALHES */
+.gh-details {
+  margin-top: 15px;
+  display: grid;
+  gap: 8px;
+}
+
+.gh-detail-line {
   display: flex;
-  gap: 14px;
-  margin-top: 10px;
+  align-items: center;
+  gap: 10px;
+  color: #dcdcdc;
+  font-size: 15px;
 }
 
-.social-icon {
-  font-size: 22px;
-  color: #00f6ff;
+.gh-detail-line svg {
+  font-size: 17px;
+  color: #00eaff;
+}
+
+.gh-click {
   cursor: pointer;
   transition: 0.2s ease;
 }
 
-.social-icon:hover {
-  transform: scale(1.2);
-  color: #fff;
+.gh-click:hover {
+  opacity: 0.8;
 }
 
-/* ==========================
-   STATUS DO ESTABELECIMENTO
-========================== */
-.status-flags {
+/* SOCIAL */
+.gh-socials {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
 }
 
-.status-badge {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px 12px;
-  border-radius: 12px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  font-size: 13px;
+.gh-social-icon {
+  cursor: pointer;
+  font-size: 18px;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: 0.2s ease-in-out;
 }
 
-.status-badge.published {
-  border-color: rgba(0, 255, 170, 0.4);
-  color: #00ffaa;
+.gh-social-icon:hover {
+  color: #00eaff;
+  transform: scale(1.1);
 }
 
-.status-badge.featured {
-  border-color: rgba(255, 200, 0, 0.4);
-  color: #ffcf40;
+/* MÉTRICAS */
+.gh-metrics {
+  margin-top: 18px;
+  display: flex;
+  gap: 25px;
 }
 
-.status-badge.approved {
-  border-color: rgba(0, 255, 255, 0.4);
+.gh-metric {
+  text-align: center;
+  min-width: 80px;
+}
+
+.gh-metric-value {
+  font-size: 20px;
+  font-weight: 700;
   color: #00eaff;
 }
 
-/* ==========================
-   MÉTRICAS
-========================== */
-.interaction-metrics {
-  display: flex;
-  gap: 25px;
-  margin-top: 18px;
-}
-
-.metric-box {
-  padding: 12px 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  min-width: 110px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-}
-
-.metric-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
-}
-
-.metric-label {
+.gh-metric-label {
   font-size: 12px;
   color: #ccc;
+  text-transform: uppercase;
 }
 
-/* Cores de glow */
-.glow-cyan {
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.25);
-}
-
-.glow-purple {
-  box-shadow: 0 0 18px rgba(180, 0, 255, 0.25);
-}
-
-/* ==========================
-   DIFERENÇAS POR TIPO — FUNDOS
-========================== */
-
-/* Estabelecimento — Azul, aço escovado + neon */
-.hero-establishment {
-  background-blend-mode: overlay;
-  background-color: #0a1f2a;
-  border-bottom-color: rgba(0, 240, 255, 0.4);
-}
-
-/* Barbeiro (Colaborador) — Roxo + textura carbono */
-.hero-employer {
-  background-blend-mode: overlay;
-  background-color: #1b0a25;
-  border-bottom-color: rgba(180, 0, 255, 0.4);
-}
-
-/* Item (serviço/produto) — Dourado quente */
-.hero-item {
-  background-blend-mode: overlay;
-  background-color: #2a1c03;
-  border-bottom-color: rgba(255, 200, 0, 0.4);
-}
-
-/* Usuário / Genérico */
-.hero-user,
-.hero-generic {
-  background-color: #0d0d0d;
-}
-
-/* ==========================
-   RESPONSIVIDADE
-========================== */
-@media (max-width: 480px) {
-  .global-hero {
-    padding: 25px 12px;
-    min-height: 240px;
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .gh-root {
+    padding: 30px 15px;
   }
 
-  .global-hero-logo {
-    width: 110px;
-    height: 110px;
+  .gh-grid {
+    flex-direction: column;
+    text-align: center;
   }
 
-  .global-hero-title {
-    font-size: 24px;
+  .gh-title {
+    justify-content: center;
   }
 
-  .metric-box {
-    min-width: 90px;
+  .gh-details {
+    text-align: left;
   }
+
+  .gh-metrics {
+    justify-content: center;
+  }
+}
+/* ===============================
+      MODO LIST — NOVO DESIGN
+================================ */
+
+.gh-list-mode {
+  padding: 45px 0;
+  min-height: 200px;
+}
+
+.gh-list-grid {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 35px;
+}
+
+.gh-logo-list {
+  width: 95px;
+  height: 95px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gh-title-list {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.gh-list-location {
+  margin-top: 5px;
+  font-size: 17px;
+  color: #dcdcdc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.gh-list-children-box {
+  margin-top: 15px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.18);
+}
+
+.gh-mapbutton-box {
+  margin-top: 18px;
+  max-width: 300px;
 }

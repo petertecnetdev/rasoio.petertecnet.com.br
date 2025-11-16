@@ -47,11 +47,6 @@ export default function GlobalNavMenu({
                 Gerenciar Conta
               </Link>
 
-              {user.establishments.length > 0 && (
-                <Link to="/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
-                  Dashboard
-                </Link>
-              )}
 
               <GlobalNavEstablishments
                 user={user}

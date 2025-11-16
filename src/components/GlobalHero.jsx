@@ -1,18 +1,14 @@
 // src/components/GlobalHero.jsx
 import React from "react";
 import PropTypes from "prop-types";
-import { Container, Row, Col, Badge } from "react-bootstrap";
+import { Container } from "react-bootstrap";
 import {
   FaUser,
-  FaEye,
-  FaUsers,
   FaPhoneAlt,
   FaMapMarkerAlt,
   FaGlobe,
   FaInstagram,
   FaFacebook,
-  FaCheckCircle,
-  FaStar,
   FaStore,
   FaCalendarAlt,
   FaTag,
@@ -20,6 +16,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import GlobalMapButton from "./GlobalMapButton";
 import "./GlobalHero.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -50,179 +47,173 @@ export default function GlobalHero({
     { icon: <FaGlobe />, url: establishment?.website_url },
   ];
 
-  const handleLink = (url) => {
-    if (url && url !== "#") window.open(url, "_blank", "noopener,noreferrer");
+  const iconByEntity = {
+    establishment: <FaStore />,
+    employer: <FaUser />,
+    item: <FaBox />,
+    list: <FaBox />,
+    order: <FaCalendarAlt />,
+    user: <FaUser />,
+    generic: <FaInfoCircle />,
   };
 
-  // Ícones por tipo
-  const iconByEntity = {
-    establishment: <FaStore className="me-2 text-info" />,
-    employer: <FaUser className="me-2 text-warning" />,
-    item: <FaBox className="me-2 text-success" />,
-    order: <FaCalendarAlt className="me-2 text-primary" />,
-    user: <FaUser className="me-2 text-light" />,
-    generic: <FaInfoCircle className="me-2 text-secondary" />,
-  };
+  const isList = entity === "list";
 
   return (
     <div
-      className={`global-hero hero-${entity}`}
+      className={`gh-root ${isList ? "gh-list-mode" : ""}`}
       style={{
-        backgroundImage: `url("${imageUrl(background)}")`,
+        backgroundImage: `linear-gradient(
+        rgba(0, 0, 0, 0.55),
+        rgba(0, 0, 0, 0.85)
+      ), url("${imageUrl(background)}")`,
       }}
     >
-      {overlay && <div className="global-hero-overlay" />}
+      {overlay && <div className="gh-overlay" />}
 
-      <Container fluid className="global-hero-content">
-        <Row className="align-items-center">
-          {/* ===== LOGO / AVATAR DO HERO ===== */}
-          <Col md="auto" className="text-center mb-3 mb-md-0">
+      <Container fluid className="gh-container">
+        <div className={`gh-grid ${isList ? "gh-list-grid" : ""}`}>
+
+          {/* LOGO */}
+          <div className={`gh-logo-box ${isList ? "gh-logo-list" : ""}`}>
             <img
               src={imageUrl(logo || PLACEHOLDER)}
               alt={title}
-              className="global-hero-logo"
+              className="gh-logo"
               onError={handleImgError}
             />
-          </Col>
+          </div>
 
-          {/* ===== INFORMAÇÕES PRINCIPAIS ===== */}
-          <Col>
-            <h1 className="global-hero-title d-flex align-items-center">
-              {iconByEntity[entity]} {title}
+          {/* INFO */}
+          <div className="gh-info">
+            <h1 className={`gh-title ${isList ? "gh-title-list" : ""}`}>
+              <span className="gh-icon">{iconByEntity[entity]}</span>
+              {title}
             </h1>
 
-            {description && (
-              <p className="global-hero-desc">{description}</p>
+            {/* LIST MODE */}
+            {isList && establishment && (
+              <>
+                <div className="gh-list-location">
+                  <FaMapMarkerAlt className="me-1" />
+                  {establishment.city}
+                  {establishment.uf ? ` - ${establishment.uf}` : ""}
+                </div>
+
+                {children && (
+                  <div className="gh-list-children-box">{children}</div>
+                )}
+              </>
             )}
 
-            <div className="global-hero-details mt-3">
-              {/* ===== Informações específicas por tipo ===== */}
+            {/* NORMAL VIEW */}
+            {!isList && (
+              <>
+                {description && <p className="gh-desc">{description}</p>}
 
-              {/* EMPLOYER → Nome do profissional */}
-              {entity === "employer" && user && (
-                <div
-                  className="detail-item owner-link"
-                  onClick={() =>
-                    navigate(`/user/view/${user.user_name || user.id}`)
-                  }
-                >
-                  <FaUser className="detail-icon" />
-                  <span>
-                    Profissional:{" "}
-                    <strong>
-                      {user.first_name} {user.last_name}
-                    </strong>
-                  </span>
-                </div>
-              )}
-
-              {/* ESTABLISHMENT → Categoria */}
-              {entity === "establishment" && establishment?.category && (
-                <div className="detail-item">
-                  <FaTag className="detail-icon" />
-                  <span>Categoria: {establishment.category}</span>
-                </div>
-              )}
-
-              {/* ITEM → Categoria do item */}
-              {entity === "item" && extraInfo?.category && (
-                <div className="detail-item">
-                  <FaTag className="detail-icon" />
-                  <span>Categoria: {extraInfo.category}</span>
-                </div>
-              )}
-
-              {/* ORDER → Número do pedido */}
-              {entity === "order" && extraInfo?.order_number && (
-                <div className="detail-item">
-                  <FaCalendarAlt className="detail-icon" />
-                  <span>Pedido nº {extraInfo.order_number}</span>
-                </div>
-              )}
-
-              {/* TELEFONE */}
-              {establishment?.phone && (
-                <div className="detail-item">
-                  <FaPhoneAlt className="detail-icon" />
-                  <span>{establishment.phone}</span>
-                </div>
-              )}
-
-              {/* ENDEREÇO */}
-              {establishment?.address && (
-                <div className="detail-item">
-                  <FaMapMarkerAlt className="detail-icon" />
-                  <span>
-                    {establishment.address}
-                    {establishment.city ? ` - ${establishment.city}` : ""}
-                    {establishment.uf ? `/${establishment.uf}` : ""}
-                  </span>
-                </div>
-              )}
-
-              {/* REDES SOCIAIS */}
-              {socials.some((s) => s.url) && (
-                <div className="social-links mt-2">
-                  {socials.map(
-                    (s, i) =>
-                      s.url && (
-                        <span
-                          key={i}
-                          className="social-icon"
-                          onClick={() => handleLink(s.url)}
-                        >
-                          {s.icon}
-                        </span>
-                      )
+                <div className="gh-details">
+                  {entity === "employer" && user && (
+                    <div
+                      className="gh-detail-line gh-click"
+                      onClick={() =>
+                        navigate(`/user/view/${user.user_name || user.id}`)
+                      }
+                    >
+                      <FaUser />
+                      <span>
+                        Profissional:{" "}
+                        <strong>
+                          {user.first_name} {user.last_name}
+                        </strong>
+                      </span>
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* STATUS (publicado, aprovado etc.) */}
-              {establishment && (
-                <div className="status-flags mt-3">
-                  {establishment.is_published && (
-                    <span className="status-badge published">
-                      <FaCheckCircle /> Publicado
-                    </span>
+                  {entity === "establishment" && establishment?.category && (
+                    <div className="gh-detail-line">
+                      <FaTag />
+                      <span>Categoria: {establishment.category}</span>
+                    </div>
                   )}
-                  {establishment.is_featured && (
-                    <span className="status-badge featured">
-                      <FaStar /> Destaque
-                    </span>
-                  )}
-                  {establishment.is_approved && (
-                    <span className="status-badge approved">
-                      <FaCheckCircle /> Aprovado
-                    </span>
-                  )}
-                </div>
-              )}
 
-              {/* MÉTRICAS */}
-              <div className="interaction-metrics mt-4">
-                <div className="metric-box glow-cyan">
-                  <div className="metric-value">
-                    {totalViews.toLocaleString()}
+                  {entity === "item" && extraInfo?.category && (
+                    <div className="gh-detail-line">
+                      <FaTag />
+                      <span>Categoria: {extraInfo.category}</span>
+                    </div>
+                  )}
+
+                  {establishment?.phone && (
+                    <div className="gh-detail-line">
+                      <FaPhoneAlt />
+                      <span>{establishment.phone}</span>
+                    </div>
+                  )}
+
+                  {establishment?.address && (
+                    <div className="gh-detail-line">
+                      <FaMapMarkerAlt />
+                      <span>
+                        {establishment.address}
+                        {establishment.city ? ` - ${establishment.city}` : ""}
+                        {establishment.uf ? `/${establishment.uf}` : ""}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* SOCIALS */}
+                  {socials.some((s) => s.url) && (
+                    <div className="gh-socials">
+                      {socials.map(
+                        (s, i) =>
+                          s.url && (
+                            <span
+                              key={i}
+                              className="gh-social-icon"
+                              onClick={() => window.open(s.url, "_blank")}
+                            >
+                              {s.icon}
+                            </span>
+                          )
+                      )}
+                    </div>
+                  )}
+
+                  {/* METRICS */}
+                  <div className="gh-metrics">
+                    <div className="gh-metric">
+                      <div className="gh-metric-value">
+                        {totalViews.toLocaleString()}
+                      </div>
+                      <div className="gh-metric-label">Visualizações</div>
+                    </div>
+
+                    <div className="gh-metric">
+                      <div className="gh-metric-value">
+                        {uniqueUsers.toLocaleString()}
+                      </div>
+                      <div className="gh-metric-label">Usuários únicos</div>
+                    </div>
                   </div>
-                  <div className="metric-label">Visualizações</div>
+
+                  {/* MAP BUTTON */}
+                  {establishment && (
+                    <div className="gh-mapbutton-box">
+                      <GlobalMapButton
+                        location={establishment?.location}
+                        address={establishment?.address}
+                        city={establishment?.city}
+                        uf={establishment?.uf}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="metric-box glow-purple">
-                  <div className="metric-value">
-                    {uniqueUsers.toLocaleString()}
-                  </div>
-                  <div className="metric-label">Usuários únicos</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Slot Extra */}
-            {children && (
-              <div className="global-hero-extra mt-3">{children}</div>
+                {children && <div className="gh-children">{children}</div>}
+              </>
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
       </Container>
     </div>
   );
@@ -240,6 +231,7 @@ GlobalHero.propTypes = {
     "establishment",
     "employer",
     "item",
+    "list",
     "order",
     "user",
     "generic",
@@ -249,14 +241,4 @@ GlobalHero.propTypes = {
   interactionSummary: PropTypes.object,
   extraInfo: PropTypes.object,
   children: PropTypes.node,
-};
-
-GlobalHero.defaultProps = {
-  overlay: true,
-  children: null,
-  user: null,
-  establishment: null,
-  interactionSummary: null,
-  extraInfo: null,
-  entity: "generic",
 };

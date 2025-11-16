@@ -1,0 +1,157 @@
+/* ============================================================
+   GLOBAL NAV HEADER — ULTRA PREMIUM (RASOIO QUANTUM STYLE)
+   Glassmorphism • Neon • Suave • Profissional • Premium
+=============================================================== */
+
+/* CONTAINER PRINCIPAL */
+.globalnav__header {
+  height: 64px;
+  padding: 0 18px;
+  backdrop-filter: blur(14px);
+  background: rgba(10, 10, 10, 0.72) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.45);
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  animation: globalnavFadeIn 0.4s ease;
+}
+
+@keyframes globalnavFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   LADO ESQUERDO DO HEADER
+=============================================================== */
+
+.globalnav__left {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* LOGO */
+.globalnav__logo {
+  height: 48px;
+  user-select: none;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.22));
+}
+
+.globalnav__logo:hover {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.45));
+}
+
+/* ============================================================
+   MENU DESKTOP
+=============================================================== */
+
+.globalnav__desktop-menu {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-left: 6px;
+}
+
+/* LINKS DO MENU */
+.globalnav__desktop-link {
+  position: relative;
+  color: #dadada;
+  font-size: 1.04rem;
+  font-weight: 500;
+  padding: 4px 2px;
+  text-decoration: none;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+
+/* HOVER */
+.globalnav__desktop-link:hover {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* LINHA NEON ANIMADA */
+.globalnav__desktop-link::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #00eaff, #0a75ff);
+  transition: width 0.3s ease;
+}
+
+.globalnav__desktop-link:hover::after {
+  width: 100%;
+}
+
+/* ESTADO ATIVO */
+.globalnav__desktop-link.active {
+  color: #ffffff;
+}
+
+.globalnav__desktop-link.active::after {
+  width: 100%;
+}
+
+/* ESCONDER NO MOBILE */
+@media (max-width: 991px) {
+  .globalnav__desktop-menu {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   LADO DIREITO DO HEADER
+=============================================================== */
+.globalnav__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* BOTÃO DO MENU MOBILE (☰) */
+.globalnav__mobile-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #eeeeee;
+  cursor: pointer;
+  padding: 4px 10px;
+  line-height: 1;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.globalnav__mobile-btn:hover {
+  transform: scale(1.12);
+  opacity: 0.85;
+}
+
+/* ============================================================
+   BOTÃO DE LOGIN
+=============================================================== */
+
+.globalnav__login-btn {
+  padding: 8px 16px;
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.globalnav__login-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.33);
+}

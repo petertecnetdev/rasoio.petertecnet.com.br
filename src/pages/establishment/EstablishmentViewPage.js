@@ -2,13 +2,17 @@ import React, { useMemo, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
+
 import NavlogComponent from "../../components/NavlogComponent";
 import GlobalHero from "../../components/GlobalHero";
 import EstablishmentSidebar from "../../components/establishment/EstablishmentSidebar";
 import EstablishmentMetrics from "../../components/establishment/EstablishmentMetrics";
 import GlobalCarousel from "../../components/GlobalCarousel";
+import GlobalMap from "../../components/GlobalMap";
+
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import GlobalRotativity from "../../components/GlobalRotativity";
+
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
 import useEstablishmentView from "../../hooks/useEstablishmentView";
@@ -17,6 +21,7 @@ import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
+import GlobalGallery from "../../components/GlobalGallery";
 
 import ShareButton from "../../components/ShareButton";
 import "./EstablishmentView.css";
@@ -27,6 +32,7 @@ const APP_ID = 3;
 export default function EstablishmentViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+
   const token = useMemo(() => localStorage.getItem("token"), []);
 
   const {
@@ -41,6 +47,7 @@ export default function EstablishmentViewPage() {
     employers,
     ordersSummary,
     completedAppointments,
+    images,
     isLoading,
   } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
@@ -48,8 +55,10 @@ export default function EstablishmentViewPage() {
   const whatsappLink = useWhatsappLink(establishment);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
-  const { ref: serviceRef, handleScroll: handleServiceScroll } = useScrollControl();
-  const { ref: productRef, handleScroll: handleProductScroll } = useScrollControl();
+  const { ref: serviceRef, handleScroll: handleServiceScroll } =
+    useScrollControl();
+  const { ref: productRef, handleScroll: handleProductScroll } =
+    useScrollControl();
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
@@ -82,9 +91,9 @@ export default function EstablishmentViewPage() {
 
   if (!establishment) return null;
 
-  const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+  const fmtBRL = (v) =>
+    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
-  /** 🔥 CORRIGIDO — PADRONIZA OS TIPOS PARA O GlobalCard */
   const mappedServices = services.map((i) => ({
     ...i,
     type: "service",
@@ -97,19 +106,23 @@ export default function EstablishmentViewPage() {
     image: i.image || null,
   }));
 
-  const mappedEmployers = employers?.map((e) => ({
-    ...e,
-    type: "employer",
-    image: e.user?.avatar || null,
-  })) || [];
+  const mappedEmployers =
+    employers?.map((e) => ({
+      ...e,
+      type: "employer",
+      image: e.user?.avatar || null,
+    })) || [];
 
-  const mappedCompleted = completedAppointments?.map((a) => ({
-    id: a.order_id,
-    name: `${a.client?.name || "Cliente"} com ${a.attendant?.name || "Colaborador"}`,
-    image: a.attendant?.avatar || "/images/default-avatar.png",
-    description: `${a.item_list.join(", ")} • ${a.attended_at}`,
-    type: "appointment",
-  })) || [];
+  const mappedCompleted =
+    completedAppointments?.map((a) => ({
+      id: a.order_id,
+      name: `${a.client?.name || "Cliente"} com ${
+        a.attendant?.name || "Colaborador"
+      }`,
+      image: a.attendant?.avatar || "/images/default-avatar.png",
+      description: `${a.item_list.join(", ")} • ${a.attended_at}`,
+      type: "appointment",
+    })) || [];
 
   const mappedOtherEstablishments = otherEstablishments.map((e) => ({
     ...e,
@@ -143,11 +156,13 @@ export default function EstablishmentViewPage() {
         handleImgError={handleImgError}
         establishment={establishment}
         interactionSummary={interactionSummary}
+        images={establishment.images || []}
       />
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
           <Col md={8}>
+            <GlobalGallery images={establishment.images || []} />
 
             {mappedServices.length > 0 && (
               <GlobalCarousel
@@ -173,7 +188,6 @@ export default function EstablishmentViewPage() {
                 handleScroll={handleProductScroll}
                 fmtBRL={fmtBRL}
                 apiBaseUrl={apiBaseUrl}
-                openSchedulePopup={() => {}}
                 navigate={navigate}
                 showSchedule={false}
               />
@@ -191,6 +205,12 @@ export default function EstablishmentViewPage() {
               />
             )}
 
+            <GlobalMap
+              location={establishment?.location}
+              address={establishment?.address}
+              city={establishment?.city}
+              uf={establishment?.uf}
+            />
           </Col>
 
           <Col md={4}>

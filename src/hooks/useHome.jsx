@@ -1,4 +1,3 @@
-// src/hooks/useHome.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -10,6 +9,20 @@ export default function useHome(apiBaseUrl, appId) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ============================================================
+  // 🔥 PEGAR CIDADE SELECIONADA NO MODAL (PRIORIDADE)
+  // ============================================================
+  const selectedCity = localStorage.getItem("selectedCity");
+  const selectedUF = localStorage.getItem("selectedUF");
+
+  // ============================================================
+  // 🔥 PEGAR LOCALIZAÇÃO DO LOGIN (SE NÃO HOUVER SELEÇÃO)
+  // ============================================================
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const city = selectedCity || user.city || null;
+  const uf = selectedUF || user.uf || null;
+
   useEffect(() => {
     let active = true;
 
@@ -18,10 +31,12 @@ export default function useHome(apiBaseUrl, appId) {
       setError(null);
 
       try {
+        const query = city && uf ? `?city=${city}&uf=${uf}` : "";
+
         const [estRes, empRes, itemRes] = await Promise.all([
-          axios.get(`${apiBaseUrl}/establishment/home/${appId}`),
-          axios.get(`${apiBaseUrl}/employer/home/${appId}`),
-          axios.get(`${apiBaseUrl}/item/home/${appId}`),
+          axios.get(`${apiBaseUrl}/establishment/home/${appId}${query}`),
+          axios.get(`${apiBaseUrl}/employer/home/${appId}${query}`),
+          axios.get(`${apiBaseUrl}/item/home/${appId}${query}`),
         ]);
 
         if (!active) return;
@@ -31,10 +46,12 @@ export default function useHome(apiBaseUrl, appId) {
         setItems(itemRes.data?.items || []);
       } catch (err) {
         if (!active) return;
+
         const msg =
           err?.response?.data?.error ||
           err?.response?.data?.message ||
           "Erro ao carregar os dados da página inicial.";
+
         setError(msg);
 
         Swal.fire({
@@ -57,7 +74,7 @@ export default function useHome(apiBaseUrl, appId) {
     return () => {
       active = false;
     };
-  }, [apiBaseUrl, appId]);
+  }, [apiBaseUrl, appId, city, uf]);
 
   return {
     establishments,
@@ -65,5 +82,7 @@ export default function useHome(apiBaseUrl, appId) {
     items,
     isLoading,
     error,
+    city,
+    uf,
   };
 }
