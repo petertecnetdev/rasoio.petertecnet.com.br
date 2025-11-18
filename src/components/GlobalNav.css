@@ -1,203 +1,269 @@
-/* ============================
-   NAVBAR PRINCIPAL
-=============================== */
+/* ============================================================
+   GLOBAL NAV FUTURISTA — PETER TECNET / RASOIO
+   Ultra Dark Neon • Vidro Líquido • Motion Elegante
+   ============================================================ */
 
-.navlog__navbar {
-  padding: 0.6rem 1rem;
-  background: #111 !important;
+/* ------------------------------
+   VARIÁVEIS DO TEMA FUTURISTA
+--------------------------------*/
+:root {
+  --bg-dark: #050508;
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.07);
+
+  --neon-cyan: #00eaff;
+  --neon-purple: #9b00ff;
+  --neon-gold: #ffd700;
+
+  --text-main: #e5e5e5;
+  --text-dim: #999;
+
+  --radius: 14px;
+  --transition: 0.28s ease;
+}
+
+/* ============================================================
+   HEADER SUPERIOR
+============================================================ */
+
+.globalnav__header {
+  height: 72px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(160%);
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-}
-
-.navlog__brand {
-  display: flex;
-  align-items: center;
-}
-
-.navlog__logo-image {
-  height: 42px;
-  width: auto;
-  user-select: none;
-}
-
-/* ============================
-   BOTÃO MOBILE
-=============================== */
-
-.navlog__mobile-toggle-btn {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 1.9rem;
-  cursor: pointer;
-  padding: 0 6px;
-  transition: opacity 0.2s ease;
-}
-
-.navlog__mobile-toggle-btn:hover {
-  opacity: 0.7;
-}
-
-/* ============================
-   BOTÃO LOGIN
-=============================== */
-
-.navlog__login-btn {
-  color: #fff;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 8px 16px;
-  border: 1px solid #fff3;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.navlog__login-btn:hover {
-  background: #fff2;
-  color: #fff;
-}
-
-/* ============================
-   MENU MOBILE
-=============================== */
-
-.navlog__mobile-menu {
-  position: fixed;
+  padding: 0 1.4rem;
+  position: sticky;
   top: 0;
-  right: 0;
-  width: 82%;
-  max-width: 330px;
-  height: 100vh;
-  background: #111;
-  color: #fff;
-  z-index: 9999;
-  padding: 1.3rem 1rem 2rem;
+  z-index: 900;
+  animation: headerFade 0.4s ease forwards;
+}
+
+@keyframes headerFade {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* LOGO */
+.globalnav__header-left {
   display: flex;
-  flex-direction: column;
-  animation: navlogSlideIn 0.2s ease-out;
+  align-items: center;
+  gap: 0.9rem;
 }
 
-@keyframes navlogSlideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+.globalnav__logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 16px var(--neon-cyan);
 }
 
-/* ============================
-   BOTÃO FECHAR
-=============================== */
-
-.navlog__mobile-close {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+/* TÍTULO */
+.globalnav__title {
+  font-size: 1.28rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(0, 234, 255, 0.4);
 }
 
-.navlog__close-btn {
+/* BOTÃO MOBILE */
+.globalnav__menu-btn {
+  font-size: 1.95rem;
+  color: var(--text-main);
   background: none;
   border: none;
-  font-size: 2rem;
-  color: #fff;
   cursor: pointer;
+  transition: var(--transition);
 }
 
-/* ============================
-   CONTEÚDO MENU MOBILE
-=============================== */
-
-.navlog__mobile-content {
-  overflow-y: auto;
-  flex: 1;
+.globalnav__menu-btn:hover {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 12px var(--neon-cyan);
 }
 
-.navlog__avatar {
-  width: 90px;
-  height: 90px;
-  border-radius: 90px;
-  object-fit: cover;
-  border: 2px solid #333;
+/* ============================================================
+   MENU MOBILE DESLIZANTE (FULL WIDTH)
+============================================================ */
+
+.globalnav__menu {
+  width: 100%;
+  padding: 1.4rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(18px) saturate(170%);
+  border-bottom: 1px solid var(--glass-border);
+  animation: slideOpen 0.32s ease forwards;
+}
+
+@keyframes slideOpen {
+  from { opacity: 0; transform: translateY(-18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   LINKS PRINCIPAIS DO MENU
+============================================================ */
+
+.globalnav__link {
   display: block;
-  margin: 0 auto 10px auto;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.55rem;
+  background: var(--bg-glass);
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 1.05rem;
+  letter-spacing: 0.4px;
+  transition: var(--transition);
 }
 
-.navlog__user-name {
-  text-align: center;
-  font-size: 1.2rem;
-  margin-bottom: 15px;
-  color: #fff;
+.globalnav__link:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.35);
+  background: rgba(0, 234, 255, 0.1);
 }
 
-/* ============================
-   LINKS DO MENU
-=============================== */
+/* ============================================================
+   BOTÕES DE SUBMENU
+============================================================ */
 
-.navlog__mobile-links {
+.navlog__submenu-btn {
+  width: 100%;
+  padding: 1rem 1rem;
+  margin-top: 0.7rem;
+  background: var(--bg-glass);
+  color: var(--text-main);
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.navlog__submenu-btn:hover {
+  background: rgba(155, 0, 255, 0.12);
+  border-color: var(--neon-purple);
+  color: var(--neon-purple);
+  box-shadow: 0 0 15px rgba(155, 0, 255, 0.45);
+}
+
+/* ============================================================
+   SUBMENUS EXPANDIDOS
+============================================================ */
+
+.navlog__submenu {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  border-left: 2px solid var(--neon-cyan);
+  margin-top: 0.5rem;
+  margin-left: 0.4rem;
+  padding-left: 0.8rem;
+  animation: fadeIn 0.25s ease forwards;
 }
 
-.navlog__link {
-  color: #e7e7e7;
-  text-decoration: none;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: #1a1a1a;
-  font-size: 1rem;
-  transition: background 0.2s ease;
-}
-
-.navlog__link:hover {
-  background: #222;
-}
-
-/* ============================
-   SUBMENUS
-=============================== */
-
-.navlog__admin-btn {
-  background: #1a1a1a;
-  border: none;
-  color: #fff;
-  padding: 10px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: left;
-  font-size: 1rem;
-  width: 100%;
-  transition: background 0.2s ease;
-}
-
-.navlog__admin-btn:hover {
-  background: #222;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .navlog__submenu-link {
-  padding: 10px 12px;
-  display: block;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.35rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  font-size: 0.98rem;
   text-decoration: none;
-  color: #ddd;
-  font-size: 0.95rem;
-  background: #161616;
-  border-radius: 6px;
-  margin-top: 5px;
-  transition: background 0.2s ease;
+  transition: var(--transition);
 }
 
 .navlog__submenu-link:hover {
-  background: #222;
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--neon-gold);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
 }
 
-/* ============================
-   LOADING
-=============================== */
+/* ============================================================
+   PERFIL DO USUÁRIO
+============================================================ */
 
-.navlog__loading {
-  color: #ccc;
-  text-align: center;
-  margin-top: 20px;
+.globalnav__profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0.5rem 1.6rem;
+}
+
+.globalnav__profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--neon-purple);
+  object-fit: cover;
+  box-shadow: 0 0 16px var(--neon-purple);
+}
+
+.globalnav__profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.globalnav__profile-name {
+  color: var(--text-main);
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.globalnav__profile-role {
+  color: var(--neon-cyan);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+   BOTÃO DE LOGOUT
+============================================================ */
+
+.globalnav__logout-btn {
+  width: 100%;
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius);
+  background: rgba(70, 0, 0, 0.4);
+  border: 1px solid rgba(255, 0, 0, 0.35);
+  color: #ff6666;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.4rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.globalnav__logout-btn:hover {
+  background: rgba(120, 0, 0, 0.45);
+  color: #ff8a8a;
+  border-color: red;
+  box-shadow: 0 0 14px rgba(255, 0, 0, 0.55);
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+============================================================ */
+
+@media (min-width: 992px) {
+  .globalnav__menu-btn {
+    display: none;
+  }
+
+  .globalnav__menu {
+    display: none;
+  }
 }

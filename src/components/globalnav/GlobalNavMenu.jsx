@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { storageUrl } from "../../config";
 import GlobalNavAdminMenu from "./GlobalNavAdminMenu";
 import GlobalNavEstablishments from "./GlobalNavEstablishments";
+import "./GlobalNavMenu.css";
 
 export default function GlobalNavMenu({
   user,
@@ -47,6 +48,9 @@ export default function GlobalNavMenu({
                 Gerenciar Conta
               </Link>
 
+              <Link to="/invite" onClick={handleToggleMobileMenu} className="navlog__link">
+                Convidar Usuário
+              </Link>
 
               <GlobalNavEstablishments
                 user={user}

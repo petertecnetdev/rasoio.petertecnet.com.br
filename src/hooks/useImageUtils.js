@@ -13,7 +13,7 @@ export default function useImageUtils(placeholder = "/images/logo.png") {
     if (isAbsolute(path)) return path;
 
     // Se for caminho relativo → monta usando storageUrl
-    return `${storageUrl}/${path}`;
+    return `${storageUrl}${path}`;
   };
 
   const handleImgError = (e) => {

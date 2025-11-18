@@ -1,0 +1,199 @@
+/* ============================================================
+   GLOBAL NAV MENU (MOBILE) — Estilo Oficial Rasoio (Neon Cyan)
+============================================================ */
+
+.navlog__mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(10, 10, 14, 0.78);
+  backdrop-filter: blur(18px) saturate(160%);
+  z-index: 9999;
+  padding: 1.4rem;
+  overflow-y: auto;
+  animation: slideIn 0.25s ease-out forwards;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   BOTÃO DE FECHAR (SEM VERMELHO)
+============================================================ */
+
+.navlog__mobile-close {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.navlog__close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e5e5e5;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  font-size: 1.7rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+
+.navlog__close-btn:hover {
+  color: #0baff5;
+  border-color: #0baff5;
+  box-shadow: 0 0 12px rgba(11,175,245,0.45);
+}
+
+/* ============================================================
+   CONTEÚDO
+============================================================ */
+
+.navlog__mobile-content {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* ============================================================
+   AVATAR
+============================================================ */
+
+.navlog__avatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #0baff5;
+  box-shadow: 0 0 14px rgba(11, 175, 245, 0.45);
+  margin-bottom: 12px;
+  background: #000;
+}
+
+/* ============================================================
+   NOME
+============================================================ */
+
+.navlog__user-name {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #eaeaea;
+  margin-bottom: 1.6rem;
+  text-shadow: 0 0 6px rgba(11,175,245,0.45);
+}
+
+/* ============================================================
+   LINKS PRINCIPAIS
+============================================================ */
+
+.navlog__mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.navlog__link {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  background: rgba(18, 18, 22, 0.7);
+  border-radius: 10px;
+  text-decoration: none;
+  color: #d2d2d2;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: 0.25s ease;
+  backdrop-filter: blur(14px);
+}
+
+.navlog__link:hover {
+  color: #0baff5;
+  background: rgba(11,175,245,0.12);
+  border-color: #0baff5;
+  box-shadow: 0 0 14px rgba(11,175,245,0.35);
+}
+
+/* ============================================================
+   LOADING
+============================================================ */
+
+.navlog__loading {
+  color: #aaaaaa;
+  font-size: 1rem;
+  margin-top: 40px;
+}
+
+/* ============================================================
+   SUBMENUS
+============================================================ */
+
+.navlog__submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+  animation: submenuFade 0.25s ease;
+}
+
+@keyframes submenuFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navlog__submenu-link {
+  padding: 11px 12px;
+  background: rgba(12, 12, 16, 0.7);
+  border-radius: 8px;
+  color: #cccccc;
+  text-decoration: none;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: 0.25s ease;
+  backdrop-filter: blur(14px);
+}
+
+.navlog__submenu-link:hover {
+  background: rgba(11,175,245,0.13);
+  border-color: #0baff5;
+  color: #0baff5;
+  box-shadow: 0 0 12px rgba(11,175,245,0.4);
+}
+
+/* ============================================================
+   RESPONSIVIDADE REAL
+============================================================ */
+
+/* CELULARES PEQUENOS */
+@media (max-width: 390px) {
+  .navlog__avatar { width: 68px; height: 68px; }
+  .navlog__user-name { font-size: 1.1rem; }
+  .navlog__link { font-size: 0.9rem; padding: 11px 0; }
+}
+
+/* TABLETS */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .navlog__mobile-menu { padding: 2rem 3rem; }
+  .navlog__avatar { width: 92px; height: 92px; }
+  .navlog__user-name { font-size: 1.55rem; }
+  .navlog__link { font-size: 1.15rem; padding: 14px 0; }
+}
+
+/* DESKTOP E TV */
+@media (min-width: 1025px) {
+  .navlog__mobile-menu {
+    width: 420px;
+    right: 0;
+    left: auto;
+    padding: 2.4rem;
+    border-left: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .navlog__mobile-content { text-align: left; }
+  .navlog__avatar { width: 105px; height: 105px; }
+  .navlog__user-name { font-size: 1.85rem; }
+  .navlog__link { font-size: 1.1rem; padding: 16px; }
+}

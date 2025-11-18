@@ -1,12 +1,16 @@
 // src/App.jsx
 import React, { useState, useEffect, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import axios from "axios";
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
 import { apiBaseUrl } from "./config";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -16,6 +20,10 @@ import LogoutPage from "./pages/auth/LogoutPage";
 import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
+
+/* 🔹 NOVOS IMPORTS — CONVITE */
+import InvitePage from "./pages/auth/InvitePage";
+import InviteCompletePage from "./pages/auth/InviteCompletePage";
 
 import DashboardPage from "./pages/DashboardPage";
 
@@ -37,12 +45,10 @@ import EmployerUpdatePage from "./pages/employer/EmployerUpdatePage";
 import EmployerViewPage from "./pages/employer/EmployerViewPage";
 import EmployerDashboardPage from "./pages/employer/EmployerDashboardPage";
 
-
 import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
 import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
 import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
-
 
 import "./index.css";
 
@@ -70,29 +76,33 @@ function AppInner() {
 
   if (initialLoading) {
     return (
-      <ProcessingIndicatorComponent
-        interval={100}
-        gifSrc="/images/logo.gif"
-      />
+      <ProcessingIndicatorComponent interval={100} gifSrc="/images/logo.gif" />
     );
   }
 
   const protectedRoute = (el) =>
-    user
-      ? user.email_verified_at
-        ? el
-        : <Navigate to="/email-verify" replace />
-      : <Navigate to="/login" replace />;
+    user ? (
+      user.email_verified_at ? (
+        el
+      ) : (
+        <Navigate to="/email-verify" replace />
+      )
+    ) : (
+      <Navigate to="/login" replace />
+    );
 
   const emailVerifiedRoute = (el) =>
-    user
-      ? !user.email_verified_at
-        ? el
-        : <Navigate to="/" replace />
-      : <Navigate to="/login" replace />;
+    user ? (
+      !user.email_verified_at ? (
+        el
+      ) : (
+        <Navigate to="/" replace />
+      )
+    ) : (
+      <Navigate to="/login" replace />
+    );
 
-  const restrictedRoute = (el) =>
-    user ? <Navigate to="/" replace /> : el;
+  const restrictedRoute = (el) => (user ? <Navigate to="/" replace /> : el);
 
   return (
     <>
@@ -102,49 +112,120 @@ function AppInner() {
           gifSrc="/images/logo.gif"
         />
       )}
-
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
 
-          <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
-          <Route path="/employer/view/:user_name" element={<EmployerViewPage  />} />
+          <Route
+            path="/establishment/view/:slug"
+            element={<EstablishmentViewPage />}
+          />
+          <Route
+            path="/employer/view/:user_name"
+            element={<EmployerViewPage />}
+          />
 
           <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
           <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-          <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
-          <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
-          <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
+          <Route
+            path="/password-email"
+            element={restrictedRoute(<PasswordEmailPage />)}
+          />
+          <Route
+            path="/password-reset"
+            element={restrictedRoute(<PasswordResetPage />)}
+          />
+          <Route
+            path="/email-verify"
+            element={emailVerifiedRoute(<EmailVerifyPage />)}
+          />
           <Route path="/password" element={protectedRoute(<PasswordPage />)} />
           <Route path="/logout" element={<LogoutPage />} />
 
-          <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
+          <Route path="/invite" element={(<InvitePage />)} />
+          <Route
+            path="/invite-complete"
+            element={(<InviteCompletePage />)}
+          />
 
-          <Route path="/order/list/:entityId" element={protectedRoute(<OrderListPage />)} />
-          <Route path="/order/create/:entityId" element={protectedRoute(<OrderCreatePage />)} />
-          <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
+          <Route
+            path="/dashboard"
+            element={protectedRoute(<DashboardPage />)}
+          />
 
-          <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
-          <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
+          <Route
+            path="/order/list/:entityId"
+            element={protectedRoute(<OrderListPage />)}
+          />
+          <Route
+            path="/order/create/:entityId"
+            element={protectedRoute(<OrderCreatePage />)}
+          />
+          <Route
+            path="/order/edit/:entityId/:id"
+            element={protectedRoute(<OrderEditPage />)}
+          />
 
-          <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
-          <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
-          <Route path="/item/view/:slug" element={protectedRoute(<ItemViewPage />)} />
-          <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
+          <Route
+            path="/user/update"
+            element={protectedRoute(<UserUpdatePage />)}
+          />
+          <Route
+            path="/user/:userName"
+            element={protectedRoute(<UserViewPage />)}
+          />
+
+          <Route
+            path="/item/list/:slug"
+            element={protectedRoute(<ItemListPage />)}
+          />
+          <Route
+            path="/item/create/:slug"
+            element={protectedRoute(<ItemCreatePage />)}
+          />
+          <Route
+            path="/item/view/:slug"
+            element={protectedRoute(<ItemViewPage />)}
+          />
+          <Route
+            path="/item/update/:id"
+            element={protectedRoute(<ItemUpdatePage />)}
+          />
           <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
-          <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
-          <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
-          <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
-          <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
-          <Route path="/employer/dashboard" element={protectedRoute(<EmployerDashboardPage />)} />
+          <Route
+            path="/employer/list/:slug"
+            element={protectedRoute(<EmployerListPage />)}
+          />
+          <Route
+            path="/employer/create/:slug"
+            element={protectedRoute(<EmployerCreatePage />)}
+          />
+          <Route
+            path="/employer/update/:id"
+            element={protectedRoute(<EmployerUpdatePage />)}
+          />
+          <Route
+            path="/employer/:id"
+            element={protectedRoute(<EmployerViewPage />)}
+          />
+          <Route
+            path="/employer/dashboard"
+            element={protectedRoute(<EmployerDashboardPage />)}
+          />
 
-
-          <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
-          <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
-          <Route path="/establishment/schedule/:slug"  element={<EstablishmentSchedulePage />} />
-
-
+          <Route
+            path="/establishment/create"
+            element={protectedRoute(<EstablishmentCreatePage />)}
+          />
+          <Route
+            path="/establishment/update/:id"
+            element={protectedRoute(<EstablishmentUpdatePage />)}
+          />
+          <Route
+            path="/establishment/schedule/:slug"
+            element={<EstablishmentSchedulePage />}
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -156,7 +237,10 @@ function AppInner() {
 export default function App() {
   return (
     <LoadingProvider>
-      <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID} locale="pt-BR">
+      <GoogleOAuthProvider
+        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+        locale="pt-BR"
+      >
         <AppInner />
       </GoogleOAuthProvider>
     </LoadingProvider>
