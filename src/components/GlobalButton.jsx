@@ -16,7 +16,10 @@ export default function GlobalButton({
   stopPropagation,
 }) {
   const handleClick = (e) => {
-    if (stopPropagation) e.stopPropagation();
+    if (stopPropagation) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     if (onClick) onClick(e);
   };
 

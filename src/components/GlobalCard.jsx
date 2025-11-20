@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+// src/components/GlobalCard.js
+import { useRef } from "react";
 import PropTypes from "prop-types";
 import { Badge } from "react-bootstrap";
 import { FaMapMarkerAlt, FaTrash, FaEdit } from "react-icons/fa";
@@ -18,44 +19,13 @@ export default function GlobalCard({
   const { imageUrl, handleImgError } = useImageUtils("/images/logo.png");
   const cardRef = useRef(null);
 
-  const handleMouseMove = (e) => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-
-    const intensity = Math.min(rect.width, rect.height) * 0.02;
-    const rotateX = (y / intensity) * -1;
-    const rotateY = x / intensity;
-
-    card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.06)`;
-  };
-
-  const handleMouseLeave = () => {
-    const card = cardRef.current;
-    if (card) card.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
-  };
-
-  const getInitials = (text) => {
-    if (!text) return "?";
-    const p = text.trim().split(" ");
-    if (p.length === 1) return p[0][0].toUpperCase();
-    return (p[0][0] + p[p.length - 1][0]).toUpperCase();
-  };
-
   const firstValidImage = () => {
-    if (!item.images) return null;
-
-    if (item.images.avatar) return imageUrl(item.images.avatar);
-    if (item.images.logo) return imageUrl(item.images.logo);
-    if (item.images.background) return imageUrl(item.images.background);
-
-    if (Array.isArray(item.images.gallery) && item.images.gallery.length > 0) {
+    if (item.avatar) return imageUrl(item.avatar);
+    if (item.images?.avatar) return imageUrl(item.images.avatar);
+    if (item.images?.logo) return imageUrl(item.images.logo);
+    if (item.images?.background) return imageUrl(item.images.background);
+    if (Array.isArray(item.images?.gallery) && item.images.gallery.length > 0)
       return imageUrl(item.images.gallery[0]);
-    }
-
     return null;
   };
 
@@ -66,24 +36,13 @@ export default function GlobalCard({
   };
 
   const handleDetails = () => {
-    if (item.type === "establishment")
-      return navigate(`/establishment/view/${item.slug}`);
-
-    if (item.type === "employer")
-      return navigate(`/employer/view/${item.slug}`);
-
-    return navigate(`/item/view/${item.id}`);
+    if (item.type === "establishment") return navigate(`/establishment/view/${item.slug}`);
+    if (item.type === "employer") return navigate(`/employer/view/${item.slug}`);
+    return navigate(`/item/view/${item.slug}`);
   };
 
   return (
-    <div
-      ref={cardRef}
-      className={`carousel-card hologram-container type-${item.type}`}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="hologram-overlay"></div>
-
+    <div ref={cardRef} className={`carousel-card hologram-container type-${item.type}`}>
       <div className={`carousel-image-wrap ${getShape()}`} onClick={handleDetails}>
         {firstValidImage() ? (
           <img
@@ -95,7 +54,7 @@ export default function GlobalCard({
           />
         ) : (
           <div className={`carousel-placeholder ${getShape()}`}>
-            {getInitials(item.name)}
+            {item.name?.charAt(0)?.toUpperCase()}
           </div>
         )}
       </div>
@@ -109,8 +68,7 @@ export default function GlobalCard({
           <div className="globalcard-location d-flex align-items-center gap-1 mt-1">
             <FaMapMarkerAlt size={12} className="text-warning" />
             <span className="text-light-50">
-              {item.city}
-              {item.uf ? ` - ${item.uf}` : ""}
+              {item.city}{item.uf ? ` - ${item.uf}` : ""}
             </span>
           </div>
         )}
@@ -135,12 +93,6 @@ export default function GlobalCard({
           <Badge bg="secondary" className="px-2 py-1 rounded-pill">
             {item.total_views ?? 0} Views
           </Badge>
-
-          {item.total_completed_appointments !== undefined && (
-            <Badge bg="success" className="px-2 py-1 rounded-pill">
-              {item.total_completed_appointments} Atendimentos
-            </Badge>
-          )}
         </div>
 
         <GlobalButton
@@ -153,32 +105,17 @@ export default function GlobalCard({
           Detalhes
         </GlobalButton>
 
-        {(onEdit || onDelete) && (
-          <div className="admin-actions mt-3 d-flex gap-2 w-100">
-            {onEdit && (
-              <GlobalButton
-                size="sm"
-                full
-                variant="primary"
-                stopPropagation
-                onClick={() => onEdit(item)}
-              >
-                <FaEdit className="me-1" /> Editar
-              </GlobalButton>
-            )}
-
-            {onDelete && (
-              <GlobalButton
-                size="sm"
-                full
-                variant="danger"
-                stopPropagation
-                onClick={() => onDelete(item)}
-              >
-                <FaTrash className="me-1" /> Excluir
-              </GlobalButton>
-            )}
-          </div>
+        {showSchedule && item.type === "service" && (
+          <GlobalButton
+            size="sm"
+            full
+            variant="primary"
+            stopPropagation
+            onClick={() => openSchedulePopup(item)}
+            className="mt-2"
+          >
+            Agendar
+          </GlobalButton>
         )}
       </div>
     </div>

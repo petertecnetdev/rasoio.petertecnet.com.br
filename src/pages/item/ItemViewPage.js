@@ -1,17 +1,20 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo, useEffect } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaWhatsapp } from "react-icons/fa";
+
 import NavlogComponent from "../../components/NavlogComponent";
 import GlobalHero from "../../components/GlobalHero";
 import ItemSidebar from "../../components/item/ItemSidebar";
 import ItemMetrics from "../../components/item/ItemMetrics";
 import GlobalRotativity from "../../components/GlobalRotativity";
+
 import { apiBaseUrl } from "../../config";
 import useItemView from "../../hooks/useItemView";
 import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
+
 import "./ItemView.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -30,14 +33,15 @@ export default function ItemViewPage() {
     ordersSummary,
     otherEstablishments,
     otherEmployers,
-    otherItems,
-    isLoading,
+    otherItems
   } = useItemView(apiBaseUrl, slug, token, navigate);
 
   const whatsappLink = useWhatsappLink(entity);
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
   useAuthPrompt();
+
+  const openSchedulePopup = () => {};
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -46,9 +50,7 @@ export default function ItemViewPage() {
   if (!item) return null;
 
   const fmtBRL = (v) =>
-    `R$ ${Number(v || 0)
-      .toFixed(2)
-      .replace(".", ",")}`;
+    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="itemv-root">
@@ -57,7 +59,7 @@ export default function ItemViewPage() {
       <GlobalHero
         entity="item"
         title={item.name}
-        description={entity?.name}
+        description={item.description}
         background={entity?.background}
         logo={item.image || entity?.logo}
         imageUrl={imageUrl}
@@ -74,7 +76,7 @@ export default function ItemViewPage() {
               otherEmployers={otherEmployers}
               otherItems={otherItems}
               navigate={navigate}
-              openSchedulePopup={() => {}}
+              openSchedulePopup={openSchedulePopup}
               fmtBRL={fmtBRL}
             />
           </Col>
@@ -89,8 +91,9 @@ export default function ItemViewPage() {
               imageUrl={imageUrl}
               handleImgError={handleImgError}
               navigate={navigate}
-              openSchedulePopup={() => {}}
+              openSchedulePopup={openSchedulePopup}
             />
+
             {metrics && <ItemMetrics metrics={metrics} />}
           </Col>
         </Row>

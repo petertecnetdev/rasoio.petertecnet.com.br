@@ -1,3 +1,4 @@
+// src/hooks/useEstablishmentView.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -34,10 +35,58 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(d.user_interactions || []);
         setOtherEstablishments(d.other_establishments || []);
-        setOtherEmployers(d.other_employers || []);
-        setOtherItems(d.other_items || []);
-        setItems(d.items || []);
-        setEmployers(d.establishment?.employers || []);
+
+        // 🔥 EMPLOYERS - padronização exata do backend
+        setOtherEmployers(
+          (d.other_employers || []).map(emp => ({
+            ...emp,
+            type: "employer",
+            slug: emp.user_name,
+            images: {
+              avatar: emp.avatar || emp.images?.avatar || null,
+              gallery: emp.images?.gallery || [],
+            }
+          }))
+        );
+
+        // self employers list
+        setEmployers(
+          (d.establishment?.employers || []).map(emp => ({
+            ...emp,
+            type: "employer",
+            slug: emp.user_name,
+            images: {
+              avatar: emp.avatar || emp.images?.avatar || null,
+              gallery: emp.images?.gallery || [],
+            }
+          }))
+        );
+
+        // ITEMS
+        setItems(
+          (d.items || []).map(it => ({
+            ...it,
+            type: it.type || "item",
+            slug: it.slug,
+            images: {
+              avatar: it.image || null,
+              gallery: it.images?.gallery || []
+            }
+          }))
+        );
+
+        setOtherItems(
+          (d.other_items || []).map(it => ({
+            ...it,
+            type: it.type || "item",
+            slug: it.slug,
+            images: {
+              avatar: it.image || null,
+              gallery: []
+            }
+          }))
+        );
+
         setOrdersSummary(d.orders_summary || null);
         setCompletedAppointments(d.completed_appointments || []);
       } catch (err) {

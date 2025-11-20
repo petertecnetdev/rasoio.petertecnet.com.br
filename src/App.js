@@ -185,7 +185,7 @@ function AppInner() {
           />
           <Route
             path="/item/view/:slug"
-            element={protectedRoute(<ItemViewPage />)}
+            element={(<ItemViewPage />)}
           />
           <Route
             path="/item/update/:id"
