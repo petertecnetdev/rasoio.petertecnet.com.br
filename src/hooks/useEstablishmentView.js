@@ -25,7 +25,6 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-
         if (!active) return;
 
         const d = res.data || {};
@@ -34,61 +33,69 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setMetrics(d.metrics || null);
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(d.user_interactions || []);
-        setOtherEstablishments(d.other_establishments || []);
+        setOrdersSummary(d.orders_summary || null);
+        setCompletedAppointments(d.completed_appointments || []);
 
-        // 🔥 EMPLOYERS - padronização exata do backend
-        setOtherEmployers(
-          (d.other_employers || []).map(emp => ({
-            ...emp,
-            type: "employer",
-            slug: emp.user_name,
-            images: {
-              avatar: emp.avatar || emp.images?.avatar || null,
-              gallery: emp.images?.gallery || [],
-            }
-          }))
-        );
-
-        // self employers list
-        setEmployers(
-          (d.establishment?.employers || []).map(emp => ({
-            ...emp,
-            type: "employer",
-            slug: emp.user_name,
-            images: {
-              avatar: emp.avatar || emp.images?.avatar || null,
-              gallery: emp.images?.gallery || [],
-            }
-          }))
-        );
-
-        // ITEMS
         setItems(
-          (d.items || []).map(it => ({
+          (d.items || []).map((it) => ({
             ...it,
             type: it.type || "item",
             slug: it.slug,
             images: {
-              avatar: it.image || null,
+              avatar: it.images?.avatar || it.image || null,
               gallery: it.images?.gallery || []
             }
           }))
         );
 
-        setOtherItems(
-          (d.other_items || []).map(it => ({
-            ...it,
-            type: it.type || "item",
-            slug: it.slug,
+        setEmployers(
+          (d.employers || []).map((emp) => ({
+            ...emp,
+            type: "employer",
+            slug: emp.slug,
             images: {
-              avatar: it.image || null,
-              gallery: []
+              avatar: emp.images?.avatar || null,
+              gallery: emp.images?.gallery || []
             }
           }))
         );
 
-        setOrdersSummary(d.orders_summary || null);
-        setCompletedAppointments(d.completed_appointments || []);
+        setOtherEstablishments(
+          (d.other_establishments || []).map((e) => ({
+            ...e,
+            type: "establishment",
+            slug: e.slug,
+            images: {
+              logo: e.logo || null,
+              background: e.background || null,
+              gallery: e.images?.gallery || []
+            }
+          }))
+        );
+
+        setOtherEmployers(
+          (d.other_employers || []).map((emp) => ({
+            ...emp,
+            type: "employer",
+            slug: emp.slug || emp.user_name,
+            images: {
+              avatar: emp.images?.avatar || emp.avatar || null,
+              gallery: emp.images?.gallery || []
+            }
+          }))
+        );
+
+        setOtherItems(
+          (d.other_items || []).map((it) => ({
+            ...it,
+            type: "item",
+            slug: it.slug,
+            images: {
+              avatar: it.images?.avatar || it.image || null,
+              gallery: it.images?.gallery || []
+            }
+          }))
+        );
       } catch (err) {
         const msg =
           err?.response?.data?.error ||

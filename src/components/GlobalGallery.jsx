@@ -1,3 +1,4 @@
+// src/components/GlobalGallery.jsx
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Row, Col, Modal } from "react-bootstrap";
@@ -7,7 +8,7 @@ export default function GlobalGallery({ images = [] }) {
   const [show, setShow] = useState(false);
   const [activeImg, setActiveImg] = useState(null);
 
-  if (!images || images.length === 0) return null;
+  if (!Array.isArray(images) || images.length === 0) return null;
 
   const open = (img) => {
     setActiveImg(img);
@@ -22,8 +23,8 @@ export default function GlobalGallery({ images = [] }) {
   return (
     <div className="global-gallery">
       <Row className="gy-3">
-        {images.map((img) => (
-          <Col key={img.id} xs={6} sm={4} md={3} lg={3}>
+        {images.map((img, index) => (
+          <Col key={index} xs={6} sm={4} md={3} lg={3}>
             <div className="gg-thumb" onClick={() => open(img.public_url)}>
               <img
                 src={img.public_url}
@@ -55,7 +56,6 @@ export default function GlobalGallery({ images = [] }) {
 GlobalGallery.propTypes = {
   images: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number,
       public_url: PropTypes.string,
       type: PropTypes.string,
     })

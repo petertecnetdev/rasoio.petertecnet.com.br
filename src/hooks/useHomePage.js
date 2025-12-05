@@ -2,55 +2,62 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-export default function useHome(apiBaseUrl, appId) {
+export default function useHomePage(apiBaseUrl, appId) {
   const [establishments, setEstablishments] = useState([]);
   const [employers, setEmployers] = useState([]);
   const [items, setItems] = useState([]);
+  const [stats, setStats] = useState({});
+  const [highlights, setHighlights] = useState({});
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [recentInteractions, setRecentInteractions] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ============================================================
-  // 🔥 PEGAR CIDADE SELECIONADA NO MODAL (PRIORIDADE)
-  // ============================================================
   const selectedCity = localStorage.getItem("selectedCity");
   const selectedUF = localStorage.getItem("selectedUF");
-
-  // ============================================================
-  // 🔥 PEGAR LOCALIZAÇÃO DO LOGIN (SE NÃO HOUVER SELEÇÃO)
-  // ============================================================
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const city = selectedCity || user.city || null;
   const uf = selectedUF || user.uf || null;
 
+  const fmtBRL = (value) => {
+    if (value === null || value === undefined) return "R$ 0,00";
+    return Number(value).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   useEffect(() => {
     let active = true;
-
-    async function fetchHomeData() {
+    async function loadHome() {
       setIsLoading(true);
       setError(null);
 
       try {
         const query = city && uf ? `?city=${city}&uf=${uf}` : "";
+        const url = `${apiBaseUrl}/home/${appId}${query}`;
 
-        const [estRes, empRes, itemRes] = await Promise.all([
-          axios.get(`${apiBaseUrl}/establishment/home/${appId}${query}`),
-          axios.get(`${apiBaseUrl}/employer/home/${appId}${query}`),
-          axios.get(`${apiBaseUrl}/item/home/${appId}${query}`),
-        ]);
-
+        const res = await axios.get(url);
         if (!active) return;
 
-        setEstablishments(estRes.data?.establishments || []);
-        setEmployers(empRes.data?.employers || []);
-        setItems(itemRes.data?.items || []);
+        const data = res.data || {};
+
+        setStats(data.stats || {});
+        setHighlights(data.highlights || {});
+        setEstablishments(data.establishments || []);
+        setEmployers(data.employers || []);
+        setItems(data.items || []);
+        setRecentOrders(data.recent_orders || []);
+        setRecentInteractions(data.recent_interactions || []);
       } catch (err) {
         if (!active) return;
 
         const msg =
           err?.response?.data?.error ||
           err?.response?.data?.message ||
-          "Erro ao carregar os dados da página inicial.";
+          "Erro ao carregar a Home.";
 
         setError(msg);
 
@@ -64,9 +71,8 @@ export default function useHome(apiBaseUrl, appId) {
       }
     }
 
-    if (appId) {
-      fetchHomeData();
-    } else {
+    if (appId) loadHome();
+    else {
       setError("app_id não fornecido.");
       setIsLoading(false);
     }
@@ -80,9 +86,14 @@ export default function useHome(apiBaseUrl, appId) {
     establishments,
     employers,
     items,
+    stats,
+    highlights,
+    recentOrders,
+    recentInteractions,
     isLoading,
     error,
     city,
     uf,
+    fmtBRL,
   };
 }

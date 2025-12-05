@@ -147,17 +147,18 @@ export default function EstablishmentViewPage() {
       <NavlogComponent />
 
       <GlobalHero
-        entity="establishment"
-        title={establishment.name}
-        description={establishment.description}
-        background={establishment.background}
-        logo={establishment.logo}
-        imageUrl={imageUrl}
-        handleImgError={handleImgError}
-        establishment={establishment}
-        interactionSummary={interactionSummary}
-        images={establishment.images || []}
-      />
+  entity="establishment"
+  title={establishment.name}
+  description={establishment.description}
+  background={establishment.background}
+  logo={establishment.logo}
+  imageUrl={imageUrl}
+  handleImgError={handleImgError}
+  establishment={establishment}
+  interactionSummary={interactionSummary}
+  images={establishment.images?.gallery || []}
+/>
+
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">

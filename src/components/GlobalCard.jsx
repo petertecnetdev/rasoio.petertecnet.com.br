@@ -1,8 +1,7 @@
-// src/components/GlobalCard.js
-import { useRef } from "react";
+import { useRef, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Badge } from "react-bootstrap";
-import { FaMapMarkerAlt, FaTrash, FaEdit } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import useImageUtils from "../hooks/useImageUtils";
 import GlobalButton from "./GlobalButton";
 import "./GlobalCard.css";
@@ -16,17 +15,40 @@ export default function GlobalCard({
   onEdit,
   onDelete,
 }) {
-  const { imageUrl, handleImgError } = useImageUtils("/images/logo.png");
+  const { imageUrl, handleImgError: baseHandleImgError } = useImageUtils();
   const cardRef = useRef(null);
+  const [broken, setBroken] = useState(false);
 
-  const firstValidImage = () => {
-    if (item.avatar) return imageUrl(item.avatar);
-    if (item.images?.avatar) return imageUrl(item.images.avatar);
-    if (item.images?.logo) return imageUrl(item.images.logo);
-    if (item.images?.background) return imageUrl(item.images.background);
-    if (Array.isArray(item.images?.gallery) && item.images.gallery.length > 0)
-      return imageUrl(item.images.gallery[0]);
+  const handleImgError = (e) => {
+    baseHandleImgError(e);
+    setBroken(true);
+  };
+
+  const image = useMemo(() => {
+    const paths = [
+      item?.avatar,
+      item?.images?.avatar,
+      item?.images?.logo,
+      item?.images?.background,
+      Array.isArray(item?.images?.gallery) ? item.images.gallery[0] : null,
+    ];
+
+    for (const p of paths) {
+      const url = imageUrl(p);
+      if (url) return url;
+    }
+
     return null;
+  }, [item, imageUrl]);
+
+  const getInitials = () => {
+    if (!item?.name) return "?";
+    const parts = item.name.trim().split(" ");
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (
+      parts[0].charAt(0).toUpperCase() +
+      parts[parts.length - 1].charAt(0).toUpperCase()
+    );
   };
 
   const getShape = () => {
@@ -36,25 +58,29 @@ export default function GlobalCard({
   };
 
   const handleDetails = () => {
-    if (item.type === "establishment") return navigate(`/establishment/view/${item.slug}`);
-    if (item.type === "employer") return navigate(`/employer/view/${item.slug}`);
+    if (item.type === "establishment")
+      return navigate(`/establishment/view/${item.slug}`);
+    if (item.type === "employer")
+      return navigate(`/employer/view/${item.slug}`);
     return navigate(`/item/view/${item.slug}`);
   };
 
+  const shape = getShape();
+
   return (
     <div ref={cardRef} className={`carousel-card hologram-container type-${item.type}`}>
-      <div className={`carousel-image-wrap ${getShape()}`} onClick={handleDetails}>
-        {firstValidImage() ? (
+      <div className={`carousel-image-wrap ${shape}`} onClick={handleDetails}>
+        {image && !broken ? (
           <img
-            src={firstValidImage()}
+            src={image}
             loading="lazy"
             alt={item.name}
             className="carousel-image"
             onError={handleImgError}
           />
         ) : (
-          <div className={`carousel-placeholder ${getShape()}`}>
-            {item.name?.charAt(0)?.toUpperCase()}
+          <div className={`carousel-placeholder ${shape}`}>
+            {getInitials()}
           </div>
         )}
       </div>
@@ -68,7 +94,8 @@ export default function GlobalCard({
           <div className="globalcard-location d-flex align-items-center gap-1 mt-1">
             <FaMapMarkerAlt size={12} className="text-warning" />
             <span className="text-light-50">
-              {item.city}{item.uf ? ` - ${item.uf}` : ""}
+              {item.city}
+              {item.uf ? ` - ${item.uf}` : ""}
             </span>
           </div>
         )}
