@@ -1,356 +1,187 @@
-:root {
-  --bg-dark: #0b0d12;
-  --bg-card: #171a20;
-  --bg-hover: #1f222a;
-  --text-light: #f2f4f8;
-  --text-muted: #b4b6be;
-  --primary: #00ffff;
-  --primary-glow: rgba(0, 255, 255, 0.45);
-  --radius: 1rem;
-  --transition: all 0.25s ease-in-out;
-}
+/* GlobalCarousel.css */
 
-/* ===============================================
-   CONTAINER DO CARROSSEL
-   =============================================== */
 .global-carousel {
-  background: var(--bg-dark);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius);
-  overflow: visible !important;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+  background: radial-gradient(circle at top left, #111827 0%, #020617 45%, #000 100%);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 16px 40px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(148, 163, 184, 0.12);
+  overflow: hidden;
+  position: relative;
 }
 
 .global-carousel .card-header {
-  background: linear-gradient(90deg, #000, #0d1117);
-  color: var(--text-light);
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  font-size: 1.05rem;
+  background: linear-gradient(90deg, #020617 0%, #020617 50%, #0f172a 100%);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.global-carousel .card-header h5 {
+  letter-spacing: 0.15em;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  border: none;
-  position: relative;
+  color: #e5e7eb;
 }
 
-.global-carousel .card-header::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 35%;
-  width: 30%;
-  height: 2px;
-  background: var(--primary);
-  border-radius: 2px;
-}
+/* Track */
 
-/* ===============================================
-   TRACK DO CARROSSEL
-   =============================================== */
 .carousel-track-static {
   display: flex;
-  gap: 1.2rem;
+  flex-wrap: nowrap;
+  gap: 1rem;
   overflow-x: auto;
-  overflow-y: hidden;
-  padding: 1.2rem 3rem;
+  padding: 0.2rem 0.5rem 0.4rem;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  align-items: stretch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
 }
+
 .carousel-track-static::-webkit-scrollbar {
-  display: none;
+  height: 6px;
 }
 
-/* ===============================================
-   CARD DO ITEM
-   =============================================== */
-.carousel-card {
-  flex: 0 0 240px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 1rem;
-  color: var(--text-light);
-  text-align: center;
-  transition: var(--transition);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
-  height: 100%;
-  min-height: 340px;
-  box-sizing: border-box;
-}
-.carousel-card:hover {
-  background: var(--bg-hover);
-  transform: translateY(-4px) scale(1.015);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.2);
-}
-
-/* ===============================================
-   ÁREA DA IMAGEM COM DIFERENÇA POR TIPO
-   =============================================== */
-.carousel-image-wrap {
-  width: 100%;
-  height: 150px;
-  overflow: hidden;
-  margin-bottom: 0.8rem;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ------------ FORMATO: EMPLOYER (REDONDO) ---------------- */
-.img-round {
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid #00ffff33;
-}
-
-/* ------------ FORMATO: ITEM/SERVICE/PRODUCT (QUADRADO) ---- */
-.img-square {
-  border-radius: 12px;
-  overflow: hidden;
-  border: 2px solid #00ffff22;
-}
-
-/* ------------ FORMATO: ESTABLISHMENT (HEXAGON NEON) ------- */
-.img-hex {
-  clip-path: polygon(
-    25% 0%,
-    75% 0%,
-    100% 50%,
-    75% 100%,
-    25% 100%,
-    0% 50%
-  );
-  border: 2px solid #00ffff55;
-  box-shadow: 0 0 12px #00ffff33;
-  overflow: hidden;
-}
-
-/* ===============================================
-   IMAGEM
-   =============================================== */
-.carousel-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: var(--transition);
-}
-.carousel-card:hover .carousel-image {
-  transform: scale(1.05);
-}
-
-/* ===============================================
-   PLACEHOLDER COM INICIAIS
-   =============================================== */
-.carousel-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #0a0f15;
-  color: var(--primary);
-  font-size: 2rem;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* formas específicas */
-.carousel-placeholder.img-round {
-  border-radius: 50%;
-}
-.carousel-placeholder.img-square {
-  border-radius: 12px;
-}
-.carousel-placeholder.img-hex {
-  clip-path: polygon(
-    25% 0%,
-    75% 0%,
-    100% 50%,
-    75% 100%,
-    25% 100%,
-    0% 50%
-  );
-}
-
-/* ===============================================
-   CONTEÚDO
-   =============================================== */
-.carousel-item-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 0.5rem;
-}
-
-.carousel-item-name {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-light);
-  line-height: 1.3;
-  min-height: 2.4em;
-}
-
-.carousel-item-price {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 0.5rem;
-}
-
-/* ===============================================
-   BADGES
-   =============================================== */
-.carousel-item-content .badge {
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-
-/* ===============================================
-   BOTÕES
-   =============================================== */
-.btn-flat-primary {
-  background: var(--primary);
-  color: #000;
-  border: none;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: var(--transition);
-  box-shadow: 0 0 8px var(--primary-glow);
-}
-.btn-flat-primary:hover {
-  background: #00cccc;
-  box-shadow: 0 0 16px var(--primary-glow);
-}
-
-.btn-flat-outline {
-  border: 1px solid var(--primary);
-  color: var(--primary);
+.carousel-track-static::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: var(--transition);
-}
-.btn-flat-outline:hover {
-  background: var(--primary);
-  color: #000;
-  box-shadow: 0 0 14px var(--primary-glow);
 }
 
-/* ===============================================
-   SETAS
-   =============================================== */
+.carousel-track-static::-webkit-scrollbar-thumb {
+  background: radial-gradient(circle, #38bdf8 0%, #1d4ed8 40%, #0f172a 100%);
+  border-radius: 999px;
+}
+
+/* Item wrapper */
+
+.global-carousel-item-wrapper {
+  flex: 0 0 240px;
+  max-width: 240px;
+  transform-origin: center center;
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    filter 0.18s ease-out;
+}
+
+.global-carousel-item-wrapper:hover {
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.3));
+}
+
+/* Inside card (GlobalCard) */
+
+.global-carousel .card {
+  background: radial-gradient(circle at top, #020617 0%, #020617 50%, #020617 100%);
+  border-radius: 1rem;
+  border: 1px solid rgba(31, 41, 55, 0.9);
+  overflow: hidden;
+}
+
+/* Actions (buttons Agendar) */
+
+.global-carousel-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.4rem 0.35rem 0.7rem;
+}
+
+.global-carousel-actions .gbtn {
+  font-size: 0.75rem;
+}
+
+/* Arrows */
+
 .carousel-arrow {
-  pointer-events: all;
   position: absolute;
   top: 50%;
+  z-index: 5;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+  color: #e5e7eb;
   transform: translateY(-50%);
-  background: var(--primary);
-  border: none;
-  color: #000;
-  font-size: 2.2rem;
-  border-radius: 50%;
-  width: 54px;
-  height: 54px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
-  transition: var(--transition);
-  box-shadow: 0 0 20px var(--primary-glow);
-  z-index: 200;
+  transition:
+    background 0.18s ease-out,
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out;
 }
+
 .carousel-arrow.left {
-  left: -25px;
+  left: 0.4rem;
 }
+
 .carousel-arrow.right {
-  right: -25px;
+  right: 0.4rem;
 }
+
+.carousel-arrow svg {
+  font-size: 0.9rem;
+}
+
 .carousel-arrow:hover {
-  background: #00cccc;
-  transform: translateY(-50%) scale(1.1);
+  background: radial-gradient(circle at center, #0f172a, #020617);
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow:
+    0 0 14px rgba(56, 189, 248, 0.7),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  transform: translateY(-50%) scale(1.04);
 }
 
-/* ===============================================
-   RESPONSIVIDADE
-   =============================================== */
-@media (max-width: 768px) {
-  .carousel-card {
-    flex: 0 0 80%;
-    min-height: 320px;
+.carousel-arrow:active {
+  transform: translateY(-50%) scale(0.97);
+}
+
+/* Login modal (que abre dentro do carrossel) */
+
+.login-modal .modal-content {
+  background: radial-gradient(circle at top, #020617 0%, #000 70%);
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.login-modal .modal-body h5 {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Responsivo */
+
+@media (max-width: 991.98px) {
+  .global-carousel-item-wrapper {
+    flex: 0 0 68%;
+    max-width: 68%;
   }
-  .carousel-image-wrap {
-    height: 130px;
-  }
+
   .carousel-arrow {
-    width: 44px;
-    height: 44px;
-    font-size: 1.8rem;
+    display: none;
   }
-  .carousel-arrow.left {
-    left: -12px;
-  }
-  .carousel-arrow.right {
-    right: -12px;
+
+  .global-carousel .card-header {
+    text-align: left;
+    padding-left: 1.5rem;
   }
 }
 
-@media (max-width: 480px) {
-  .carousel-card {
-    flex: 0 0 90%;
-    min-height: 300px;
+@media (max-width: 575.98px) {
+  .global-carousel-item-wrapper {
+    flex: 0 0 78%;
+    max-width: 78%;
   }
-}
-/* ---------------------------------------------
-   FORMATO DAS IMAGENS POR TIPO
---------------------------------------------- */
 
-/* EMPLOYER → avatar circular menor */
-.img-round,
-.carousel-placeholder.img-round {
-  width: 80px !important;
-  height: 80px !important;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid #00ffff55;
-  box-shadow: 0 0 8px #00ffff33;
-  margin: 0 auto;
-}
+  .global-carousel .card-body {
+    padding-inline: 0.4rem;
+  }
 
-/* ITEM / SERVICE / PRODUCT → quadrado (mantém igual) */
-.img-square,
-.carousel-placeholder.img-square {
-  width: 100% !important;
-  height: 150px !important;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid #00ffff22;
-}
-
-/* ESTABLISHMENT → círculo elegante */
-.img-establishment,
-.carousel-placeholder.img-establishment {
-  width: 90px !important;
-  height: 90px !important;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid #00ffff66;
-  box-shadow: 0 0 10px #00ffff33;
-  margin: 0 auto;
-}
-
-/* ---------------------------------------------
-   PLACEHOLDER DE INICIAIS
---------------------------------------------- */
-.carousel-placeholder {
-  background: #0a0f15;
-  color: #00ffff;
-  font-size: 26px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  .global-carousel-actions {
+    padding-inline: 0.2rem;
+  }
 }

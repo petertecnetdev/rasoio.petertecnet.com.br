@@ -1,3 +1,4 @@
+// src/pages/establishment/EstablishmentViewPage.jsx
 import React, { useMemo, useEffect, useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,9 +10,9 @@ import EstablishmentSidebar from "../../components/establishment/EstablishmentSi
 import EstablishmentMetrics from "../../components/establishment/EstablishmentMetrics";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import GlobalMap from "../../components/GlobalMap";
-
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import GlobalRotativity from "../../components/GlobalRotativity";
+import GlobalGallery from "../../components/GlobalGallery";
 
 import { apiBaseUrl } from "../../config";
 import useAppointment from "../../hooks/useAppointment";
@@ -21,7 +22,6 @@ import useWhatsappLink from "../../hooks/useWhatsappLink";
 import useImageUtils from "../../hooks/useImageUtils";
 import useScrollControl from "../../hooks/useScrollControl";
 import useAuthPrompt from "../../hooks/useAuthPrompt";
-import GlobalGallery from "../../components/GlobalGallery";
 
 import ShareButton from "../../components/ShareButton";
 import "./EstablishmentView.css";
@@ -47,7 +47,6 @@ export default function EstablishmentViewPage() {
     employers,
     ordersSummary,
     completedAppointments,
-    images,
     isLoading,
   } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
 
@@ -75,11 +74,13 @@ export default function EstablishmentViewPage() {
   const openSchedulePopup = (target = {}) => {
     const opts = {};
 
-    if (target?.type === "service" || target?.price || target?.duration)
+    if (target?.type === "service" || target?.price || target?.duration) {
       opts.preselectedService = target;
+    }
 
-    if (target?.user || (target?.id && target?.establishment_id))
+    if (target?.type === "employer" || target?.user || target?.establishment_id) {
       opts.preselectedEmployer = target;
+    }
 
     setWizardOptions(opts);
     setTimeout(() => setShowWizard(true), 50);
@@ -89,29 +90,61 @@ export default function EstablishmentViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
+  if (!establishment && !isLoading) return null;
   if (!establishment) return null;
 
   const fmtBRL = (v) =>
-    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+    `R$ ${Number(v || 0)
+      .toFixed(2)
+      .replace(".", ",")}`;
 
   const mappedServices = services.map((i) => ({
     ...i,
     type: "service",
-    image: i.image || null,
+    image: i.image || i.images?.avatar || null,
   }));
 
   const mappedProducts = products.map((i) => ({
     ...i,
     type: "product",
-    image: i.image || null,
+    image: i.image || i.images?.avatar || null,
   }));
 
+  const hasServices = mappedServices.length > 0;
+  const hasProducts = mappedProducts.length > 0;
+
+  const mappedGenericItems =
+    !hasServices && !hasProducts && items.length
+      ? items.map((i) => ({
+          ...i,
+          type: i.type === "product" ? "product" : "service",
+          image: i.image || i.images?.avatar || null,
+        }))
+      : [];
+
   const mappedEmployers =
-    employers?.map((e) => ({
-      ...e,
-      type: "employer",
-      image: e.user?.avatar || null,
-    })) || [];
+    employers?.map((e) => {
+      const avatar =
+        e.images?.avatar ||
+        e.avatar ||
+        e.image ||
+        e.user?.avatar ||
+        PLACEHOLDER;
+
+      return {
+        ...e,
+        type: "employer",
+        image: avatar,
+        images: {
+          avatar,
+          gallery: e.images?.gallery || [],
+        },
+        user: e.user || {
+          first_name: e.name || "",
+          avatar,
+        },
+      };
+    }) || [];
 
   const mappedCompleted =
     completedAppointments?.map((a) => ({
@@ -124,22 +157,49 @@ export default function EstablishmentViewPage() {
       type: "appointment",
     })) || [];
 
-  const mappedOtherEstablishments = otherEstablishments.map((e) => ({
-    ...e,
-    type: "establishment",
-    image: e.logo || e.background || null,
-  }));
+  const mappedOtherEstablishments = otherEstablishments.map((e) => {
+    const logo = e.images?.logo || e.logo || null;
+    const background = e.images?.background || e.background || null;
 
-  const mappedOtherEmployers = otherEmployers.map((e) => ({
-    ...e,
-    type: "employer",
-    image: e.user?.avatar || null,
-  }));
+    return {
+      ...e,
+      type: "establishment",
+      image: logo || background || null,
+      images: {
+        logo,
+        background,
+        gallery: e.images?.gallery || [],
+      },
+    };
+  });
+
+  const mappedOtherEmployers = otherEmployers.map((e) => {
+    const avatar =
+      e.images?.avatar ||
+      e.avatar ||
+      e.image ||
+      e.user?.avatar ||
+      PLACEHOLDER;
+
+    return {
+      ...e,
+      type: "employer",
+      image: avatar,
+      images: {
+        avatar,
+        gallery: e.images?.gallery || [],
+      },
+      user: e.user || {
+        first_name: e.name || "",
+        avatar,
+      },
+    };
+  });
 
   const mappedOtherItems = otherItems.map((i) => ({
     ...i,
     type: i.type === "product" ? "product" : "service",
-    image: i.image || null,
+    image: i.image || i.images?.avatar || null,
   }));
 
   return (
@@ -147,25 +207,45 @@ export default function EstablishmentViewPage() {
       <NavlogComponent />
 
       <GlobalHero
-  entity="establishment"
-  title={establishment.name}
-  description={establishment.description}
-  background={establishment.background}
-  logo={establishment.logo}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-  establishment={establishment}
-  interactionSummary={interactionSummary}
-  images={establishment.images?.gallery || []}
-/>
-
+        entity="establishment"
+        title={establishment.name}
+        description={establishment.description}
+        background={
+          establishment.images?.background || establishment.background || null
+        }
+        logo={establishment.images?.logo || establishment.logo || null}
+        imageUrl={imageUrl}
+        handleImgError={handleImgError}
+        establishment={establishment}
+        interactionSummary={interactionSummary}
+        metrics={metrics}
+        ordersSummary={ordersSummary}
+        whatsappLink={whatsappLink}
+        onScheduleClick={() =>
+          openSchedulePopup({ type: "establishment", establishment })
+        }
+        images={establishment.images?.gallery || []}
+      />
 
       <Container fluid className="estv-main">
         <Row className="gx-3 gy-4">
           <Col md={8}>
-            <GlobalGallery images={establishment.images || []} />
+            <GlobalGallery images={establishment.images?.gallery || []} />
 
-            {mappedServices.length > 0 && (
+            {mappedEmployers.length > 0 && (
+              <GlobalCarousel
+                title="Profissionais"
+                items={mappedEmployers}
+                carouselActive
+                fmtBRL={fmtBRL}
+                apiBaseUrl={apiBaseUrl}
+                openSchedulePopup={openSchedulePopup}
+                navigate={navigate}
+                showSchedule
+              />
+            )}
+
+            {hasServices && (
               <GlobalCarousel
                 title="Serviços"
                 items={mappedServices}
@@ -180,7 +260,7 @@ export default function EstablishmentViewPage() {
               />
             )}
 
-            {mappedProducts.length > 0 && (
+            {hasProducts && (
               <GlobalCarousel
                 title="Produtos"
                 items={mappedProducts}
@@ -191,6 +271,19 @@ export default function EstablishmentViewPage() {
                 apiBaseUrl={apiBaseUrl}
                 navigate={navigate}
                 showSchedule={false}
+              />
+            )}
+
+            {!hasServices && !hasProducts && mappedGenericItems.length > 0 && (
+              <GlobalCarousel
+                title="Serviços e Produtos"
+                items={mappedGenericItems}
+                carouselActive
+                fmtBRL={fmtBRL}
+                apiBaseUrl={apiBaseUrl}
+                openSchedulePopup={openSchedulePopup}
+                navigate={navigate}
+                showSchedule
               />
             )}
 
@@ -247,7 +340,7 @@ export default function EstablishmentViewPage() {
         show={showWizard}
         onHide={() => setShowWizard(false)}
         employers={mappedEmployers}
-        services={mappedServices}
+        services={mappedServices.length ? mappedServices : mappedGenericItems}
         loadAvailableTimes={loadAvailableTimes}
         handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}

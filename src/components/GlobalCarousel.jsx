@@ -16,7 +16,7 @@ export default function GlobalCarousel({
 }) {
   const trackRef = useRef(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [pendingItem, setPendingItem] = useState(null);
+  const [pendingSchedule, setPendingSchedule] = useState(null);
 
   useLayoutEffect(() => {
     const t = setTimeout(() => {
@@ -26,23 +26,25 @@ export default function GlobalCarousel({
   }, []);
 
   const isAuthenticated = () => !!localStorage.getItem("token");
+  const canSchedule = showSchedule && typeof openSchedulePopup === "function";
 
-  const handleScheduleClick = (item) => {
+  const handleScheduleClick = (source) => {
+    if (!canSchedule) return;
+
     if (!isAuthenticated()) {
-      setPendingItem(item);
+      setPendingSchedule(source);
       setShowLoginModal(true);
       return;
     }
-    openSchedulePopup({ ...item, type: "service" });
+
+    openSchedulePopup(source);
   };
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false);
-    if (pendingItem) {
-      setTimeout(() => {
-        openSchedulePopup({ ...pendingItem, type: "service" });
-        setPendingItem(null);
-      }, 300);
+    if (pendingSchedule && canSchedule) {
+      openSchedulePopup(pendingSchedule);
+      setPendingSchedule(null);
     }
   };
 
@@ -56,30 +58,47 @@ export default function GlobalCarousel({
 
   return (
     <>
-      <Card bg="dark" text="light" className="mb-4 shadow-sm border-0 rounded-4 overflow-hidden global-carousel">
+      <Card
+        bg="dark"
+        text="light"
+        className="mb-4 shadow-sm border-0 rounded-4 overflow-hidden global-carousel"
+      >
         <Card.Header className="bg-black text-center py-3 border-0">
-          <h5 className="fw-bold text-uppercase mb-0 text-light">{title}</h5>
+          <h5 className="fw-bold text-uppercase mb-0 text-light">
+            {title}
+          </h5>
         </Card.Header>
-
         <Card.Body className="p-3 position-relative">
-          <button type="button" className="carousel-arrow left" onClick={() => scroll("left")}>
+          <button
+            type="button"
+            className="carousel-arrow left"
+            onClick={() => scroll("left")}
+          >
             <FaChevronLeft />
           </button>
 
-          <button type="button" className="carousel-arrow right" onClick={() => scroll("right")}>
+          <button
+            type="button"
+            className="carousel-arrow right"
+            onClick={() => scroll("right")}
+          >
             <FaChevronRight />
           </button>
 
           <div ref={trackRef} className="carousel-track-static">
             {items.map((it, idx) => (
-              <GlobalCard
+              <div
                 key={it.id || idx}
-                item={it}
-                fmtBRL={fmtBRL}
-                navigate={navigate}
-                openSchedulePopup={openSchedulePopup}
-                showSchedule={showSchedule}
-              />
+                className="global-carousel-item-wrapper"
+              >
+                <GlobalCard
+                  item={it}
+                  fmtBRL={fmtBRL}
+                  navigate={navigate}
+                  showSchedule={canSchedule}
+                  openSchedulePopup={canSchedule ? handleScheduleClick : null}
+                />
+              </div>
             ))}
           </div>
         </Card.Body>
@@ -106,11 +125,12 @@ GlobalCarousel.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.array.isRequired,
   fmtBRL: PropTypes.func.isRequired,
-  openSchedulePopup: PropTypes.func.isRequired,
+  openSchedulePopup: PropTypes.func,
   navigate: PropTypes.func.isRequired,
   showSchedule: PropTypes.bool,
 };
 
 GlobalCarousel.defaultProps = {
   showSchedule: false,
+  openSchedulePopup: null,
 };

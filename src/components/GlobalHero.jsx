@@ -11,13 +11,17 @@ import {
   FaFacebook,
   FaStore,
   FaCalendarAlt,
-  FaTag,          // ← ADICIONE ESTA LINHA
+  FaTag,
   FaBox,
   FaInfoCircle,
+  FaMoneyBillWave,
+  FaChartLine,
+  FaPercent,
+  FaWhatsapp,
 } from "react-icons/fa";
-
 import { useNavigate } from "react-router-dom";
 import GlobalMapButton from "./GlobalMapButton";
+import GlobalButton from "./GlobalButton";
 import "./GlobalHero.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -34,6 +38,10 @@ export default function GlobalHero({
   user,
   interactionSummary,
   establishment,
+  metrics,
+  ordersSummary,
+  whatsappLink,
+  onScheduleClick,
   extraInfo,
   children,
 }) {
@@ -60,13 +68,33 @@ export default function GlobalHero({
 
   const isList = entity === "list";
 
+  const fmtBRL = (v) =>
+    `R$ ${Number(v || 0)
+      .toFixed(2)
+      .replace(".", ",")}`;
+
+  const fmtPercent = (v) => `${Number(v || 0).toFixed(1)}%`;
+
+  const totalItems = metrics?.total_items ?? 0;
+  const totalEmployers = metrics?.total_employers ?? 0;
+  const totalOrders = metrics?.total_orders ?? ordersSummary?.total_orders ?? 0;
+  const totalRevenue =
+    metrics?.total_revenue ?? ordersSummary?.total_revenue ?? 0;
+  const averageTicket =
+    metrics?.average_ticket ?? ordersSummary?.average_ticket ?? 0;
+  const completionRate =
+    metrics?.completion_rate ?? ordersSummary?.completion_rate ?? 0;
+  const returnRate =
+    metrics?.return_rate ?? ordersSummary?.return_rate ?? 0;
+  const engagementScore = metrics?.engagement_score ?? null;
+
   return (
     <div
       className={`gh-root ${isList ? "gh-list-mode" : ""}`}
       style={{
         backgroundImage: `linear-gradient(
-          rgba(0, 0, 0, 0.55),
-          rgba(0, 0, 0, 0.85)
+          rgba(7, 7, 12, 0.75),
+          rgba(3, 3, 8, 0.96)
         ), url("${imageUrl(background)}")`,
       }}
     >
@@ -74,25 +102,97 @@ export default function GlobalHero({
 
       <Container fluid className="gh-container">
         <div className={`gh-grid ${isList ? "gh-list-grid" : ""}`}>
-
-          {/* LOGO */}
           <div className={`gh-logo-box ${isList ? "gh-logo-list" : ""}`}>
-            <img
-              src={imageUrl(logo || PLACEHOLDER)}
-              alt={title}
-              className="gh-logo"
-              onError={handleImgError}
-            />
+            <div className="gh-logo-glow">
+              <img
+                src={imageUrl(logo || PLACEHOLDER)}
+                alt={title}
+                className="gh-logo"
+                onError={handleImgError}
+              />
+            </div>
           </div>
 
-          {/* INFO PRINCIPAL */}
           <div className="gh-info">
-            <h1 className={`gh-title ${isList ? "gh-title-list" : ""}`}>
-              <span className="gh-icon">{iconByEntity[entity]}</span>
-              {title}
-            </h1>
+            <div className="gh-header-row">
+              <h1 className={`gh-title ${isList ? "gh-title-list" : ""}`}>
+                <span className="gh-icon">{iconByEntity[entity]}</span>
+                {title}
+              </h1>
 
-            {/* LIST MODE */}
+              {!isList && (whatsappLink || onScheduleClick) && (
+                <div className="gh-cta-group">
+                  {onScheduleClick && (
+                    <GlobalButton
+                      variant="primary"
+                      size="md"
+                      rounded
+                      onClick={onScheduleClick}
+                    >
+                      <FaCalendarAlt className="me-2" />
+                      Agendar agora
+                    </GlobalButton>
+                  )}
+
+                  {whatsappLink && (
+                    <a
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="gh-whatsapp-link"
+                    >
+                      <GlobalButton variant="outline" size="md" rounded>
+                        <FaWhatsapp className="me-2" />
+                        WhatsApp
+                      </GlobalButton>
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {!isList && (
+              <div className="gh-badges-row">
+                {establishment?.city && (
+                  <div className="gh-badge">
+                    <FaMapMarkerAlt className="me-1" />
+                    <span>
+                      {establishment.city}
+                      {establishment.uf ? ` - ${establishment.uf}` : ""}
+                    </span>
+                  </div>
+                )}
+
+                {establishment?.category && (
+                  <div className="gh-badge">
+                    <FaTag className="me-1" />
+                    <span>{establishment.category}</span>
+                  </div>
+                )}
+
+                {totalItems > 0 && (
+                  <div className="gh-badge gh-badge-soft">
+                    <FaBox className="me-1" />
+                    <span>{totalItems} serviços/produtos</span>
+                  </div>
+                )}
+
+                {totalEmployers > 0 && (
+                  <div className="gh-badge gh-badge-soft">
+                    <FaUser className="me-1" />
+                    <span>{totalEmployers} profissionais</span>
+                  </div>
+                )}
+
+                {engagementScore !== null && (
+                  <div className="gh-badge gh-badge-score">
+                    <FaChartLine className="me-1" />
+                    <span>Score engajamento: {engagementScore}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {isList && establishment && (
               <>
                 {establishment.city && (
@@ -109,14 +209,11 @@ export default function GlobalHero({
               </>
             )}
 
-            {/* NORMAL MODE */}
             {!isList && (
               <>
                 {description && <p className="gh-desc">{description}</p>}
 
                 <div className="gh-details">
-
-                  {/* EMPLOYER */}
                   {entity === "employer" && user && (
                     <div
                       className="gh-detail-line gh-click"
@@ -134,15 +231,6 @@ export default function GlobalHero({
                     </div>
                   )}
 
-                  {/* CATEGORY (se existir) */}
-                  {establishment?.category && (
-                    <div className="gh-detail-line">
-                      <FaTag />
-                      <span>Categoria: {establishment.category}</span>
-                    </div>
-                  )}
-
-                  {/* PHONE */}
                   {establishment?.phone && (
                     <div className="gh-detail-line">
                       <FaPhoneAlt />
@@ -150,7 +238,6 @@ export default function GlobalHero({
                     </div>
                   )}
 
-                  {/* ADDRESS */}
                   {establishment?.address && (
                     <div className="gh-detail-line">
                       <FaMapMarkerAlt />
@@ -162,7 +249,6 @@ export default function GlobalHero({
                     </div>
                   )}
 
-                  {/* SOCIAL LINKS */}
                   {socials.some((s) => s.url) && (
                     <div className="gh-socials">
                       {socials.map(
@@ -180,7 +266,39 @@ export default function GlobalHero({
                     </div>
                   )}
 
-                  {/* METRICS */}
+                  <div className="gh-stats-row">
+
+                    <div className="gh-stat-card">
+                      <div className="gh-stat-icon">
+                        <FaPercent />
+                      </div>
+                      <div className="gh-stat-content">
+                        <div className="gh-stat-label">Taxa conclusão</div>
+                        <div className="gh-stat-value">
+                          {fmtPercent(completionRate)}
+                        </div>
+                        <div className="gh-stat-sub">
+                          Retorno clientes {fmtPercent(returnRate)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="gh-stat-card">
+                      <div className="gh-stat-icon">
+                        <FaChartLine />
+                      </div>
+                      <div className="gh-stat-content">
+                        <div className="gh-stat-label">Atendimentos</div>
+                        <div className="gh-stat-value">
+                          {totalOrders.toLocaleString()}
+                        </div>
+                        <div className="gh-stat-sub">
+                          {totalViews.toLocaleString()} visualizações
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="gh-metrics">
                     <div className="gh-metric">
                       <div className="gh-metric-value">
@@ -197,7 +315,6 @@ export default function GlobalHero({
                     </div>
                   </div>
 
-                  {/* MAP BUTTON */}
                   {establishment && (
                     <div className="gh-mapbutton-box">
                       <GlobalMapButton
@@ -240,6 +357,10 @@ GlobalHero.propTypes = {
   user: PropTypes.object,
   establishment: PropTypes.object,
   interactionSummary: PropTypes.object,
+  metrics: PropTypes.object,
+  ordersSummary: PropTypes.object,
+  whatsappLink: PropTypes.string,
+  onScheduleClick: PropTypes.func,
   extraInfo: PropTypes.object,
   children: PropTypes.node,
 };

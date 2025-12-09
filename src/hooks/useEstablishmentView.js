@@ -29,7 +29,21 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
 
         const d = res.data || {};
 
-        setEstablishment(d.establishment || null);
+        const est = d.establishment || null;
+        setEstablishment(
+          est
+            ? {
+                ...est,
+                images: {
+                  logo: est.images?.logo ?? est.logo ?? null,
+                  background: est.images?.background ?? est.background ?? null,
+                  gallery: est.images?.gallery ?? [],
+                  files: est.images?.files ?? [],
+                },
+              }
+            : null
+        );
+
         setMetrics(d.metrics || null);
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(d.user_interactions || []);
@@ -37,67 +51,88 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setCompletedAppointments(d.completed_appointments || []);
 
         setItems(
-          (d.items || []).map((it) => ({
-            ...it,
-            type: it.type || "item",
-            slug: it.slug,
-            images: {
-              avatar: it.images?.avatar || it.image || null,
-              gallery: it.images?.gallery || []
-            }
-          }))
+          (d.items || []).map((it) => {
+            const img = it.images || {};
+            return {
+              ...it,
+              type: it.type || "item",
+              slug: it.slug,
+              images: {
+                avatar: img.avatar ?? it.image ?? null,
+                gallery: img.gallery ?? [],
+                files: img.files ?? [],
+              },
+            };
+          })
         );
 
         setEmployers(
-          (d.employers || []).map((emp) => ({
-            ...emp,
-            type: "employer",
-            slug: emp.slug,
-            images: {
-              avatar: emp.images?.avatar || null,
-              gallery: emp.images?.gallery || []
-            }
-          }))
+          (d.employers || []).map((emp) => {
+            const img = emp.images || {};
+            return {
+              ...emp,
+              type: "employer",
+              slug: emp.slug,
+              images: {
+                avatar: img.avatar ?? null,
+                gallery: img.gallery ?? [],
+                files: img.files ?? [],
+              },
+            };
+          })
         );
 
         setOtherEstablishments(
-          (d.other_establishments || []).map((e) => ({
-            ...e,
-            type: "establishment",
-            slug: e.slug,
-            images: {
-              logo: e.logo || null,
-              background: e.background || null,
-              gallery: e.images?.gallery || []
-            }
-          }))
+          (d.other_establishments || []).map((e) => {
+            const img = e.images || {};
+            return {
+              ...e,
+              type: "establishment",
+              slug: e.slug,
+              images: {
+                logo: img.logo ?? e.logo ?? null,
+                background: img.background ?? e.background ?? null,
+                gallery: img.gallery ?? [],
+                files: img.files ?? [],
+              },
+            };
+          })
         );
 
         setOtherEmployers(
-          (d.other_employers || []).map((emp) => ({
-            ...emp,
-            type: "employer",
-            slug: emp.slug || emp.user_name,
-            images: {
-              avatar: emp.images?.avatar || emp.avatar || null,
-              gallery: emp.images?.gallery || []
-            }
-          }))
+          (d.other_employers || []).map((emp) => {
+            const img = emp.images || {};
+            return {
+              ...emp,
+              type: "employer",
+              slug: emp.slug || emp.user_name,
+              images: {
+                avatar: img.avatar ?? emp.avatar ?? null,
+                gallery: img.gallery ?? [],
+                files: img.files ?? [],
+              },
+            };
+          })
         );
 
         setOtherItems(
-          (d.other_items || []).map((it) => ({
-            ...it,
-            type: "item",
-            slug: it.slug,
-            images: {
-              avatar: it.images?.avatar || it.image || null,
-              gallery: it.images?.gallery || []
-            }
-          }))
+          (d.other_items || []).map((it) => {
+            const img = it.images || {};
+            return {
+              ...it,
+              type: "item",
+              slug: it.slug,
+              images: {
+                avatar: img.avatar ?? it.image ?? null,
+                gallery: img.gallery ?? [],
+                files: img.files ?? [],
+              },
+            };
+          })
         );
       } catch (err) {
         const msg =
+          err?.response?.data?.message ||
           err?.response?.data?.error ||
           err?.message ||
           "Erro ao carregar o estabelecimento.";

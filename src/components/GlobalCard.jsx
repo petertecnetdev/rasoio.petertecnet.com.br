@@ -1,3 +1,4 @@
+// src/components/GlobalCard.jsx
 import { useRef, useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Badge } from "react-bootstrap";
@@ -12,8 +13,6 @@ export default function GlobalCard({
   navigate,
   showSchedule,
   openSchedulePopup,
-  onEdit,
-  onDelete,
 }) {
   const { imageUrl, handleImgError: baseHandleImgError } = useImageUtils();
   const cardRef = useRef(null);
@@ -37,18 +36,15 @@ export default function GlobalCard({
       const url = imageUrl(p);
       if (url) return url;
     }
-
     return null;
   }, [item, imageUrl]);
 
   const getInitials = () => {
     if (!item?.name) return "?";
     const parts = item.name.trim().split(" ");
-    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-    return (
-      parts[0].charAt(0).toUpperCase() +
-      parts[parts.length - 1].charAt(0).toUpperCase()
-    );
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : parts[0][0].toUpperCase() + parts.at(-1)[0].toUpperCase();
   };
 
   const getShape = () => {
@@ -58,17 +54,24 @@ export default function GlobalCard({
   };
 
   const handleDetails = () => {
-    if (item.type === "establishment")
-      return navigate(`/establishment/view/${item.slug}`);
-    if (item.type === "employer")
-      return navigate(`/employer/view/${item.slug}`);
-    return navigate(`/item/view/${item.slug}`);
+    if (item.type === "establishment") {
+      navigate(`/establishment/view/${item.slug}`);
+      return;
+    }
+    if (item.type === "employer") {
+      navigate(`/employer/view/${item.slug}`);
+      return;
+    }
+    navigate(`/item/view/${item.slug}`);
   };
 
   const shape = getShape();
 
   return (
-    <div ref={cardRef} className={`carousel-card hologram-container type-${item.type}`}>
+    <div
+      ref={cardRef}
+      className={`carousel-card hologram-container type-${item.type}`}
+    >
       <div className={`carousel-image-wrap ${shape}`} onClick={handleDetails}>
         {image && !broken ? (
           <img
@@ -79,9 +82,7 @@ export default function GlobalCard({
             onError={handleImgError}
           />
         ) : (
-          <div className={`carousel-placeholder ${shape}`}>
-            {getInitials()}
-          </div>
+          <div className={`carousel-placeholder ${shape}`}>{getInitials()}</div>
         )}
       </div>
 
@@ -123,6 +124,7 @@ export default function GlobalCard({
         </div>
 
         <GlobalButton
+          className="mt-3"
           size="sm"
           full
           variant="outline"
@@ -132,14 +134,33 @@ export default function GlobalCard({
           Detalhes
         </GlobalButton>
 
-        {showSchedule && item.type === "service" && (
+        {showSchedule && (
           <GlobalButton
             size="sm"
             full
             variant="primary"
             stopPropagation
-            onClick={() => openSchedulePopup(item)}
             className="mt-2"
+            onClick={() => {
+              if (item.type === "establishment") {
+                navigate(`/establishment/view/${item.slug}?schedule=1`);
+                return;
+              }
+
+              if (item.type === "employer" && item.establishment?.slug) {
+                navigate(
+                  `/establishment/view/${item.establishment.slug}?employer=${item.id}&schedule=1`
+                );
+                return;
+              }
+
+              if (item.type !== "establishment" && item.establishment?.slug) {
+                navigate(
+                  `/establishment/view/${item.establishment.slug}?item=${item.id}&schedule=1`
+                );
+                return;
+              }
+            }}
           >
             Agendar
           </GlobalButton>
@@ -155,13 +176,10 @@ GlobalCard.propTypes = {
   navigate: PropTypes.func.isRequired,
   showSchedule: PropTypes.bool,
   openSchedulePopup: PropTypes.func,
-  onEdit: PropTypes.func,
-  onDelete: PropTypes.func,
 };
 
 GlobalCard.defaultProps = {
+  fmtBRL: (v) => v,
   showSchedule: false,
-  openSchedulePopup: () => {},
-  onEdit: null,
-  onDelete: null,
+  openSchedulePopup: null,
 };

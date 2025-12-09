@@ -20,7 +20,7 @@ export default function GlobalButton({
       e.stopPropagation();
       e.preventDefault();
     }
-    if (onClick) onClick(e);
+    if (!disabled && !loading && onClick) onClick(e);
   };
 
   return (
@@ -29,15 +29,17 @@ export default function GlobalButton({
       className={`
         gbtn
         gbtn-${variant}
+        gbtn-${size}
         ${full ? "gbtn-full" : ""}
         ${rounded ? "gbtn-rounded" : ""}
-        gbtn-${size}
+        ${loading ? "gbtn-loading" : ""}
+        ${disabled ? "gbtn-disabled" : ""}
         ${className || ""}
       `}
       onClick={handleClick}
       disabled={disabled || loading}
     >
-      {loading ? <span className="gbtn-loader"></span> : children}
+      {loading ? <span className="gbtn-loader" /> : children}
     </button>
   );
 }
