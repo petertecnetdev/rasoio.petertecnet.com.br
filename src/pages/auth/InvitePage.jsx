@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import GlobalNav from "../../components/GlobalNav";
 import InviteFormComponent from "../../components/auth/InviteFormComponent";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { Container, Row, Col, Card, Modal } from "react-bootstrap";
+import GlobalButton from "../../components/GlobalButton";
 import "./InvitePage.css";
 
 export default function InvitePage() {
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   return (
     <>
       <GlobalNav />
@@ -25,11 +28,43 @@ export default function InvitePage() {
                 Convidar Usuário
               </h3>
 
-              <InviteFormComponent redirectTo="/user/list" />
+              <InviteFormComponent
+                onSuccess={() => setShowSuccessModal(true)}
+              />
             </Card>
           </Col>
         </Row>
       </Container>
+
+      <Modal
+        centered
+        show={showSuccessModal}
+        onHide={() => setShowSuccessModal(false)}
+      >
+        <Modal.Body
+          style={{
+            background: "#0f0f11",
+            borderRadius: "14px",
+            color: "#e5e7eb",
+            textAlign: "center",
+            padding: "32px",
+          }}
+        >
+          <h4 style={{ marginBottom: "12px" }}>Convite enviado com sucesso</h4>
+          <p style={{ color: "#9ca3af", marginBottom: "24px" }}>
+            O usuário receberá um e-mail com o convite para acessar a plataforma.
+          </p>
+
+          <GlobalButton
+            variant="primary"
+            full
+            rounded
+            onClick={() => setShowSuccessModal(false)}
+          >
+            Ok
+          </GlobalButton>
+        </Modal.Body>
+      </Modal>
     </>
   );
 }

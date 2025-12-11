@@ -1,11 +1,13 @@
 // src/pages/HomePage.jsx
 import React, { useState, useMemo } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../config";
 
 import useHomePage from "../hooks/useHomePage";
 import useAppointment from "../hooks/useAppointment";
-import useAuthPrompt from "../hooks/useAuthPrompt";
+import useImageUtils from "../hooks/useImageUtils";
 
 import "./HomePage.css";
 
@@ -19,9 +21,9 @@ import StatsQuick from "../components/home/StatsQuick";
 import HighlightsSection from "../components/home/HighlightsSection";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
 
-export default function HomePage() {
-  const navigate = useNavigate();
+const PLACEHOLDER = "/images/logo.png";
 
+export default function HomePage() {
   const {
     establishments,
     employers,
@@ -33,6 +35,10 @@ export default function HomePage() {
     fmtBRL,
   } = useHomePage(apiBaseUrl, appId);
 
+  const navigate = useNavigate();
+
+  const token = useMemo(() => localStorage.getItem("token"), []);
+
   const [showCityModal, setShowCityModal] = useState(false);
   const [user] = useState(() => {
     const cached = localStorage.getItem("user");
@@ -40,146 +46,181 @@ export default function HomePage() {
   });
 
   const [showWizard, setShowWizard] = useState(false);
-  const [wizardOptions, setWizardOptions] = useState({
-    services: [],
-    employers: [],
-    preselectedService: null,
-    preselectedEmployer: null,
-  });
-  const [selectedEstablishment, setSelectedEstablishment] = useState(null);
+  const [wizardOptions, setWizardOptions] = useState({});
+  const [wizardEstablishment, setWizardEstablishment] = useState(null);
+  const [wizardEmployers, setWizardEmployers] = useState([]);
+  const [wizardServices, setWizardServices] = useState([]);
 
-  const token = useMemo(() => localStorage.getItem("token"), []);
-
-  useAuthPrompt();
+  const { imageUrl } = useImageUtils(PLACEHOLDER);
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
     appId,
     token,
-    selectedEstablishment
+    wizardEstablishment
   );
 
   const handleChangeCity = () => {
     setShowCityModal(true);
   };
 
-  const mappedEstablishments = useMemo(
-    () =>
-      (establishments || []).map((e) => ({
-        ...e,
-        type: e.type || "establishment",
-      })),
-    [establishments]
-  );
-
-  const mappedEmployers = useMemo(
-    () =>
-      (employers || []).map((emp) => ({
-        ...emp,
-        type: emp.type || "employer",
-      })),
-    [employers]
-  );
-
-  const mappedItems = useMemo(
-    () =>
-      (items || []).map((i) => ({
-        ...i,
-        type: i.type || "service",
-      })),
-    [items]
-  );
-
-  const resolveEstablishmentFromTarget = (target) => {
+  const resolveEstablishmentSlugFromTarget = (target) => {
     if (!target) return null;
 
-    if (target.type === "establishment") {
-      return target;
+    if (target.type === "establishment" && target.slug) {
+      return target.slug;
     }
 
-    const estId =
-      target.establishment_id ||
-      target.establishmentId ||
-      target.establishment?.id ||
-      null;
+    if (target.establishment && target.establishment.slug) {
+      return target.establishment.slug;
+    }
 
-    if (!estId) return null;
-
-    return (
-      mappedEstablishments.find((e) => e.id === estId) ||
-      establishments.find((e) => e.id === estId) ||
-      null
-    );
+    return null;
   };
 
-  const openSchedulePopup = (target = {}) => {
-    const establishment = resolveEstablishmentFromTarget(target);
+  const mapEstablishmentFromPayload = (est) => {
+    if (!est) return null;
 
-    if (!establishment) {
-      return;
-    }
+    return {
+      ...est,
+      images: {
+        logo: est.images?.logo ?? est.logo ?? null,
+        background: est.images?.background ?? est.background ?? null,
+        gallery: est.images?.gallery ?? [],
+        files: est.images?.files ?? [],
+      },
+    };
+  };
 
-    setSelectedEstablishment(establishment);
-
-    const estItems = (items || []).filter((i) => {
-      const estIdItem =
-        i.establishment_id ||
-        i.establishmentId ||
-        i.establishment?.id ||
-        null;
-      return estIdItem === establishment.id;
+  const mapItemsFromPayload = (rawItems) => {
+    return (rawItems || []).map((it) => {
+      const img = it.images || {};
+      return {
+        ...it,
+        type: it.type || "item",
+        slug: it.slug,
+        images: {
+          avatar: img.avatar ?? it.image ?? null,
+          gallery: img.gallery ?? [],
+          files: img.files ?? [],
+        },
+      };
     });
+  };
 
-    const estServices = estItems.map((i) => ({
-      ...i,
-      type: i.type === "product" ? "product" : "service",
-    }));
+  const mapEmployersFromPayload = (rawEmployers) => {
+    return (rawEmployers || []).map((e) => {
+      const img = e.images || {};
+      const avatar =
+        img.avatar ||
+        e.avatar ||
+        e.image ||
+        e.user?.avatar ||
+        PLACEHOLDER;
 
-    const estEmployers = (employers || [])
-      .filter((emp) => {
-        const estIdEmp =
-          emp.establishment_id ||
-          emp.establishmentId ||
-          emp.establishment?.id ||
-          null;
-        return estIdEmp === establishment.id;
-      })
-      .map((emp) => ({
-        ...emp,
+      return {
+        ...e,
         type: "employer",
-      }));
-
-    let preselectedService = null;
-    let preselectedEmployer = null;
-
-    if (
-      target.type === "service" ||
-      target.type === "product" ||
-      target.price ||
-      target.duration
-    ) {
-      preselectedService =
-        estServices.find((s) => s.id === target.id) || { ...target };
-    }
-
-    if (
-      target.type === "employer" ||
-      target.user ||
-      target.establishment_id ||
-      target.establishmentId
-    ) {
-      preselectedEmployer =
-        estEmployers.find((emp) => emp.id === target.id) || { ...target };
-    }
-
-    setWizardOptions({
-      services: estServices,
-      employers: estEmployers,
-      preselectedService,
-      preselectedEmployer,
+        image: avatar,
+        images: {
+          avatar,
+          gallery: img.gallery || [],
+          files: img.files || [],
+        },
+        user: e.user || {
+          first_name: e.name || "",
+          avatar,
+        },
+      };
     });
+  };
 
-    setTimeout(() => setShowWizard(true), 50);
+  const openSchedulePopup = async (target = {}) => {
+    if (!target) return;
+
+    const estSlug = resolveEstablishmentSlugFromTarget(target);
+    if (!estSlug) return;
+
+    try {
+      const headers = token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : {};
+
+      const res = await axios.get(
+        `${apiBaseUrl}/establishment/view/${estSlug}`,
+        { headers }
+      );
+
+      const data = res.data || {};
+
+      const est = mapEstablishmentFromPayload(data.establishment || null);
+      const mappedItems = mapItemsFromPayload(data.items || []);
+      const mappedEmployers = mapEmployersFromPayload(data.employers || []);
+
+      const servicesList = mappedItems.filter(
+        (i) => (i.type || "").toLowerCase() !== "product"
+      );
+      const productsList = mappedItems.filter(
+        (i) => (i.type || "").toLowerCase() === "product"
+      );
+
+      const hasServices = servicesList.length > 0;
+      const hasProducts = productsList.length > 0;
+
+      const genericItems =
+        !hasServices && !hasProducts && mappedItems.length
+          ? mappedItems.map((i) => ({
+              ...i,
+              type: i.type === "product" ? "product" : "service",
+            }))
+          : [];
+
+      const servicesForWizard = hasServices ? servicesList : genericItems;
+
+      let preselectedService = null;
+      let preselectedEmployer = null;
+
+      if (target.type === "employer") {
+        preselectedEmployer =
+          mappedEmployers.find(
+            (e) => e.id === target.id || e.slug === target.slug
+          ) || null;
+      }
+
+      if (
+        target.type !== "establishment" &&
+        (!target.type || target.type !== "employer")
+      ) {
+        preselectedService =
+          servicesForWizard.find(
+            (s) => s.id === target.id || s.slug === target.slug
+          ) || null;
+      }
+
+      setWizardEstablishment(est);
+      setWizardEmployers(mappedEmployers);
+      setWizardServices(servicesForWizard);
+      setWizardOptions({
+        preselectedService,
+        preselectedEmployer,
+      });
+
+      setShowWizard(true);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Erro ao carregar dados do estabelecimento.";
+
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: msg,
+      });
+    }
   };
 
   if (isLoading) {
@@ -213,27 +254,29 @@ export default function HomePage() {
 
         <GlobalCarousel
           title="Estabelecimentos"
-          items={mappedEstablishments}
+          items={establishments}
           fmtBRL={fmtBRL}
-          navigate={(path) => navigate(path)}
+          navigate={(path) => (window.location.href = path)}
           openSchedulePopup={openSchedulePopup}
           showSchedule
         />
 
         <GlobalCarousel
           title="Profissionais"
-          items={mappedEmployers}
+          items={employers}
+          carouselActive
           fmtBRL={fmtBRL}
-          navigate={(path) => navigate(path)}
+          apiBaseUrl={apiBaseUrl}
           openSchedulePopup={openSchedulePopup}
+          navigate={navigate}
           showSchedule
         />
 
         <GlobalCarousel
           title="Serviços"
-          items={mappedItems}
+          items={items}
           fmtBRL={fmtBRL}
-          navigate={(path) => navigate(path)}
+          navigate={(path) => (window.location.href = path)}
           openSchedulePopup={openSchedulePopup}
           showSchedule
         />
@@ -263,26 +306,23 @@ export default function HomePage() {
         </div>
       </div>
 
+      <AppointmentWizardModal
+        show={showWizard}
+        onHide={() => setShowWizard(false)}
+        employers={wizardEmployers}
+        services={wizardServices}
+        loadAvailableTimes={loadAvailableTimes}
+        handleCreateAppointment={handleCreateAppointment}
+        imageUrl={imageUrl}
+        preselectedService={wizardOptions.preselectedService || null}
+        preselectedEmployer={wizardOptions.preselectedEmployer || null}
+        establishment={wizardEstablishment}
+      />
+
       <CitySelectorModal
         user={user}
         show={showCityModal}
         onClose={() => setShowCityModal(false)}
-      />
-
-      <AppointmentWizardModal
-        show={showWizard}
-        onHide={() => setShowWizard(false)}
-        employers={wizardOptions.employers}
-        services={wizardOptions.services}
-        loadAvailableTimes={loadAvailableTimes}
-        handleCreateAppointment={handleCreateAppointment}
-        imageUrl={
-          selectedEstablishment?.images?.logo ||
-          selectedEstablishment?.logo ||
-          "/images/logo.png"
-        }
-        preselectedService={wizardOptions.preselectedService}
-        preselectedEmployer={wizardOptions.preselectedEmployer}
       />
     </>
   );

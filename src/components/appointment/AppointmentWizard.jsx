@@ -23,7 +23,6 @@ export default function AppointmentWizardModal({
   imageUrl,
   preselectedService = null,
   preselectedEmployer = null,
-  preselectedEstablishment = null,
 }) {
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -56,44 +55,16 @@ export default function AppointmentWizardModal({
         const profile = parsed.profile || {};
         setCustomerCpf(profile.cpf || parsed.cpf || "");
         setCustomerPhone(profile.phone || parsed.phone || "");
-      } catch {
+      } catch (err) {
+        console.error("Erro ao carregar usuário:", err);
         setCustomerCpf("");
         setCustomerPhone("");
       }
+    } else {
+      setCustomerCpf("");
+      setCustomerPhone("");
     }
-  }, [show, preselectedService, preselectedEmployer, preselectedEstablishment]);
-
-  const establishmentId = useMemo(() => {
-    if (preselectedEstablishment?.id) return preselectedEstablishment.id;
-    if (preselectedEmployer?.establishment_id) return preselectedEmployer.establishment_id;
-    if (selectedEmployer?.establishment_id) return selectedEmployer.establishment_id;
-    if (preselectedService?.establishment_id) return preselectedService.establishment_id;
-    if (selectedServices.length && selectedServices[0].establishment_id)
-      return selectedServices[0].establishment_id;
-    return null;
-  }, [
-    preselectedEstablishment,
-    preselectedEmployer,
-    selectedEmployer,
-    preselectedService,
-    selectedServices,
-  ]);
-
-  const filteredServices = useMemo(() => {
-    if (!establishmentId) return services;
-    return services.filter(
-      (s) =>
-        s.establishment_id === establishmentId ||
-        s.establishment?.id === establishmentId
-    );
-  }, [services, establishmentId]);
-
-  const filteredEmployers = useMemo(() => {
-    if (!establishmentId) return employers;
-    return employers.filter(
-      (e) => e.establishment_id === establishmentId
-    );
-  }, [employers, establishmentId]);
+  }, [show, preselectedService, preselectedEmployer]);
 
   const totalDuration = useMemo(
     () =>
@@ -115,15 +86,18 @@ export default function AppointmentWizardModal({
 
   const handleServiceToggle = (service) => {
     const id = service.id || service.item_id;
-    setSelectedServices((prev) =>
-      prev.some((s) => (s.id || s.item_id) === id)
+    setSelectedServices((prev) => {
+      const exists = prev.some((s) => (s.id || s.item_id) === id);
+      return exists
         ? prev.filter((s) => (s.id || s.item_id) !== id)
-        : [...prev, service]
-    );
+        : [...prev, service];
+    });
   };
 
   const fmtBRL = (v) =>
-    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+    `R$ ${Number(v || 0)
+      .toFixed(2)
+      .replace(".", ",")}`;
 
   const handleNext = async () => {
     if (loading) return;
@@ -145,17 +119,21 @@ export default function AppointmentWizardModal({
 
       try {
         setLoading(true);
+        const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
         const times = await loadAvailableTimes(
-          dayjs(selectedDate).format("YYYY-MM-DD"),
+          dateSP,
           selectedEmployer || preselectedEmployer,
           totalDuration
         );
         setAvailableTimes(Array.isArray(times) ? times : []);
+      } catch (err) {
+        console.error("Erro ao carregar horários:", err);
+        setAvailableTimes([]);
       } finally {
         setLoading(false);
       }
 
-      setStep((s) => s + 1);
+      setStep((prev) => prev + 1);
       return;
     }
 
@@ -166,29 +144,60 @@ export default function AppointmentWizardModal({
     }
 
     if (step === finalStep) {
+      if (!customerCpf || !customerPhone) {
+        MySwal.fire({
+          icon: "warning",
+          title: "Preencha os campos",
+          text: "Informe seu CPF e telefone para continuar.",
+          background: "#0a0a0c",
+          color: "#fff",
+          confirmButtonColor: "#00bcd4",
+        });
+        return;
+      }
+
       try {
         setLoading(true);
 
-        const dateString = `${dayjs(selectedDate).format("YYYY-MM-DD")} ${selectedTime}`;
-        const isoDatetime = dayjs
-          .tz(dateString, "YYYY-MM-DD HH:mm", "America/Sao_Paulo")
-          .format("YYYY-MM-DDTHH:mm:ssZ");
+        const dateBase =
+          typeof selectedDate === "string"
+            ? selectedDate
+            : dayjs(selectedDate).format("YYYY-MM-DD");
 
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        const dateString = `${dateBase} ${selectedTime}`;
+        const datetimeSP = dayjs.tz(
+          dateString,
+          "YYYY-MM-DD HH:mm",
+          "America/Sao_Paulo"
+        );
+        const isoDatetime = datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ");
+
+        let customerName = "Cliente App";
+        let clientId = null;
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          clientId = parsed.id || null;
+          customerName =
+            `${parsed.first_name || ""} ${parsed.last_name || ""}`.trim() ||
+            parsed.user_name ||
+            "Cliente App";
+        }
 
         const payload = {
           mode: "appointment",
           app_id: 2,
           entity_name: "establishment",
-          entity_id: establishmentId,
+          entity_id:
+            selectedEmployer?.establishment_id ||
+            preselectedEmployer?.establishment_id ||
+            7,
           items: selectedServices.map((s) => ({
             item_id: s.id || s.item_id,
             quantity: 1,
           })),
-          client_id: userData.id || null,
-          customer_name:
-            `${userData.first_name || ""} ${userData.last_name || ""}`.trim() ||
-            "Cliente App",
+          client_id: clientId,
+          customer_name: customerName,
           customer_phone: customerPhone,
           customer_cpf: customerCpf,
           origin: "App",
@@ -197,110 +206,285 @@ export default function AppointmentWizardModal({
           payment_method: "Pix",
           notes: "Agendamento feito pelo aplicativo.",
           order_datetime: isoDatetime,
-          attendant_id: (selectedEmployer || preselectedEmployer)?.id || null,
+          attendant_id: selectedEmployer?.id || preselectedEmployer?.id,
         };
 
+        const token = localStorage.getItem("token");
         const res = await fetch(`${apiBaseUrl}/order`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json; charset=utf-8",
+            Authorization: token ? `Bearer ${token}` : "",
           },
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) throw new Error();
+        const data = await res.json();
 
-        await MySwal.fire("Sucesso", "Agendamento criado.", "success");
-        onHide();
-      } catch {
-        MySwal.fire("Erro", "Falha ao criar agendamento.", "error");
+        if (res.ok) {
+          await MySwal.fire({
+            icon: "success",
+            title: "Agendamento registrado com sucesso!",
+            text: "Seu pedido foi enviado para o profissional.",
+            background: "#0a0a0c",
+            color: "#fff",
+            confirmButtonColor: "#00bcd4",
+          });
+          onHide();
+        } else {
+          MySwal.fire({
+            icon: "error",
+            title: "Erro ao agendar",
+            text: data?.message || data?.error || "Não foi possível criar o agendamento.",
+            background: "#0a0a0c",
+            color: "#fff",
+            confirmButtonColor: "#00bcd4",
+          });
+        }
+      } catch (error) {
+        console.error("Erro inesperado:", error);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const handleBack = () => setStep((s) => Math.max(1, s - 1));
+  const handleBack = () => {
+    setStep((prev) => Math.max(1, prev - 1));
+  };
+
+  const stepsArray = hasPreselectedEmployer ? [1, 2, 3, 4] : [1, 2, 3, 4, 5];
+
+  const renderServicesStep = () => (
+    <div className="wizard-step">
+      <h4>Escolha os Serviços</h4>
+      <div className="grid">
+        {services && services.length ? (
+          services.map((s) => {
+            const id = s.id || s.item_id;
+            const active = selectedServices.some(
+              (x) => (x.id || x.item_id) === id
+            );
+            return (
+              <div
+                key={id}
+                className={`card-service ${active ? "active" : ""}`}
+                onClick={() => handleServiceToggle(s)}
+              >
+                <h5>{s.name || "Serviço"}</h5>
+                <p>{fmtBRL(s.price)}</p>
+                <small>{s.duration || 30} min</small>
+              </div>
+            );
+          })
+        ) : (
+          <div className="step-empty">
+            <p>Nenhum serviço disponível.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderEmployersStep = () => {
+    if (hasPreselectedEmployer) return null;
+
+    return (
+      <div className="wizard-step">
+        <h4>Escolha o Profissional</h4>
+        <div className="grid">
+          {employers && employers.length ? (
+            employers.map((e) => (
+              <div
+                key={e.id}
+                className={`card-emp ${
+                  selectedEmployer?.id === e.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedEmployer(e)}
+              >
+                <img
+                  src={imageUrl(e.user?.avatar)}
+                  alt={e.user?.first_name}
+                  onError={(ev) => (ev.currentTarget.src = "/images/logo.png")}
+                />
+                <strong>{e.user?.first_name}</strong>
+              </div>
+            ))
+          ) : (
+            <div className="step-empty">
+              <p>Nenhum profissional disponível.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDateStep = () => (
+    <div className="wizard-step">
+      <h4>Escolha a Data</h4>
+      <GlobalDateCarousel
+        selectedDate={selectedDate}
+        onChange={(d) => setSelectedDate(d)}
+        daysToShow={14}
+      />
+    </div>
+  );
+
+  const renderTimeStep = () => (
+    <div className="wizard-step">
+      <h4>Escolha o Horário</h4>
+      {availableTimes && availableTimes.length ? (
+        <div className="grid-times">
+          {availableTimes.map((t) => (
+            <button
+              key={t}
+              className={`time-btn ${selectedTime === t ? "active" : ""}`}
+              onClick={() => setSelectedTime(t)}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="step-empty">
+          <p>Nenhum horário disponível para esta data.</p>
+          <Button variant="dark" onClick={handleBack} className="mt-3">
+            Voltar
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderConfirmStep = () => {
+    const dateBase =
+      typeof selectedDate === "string"
+        ? selectedDate
+        : selectedDate
+        ? dayjs(selectedDate).format("YYYY-MM-DD")
+        : "";
+
+    return (
+      <div className="wizard-step">
+        <h4>Confirmar Agendamento</h4>
+        <div className="confirm-box">
+          <p>
+            <b>Profissional:</b>{" "}
+            {selectedEmployer?.user?.first_name ||
+              preselectedEmployer?.user?.first_name ||
+              "-"}
+          </p>
+          <p>
+            <b>Data:</b>{" "}
+            {dateBase ? dateBase.split("-").reverse().join("/") : "-"}
+          </p>
+          <p>
+            <b>Horário:</b> {selectedTime || "-"}
+          </p>
+
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>CPF</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Digite seu CPF"
+                  value={customerCpf}
+                  onChange={(e) => setCustomerCpf(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>Telefone</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Digite seu telefone"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <ul>
+            {selectedServices.map((s) => (
+              <li key={s.id || s.item_id}>
+                {s.name} - {fmtBRL(s.price)}
+              </li>
+            ))}
+          </ul>
+          <hr />
+          <p>
+            <b>Total:</b> {fmtBRL(totalValue)} | <b>Duração:</b>{" "}
+            {totalDuration} min
+          </p>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <Modal show={show} onHide={onHide} centered size="lg" backdrop="static">
-      <Modal.Body>
-        {step === 1 && (
-          <div className="wizard-step">
-            <h4>Escolha os Serviços</h4>
-            <div className="grid">
-              {filteredServices.map((s) => (
-                <div
-                  key={s.id || s.item_id}
-                  className={`card-service ${
-                    selectedServices.some(
-                      (x) => (x.id || x.item_id) === (s.id || s.item_id)
-                    )
-                      ? "active"
-                      : ""
-                  }`}
-                  onClick={() => handleServiceToggle(s)}
-                >
-                  <h5>{s.name}</h5>
-                  <p>{fmtBRL(s.price)}</p>
-                </div>
-              ))}
+    <Modal
+      show={show}
+      onHide={onHide}
+      centered
+      size="lg"
+      backdrop="static"
+      className="neon-modal"
+    >
+      <Modal.Body className="wizard-body" style={{ pointerEvents: "auto" }}>
+        <div className="wizard-steps">
+          {stepsArray.map((n) => (
+            <div key={n} className={`step-dot ${step >= n ? "active" : ""}`} />
+          ))}
+        </div>
+
+        {hasPreselectedEmployer && preselectedEmployer && (
+          <div className="employer-selected-header">
+            <div className="d-flex align-items-center gap-3 mb-3">
+              <img
+                src={imageUrl(preselectedEmployer.user?.avatar)}
+                alt={preselectedEmployer.user?.first_name}
+                className="rounded-circle"
+                width="60"
+                height="60"
+                onError={(e) => (e.currentTarget.src = "/images/logo.png")}
+              />
+              <div>
+                <h5 className="mb-0 text-light">
+                  {preselectedEmployer.user?.first_name}
+                </h5>
+                <small className="text-muted">Profissional selecionado</small>
+              </div>
             </div>
+            <hr className="mb-4" />
           </div>
         )}
 
-        {!hasPreselectedEmployer && step === 2 && (
-          <div className="wizard-step">
-            <h4>Escolha o Profissional</h4>
-            <div className="grid">
-              {filteredEmployers.map((e) => (
-                <div
-                  key={e.id}
-                  className={`card-emp ${
-                    selectedEmployer?.id === e.id ? "active" : ""
-                  }`}
-                  onClick={() => setSelectedEmployer(e)}
-                >
-                  <img
-                    src={imageUrl(e.user?.avatar)}
-                    alt={e.user?.first_name}
-                  />
-                  <strong>{e.user?.first_name}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === (hasPreselectedEmployer ? 2 : 3) && (
-          <GlobalDateCarousel
-            selectedDate={selectedDate}
-            onChange={setSelectedDate}
-          />
-        )}
-
-        {step === (hasPreselectedEmployer ? 3 : 4) && (
-          <div className="grid-times">
-            {availableTimes.map((t) => (
-              <button
-                key={t}
-                className={selectedTime === t ? "active" : ""}
-                onClick={() => setSelectedTime(t)}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        )}
+        {step === 1 && renderServicesStep()}
+        {!hasPreselectedEmployer && step === 2 && renderEmployersStep()}
+        {step === (hasPreselectedEmployer ? 2 : 3) && renderDateStep()}
+        {step === (hasPreselectedEmployer ? 3 : 4) && renderTimeStep()}
+        {step === finalStep && renderConfirmStep()}
       </Modal.Body>
 
-      <Modal.Footer>
-        <Button onClick={handleBack} disabled={step === 1}>
-          Voltar
+      <Modal.Footer className="wizard-footer">
+        <Button variant="secondary" onClick={onHide}>
+          Cancelar
         </Button>
-        <Button onClick={handleNext} disabled={loading}>
-          {step === finalStep ? "Confirmar" : "Avançar"}
+        {step > 1 && (
+          <Button variant="dark" onClick={handleBack}>
+            Voltar
+          </Button>
+        )}
+        <Button variant="info" onClick={handleNext} disabled={loading}>
+          {loading
+            ? "Enviando..."
+            : step === finalStep
+            ? "Confirmar"
+            : "Avançar"}
         </Button>
       </Modal.Footer>
     </Modal>

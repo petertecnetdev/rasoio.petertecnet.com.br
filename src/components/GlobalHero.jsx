@@ -88,6 +88,14 @@ export default function GlobalHero({
     metrics?.return_rate ?? ordersSummary?.return_rate ?? 0;
   const engagementScore = metrics?.engagement_score ?? null;
 
+  const handleSchedule = () => {
+    if (onScheduleClick) {
+      onScheduleClick();
+      return;
+    }
+    navigate("/order/create");
+  };
+
   return (
     <div
       className={`gh-root ${isList ? "gh-list-mode" : ""}`}
@@ -120,19 +128,17 @@ export default function GlobalHero({
                 {title}
               </h1>
 
-              {!isList && (whatsappLink || onScheduleClick) && (
+              {!isList && (
                 <div className="gh-cta-group">
-                  {onScheduleClick && (
-                    <GlobalButton
-                      variant="primary"
-                      size="md"
-                      rounded
-                      onClick={onScheduleClick}
-                    >
-                      <FaCalendarAlt className="me-2" />
-                      Agendar agora
-                    </GlobalButton>
-                  )}
+                  <GlobalButton
+                    variant="primary"
+                    size="md"
+                    rounded
+                    onClick={handleSchedule}
+                  >
+                    <FaCalendarAlt className="me-2" />
+                    Agendar agora
+                  </GlobalButton>
 
                   {whatsappLink && (
                     <a
@@ -267,7 +273,6 @@ export default function GlobalHero({
                   )}
 
                   <div className="gh-stats-row">
-
                     <div className="gh-stat-card">
                       <div className="gh-stat-icon">
                         <FaPercent />

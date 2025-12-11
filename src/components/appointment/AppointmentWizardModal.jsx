@@ -24,6 +24,7 @@ export default function AppointmentWizardModal({
   imageUrl,
   preselectedService = null,
   preselectedEmployer = null,
+  establishment = null,
 }) {
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -65,7 +66,7 @@ export default function AppointmentWizardModal({
       setCustomerCpf("");
       setCustomerPhone("");
     }
-  }, [show, preselectedService, preselectedEmployer]);
+  }, [show, preselectedService, preselectedEmployer, establishment]);
 
   const totalDuration = useMemo(
     () =>
@@ -120,10 +121,7 @@ export default function AppointmentWizardModal({
 
       try {
         setLoading(true);
-        const dateSP =
-          typeof selectedDate === "string"
-            ? selectedDate
-            : dayjs(selectedDate).format("YYYY-MM-DD");
+        const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
         const times = await loadAvailableTimes(
           dateSP,
           selectedEmployer || preselectedEmployer,
@@ -188,27 +186,30 @@ export default function AppointmentWizardModal({
             "Cliente App";
         }
 
+        const entityId =
+          establishment?.id ||
+          selectedEmployer?.establishment_id ||
+          preselectedEmployer?.establishment_id ||
+          null;
+
         const payload = {
           mode: "appointment",
-          app_id: 2,
+          app_id: establishment?.app_id || 2,
           entity_name: "establishment",
-          entity_id:
-            selectedEmployer?.establishment_id ||
-            preselectedEmployer?.establishment_id ||
-            7,
+          entity_id: entityId,
           items: selectedServices.map((s) => ({
             item_id: s.id || s.item_id,
             quantity: 1,
           })),
           client_id: clientId,
           customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_cpf: customerCpf,
           origin: "App",
           fulfillment: "dine-in",
           payment_status: "pending",
           payment_method: "Pix",
           notes: "Agendamento feito pelo aplicativo.",
-          customer_phone: customerPhone,
-          customer_cpf: customerCpf,
           order_datetime: isoDatetime,
           attendant_id: selectedEmployer?.id || preselectedEmployer?.id,
         };
@@ -262,51 +263,36 @@ export default function AppointmentWizardModal({
 
   const stepsArray = hasPreselectedEmployer ? [1, 2, 3, 4] : [1, 2, 3, 4, 5];
 
-  const renderServicesStep = () => {
-    const preId = preselectedService
-      ? preselectedService.id || preselectedService.item_id
-      : null;
-
-    const listBase = Array.isArray(services) ? services : [];
-    const hasPreInList =
-      preId &&
-      listBase.some((s) => (s.id || s.item_id) === preId);
-
-    const list = hasPreInList || !preselectedService
-      ? listBase
-      : [preselectedService, ...listBase];
-
-    return (
-      <div className="wizard-step">
-        <h4>Escolha os Serviços</h4>
-        <div className="grid">
-          {list && list.length ? (
-            list.map((s) => {
-              const id = s.id || s.item_id;
-              const active = selectedServices.some(
-                (x) => (x.id || x.item_id) === id
-              );
-              return (
-                <div
-                  key={id}
-                  className={`card-service ${active ? "active" : ""}`}
-                  onClick={() => handleServiceToggle(s)}
-                >
-                  <h5>{s.name || "Serviço"}</h5>
-                  <p>{fmtBRL(s.price)}</p>
-                  <small>{s.duration || 30} min</small>
-                </div>
-              );
-            })
-          ) : (
-            <div className="step-empty">
-              <p>Nenhum serviço disponível.</p>
-            </div>
-          )}
-        </div>
+  const renderServicesStep = () => (
+    <div className="wizard-step">
+      <h4>Escolha os Serviços</h4>
+      <div className="grid">
+        {services && services.length ? (
+          services.map((s) => {
+            const id = s.id || s.item_id;
+            const active = selectedServices.some(
+              (x) => (x.id || x.item_id) === id
+            );
+            return (
+              <div
+                key={id}
+                className={`card-service ${active ? "active" : ""}`}
+                onClick={() => handleServiceToggle(s)}
+              >
+                <h5>{s.name || "Serviço"}</h5>
+                <p>{fmtBRL(s.price)}</p>
+                <small>{s.duration || 30} min</small>
+              </div>
+            );
+          })
+        ) : (
+          <div className="step-empty">
+            <p>Nenhum serviço disponível.</p>
+          </div>
+        )}
       </div>
-    );
-  };
+    </div>
+  );
 
   const renderEmployersStep = () => {
     if (hasPreselectedEmployer) return null;
@@ -459,10 +445,7 @@ export default function AppointmentWizardModal({
       <Modal.Body className="wizard-body" style={{ pointerEvents: "auto" }}>
         <div className="wizard-steps">
           {stepsArray.map((n) => (
-            <div
-              key={n}
-              className={`step-dot ${step >= n ? "active" : ""}`}
-            />
+            <div key={n} className={`step-dot ${step >= n ? "active" : ""}`} />
           ))}
         </div>
 

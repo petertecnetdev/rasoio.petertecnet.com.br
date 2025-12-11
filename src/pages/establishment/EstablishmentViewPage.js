@@ -59,7 +59,7 @@ export default function EstablishmentViewPage() {
   const { ref: productRef, handleScroll: handleProductScroll } =
     useScrollControl();
 
-  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
+  const { loadAvailableTimes } = useAppointment(
     apiBaseUrl,
     APP_ID,
     token,
@@ -342,10 +342,10 @@ export default function EstablishmentViewPage() {
         employers={mappedEmployers}
         services={mappedServices.length ? mappedServices : mappedGenericItems}
         loadAvailableTimes={loadAvailableTimes}
-        handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}
         preselectedService={wizardOptions.preselectedService || null}
         preselectedEmployer={wizardOptions.preselectedEmployer || null}
+        establishment={establishment}
       />
 
       {whatsappLink && (

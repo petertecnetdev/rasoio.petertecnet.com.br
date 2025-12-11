@@ -134,33 +134,14 @@ export default function GlobalCard({
           Detalhes
         </GlobalButton>
 
-        {showSchedule && (
+        {showSchedule && typeof openSchedulePopup === "function" && (
           <GlobalButton
             size="sm"
             full
             variant="primary"
             stopPropagation
+            onClick={() => openSchedulePopup(item)}
             className="mt-2"
-            onClick={() => {
-              if (item.type === "establishment") {
-                navigate(`/establishment/view/${item.slug}?schedule=1`);
-                return;
-              }
-
-              if (item.type === "employer" && item.establishment?.slug) {
-                navigate(
-                  `/establishment/view/${item.establishment.slug}?employer=${item.id}&schedule=1`
-                );
-                return;
-              }
-
-              if (item.type !== "establishment" && item.establishment?.slug) {
-                navigate(
-                  `/establishment/view/${item.establishment.slug}?item=${item.id}&schedule=1`
-                );
-                return;
-              }
-            }}
           >
             Agendar
           </GlobalButton>
