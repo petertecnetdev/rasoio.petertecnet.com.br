@@ -1,70 +1,131 @@
-import React from "react";
-import { Card, Badge, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+// src/components/item/ItemListCard.jsx
+import React, { useMemo } from "react";
+import PropTypes from "prop-types";
+import { Card, Badge } from "react-bootstrap";
+import GlobalButton from "../GlobalButton";
+import useImageUtils from "../../hooks/useImageUtils";
 import "./ItemListCard.css";
 
-export default function ItemListCard({
-  item,
-  fmtPrice,
-  ph,
-  imageUrl,
-  handleImgError,
-  onDelete,
-}) {
+export default function ItemListCard({ item, onEdit, onDelete, fmtPrice }) {
+  const { imageUrl } = useImageUtils();
+
+  const cover = useMemo(() => {
+    const paths = [
+      item?.images?.avatar,
+      item?.images?.logo,
+      item?.images?.background,
+      Array.isArray(item?.images?.gallery) ? item.images.gallery[0] : null,
+      item?.image,
+    ];
+
+    for (const p of paths) {
+      const url = imageUrl(p);
+      if (url) return url;
+    }
+    return null;
+  }, [item, imageUrl]);
+
+  const initials = useMemo(() => {
+    if (!item?.name) return "?";
+    const parts = item.name.trim().split(" ");
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (
+      parts[0][0].toUpperCase() +
+      parts[parts.length - 1][0].toUpperCase()
+    );
+  }, [item]);
+
   return (
-    <Card className="iteml-card h-100" bg="black" text="light">
-      <div className="iteml-media-wrap">
-        <img
-          src={item.image ? imageUrl(item.image) : ph}
-          alt={item.name}
-          className="iteml-media"
-          onError={handleImgError}
-          loading="lazy"
-        />
+    <Card className="itemlist-card h-100 bg-dark text-light">
+      <div className="itemlist-card-image-wrapper">
+        {cover ? (
+          <img
+            src={cover}
+            alt={item.name}
+            className="itemlist-card-image"
+          />
+        ) : (
+          <div className="itemlist-card-placeholder">{initials}</div>
+        )}
       </div>
 
-      <Card.Body className="p-3 d-flex flex-column">
-        <div className="iteml-item-name">{item.name}</div>
+      <Card.Body className="d-flex flex-column">
+        <Card.Title className="itemlist-card-title">
+          {item.name}
+        </Card.Title>
 
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div className="iteml-item-price">{fmtPrice(item.price)}</div>
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <Badge bg="warning" text="dark">
+            {item.type || "item"}
+          </Badge>
 
-          {item.duration && (
-            <Badge bg="warning" text="dark">
-              {item.duration} min
-            </Badge>
-          )}
-
-          {item.stock !== undefined && item.stock !== null && (
-            <Badge bg={Number(item.stock) > 0 ? "success" : "secondary"}>
-              {Number(item.stock) > 0 ? "Em estoque" : "Indisponível"}
-            </Badge>
+          {item.price !== undefined && item.price !== null && (
+            <span className="itemlist-card-price">
+              {fmtPrice(item.price)}
+            </span>
           )}
         </div>
 
-        {item.description && (
-          <div className="iteml-item-desc mt-2">{item.description}</div>
+        {item.status !== undefined && (
+          <div className="mb-2">
+            <Badge bg={item.status ? "success" : "secondary"}>
+              {item.status ? "Ativo" : "Inativo"}
+            </Badge>
+          </div>
         )}
 
-        <div className="mt-3 d-flex gap-2">
-          <Button
-            as={Link}
-            to={`/item/update/${item.id}`}
-            variant="outline-warning"
+        {typeof item.total_views === "number" && (
+          <div className="mb-2 small text-muted">
+            {item.total_views} visualizações
+          </div>
+        )}
+
+        <div className="mt-auto d-flex gap-2">
+          <GlobalButton
+            variant="outline"
             size="sm"
+            full
+            onClick={() => onEdit && onEdit(item)}
           >
             Editar
-          </Button>
+          </GlobalButton>
 
-          <Button
-            variant="outline-danger"
+          <GlobalButton
+            variant="danger"
             size="sm"
-            onClick={() => onDelete(item)}
+            full
+            onClick={() => onDelete && onDelete(item)}
           >
             Excluir
-          </Button>
+          </GlobalButton>
         </div>
       </Card.Body>
     </Card>
   );
 }
+
+ItemListCard.propTypes = {
+  item: PropTypes.shape({
+    id: PropTypes.number,
+    name: PropTypes.string,
+    type: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    status: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    total_views: PropTypes.number,
+    image: PropTypes.string,
+    images: PropTypes.object,
+  }).isRequired,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  fmtPrice: PropTypes.func,
+};
+
+ItemListCard.defaultProps = {
+  onEdit: null,
+  onDelete: null,
+  fmtPrice: (v) =>
+    Number(v || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }),
+};

@@ -5,11 +5,19 @@ import { apiBaseUrl, storageUrl } from "../config";
 
 export default function useItemUpdate(id, navigate, reset, setValue) {
   const [loading, setLoading] = useState(true);
-  const [imagePreview, setImagePreview] = useState("");
-  const [backgroundPreview, setBackgroundPreview] = useState("");
-  const [newImageFile, setNewImageFile] = useState(null);
+
+  const [item, setItem] = useState(null);
   const [establishment, setEstablishment] = useState(null);
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const [backgroundPreview, setBackgroundPreview] = useState(null);
+
+  const [newImageFile, setNewImageFile] = useState(null);
+  const [newBackgroundFile, setNewBackgroundFile] = useState(null);
+
+  // =====================================================
+  // 🔥 CARREGAR ITEM
+  // =====================================================
   useEffect(() => {
     async function fetchItem() {
       try {
@@ -19,39 +27,42 @@ export default function useItemUpdate(id, navigate, reset, setValue) {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const item = res.data;
+        const data = res.data;
+        setItem(data);
 
-        setEstablishment(item.establishment ?? null);
+        setEstablishment(data.establishment ?? null);
+reset({
+  name: data.name ?? "",
+  type: data.type ?? "service",
+  duration: data.duration ? String(data.duration) : "",
+  description: data.description ?? "",
+  price: String(data.price ?? ""),
+  stock: String(data.stock ?? ""),
+  status: String(data.status ?? "active"),
+  limited_by_user: String(data.limited_by_user ?? "no"),
+  category: data.category ?? "",
+  subcategory: data.subcategory ?? "",
+  brand: data.brand ?? "",
+  availability_start: data.availability_start?.slice(0, 16) ?? "",
+  availability_end: data.availability_end?.slice(0, 16) ?? "",
+  tags: data.tags ?? "",
+  discount: String(data.discount ?? ""),
+  expiration_date: data.expiration_date?.slice(0, 10) ?? "",
+  notes: data.notes ?? "",
+  is_featured: data.is_featured ? "1" : "0",
+  remove_image: 0,
+});
 
-        reset({
-          name: item.name ?? "",
-          type: item.type ?? "",
-          description: item.description ?? "",
-          price: String(item.price ?? ""),
-          stock: String(item.stock ?? ""),
-          status: String(item.status ?? 0),
-          limited_by_user: String(item.limited_by_user ?? 0),
-          category: item.category ?? "",
-          subcategory: item.subcategory ?? "",
-          brand: item.brand ?? "",
-          availability_start: item.availability_start?.slice(0, 16) ?? "",
-          availability_end: item.availability_end?.slice(0, 16) ?? "",
-          tags: item.tags ?? "",
-          discount: String(item.discount ?? ""),
-          expiration_date: item.expiration_date?.slice(0, 10) ?? "",
-          notes: item.notes ?? "",
-          is_featured: item.is_featured ? "1" : "0",
-          remove_image: 0,
-        });
 
-        setImagePreview(item.image ? `${storageUrl}/${item.image}` : "");
-        setBackgroundPreview(
-          item.establishment?.background
-            ? `${storageUrl}/${item.establishment.background}`
-            : ""
-        );
+        if (data?.image) {
+          setImagePreview(`${storageUrl}/${data.image}`);
+        }
 
-      } catch {
+        if (data?.establishment?.background) {
+          setBackgroundPreview(`${storageUrl}/${data.establishment.background}`);
+        }
+      } catch (err) {
+        console.log(err);
         Swal.fire("Erro", "Não foi possível carregar o item", "error");
       } finally {
         setLoading(false);
@@ -61,13 +72,19 @@ export default function useItemUpdate(id, navigate, reset, setValue) {
     fetchItem();
   }, [id, reset]);
 
+  // =====================================================
+  // ❌ REMOVER IMAGEM
+  // =====================================================
   function handleRemoveImage() {
-    setImagePreview("");
+    setImagePreview(null);
     setNewImageFile(null);
     setValue("remove_image", 1);
     setValue("image", null);
   }
 
+  // =====================================================
+  // 📸 ALTERAR IMAGEM COM PREVIEW
+  // =====================================================
   function handleImageChange(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -79,6 +96,22 @@ export default function useItemUpdate(id, navigate, reset, setValue) {
     setImagePreview(url);
   }
 
+  // =====================================================
+  // 🌄 ALTERAR BACKGROUND COM PREVIEW
+  // =====================================================
+  function handleBackgroundChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setNewBackgroundFile(file);
+
+    const url = URL.createObjectURL(file);
+    setBackgroundPreview(url);
+  }
+
+  // =====================================================
+  // 🚀 ATUALIZAR ITEM
+  // =====================================================
   async function submitUpdate(data) {
     const token = localStorage.getItem("token");
     const formData = new FormData();
@@ -91,6 +124,10 @@ export default function useItemUpdate(id, navigate, reset, setValue) {
       formData.set("image", "");
     } else if (newImageFile) {
       formData.append("image", newImageFile);
+    }
+
+    if (newBackgroundFile) {
+      formData.append("background", newBackgroundFile);
     }
 
     try {
@@ -108,17 +145,18 @@ export default function useItemUpdate(id, navigate, reset, setValue) {
       } else {
         navigate(-1);
       }
-
-    } catch {
+    } catch (err) {
       Swal.fire("Erro", "Falha ao atualizar", "error");
     }
   }
 
   return {
     loading,
+    item,
     imagePreview,
     backgroundPreview,
     handleImageChange,
+    handleBackgroundChange,
     handleRemoveImage,
     submitUpdate,
   };

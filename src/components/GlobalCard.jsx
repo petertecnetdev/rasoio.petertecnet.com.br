@@ -24,13 +24,14 @@ export default function GlobalCard({
   };
 
   const image = useMemo(() => {
-    const paths = [
-      item?.avatar,
-      item?.images?.avatar,
-      item?.images?.logo,
-      item?.images?.background,
-      Array.isArray(item?.images?.gallery) ? item.images.gallery[0] : null,
-    ];
+  const paths = [
+  item?.image,               // 👈 PRIORIDADE MÁXIMA (backend já resolveu)
+  item?.avatar,
+  item?.images?.avatar,
+  item?.images?.logo,
+  item?.images?.background,
+  Array.isArray(item?.images?.gallery) ? item.images.gallery[0] : null,
+];
 
     for (const p of paths) {
       const url = imageUrl(p);
@@ -103,6 +104,12 @@ export default function GlobalCard({
 
         {item.price !== undefined && (
           <div className="carousel-item-price">{fmtBRL(item.price)}</div>
+        )}
+
+        {item.duration !== null && item.duration !== undefined && (
+          <div className="text-light-50 small mb-1">
+            {item.duration} min
+          </div>
         )}
 
         {item.establishment && item.type !== "establishment" && (

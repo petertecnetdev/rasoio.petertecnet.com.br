@@ -49,6 +49,7 @@ import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePa
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
 import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
 import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
+import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
 
 import "./index.css";
 
@@ -221,6 +222,11 @@ function AppInner() {
           <Route
             path="/establishment/update/:id"
             element={protectedRoute(<EstablishmentUpdatePage />)}
+          />
+          
+          <Route
+            path="/establishment/my"
+            element={protectedRoute(<EstablishmentMyPage />)}
           />
           <Route
             path="/establishment/schedule/:slug"

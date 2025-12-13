@@ -1,196 +1,267 @@
-// src/pages/item/ItemListPage.js
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Container } from "react-bootstrap";
+// src/pages/item/ItemListPage.jsx
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Container, Row, Col, Spinner, Alert, ButtonGroup } from "react-bootstrap";
 import axios from "axios";
 import Swal from "sweetalert2";
 
 import NavlogComponent from "../../components/NavlogComponent";
+import GlobalCard from "../../components/GlobalCard";
+import GlobalButton from "../../components/GlobalButton";
 import GlobalHeroList from "../../components/GlobalHeroList";
-import GlobalSectionList from "../../components/GlobalSectionList";
-
-import {
-  ItemListHeader,
-  ItemDeleteModal,
-  ItemListSkeleton,
-} from "../../components/item";
-
-import useItemsFilter from "../../hooks/useItemsFilter";
+import useItemListBySlug from "../../hooks/useItemListBySlug";
 import useImageUtils from "../../hooks/useImageUtils";
-
 import { apiBaseUrl } from "../../config";
-import "./ItemListPage.css";
+
+const PLACEHOLDER = "/images/logo.png";
 
 export default function ItemListPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
-  const [user, setUser] = useState(null);
-  const [establishment, setEstablishment] = useState(null);
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
-  const token = useMemo(() => localStorage.getItem("token"), []);
-  const ph = "/images/logo.png";
-  const { imageUrl, handleImgError } = useImageUtils(ph);
+  const { establishment, items, loading, apiError } = useItemListBySlug(slug);
+  const [localItems, setLocalItems] = useState([]);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-      return;
+    setLocalItems(items || []);
+  }, [items]);
+
+  const fmtBRL = (v) =>
+    Number(v || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+  const mappedItems = useMemo(() => {
+    if (!localItems?.length) return [];
+
+    return localItems
+      .map((item) => {
+        const type =
+          item.type ||
+          (item.category === "product" ? "product" : "service");
+
+        return {
+          ...item,
+          type,
+          image: item.image || null,
+          duration: item.duration ?? null,
+          city: establishment?.city || null,
+          uf: establishment?.uf || null,
+          total_views: item.total_views ?? 0,
+          establishment: establishment
+            ? { name: establishment.name, slug: establishment.slug }
+            : null,
+        };
+      })
+      .filter((item) => {
+        if (filter === "all") return true;
+        return item.type === filter;
+      });
+  }, [localItems, establishment, filter]);
+
+  const heroData = useMemo(() => {
+    const servicesCount = (localItems || []).filter(
+      (i) => i.type === "service" || i.category === "service"
+    ).length;
+
+    const productsCount = (localItems || []).filter(
+      (i) => i.type === "product" || i.category === "product"
+    ).length;
+
+    if (!establishment) {
+      return {
+        logo: PLACEHOLDER,
+        background: null,
+        title: "Itens do estabelecimento",
+        subtitle: "",
+        servicesCount,
+        productsCount,
+      };
     }
 
-    let active = true;
+    const subtitle =
+      establishment.city && establishment.uf
+        ? `${establishment.city} - ${establishment.uf}`
+        : "";
 
-    (async () => {
-      try {
-        const { data: userData } = await axios.get(`${apiBaseUrl}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!active) return;
-        setUser(userData.user);
+    return {
+      logo: establishment.logo || PLACEHOLDER,
+      background: null,
+      title: establishment.fantasy || establishment.name,
+      subtitle,
+      servicesCount,
+      productsCount,
+    };
+  }, [establishment, localItems]);
 
-        const { data } = await axios.get(
-          `${apiBaseUrl}/establishment/view/${slug}`,
+  const handleDelete = async (itemId) => {
+    const token = localStorage.getItem("token");
 
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+    const confirm = await Swal.fire({
+      title: "Excluir item",
+      text: "Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, excluir",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
 
-        if (!active) return;
+    if (!confirm.isConfirmed) return;
 
-        const estObj = data.establishment ?? null;
-        const estItems = data.items ?? [];
-
-        if (!estObj) {
-          navigate("/404");
-          return;
-        }
-
-        if (userData.user.id !== estObj.user_id) {
-          Swal.fire({
-            icon: "warning",
-            title: "Acesso negado",
-            text: "Você não tem permissão para acessar os itens deste estabelecimento.",
-          }).then(() => navigate("/dashboard"));
-          return;
-        }
-
-        setEstablishment(estObj);
-        setItems(estItems);
-      } catch (e) {
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Não foi possível carregar os itens.",
-        }).then(() => navigate("/dashboard"));
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    })();
-
-    return () => (active = false);
-  }, [slug, token, navigate]);
-
-  const { services, products } = useItemsFilter(items);
-
-  const fmtPrice = useCallback(
-    (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`,
-    []
-  );
-
-  const askDelete = (item) => setDeleteTarget(item);
-  const closeDelete = () => setDeleteTarget(null);
-
-  const confirmDelete = async () => {
     try {
-      await axios.delete(`${apiBaseUrl}/item/${deleteTarget.id}`, {
+      const { data } = await axios.delete(`${apiBaseUrl}/item/${itemId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      if (data?.message) {
+        await Swal.fire({
+          icon: "success",
+          title: "Sucesso",
+          text: data.message,
+        });
+      }
 
-      Swal.fire({
-        icon: "success",
-        title: "Excluído",
-        text: `O item "${deleteTarget.name}" foi removido.`,
-      });
-
-      closeDelete();
-    } catch (e) {
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: "Não foi possível excluir.",
-      });
+      setLocalItems((prev) => prev.filter((it) => it.id !== itemId));
+    } catch (error) {
+      const apiMsg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        "Erro ao excluir o item.";
+      await Swal.fire({ icon: "error", title: "Erro", text: apiMsg });
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="iteml-root">
-        <NavlogComponent />
-        <Container fluid className="mt-5">
-          <ItemListSkeleton />
-        </Container>
-      </div>
-    );
-  }
+  const handleCreate = () => {
+    if (establishment) navigate(`/item/create/${establishment.id}`);
+  };
 
-  if (!establishment) return null;
+  const handleEdit = (id) => {
+    navigate(`/item/update/${id}`);
+  };
 
   return (
     <>
       <NavlogComponent />
 
-      {/* ======= HERO SIMPLES, ELEGANTE E LIMPO ======= */}
-     <GlobalHeroList
-  title={`Itens de ${establishment.name}`}
-  subtitle={establishment.description}
-  logo={establishment.logo}
-  background={establishment.background}
-  servicesCount={services.length}
-  productsCount={products.length}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-/>
-
-
-      {/* ======= CONTAINER PRINCIPAL ======= */}
-      <Container fluid className="mt-4 iteml-container">
-
-        <ItemListHeader
-          servicesCount={services.length}
-          productsCount={products.length}
-        />
-
-        <GlobalSectionList
-          title="Serviços"
-          items={services}
-          fmtBRL={fmtPrice}
-          navigate={navigate}
-          onEdit={(it) => navigate(`/item/update/${it.id}`)}
-          onDelete={askDelete}
-          openSchedulePopup={() => {}}
-        />
-
-        <GlobalSectionList
-          title="Produtos"
-          items={products}
-          fmtBRL={fmtPrice}
-          navigate={navigate}
-          onEdit={(it) => navigate(`/item/update/${it.id}`)}
-          onDelete={askDelete}
-          openSchedulePopup={() => {}}
-        />
-      </Container>
-
-      <ItemDeleteModal
-        show={Boolean(deleteTarget)}
-        item={deleteTarget}
-        onHide={closeDelete}
-        onConfirm={confirmDelete}
+      <GlobalHeroList
+        logo={heroData.logo}
+        background={heroData.background}
+        title={heroData.title}
+        subtitle={heroData.subtitle}
+        servicesCount={heroData.servicesCount}
+        productsCount={heroData.productsCount}
+        imageUrl={imageUrl}
+        handleImgError={handleImgError}
       />
+
+      <Container className="py-3">
+        <Row className="mb-3 align-items-center">
+          <Col>
+            <h5 className="text-light mb-2">
+              {mappedItems.length} item
+              {mappedItems.length === 1 ? "" : "s"} listado
+            </h5>
+
+            <ButtonGroup>
+              <GlobalButton
+                size="sm"
+                variant={filter === "all" ? "primary" : "outline"}
+                onClick={() => setFilter("all")}
+              >
+                Todos
+              </GlobalButton>
+
+              <GlobalButton
+                size="sm"
+                variant={filter === "service" ? "primary" : "outline"}
+                onClick={() => setFilter("service")}
+              >
+                Serviços
+              </GlobalButton>
+
+              <GlobalButton
+                size="sm"
+                variant={filter === "product" ? "primary" : "outline"}
+                onClick={() => setFilter("product")}
+              >
+                Produtos
+              </GlobalButton>
+            </ButtonGroup>
+          </Col>
+
+          <Col className="text-end">
+            {establishment && (
+              <GlobalButton size="sm" variant="success" onClick={handleCreate}>
+                + Novo Item
+              </GlobalButton>
+            )}
+          </Col>
+        </Row>
+
+        {loading && (
+          <div className="d-flex justify-content-center py-5">
+            <Spinner animation="border" role="status" />
+          </div>
+        )}
+
+        {!loading && apiError && (
+          <Alert variant="danger" className="mt-3">
+            {apiError}
+          </Alert>
+        )}
+
+        {!loading && !apiError && (
+          <>
+            {mappedItems.length === 0 && (
+              <Alert variant="secondary" className="text-center">
+                Nenhum item encontrado para este filtro.
+              </Alert>
+            )}
+
+            {mappedItems.length > 0 && (
+              <Row className="gy-3">
+                {mappedItems.map((item) => (
+                  <Col xs={12} md={6} lg={4} key={item.id}>
+                    <div className="h-100 d-flex flex-column">
+                      <GlobalCard
+                        item={item}
+                        fmtBRL={fmtBRL}
+                        navigate={navigate}
+                        showSchedule={false}
+                        openSchedulePopup={null}
+                      />
+
+                      <div className="d-flex justify-content-between mt-3 gap-2">
+                        <GlobalButton
+                          variant="outline"
+                          size="sm"
+                          full
+                          onClick={() => handleEdit(item.id)}
+                        >
+                          Editar
+                        </GlobalButton>
+
+                        <GlobalButton
+                          variant="danger"
+                          size="sm"
+                          full
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Excluir
+                        </GlobalButton>
+                      </div>
+                    </div>
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </>
+        )}
+      </Container>
     </>
   );
 }

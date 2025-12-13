@@ -1,46 +1,102 @@
 // src/components/GlobalHeroEditorPreview.jsx
-import React from "react";
-import { Badge } from "react-bootstrap";
+import React, { useMemo, useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import useImageUtils from "../hooks/useImageUtils";
 import "./GlobalHeroEditorPreview.css";
 
 export default function GlobalHeroEditorPreview({
-  backgroundPreview = null,
-  logoPreview = null,
-  segments = [],
-  title = "",
-  subtitle = "",
+  entity = "generic",
+  title,
+  subtitle,
+  logoPreview,
+  backgroundPreview,
+  data = {},
 }) {
-  const bgStyle = backgroundPreview
-    ? `linear-gradient(90deg, rgba(18,18,18,0.87) 60%, rgba(36,36,36,0.70)),
-       url('${backgroundPreview}') center/cover no-repeat`
-    : "linear-gradient(90deg, rgba(18,18,18,0.9) 60%, rgba(36,36,36,0.7)), #222";
+  const { imageUrl } = useImageUtils();
+  const [imgBroken, setImgBroken] = useState(false);
+
+  useEffect(() => {
+    setImgBroken(false);
+  }, [logoPreview]);
+
+  const getInitials = () => {
+    const base = data?.name || data?.first_name || title || "?";
+    const parts = base.trim().split(" ");
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : (parts[0][0] + parts.at(-1)[0]).toUpperCase();
+  };
+
+  const mainImage = useMemo(() => {
+    if (logoPreview && !imgBroken) return logoPreview;
+
+    const paths = [
+      data?.image,
+      data?.avatar,
+      data?.logo,
+      data?.images?.avatar,
+      data?.images?.logo,
+      Array.isArray(data?.images?.gallery) ? data.images.gallery[0] : null,
+    ];
+
+    for (const p of paths) {
+      const url = imageUrl(p);
+      if (url) return url;
+    }
+
+    return null;
+  }, [logoPreview, data, imageUrl, imgBroken]);
+
+  const bgImage = useMemo(() => {
+    if (entity === "item") return null;
+
+    if (backgroundPreview) return backgroundPreview;
+
+    const bg =
+      data?.background ||
+      data?.images?.background ||
+      (Array.isArray(data?.images?.gallery) ? data.images.gallery[0] : null);
+
+    return imageUrl(bg);
+  }, [entity, backgroundPreview, data, imageUrl]);
+
+  const showImg = mainImage && !imgBroken;
 
   return (
-    <div className="global-hero-editor" style={{ background: bgStyle }}>
-      <div className="global-hero-editor-inner">
-
-        <div className="global-hero-editor-logo-bubble">
-          <img
-            src={logoPreview || "/images/logo.png"}
-            alt="Logo"
-            className="global-hero-editor-logo"
-          />
+    <div
+      className="ghep-root"
+      style={{
+        backgroundImage: bgImage
+          ? `linear-gradient(rgba(7,7,12,0.75),rgba(3,3,8,0.95)), url('${bgImage}')`
+          : "linear-gradient(rgba(7,7,12,0.75),rgba(3,3,8,0.95))",
+      }}
+    >
+      <div className="ghep-center">
+        <div className="ghep-image-box">
+          {showImg ? (
+            <img
+              src={mainImage}
+              className="ghep-image"
+              onError={() => setImgBroken(true)}
+              alt="preview"
+            />
+          ) : (
+            <div className="ghep-placeholder">{getInitials()}</div>
+          )}
         </div>
 
-        <div className="global-hero-editor-info">
-          <h1 className="global-hero-editor-title">{title}</h1>
-          <div className="global-hero-editor-subtitle">{subtitle}</div>
-
-          <div className="global-hero-editor-badge-list">
-            {Array.isArray(segments) &&
-              segments.map((seg, i) => (
-                <Badge key={i} bg="warning" text="dark" className="me-1">
-                  {seg.replace(/_/g, " ")}
-                </Badge>
-              ))}
-          </div>
-        </div>
+        {title && <h3 className="ghep-title">{title}</h3>}
+        {subtitle && <p className="ghep-sub">{subtitle}</p>}
       </div>
     </div>
   );
 }
+
+GlobalHeroEditorPreview.propTypes = {
+  entity: PropTypes.string,
+  title: PropTypes.string,
+  subtitle: PropTypes.string,
+  data: PropTypes.object,
+  logoPreview: PropTypes.string,
+  backgroundPreview: PropTypes.string,
+};

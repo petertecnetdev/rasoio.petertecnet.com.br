@@ -10,11 +10,11 @@ export default function GlobalNavEstablishments({
 
   return (
     <Link
-      to="/dashboard"
+      to="/establishment/my"
       onClick={handleToggleMobileMenu}
       className="navlog__link"
     >
-      Minhas Barbearias
+      Meus estabelecimentos
     </Link>
   );
 }

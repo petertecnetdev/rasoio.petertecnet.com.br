@@ -1,19 +1,17 @@
-// src/components/item/ItemUpdateForm.jsx
+// src/components/item/ItemCreateForm.jsx
 import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import GlobalHeroEditorPreview from "../GlobalHeroEditorPreview";
-import "./ItemUpdateForm.css";
+import { appId } from "../../config";
+import "./ItemCreateForm.css";
 
-export default function ItemUpdateForm({
+export default function ItemCreateForm({
   register,
   handleSubmit,
   watch,
   isSubmitting,
-  item,
   imagePreview,
-  backgroundPreview,
   handleImageChange,
-  handleBackgroundChange,
   handleRemoveImage,
   onSubmit,
 }) {
@@ -23,62 +21,44 @@ export default function ItemUpdateForm({
     <>
       <GlobalHeroEditorPreview
         entity="item"
-        title={item?.name}
-        subtitle="Visualização da edição"
-        logoPreview={imagePreview ?? null}   // 👈 sempre passa preview
-        backgroundPreview={backgroundPreview ?? null}
-        data={item}
+        title={watch("name") || "Novo Item"}
+        subtitle="Visualização do cadastro"
+        logoPreview={imagePreview ?? null}
+        data={{ name: watch("name") }}
       />
 
-      {/* BOTÕES */}
       <div className="d-flex justify-content-center gap-3 my-3">
         <Button
           variant="secondary"
           className="action-button"
           onClick={() => document.getElementById("itemImageInput")?.click()}
         >
-          Alterar Imagem
+          Adicionar Imagem
         </Button>
 
-        <Button
-          variant="secondary"
-          className="action-button"
-          onClick={handleRemoveImage}
-        >
-          Remover Imagem
-        </Button>
+        {imagePreview && (
+          <Button
+            variant="secondary"
+            className="action-button"
+            onClick={handleRemoveImage}
+          >
+            Remover Imagem
+          </Button>
+        )}
       </div>
 
-      {/* INPUT DE UPLOAD */}
       <Form.Control
         id="itemImageInput"
         type="file"
         accept="image/*"
+        multiple
         onChange={handleImageChange}
         style={{ display: "none" }}
       />
 
-      {/* BACKGROUND */}
-      <div className="d-flex justify-content-center gap-3 mt-2">
-        <Button
-          variant="secondary"
-          className="action-button"
-          onClick={() => document.getElementById("itemBgInput")?.click()}
-        >
-          Alterar Background
-        </Button>
-      </div>
-
-      <Form.Control
-        id="itemBgInput"
-        type="file"
-        accept="image/*"
-        onChange={handleBackgroundChange}
-        style={{ display: "none" }}
-      />
-
-      {/* FORM */}
       <Form onSubmit={handleSubmit(onSubmit)}>
+        <input type="hidden" value={appId} {...register("app_id")} />
+
         <Row className="gy-3 mt-3">
           <Col xs={12} md={6} lg={4}>
             <div className="form-group">
@@ -91,6 +71,7 @@ export default function ItemUpdateForm({
             <div className="form-group">
               <label>Tipo*</label>
               <select {...register("type", { required: true })} required>
+                <option value="">Selecione</option>
                 <option value="service">Serviço</option>
                 <option value="product">Produto</option>
               </select>
@@ -101,7 +82,11 @@ export default function ItemUpdateForm({
             <Col xs={12} md={4} lg={2}>
               <div className="form-group">
                 <label>Duração (minutos)*</label>
-                <input type="number" min="1" {...register("duration", { required: true })} />
+                <input
+                  type="number"
+                  min="1"
+                  {...register("duration", { required: true })}
+                />
               </div>
             </Col>
           )}
@@ -109,7 +94,11 @@ export default function ItemUpdateForm({
           <Col xs={12} md={6} lg={3}>
             <div className="form-group">
               <label>Preço*</label>
-              <input type="text" inputMode="decimal" {...register("price", { required: true })} />
+              <input
+                type="text"
+                inputMode="decimal"
+                {...register("price", { required: true })}
+              />
             </div>
           </Col>
 
@@ -123,9 +112,9 @@ export default function ItemUpdateForm({
           <Col xs={12} md={6} lg={3}>
             <div className="form-group">
               <label>Status</label>
-              <select {...register("status")}>
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
+              <select {...register("status")} defaultValue={1}>
+                <option value={1}>Ativo</option>
+                <option value={0}>Inativo</option>
               </select>
             </div>
           </Col>
@@ -133,9 +122,9 @@ export default function ItemUpdateForm({
           <Col xs={12} md={6} lg={3}>
             <div className="form-group">
               <label>Limitar p/ Usuário</label>
-              <select {...register("limited_by_user")}>
-                <option value="no">Não</option>
-                <option value="yes">Sim</option>
+              <select {...register("limited_by_user")} defaultValue={0}>
+                <option value={0}>Não</option>
+                <option value={1}>Sim</option>
               </select>
             </div>
           </Col>
@@ -170,7 +159,7 @@ export default function ItemUpdateForm({
 
           <Col xs={12} className="text-end">
             <button type="submit" className="submit-btn" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
+              {isSubmitting ? "Salvando..." : "Criar Item"}
             </button>
           </Col>
         </Row>
