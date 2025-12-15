@@ -1,5 +1,6 @@
 // src/hooks/useEmployerSchedules.js
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import Swal from "sweetalert2";
 import api from "../services/api";
 
 export const EMPLOYER_DAYS = [
@@ -12,8 +13,6 @@ export const EMPLOYER_DAYS = [
   { key: "sunday", label: "Domingo" },
 ];
 
-const DAY_KEYS = EMPLOYER_DAYS.map((d) => d.key);
-
 const toHM = (v) => {
   if (!v) return "";
   if (/^\d{2}:\d{2}:\d{2}$/.test(v)) return v.slice(0, 5);
@@ -23,7 +22,6 @@ const toHM = (v) => {
 
 const normalize = (s) => ({
   ...s,
-  day_of_week: s.day_of_week,
   start_time: toHM(s.start_time),
   end_time: toHM(s.end_time),
 });
@@ -32,7 +30,6 @@ export default function useEmployerSchedules() {
   const mountedRef = useRef(true);
 
   const [employerId, setEmployerId] = useState(null);
-
   const [schedules, setSchedules] = useState([]);
 
   const [addDay, setAddDay] = useState("monday");
@@ -73,10 +70,9 @@ export default function useEmployerSchedules() {
           setSchedules(res.data.map(normalize));
         }
       } catch (e) {
-        if (mountedRef.current)
-          setApiError(
-            e?.response?.data?.error || "Erro ao carregar horários."
-          );
+        if (mountedRef.current) {
+          setApiError(e?.response?.data?.error || "Erro ao carregar horários.");
+        }
       } finally {
         if (mountedRef.current) setLoading(false);
       }
@@ -134,6 +130,17 @@ export default function useEmployerSchedules() {
   }, [addDay, addStart, addEnd]);
 
   const handleRemoveSchedule = useCallback(async (schedule) => {
+    const confirm = await Swal.fire({
+      title: "Remover horário?",
+      text: `Deseja remover o horário ${schedule.start_time} – ${schedule.end_time}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, remover",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     if (schedule.__local) {
       setSchedules((prev) => prev.filter((s) => s !== schedule));
       return;
@@ -145,9 +152,7 @@ export default function useEmployerSchedules() {
       setSchedules((prev) => prev.filter((s) => s.id !== schedule.id));
       setActionMessage("Horário removido com sucesso.");
     } catch (e) {
-      setApiError(
-        e?.response?.data?.error || "Erro ao remover horário."
-      );
+      setApiError(e?.response?.data?.error || "Erro ao remover horário.");
     } finally {
       setDeleting(false);
     }
@@ -155,6 +160,17 @@ export default function useEmployerSchedules() {
 
   const handleSaveSchedules = useCallback(async () => {
     if (!employerId) return;
+
+    const confirm = await Swal.fire({
+      title: "Confirmar alterações?",
+      text: "Deseja salvar os horários de atendimento?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Salvar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
 
     try {
       setSaving(true);
@@ -176,9 +192,7 @@ export default function useEmployerSchedules() {
       await loadSchedules(employerId);
       setActionMessage("Horários salvos com sucesso.");
     } catch (e) {
-      setApiError(
-        e?.response?.data?.error || "Erro ao salvar horários."
-      );
+      setApiError(e?.response?.data?.error || "Erro ao salvar horários.");
     } finally {
       setSaving(false);
     }
@@ -186,23 +200,18 @@ export default function useEmployerSchedules() {
 
   return {
     employerId,
-
     schedulesByDay,
-
     addDay,
     setAddDay,
     addStart,
     setAddStart,
     addEnd,
     setAddEnd,
-
     loading,
     saving,
     deleting,
-
     apiError,
     actionMessage,
-
     handleAddScheduleLocal,
     handleRemoveSchedule,
     handleSaveSchedules,

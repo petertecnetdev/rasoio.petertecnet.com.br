@@ -1,70 +1,139 @@
 /* src/components/establishment/EstablishmentHero.css */
-.esth-root {
-  background: linear-gradient(
-    180deg,
-    rgba(8, 10, 20, 0.95),
-    rgba(5, 6, 14, 0.98)
+
+:root {
+  --esh-bg: linear-gradient(
+    135deg,
+    #020617 0%,
+    #020617 30%,
+    #020617 100%
   );
-  border-radius: 18px;
+  --esh-card: rgba(11, 18, 32, 0.96);
+  --esh-border: rgba(148, 163, 184, 0.14);
+
+  --esh-text-main: #e5e7eb;
+  --esh-text-soft: #94a3b8;
+  --esh-accent: #38bdf8;
+  --esh-accent-soft: rgba(56, 189, 248, 0.35);
 }
 
-.esth-container {
-  padding: 24px;
+.esh-root {
+  width: 100%;
 }
 
-.esth-card {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+.esh-card {
+  position: relative;
+  background: var(--esh-card);
+  border: 1px solid var(--esh-border);
   border-radius: 18px;
   padding: 22px 26px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.esh-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--esh-bg);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+.esh-top {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 18px;
+}
+
+.esh-back-btn {
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--esh-text-soft);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.esh-back-btn:hover {
+  color: var(--esh-accent);
+  text-decoration: none;
+}
+
+.esh-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
 }
 
-.esth-content {
+.esh-left {
   display: flex;
   align-items: center;
   gap: 18px;
 }
 
-.esth-icon {
-  width: 56px;
-  height: 56px;
+.esh-icon {
+  width: 54px;
+  height: 54px;
   border-radius: 14px;
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.15),
+    rgba(30, 41, 59, 0.85)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60a5fa;
-  font-size: 26px;
+  color: var(--esh-accent);
+  font-size: 1.6rem;
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.25),
+    0 10px 25px rgba(0, 0, 0, 0.45);
 }
 
-.esth-text h1 {
+.esh-text h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #e5e7eb;
+  color: var(--esh-text-main);
+  letter-spacing: 0.3px;
 }
 
-.esth-text p {
-  margin: 4px 0 0;
-  font-size: 14px;
-  color: #94a3b8;
+.esh-text p {
+  margin: 6px 0 4px;
+  font-size: 0.95rem;
+  color: var(--esh-text-soft);
 }
 
-.esth-actions {
-  display: flex;
+.esh-location {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--esh-accent);
 }
 
-.esth-badge {
-  padding: 6px 12px;
-  font-size: 12px;
-  border-radius: 999px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
-  font-weight: 600;
+@media (max-width: 768px) {
+  .esh-card {
+    padding: 18px;
+  }
+
+  .esh-left {
+    gap: 14px;
+  }
+
+  .esh-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+
+  .esh-text h1 {
+    font-size: 1.35rem;
+  }
 }

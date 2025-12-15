@@ -1,50 +1,81 @@
 // src/pages/establishment/EstablishmentEmployersPage.jsx
-import React, { useMemo } from "react";
-import { Container, Spinner, Alert } from "react-bootstrap";
+import React from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+  Card,
+  Badge,
+  Button,
+} from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+
 import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
-import GlobalCarousel from "../../components/GlobalCarousel";
-import useEstablishmentEmployers from "../../hooks/useEstablishmentEmployers";
-import useImageUtils from "../../hooks/useImageUtils";
-
-const PLACEHOLDER = "/images/logo.png";
+import GlobalCard from "../../components/GlobalCard";
+import useEstablishmentEmployersBySlug from "../../hooks/useEstablishmentEmployersBySlug";
+import api from "../../services/api";
 
 export default function EstablishmentEmployersPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { imageUrl } = useImageUtils(PLACEHOLDER);
 
-  const { employers, establishment, loading, apiError } =
-    useEstablishmentEmployers(slug);
+  const {
+    establishment,
+    employers,
+    count,
+    loading,
+    apiError,
+  } = useEstablishmentEmployersBySlug(slug);
 
-  const mappedEmployers = useMemo(() => {
-    return (employers || []).map((emp) => {
-      const u = emp.user || {};
-      const avatar =
-        emp.images?.avatar ||
-        u.avatar ||
-        PLACEHOLDER;
-
-      return {
-        id: emp.id,
-        type: "employer",
-        name:
-          `${u.first_name || ""} ${u.last_name || ""}`.trim() ||
-          "Profissional",
-        slug: u.user_name,
-        city: u.city,
-        uf: u.uf,
-        avatar,
-        image: avatar,
-        images: {
-          avatar,
-          gallery: emp.images?.gallery || [],
-        },
-        total_views: emp.metrics?.total_views ?? 0,
-      };
+  const handleDetach = async (employer) => {
+    const res = await Swal.fire({
+      title: "Remover colaborador?",
+      text: `Deseja remover ${employer.user?.first_name} do estabelecimento?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sim, remover",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      background: "#0b1220",
+      color: "#e5e7eb",
     });
-  }, [employers]);
+
+    if (!res.isConfirmed) return;
+
+    try {
+      await api.post("/employer/detach", {
+        employer_id: employer.id,
+        establishment_id: establishment.id,
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Removido",
+        text: "Colaborador removido com sucesso.",
+        timer: 1600,
+        showConfirmButton: false,
+        background: "#0b1220",
+        color: "#e5e7eb",
+      });
+
+      window.location.reload();
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text:
+          err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          "Erro ao remover colaborador.",
+        background: "#0b1220",
+        color: "#e5e7eb",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -62,7 +93,9 @@ export default function EstablishmentEmployersPage() {
       <>
         <GlobalNav />
         <Container className="py-4">
-          <Alert variant="warning">Estabelecimento não encontrado.</Alert>
+          <Alert variant="danger">
+            Estabelecimento não encontrado.
+          </Alert>
         </Container>
       </>
     );
@@ -74,27 +107,95 @@ export default function EstablishmentEmployersPage() {
 
       <Container className="py-4">
         <EstablishmentHero
-          title="Profissionais do Estabelecimento"
-          subtitle={`Equipe de ${establishment.fantasy || establishment.name}`}
+          title={establishment.fantasy || establishment.name}
+          subtitle="Gestão de colaboradores"
+          city={establishment.city}
+          uf={establishment.uf}
           icon="bi-people-fill"
-          badge="Estabelecimento"
-          backTo={`/establishment/view/${establishment.slug}`}
         />
 
         {apiError && <Alert variant="danger">{apiError}</Alert>}
 
-        {mappedEmployers.length === 0 ? (
-          <Alert variant="secondary">
-            Nenhum profissional cadastrado neste estabelecimento.
-          </Alert>
-        ) : (
-          <GlobalCarousel
-            title="Equipe"
-            items={mappedEmployers}
-            navigate={navigate}
-            showSchedule={false}
-          />
-        )}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div style={{ color: "#e5e7eb" }}>
+            Total de colaboradores
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() =>
+              navigate(`/employer/create/${establishment.slug}`)
+            }
+          >
+            <i className="bi bi-plus-lg me-2" />
+            Adicionar colaborador
+          </Button>
+        </div>
+
+        <Card
+          style={{
+            background: "#0b1220",
+            border: "1px solid rgba(148,163,184,.12)",
+            borderRadius: 14,
+          }}
+        >
+          <Card.Header
+            className="d-flex justify-content-between align-items-center"
+            style={{
+              background: "transparent",
+              color: "#e5e7eb",
+            }}
+          >
+            <span>Equipe</span>
+            <Badge bg="secondary">{count}</Badge>
+          </Card.Header>
+
+          <Card.Body>
+            {employers.length === 0 && (
+              <Alert variant="secondary">
+                Nenhum colaborador vinculado.
+              </Alert>
+            )}
+
+            <Row className="g-3">
+              {employers.map((emp) => {
+                const fullName = `${emp.user?.first_name || ""} ${
+                  emp.user?.last_name || ""
+                }`.trim();
+
+                return (
+                  <Col key={emp.id} xl={3} lg={4} md={6} xs={12}>
+                    <GlobalCard
+                      item={{
+                        type: "employer",
+                        id: emp.id,
+                        name: fullName || emp.user?.user_name,
+                        slug: emp.user?.user_name,
+                        city: emp.user?.city,
+                        uf: emp.user?.uf,
+                        avatar: emp.user?.images?.avatar,
+                        images: {
+                          avatar: emp.user?.images?.avatar,
+                        },
+                      }}
+                      navigate={(path) => navigate(path)}
+                      actions={
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          className="w-100"
+                          onClick={() => handleDetach(emp)}
+                        >
+                          Remover vínculo
+                        </Button>
+                      }
+                    />
+                  </Col>
+                );
+              })}
+            </Row>
+          </Card.Body>
+        </Card>
       </Container>
     </>
   );

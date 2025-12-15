@@ -14,7 +14,6 @@ import {
   FaTag,
   FaBox,
   FaInfoCircle,
-  FaMoneyBillWave,
   FaChartLine,
   FaPercent,
   FaWhatsapp,
@@ -25,6 +24,11 @@ import GlobalButton from "./GlobalButton";
 import "./GlobalHero.css";
 
 const PLACEHOLDER = "/images/logo.png";
+
+const safeImageUrl = (fn) => {
+  if (typeof fn === "function") return fn;
+  return (path) => path || PLACEHOLDER;
+};
 
 export default function GlobalHero({
   title,
@@ -46,6 +50,9 @@ export default function GlobalHero({
   children,
 }) {
   const navigate = useNavigate();
+  const img = safeImageUrl(imageUrl);
+  const onImgError =
+    typeof handleImgError === "function" ? handleImgError : undefined;
 
   const totalViews = interactionSummary?.total_views || 0;
   const uniqueUsers = interactionSummary?.unique_users || 0;
@@ -69,9 +76,7 @@ export default function GlobalHero({
   const isList = entity === "list";
 
   const fmtBRL = (v) =>
-    `R$ ${Number(v || 0)
-      .toFixed(2)
-      .replace(".", ",")}`;
+    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
   const fmtPercent = (v) => `${Number(v || 0).toFixed(1)}%`;
 
@@ -103,7 +108,7 @@ export default function GlobalHero({
         backgroundImage: `linear-gradient(
           rgba(7, 7, 12, 0.75),
           rgba(3, 3, 8, 0.96)
-        ), url("${imageUrl(background)}")`,
+        ), url("${img(background)}")`,
       }}
     >
       {overlay && <div className="gh-overlay" />}
@@ -113,10 +118,10 @@ export default function GlobalHero({
           <div className={`gh-logo-box ${isList ? "gh-logo-list" : ""}`}>
             <div className="gh-logo-glow">
               <img
-                src={imageUrl(logo || PLACEHOLDER)}
+                src={img(logo || PLACEHOLDER)}
                 alt={title}
                 className="gh-logo"
-                onError={handleImgError}
+                onError={onImgError}
               />
             </div>
           </div>
@@ -347,8 +352,8 @@ GlobalHero.propTypes = {
   description: PropTypes.string,
   background: PropTypes.string,
   logo: PropTypes.string,
-  imageUrl: PropTypes.func.isRequired,
-  handleImgError: PropTypes.func.isRequired,
+  imageUrl: PropTypes.func,
+  handleImgError: PropTypes.func,
   overlay: PropTypes.bool,
   entity: PropTypes.oneOf([
     "establishment",

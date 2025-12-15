@@ -1,3 +1,4 @@
+// src/pages/establishment/EstablishmentSchedulePage.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,19 +12,25 @@ import {
   Button,
   Badge,
 } from "react-bootstrap";
-import NavlogComponent from "../../components/NavlogComponent";
-import { apiBaseUrl, storageUrl } from "../../config";
+
+import Global from "../../components/Global.jsx";
+import {
+  GlobalHero,
+  GlobalDatePicker,
+  GlobalTimePicker,
+  GlobalServiceCard,
+} from "../../components/";
+import useImageUtils from "../../hooks/useImageUtils";
+
+import { apiBaseUrl } from "../../config";
 import "./EstablishmentSchedulePage.css";
 
 const MySwal = withReactContent(Swal);
 const APP_ID = 2;
-const PLACEHOLDER = "/images/logo.png";
 const TZ = "America/Sao_Paulo";
 
 const fmtBRL = (v) =>
-  `R$ ${Number(v || 0)
-    .toFixed(2)
-    .replace(".", ",")}`;
+  `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
 
 const toDateKey = (d) =>
   new Date(d).toLocaleDateString("en-CA", { timeZone: TZ });
@@ -31,11 +38,13 @@ const toDateKey = (d) =>
 export default function EstablishmentSchedulePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { imageUrl, handleImgError } = useImageUtils();
 
   const [loading, setLoading] = useState(true);
   const [establishment, setEstablishment] = useState(null);
   const [services, setServices] = useState([]);
   const [collaborators, setCollaborators] = useState([]);
+
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedCollaborator, setSelectedCollaborator] = useState(null);
   const [selectedDateKey, setSelectedDateKey] = useState(null);
@@ -43,12 +52,19 @@ export default function EstablishmentSchedulePage() {
 
   const totalDuration = useMemo(
     () =>
-      selectedServices.reduce((sum, s) => sum + (Number(s.duration) || 0), 0),
+      selectedServices.reduce(
+        (sum, s) => sum + (Number(s.duration) || 0),
+        0
+      ),
     [selectedServices]
   );
 
   const totalPrice = useMemo(
-    () => selectedServices.reduce((sum, s) => sum + (Number(s.price) || 0), 0),
+    () =>
+      selectedServices.reduce(
+        (sum, s) => sum + (Number(s.price) || 0),
+        0
+      ),
     [selectedServices]
   );
 
@@ -58,58 +74,36 @@ export default function EstablishmentSchedulePage() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(now);
       d.setDate(now.getDate() + i);
-      const key = toDateKey(d);
-      const label = d.toLocaleDateString("pt-BR", {
-        weekday: "short",
-        day: "2-digit",
-        month: "2-digit",
-        timeZone: TZ,
+      days.push({
+        key: toDateKey(d),
+        label: d.toLocaleDateString("pt-BR", {
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
+          timeZone: TZ,
+        }),
       });
-      days.push({ key, date: d, label });
     }
     return days;
-  }, []);
-
-  const imageUrl = useCallback((path) => {
-    if (!path) return PLACEHOLDER;
-    return `${storageUrl}/${path}`;
-  }, []);
-
-  const handleImgError = useCallback((e) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src = PLACEHOLDER;
   }, []);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        setLoading(true);
         const { data } = await axios.get(
           `${apiBaseUrl}/establishment/view/${slug}`
         );
-        const est = data?.establishment || null;
-        const items = Array.isArray(data?.items) ? data.items : [];
-        const cols = Array.isArray(data?.collaborators)
-          ? data.collaborators
-          : [];
-        if (!est) {
-          await MySwal.fire({
-            icon: "error",
-            title: "Erro",
-            text: "Não foi possível carregar o estabelecimento.",
-          });
-          navigate("/");
-          return;
-        }
+
         if (!mounted) return;
-        setEstablishment(est);
+
+        setEstablishment(data.establishment || null);
         setServices(
-          items.filter(
-            (i) => String(i.type) === "service" && String(i.status) === "1"
+          (data.items || []).filter(
+            (i) => i.type === "service" && String(i.status) === "1"
           )
         );
-        setCollaborators(cols);
+        setCollaborators(data.collaborators || []);
       } catch {
         await MySwal.fire({
           icon: "error",
@@ -121,20 +115,15 @@ export default function EstablishmentSchedulePage() {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => (mounted = false);
   }, [slug, navigate]);
 
   const loadAvailableTimes = useCallback(
-    async (dayKey, collaborator, durationMin) => {
+    async (dayKey, collaborator, duration) => {
       try {
         setAvailableTimes([]);
-        if (!dayKey || !collaborator || !durationMin) return;
-
-        console.log("🔹 Buscando horários disponíveis:", {
-          collaborator: collaborator.id,
-          date: dayKey,
-          duration: durationMin,
-        });
+        if (!dayKey || !collaborator || !duration) return;
 
         const token = localStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -145,20 +134,14 @@ export default function EstablishmentSchedulePage() {
             params: {
               employer_id: collaborator.id,
               date: dayKey,
-              duration: durationMin,
+              duration,
             },
             headers,
           }
         );
 
-        setAvailableTimes(
-          Array.isArray(data.available_times) ? data.available_times : []
-        );
-      } catch (err) {
-        console.error(
-          "❌ Erro ao carregar horários disponíveis:",
-          err.response || err
-        );
+        setAvailableTimes(data.available_times || []);
+      } catch {
         await MySwal.fire({
           icon: "error",
           title: "Erro",
@@ -171,8 +154,11 @@ export default function EstablishmentSchedulePage() {
 
   useEffect(() => {
     if (selectedCollaborator && selectedDateKey && totalDuration > 0) {
-      console.log("⚙️ Atualizando horários disponíveis...");
-      loadAvailableTimes(selectedDateKey, selectedCollaborator, totalDuration);
+      loadAvailableTimes(
+        selectedDateKey,
+        selectedCollaborator,
+        totalDuration
+      );
     }
   }, [
     selectedCollaborator,
@@ -181,192 +167,26 @@ export default function EstablishmentSchedulePage() {
     loadAvailableTimes,
   ]);
 
-  const openCollaboratorPicker = async () => {
-    if (!collaborators.length) {
-      await MySwal.fire({
-        icon: "info",
-        title: "Aviso",
-        text: "Nenhum colaborador disponível.",
-      });
-      return;
-    }
-    const html = `
-      <style>
-        .swal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-        .selbtn{border:1px solid #444;border-radius:10px;padding:10px;background:#111;color:#fff;cursor:pointer;transition:all 0.2s}
-        .selbtn:hover{background:#222}
-        .selbtn.active{outline:2px solid #ffc107;background:#1b1b1b}
-        .small{font-size:12px;color:#bbb}
-      </style>
-      <div class="swal-grid">
-        ${collaborators
-          .map((c) => {
-            const nm =
-              `${c.user?.first_name || ""} ${c.user?.last_name || ""}`.trim() ||
-              "Colaborador";
-            return `<button type="button" class="selbtn" data-id="${c.id}">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <img src="${imageUrl(
-                  c.user?.avatar
-                )}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="this.src='${PLACEHOLDER}'" />
-                <div><div>${nm}</div><div class="small">${
-              c.role || ""
-            }</div></div>
-              </div>
-            </button>`;
-          })
-          .join("")}
-      </div>`;
-    await MySwal.fire({
-      title: "Escolha um colaborador",
-      html,
-      showConfirmButton: false,
-      didOpen: () => {
-        const root = MySwal.getHtmlContainer();
-        root.querySelectorAll(".selbtn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            root
-              .querySelectorAll(".selbtn")
-              .forEach((b) => b.classList.remove("active"));
-            btn.classList.add("active");
-            const id = Number(btn.getAttribute("data-id"));
-            const col = collaborators.find((c) => Number(c.id) === id);
-            setSelectedCollaborator(col || null);
-            setAvailableTimes([]);
-            setSelectedDateKey(null);
-            setSelectedServices([]);
-            Swal.close();
-          });
-        });
-      },
-    });
-  };
-
-  const openServicePicker = async () => {
-    if (!services.length) {
-      await MySwal.fire({
-        icon: "info",
-        title: "Aviso",
-        text: "Nenhum serviço disponível.",
-      });
-      return;
-    }
-    const selectedIds = new Set(selectedServices.map((s) => s.id));
-    const html = `
-      <style>
-        .swal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-        .selbtn{border:1px solid #444;border-radius:12px;padding:10px;background:#111;color:#fff;cursor:pointer;text-align:left;transition:all 0.2s}
-        .selbtn:hover{background:#222}
-        .selbtn.active{outline:2px solid #0dcaf0;background:#1b1b1b}
-        .rowtop{display:flex;justify-content:space-between;align-items:center}
-        .small{font-size:12px;color:#bbb}
-      </style>
-      <div class="swal-grid">
-        ${services
-          .map((sv) => {
-            const activeClass = selectedIds.has(sv.id) ? "active" : "";
-            return `<button type="button" class="selbtn ${activeClass}" data-id="${
-              sv.id
-            }">
-              <div class="rowtop"><strong>${sv.name}</strong><span>${fmtBRL(
-              sv.price
-            )}</span></div>
-              <div class="small">${sv.duration || 0} min</div>
-            </button>`;
-          })
-          .join("")}
-      </div>`;
-    await MySwal.fire({
-      title: "Selecione os serviços",
-      html,
-      showConfirmButton: false,
-      didOpen: () => {
-        const root = MySwal.getHtmlContainer();
-        const chosen = new Set(selectedIds);
-        const refresh = () => {
-          const ids = [...chosen];
-          const chosenServices = services.filter((s) => ids.includes(s.id));
-          setSelectedServices(chosenServices);
-          setAvailableTimes([]);
-        };
-        root.querySelectorAll(".selbtn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const id = Number(btn.getAttribute("data-id"));
-            if (chosen.has(id)) {
-              chosen.delete(id);
-              btn.classList.remove("active");
-            } else {
-              chosen.add(id);
-              btn.classList.add("active");
-            }
-            refresh();
-            setTimeout(() => Swal.close(), 400);
-          });
-        });
-      },
-    });
-  };
-
-  const handleCreateAppointment = async (timeStr) => {
+  const handleCreateAppointment = async (time) => {
     try {
-      if (!selectedCollaborator || !selectedDateKey || !selectedServices.length)
-        return;
-
-      const collaboratorName = `${
-        selectedCollaborator.user?.first_name || ""
-      } ${selectedCollaborator.user?.last_name || ""}`.trim();
-      const servicesList = selectedServices
-        .map((s) => `• ${s.name} (${fmtBRL(s.price)})`)
-        .join("<br>");
-      const dateFormatted = new Date(selectedDateKey).toLocaleDateString(
-        "pt-BR"
-      );
-
-      const confirm = await MySwal.fire({
-        icon: "question",
-        title: "Confirmar agendamento",
-        html: `
-        <div style="text-align:left;">
-          <b>Colaborador:</b> ${collaboratorName}<br>
-          <b>Data:</b> ${dateFormatted}<br>
-          <b>Horário:</b> ${timeStr}<br>
-          <b>Serviços:</b><br>${servicesList}<br>
-          <b>Total:</b> ${fmtBRL(totalPrice)}
-        </div>
-      `,
-        showCancelButton: true,
-        confirmButtonText: "Confirmar",
-        cancelButtonText: "Cancelar",
-        reverseButtons: true,
-      });
-
-      if (!confirm.isConfirmed) return;
-
-      const [h, m] = timeStr.split(":").map((n) => parseInt(n, 10));
-      const [year, month, day] = selectedDateKey.split("-").map(Number);
-const start = new Date(year, month - 1, day, h, m, 0);
-
+      const [h, m] = time.split(":").map(Number);
+      const [y, mo, d] = selectedDateKey.split("-").map(Number);
+      const start = new Date(y, mo - 1, d, h, m, 0);
 
       const user = JSON.parse(localStorage.getItem("user") || "null");
-
-      let customerName = user
-        ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
-        : "";
+      let customerName =
+        user &&
+        `${user.first_name || ""} ${user.last_name || ""}`.trim();
 
       if (!customerName) {
-        const { value: name } = await MySwal.fire({
+        const { value } = await MySwal.fire({
           title: "Informe seu nome",
           input: "text",
-          inputLabel: "Como devemos chamar você?",
-          inputPlaceholder: "Ex: João Silva",
-          confirmButtonText: "Continuar",
-          cancelButtonText: "Cancelar",
           inputValidator: (v) =>
-            !v ? "Por favor, informe seu nome para continuar." : undefined,
+            !v ? "Informe seu nome para continuar." : undefined,
         });
-
-        if (!name) return;
-        customerName = name.trim();
+        if (!value) return;
+        customerName = value;
       }
 
       const payload = {
@@ -384,265 +204,192 @@ const start = new Date(year, month - 1, day, h, m, 0);
         fulfillment: "dine-in",
         payment_status: "pending",
         payment_method: "Dinheiro",
-        notes: "",
-       order_datetime: start.toLocaleString("sv-SE").replace(" ", "T"),
+        order_datetime: start.toLocaleString("sv-SE").replace(" ", "T"),
         attendant_id: selectedCollaborator.id,
       };
 
       const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-      const { data } = await axios.post(`${apiBaseUrl}/order`, payload, {
-        headers,
-      });
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      await axios.post(`${apiBaseUrl}/order`, payload, { headers });
 
       await MySwal.fire({
         icon: "success",
-        title: "Agendamento confirmado!",
-        text: data?.message || "Seu agendamento foi registrado com sucesso.",
+        title: "Agendamento confirmado",
       });
 
       navigate(`/establishment/view/${slug}`);
     } catch (err) {
-      const data = err.response?.data || {};
-      const baseMsg =
-        data.error || data.message || "Não foi possível criar o agendamento.";
-
-      if (data.suggestion) {
-        const result = await MySwal.fire({
-          icon: "warning",
-          title: "Conflito de horário",
-          html: `
-          <div style="text-align:left;">
-            <p>${baseMsg}</p>
-            <p><b>${data.suggestion}</b></p>
-            ${data.tip ? `<p class="text-muted small">${data.tip}</p>` : ""}
-          </div>
-        `,
-          showCancelButton: true,
-          confirmButtonText: "Agendar no horário sugerido",
-          cancelButtonText: "Cancelar",
-          reverseButtons: true,
-        });
-
-        if (result.isConfirmed) {
-          const suggestion = data.suggestion.match(/\d{2}:\d{2}/);
-          if (suggestion) {
-            const newTime = suggestion[0];
-            await loadAvailableTimes(
-              selectedDateKey,
-              selectedCollaborator,
-              totalDuration
-            );
-            const isValidTime = availableTimes.includes(newTime);
-
-            if (!isValidTime) {
-              await MySwal.fire({
-                icon: "info",
-                title: "Horário incompatível",
-                text: `O horário sugerido (${newTime}) não está dentro do período de atendimento do colaborador.`,
-              });
-              return;
-            }
-
-            await handleCreateAppointment(newTime);
-          }
-        }
-      } else {
-        await MySwal.fire({ icon: "error", title: "Erro", text: baseMsg });
-      }
+      await MySwal.fire({
+        icon: "error",
+        title: "Erro",
+        text:
+          err.response?.data?.message ||
+          "Não foi possível criar o agendamento.",
+      });
     }
   };
 
   if (loading)
     return (
       <div className="estv-root">
-        <NavlogComponent />
+        <Global />
       </div>
     );
 
   if (!establishment) return null;
 
-  const title = `Agendar com ${establishment.name || ""}`;
-
   return (
     <div className="estv-root">
-      <NavlogComponent />
-      <div
-        className="estv-hero text-center text-md-start"
-        style={{
-          backgroundImage: `url("${imageUrl(establishment.background)}")`,
-        }}
-      >
-        <div className="estv-hero-overlay" />
-        <Container
-          fluid
-          className="estv-hero-content d-flex flex-column flex-md-row align-items-center justify-content-between"
-        >
-          <div className="mb-3 mb-md-0">
-            <img
-              src={imageUrl(establishment.logo)}
-              alt={establishment.name}
-              className="estv-logo"
-              onError={handleImgError}
-            />
-          </div>
-          <div>
-            <h1 className="estv-title">{title}</h1>
-            <div className="d-flex flex-wrap gap-2 mt-2 justify-content-center justify-content-md-start">
+      <Global />
+
+      <GlobalHero
+        title={`Agendar com ${establishment.name}`}
+        background={establishment.background}
+        logo={establishment.logo}
+        imageUrl={imageUrl}
+        handleImgError={handleImgError}
+        actions={
+          <>
+            <div className="d-flex flex-wrap gap-2 mt-2">
               <Button
                 size="sm"
                 className="bg-black"
-                onClick={openCollaboratorPicker}
+                onClick={() =>
+                  MySwal.fire({
+                    title: "Escolha um colaborador",
+                    input: "select",
+                    inputOptions: Object.fromEntries(
+                      collaborators.map((c) => [
+                        c.id,
+                        `${c.user?.first_name || ""} ${
+                          c.user?.last_name || ""
+                        }`,
+                      ])
+                    ),
+                    inputValidator: (v) =>
+                      !v ? "Selecione um colaborador." : undefined,
+                  }).then((res) => {
+                    if (res.value) {
+                      const col = collaborators.find(
+                        (c) => String(c.id) === String(res.value)
+                      );
+                      setSelectedCollaborator(col);
+                      setSelectedServices([]);
+                      setSelectedDateKey(null);
+                      setAvailableTimes([]);
+                    }
+                  })
+                }
               >
                 Selecionar Colaborador
               </Button>
+
               <Button
                 size="sm"
                 className="bg-black"
-                onClick={openServicePicker}
+                onClick={() =>
+                  MySwal.fire({
+                    title: "Selecione os serviços",
+                    html: services
+                      .map(
+                        (s) => `
+                        <div style="margin-bottom:6px">
+                          <input type="checkbox" value="${s.id}" id="s${s.id}">
+                          <label for="s${s.id}">${s.name} (${fmtBRL(
+                          s.price
+                        )})</label>
+                        </div>`
+                      )
+                      .join(""),
+                    preConfirm: () =>
+                      services.filter((s) =>
+                        document.getElementById(`s${s.id}`)?.checked
+                      ),
+                  }).then((res) => {
+                    if (res.value) {
+                      setSelectedServices(res.value);
+                      setAvailableTimes([]);
+                    }
+                  })
+                }
               >
                 Selecionar Serviços
               </Button>
             </div>
-            <div className="mt-3 text-center text-md-start">
-              <Badge
-                bg={selectedCollaborator ? "info" : "secondary"}
-                text="dark"
-                className="me-2"
-              >
+
+            <div className="mt-3">
+              <Badge bg={selectedCollaborator ? "info" : "secondary"}>
                 {selectedCollaborator
-                  ? `Colaborador: ${
-                      (selectedCollaborator.user?.first_name || "") +
-                      " " +
-                      (selectedCollaborator.user?.last_name || "")
-                    }`
+                  ? `Colaborador: ${selectedCollaborator.user?.first_name} ${selectedCollaborator.user?.last_name}`
                   : "Nenhum colaborador"}
-              </Badge>
+              </Badge>{" "}
               <Badge bg={selectedServices.length ? "success" : "secondary"}>
                 {selectedServices.length
                   ? `${selectedServices.length} serviço(s)`
                   : "Nenhum serviço"}
               </Badge>
               <div className="mt-2">
-                <Badge bg="warning" text="dark" className="me-2">
-                  Duração total: {totalDuration} min
-                </Badge>
+                <Badge bg="warning" text="dark">
+                  Duração: {totalDuration} min
+                </Badge>{" "}
                 <Badge bg="warning" text="dark">
                   Total: {fmtBRL(totalPrice)}
                 </Badge>
               </div>
             </div>
-          </div>
-        </Container>
-      </div>
+          </>
+        }
+      />
 
       <Container fluid className="estv-main">
-        <Row className="gx-3 gy-3">
-          <Col xs={12}>
-            <Card bg="dark" text="light" className="mb-3">
-              <Card.Header>
-                <strong>Escolha uma data</strong>
-              </Card.Header>
-              <Card.Body className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                {futureDays.map((d) => (
-                  <Button
-                    key={d.key}
-                    size="sm"
-                    variant={
-                      selectedDateKey === d.key ? "warning" : "secondary"
+        <Card bg="dark" text="light" className="mb-3">
+          <Card.Header>Escolha uma data</Card.Header>
+          <Card.Body className="d-flex flex-wrap gap-2">
+            <GlobalDatePicker
+              days={futureDays}
+              selectedKey={selectedDateKey}
+              disabled={!selectedCollaborator || !selectedServices.length}
+              onSelect={(key) => setSelectedDateKey(key)}
+            />
+          </Card.Body>
+        </Card>
+
+        <Card bg="dark" text="light" className="mb-3">
+          <Card.Header>Horários disponíveis</Card.Header>
+          <Card.Body className="d-flex flex-wrap gap-2">
+            <GlobalTimePicker
+              times={availableTimes}
+              disabled={!selectedDateKey}
+              onSelect={handleCreateAppointment}
+            />
+          </Card.Body>
+        </Card>
+
+        <Card bg="dark" text="light">
+          <Card.Header>Serviços selecionados</Card.Header>
+          <Card.Body>
+            <Row className="gx-3 gy-3">
+              {selectedServices.map((s) => (
+                <Col key={s.id} lg={3} md={4} sm={6} xs={12}>
+                  <GlobalServiceCard
+                    service={s}
+                    onRemove={(sv) =>
+                      setSelectedServices((prev) =>
+                        prev.filter((x) => x.id !== sv.id)
+                      )
                     }
-                    onClick={() => {
-                      setSelectedDateKey(d.key);
-                      if (selectedCollaborator && selectedServices.length) {
-                        loadAvailableTimes(
-                          d.key,
-                          selectedCollaborator,
-                          totalDuration
-                        );
-                      }
-                    }}
-                    disabled={!selectedCollaborator || !selectedServices.length}
-                  >
-                    {d.label}
-                  </Button>
-                ))}
-              </Card.Body>
-            </Card>
-
-            <Card bg="dark" text="light" className="mb-3">
-              <Card.Header>
-                <strong>Horários disponíveis</strong>
-              </Card.Header>
-              <Card.Body className="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                {!selectedCollaborator ||
-                !selectedDateKey ||
-                !selectedServices.length ? (
-                  <div className="text-muted">
-                    Selecione colaborador, serviços e uma data.
-                  </div>
-                ) : availableTimes.length ? (
-                  availableTimes.map((t) => (
-                    <Button
-                      key={t}
-                      size="sm"
-                      className="bg-black"
-                      onClick={() => handleCreateAppointment(t)}
-                    >
-                      {t}
-                    </Button>
-                  ))
-                ) : (
-                  <div className="text-muted">Nenhum horário disponível.</div>
-                )}
-              </Card.Body>
-            </Card>
-
-            <Card bg="dark" text="light">
-              <Card.Header>
-                <strong>Serviços selecionados</strong>
-              </Card.Header>
-              <Card.Body>
-                {selectedServices.length ? (
-                  <Row className="gx-3 gy-3 justify-content-center justify-content-md-start">
-                    {selectedServices.map((s) => (
-                      <Col key={s.id} lg={3} md={4} sm={6} xs={12}>
-                        <Card bg="black" text="light" className="h-100">
-                          <Card.Body>
-                            <div className="d-flex justify-content-between">
-                              <strong>{s.name}</strong>
-                              <span>{fmtBRL(s.price)}</span>
-                            </div>
-                            <div className="small text-muted">
-                              {s.duration || 0} min
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="outline-danger"
-                              className="mt-2 w-100"
-                              onClick={() =>
-                                setSelectedServices((prev) =>
-                                  prev.filter(
-                                    (x) => Number(x.id) !== Number(s.id)
-                                  )
-                                )
-                              }
-                            >
-                              Remover
-                            </Button>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    ))}
-                  </Row>
-                ) : (
-                  <div className="text-muted text-center">
-                    Nenhum serviço selecionado.
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+                  />
+                </Col>
+              ))}
+              {!selectedServices.length && (
+                <div className="text-muted text-center w-100">
+                  Nenhum serviço selecionado.
+                </div>
+              )}
+            </Row>
+          </Card.Body>
+        </Card>
       </Container>
     </div>
   );

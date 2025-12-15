@@ -12,9 +12,11 @@ import {
   Button,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 import GlobalNav from "../../components/GlobalNav";
 import EmployerHero from "../../components/employer/EmployerHero";
 import useEmployerOrders from "../../hooks/useEmployerOrders";
+import useImageUtils from "../../hooks/useImageUtils";
 
 export default function EmployerOrdersPage() {
   const {
@@ -26,6 +28,8 @@ export default function EmployerOrdersPage() {
     updateOrderStatus,
   } = useEmployerOrders();
 
+  const { imageUrl, handleImgError } = useImageUtils();
+
   const fmtBRL = (v) =>
     Number(v || 0).toLocaleString("pt-BR", {
       style: "currency",
@@ -34,6 +38,81 @@ export default function EmployerOrdersPage() {
 
   const fmtDateTime = (v) =>
     v ? new Date(v).toLocaleString("pt-BR") : "-";
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : parts[0][0].toUpperCase() + parts.at(-1)[0].toUpperCase();
+  };
+
+  const confirmAction = async (order, action) => {
+    const map = {
+      confirm: {
+        title: "Confirmar agendamento?",
+        text: `Confirmar o agendamento de ${order.customer?.name} em ${fmtDateTime(
+          order.scheduled_start
+        )}?`,
+        confirm: "Sim, confirmar",
+      },
+      cancel: {
+        title: "Cancelar agendamento?",
+        text: `Cancelar o agendamento de ${order.customer?.name} em ${fmtDateTime(
+          order.scheduled_start
+        )}?`,
+        confirm: "Sim, cancelar",
+      },
+      attended: {
+        title: "Finalizar atendimento",
+        text: `Confirmar que ${order.customer?.name} foi atendido?`,
+        confirm: "Sim, atendido",
+      },
+      not_attended: {
+        title: "Finalizar atendimento",
+        text: `Confirmar que ${order.customer?.name} não compareceu?`,
+        confirm: "Sim, não atendido",
+      },
+    };
+
+    const cfg = map[action];
+    if (!cfg) return;
+
+    const res = await Swal.fire({
+      title: cfg.title,
+      text: cfg.text,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: cfg.confirm,
+      cancelButtonText: "Voltar",
+      reverseButtons: true,
+      background: "#0b1220",
+      color: "#e5e7eb",
+    });
+
+    if (!res.isConfirmed) return;
+
+    try {
+      await updateOrderStatus(order.id, action);
+      Swal.fire({
+        icon: "success",
+        title: "Sucesso",
+        text: "Status atualizado com sucesso.",
+        timer: 1600,
+        showConfirmButton: false,
+        background: "#0b1220",
+        color: "#e5e7eb",
+      });
+    } catch (e) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: e.message,
+        background: "#0b1220",
+        color: "#e5e7eb",
+      });
+    }
+  };
 
   const now = new Date();
 
@@ -64,7 +143,6 @@ export default function EmployerOrdersPage() {
   return (
     <>
       <GlobalNav />
-
       <Container className="py-4">
         <EmployerHero
           title="Meus Atendimentos"
@@ -111,7 +189,11 @@ export default function EmployerOrdersPage() {
             attended: "Atendido",
             not_attended: "Não atendido",
             cancelled: "Cancelado",
-          }[order.appointment_status] || order.appointment_status;
+          }[order.appointment_status];
+
+          const avatar =
+            imageUrl(order.customer?.avatar) ||
+            imageUrl(order.customer?.images?.avatar);
 
           return (
             <Card
@@ -124,7 +206,7 @@ export default function EmployerOrdersPage() {
               }}
             >
               <Card.Body>
-                <Row className="mb-2 align-items-center">
+                <Row className="mb-3 align-items-center">
                   <Col md={4} style={{ color: "#e5e7eb", fontWeight: 600 }}>
                     #{order.order_number}
                     <div style={{ fontSize: 13, color: "#94a3b8" }}>
@@ -133,19 +215,7 @@ export default function EmployerOrdersPage() {
                   </Col>
 
                   <Col md={4}>
-                    <Badge
-                      bg={
-                        order.appointment_status === "confirmed"
-                          ? "primary"
-                          : order.appointment_status === "attended"
-                          ? "success"
-                          : order.appointment_status === "cancelled"
-                          ? "danger"
-                          : "secondary"
-                      }
-                    >
-                      {statusLabel}
-                    </Badge>
+                    <Badge bg="secondary">{statusLabel}</Badge>
                   </Col>
 
                   <Col
@@ -157,19 +227,52 @@ export default function EmployerOrdersPage() {
                   </Col>
                 </Row>
 
-                <Row className="mb-3">
-                  <Col md={6} style={{ color: "#e5e7eb" }}>
-                    Cliente:{" "}
-                    {order.customer?.user_name ? (
-                      <Link
-                        to={`/user/${order.customer.user_name}`}
-                        style={{ color: "#60a5fa" }}
-                      >
-                        {order.customer.name}
-                      </Link>
+                <Row className="mb-3 align-items-center">
+                  <Col md={6} className="d-flex align-items-center gap-3">
+                    {avatar ? (
+                      <img
+                        src={avatar}
+                        alt={order.customer?.name}
+                        width={48}
+                        height={48}
+                        onError={handleImgError}
+                        style={{
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
+                      />
                     ) : (
-                      order.customer?.name
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: "50%",
+                          background:
+                            "linear-gradient(135deg,#1e293b,#020617)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#e5e7eb",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {getInitials(order.customer?.name)}
+                      </div>
                     )}
+
+                    <div style={{ color: "#e5e7eb" }}>
+                      Cliente:{" "}
+                      {order.customer?.user_name ? (
+                        <Link
+                          to={`/user/${order.customer.user_name}`}
+                          style={{ color: "#60a5fa" }}
+                        >
+                          {order.customer.name}
+                        </Link>
+                      ) : (
+                        order.customer?.name
+                      )}
+                    </div>
                   </Col>
 
                   {order.type === "appointment" && (
@@ -191,22 +294,11 @@ export default function EmployerOrdersPage() {
                       }}
                     >
                       <Row>
-                        <Col md={6}>
-                          {item.name}{" "}
-                          {item.type && (
-                            <span style={{ color: "#94a3b8" }}>
-                              ({item.type})
-                            </span>
-                          )}
-                        </Col>
+                        <Col md={6}>{item.name}</Col>
                         <Col md={3}>
                           {item.quantity}x {fmtBRL(item.unit_price)}
                         </Col>
-                        <Col
-                          md={3}
-                          className="text-md-end"
-                          style={{ fontWeight: 600 }}
-                        >
+                        <Col md={3} className="text-md-end">
                           {fmtBRL(item.subtotal)}
                         </Col>
                       </Row>
@@ -220,11 +312,9 @@ export default function EmployerOrdersPage() {
                       size="sm"
                       variant="primary"
                       disabled={actionLoading === order.id}
-                      onClick={() =>
-                        updateOrderStatus(order.id, "confirm")
-                      }
+                      onClick={() => confirmAction(order, "confirm")}
                     >
-                      Confirmar agendamento
+                      Confirmar
                     </Button>
                   )}
 
@@ -234,9 +324,7 @@ export default function EmployerOrdersPage() {
                         size="sm"
                         variant="success"
                         disabled={actionLoading === order.id}
-                        onClick={() =>
-                          updateOrderStatus(order.id, "attended")
-                        }
+                        onClick={() => confirmAction(order, "attended")}
                       >
                         Atendido
                       </Button>
@@ -245,7 +333,7 @@ export default function EmployerOrdersPage() {
                         variant="outline-danger"
                         disabled={actionLoading === order.id}
                         onClick={() =>
-                          updateOrderStatus(order.id, "not_attended")
+                          confirmAction(order, "not_attended")
                         }
                       >
                         Não atendido
@@ -258,9 +346,7 @@ export default function EmployerOrdersPage() {
                       size="sm"
                       variant="outline-danger"
                       disabled={actionLoading === order.id}
-                      onClick={() =>
-                        updateOrderStatus(order.id, "cancel")
-                      }
+                      onClick={() => confirmAction(order, "cancel")}
                     >
                       Cancelar
                     </Button>

@@ -57,29 +57,8 @@ export default function useEmployerOrders() {
     loadOrders();
   }, [loadOrders]);
 
-  const appointments = orders.filter((o) => o.type === "appointment");
-
-  const pendingAppointments = appointments.filter(
-    (o) => o.appointment_status === "pending"
-  );
-
-  const confirmedAppointments = appointments.filter(
-    (o) => o.appointment_status === "confirmed"
-  );
-
-  const finishedAppointments = appointments.filter((o) =>
-    ["attended", "not_attended", "cancelled"].includes(o.appointment_status)
-  );
-
-  const directOrders = orders.filter((o) => o.type !== "appointment");
-
   return {
     orders,
-    appointments,
-    pendingAppointments,
-    confirmedAppointments,
-    finishedAppointments,
-    directOrders,
     employer,
     loading,
     actionLoading,

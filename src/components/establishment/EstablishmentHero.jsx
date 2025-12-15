@@ -1,60 +1,71 @@
 // src/components/establishment/EstablishmentHero.jsx
 import React from "react";
-import PropTypes from "prop-types";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import { Row, Col, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import "./EstablishmentHero.css";
 
 export default function EstablishmentHero({
   title,
   subtitle,
+  city,
+  uf,
   icon,
-  badge,
-  backTo,
+  backLabel,
 }) {
   const navigate = useNavigate();
 
   return (
-    <div className="esth-root mb-4">
-      <Container fluid className="esth-container">
-        <Row className="align-items-center">
-          <Col className="esth-left">
-            <div className="esth-card">
-              <div className="esth-content">
-                <div className="esth-icon">
-                  <i className={`bi ${icon}`} />
-                </div>
+    <Row className="esh-root mb-5">
+      <Col>
+        <div className="esh-card">
+          <div className="esh-top">
+            <Button
+              variant="link"
+              className="esh-back-btn"
+              onClick={() => navigate(-1)}
+            >
+              <i className="bi bi-arrow-left me-2" />
+              {backLabel}
+            </Button>
+          </div>
 
-                <div className="esth-text">
-                  <h1>{title}</h1>
-                  {subtitle && <p>{subtitle}</p>}
-                </div>
+          <div className="esh-content">
+            <div className="esh-left">
+              <div className="esh-icon">
+                <i className={`bi ${icon}`} />
               </div>
 
-              <div className="esth-actions">
-                {badge && <span className="esth-badge">{badge}</span>}
-                {backTo && (
-                  <Button
-                    size="sm"
-                    variant="outline-light"
-                    onClick={() => navigate(backTo)}
-                  >
-                    Voltar
-                  </Button>
+              <div className="esh-text">
+                <h1>{title}</h1>
+                {subtitle && <p>{subtitle}</p>}
+                {(city || uf) && (
+                  <span className="esh-location">
+                    <i className="bi bi-geo-alt-fill me-1" />
+                    {city}
+                    {city && uf ? " / " : ""}
+                    {uf}
+                  </span>
                 )}
               </div>
             </div>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+          </div>
+        </div>
+      </Col>
+    </Row>
   );
 }
 
 EstablishmentHero.propTypes = {
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
+  city: PropTypes.string,
+  uf: PropTypes.string,
   icon: PropTypes.string,
-  badge: PropTypes.string,
-  backTo: PropTypes.string,
+  backLabel: PropTypes.string,
+};
+
+EstablishmentHero.defaultProps = {
+  icon: "bi-shop",
+  backLabel: "Voltar",
 };

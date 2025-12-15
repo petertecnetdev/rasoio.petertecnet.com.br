@@ -9,6 +9,7 @@ import {
   Card,
   Button,
 } from "react-bootstrap";
+import Swal from "sweetalert2";
 import GlobalNav from "../../components/GlobalNav";
 import EmployerHero from "../../components/employer/EmployerHero";
 import EmployerScheduleAddForm from "../../components/employer/EmployerScheduleAddForm";
@@ -19,27 +20,54 @@ import useEmployerSchedules, {
 export default function EmployerSchedulesPage() {
   const {
     employerId,
-
     schedulesByDay,
-
     addDay,
     setAddDay,
     addStart,
     setAddStart,
     addEnd,
     setAddEnd,
-
     loading,
     saving,
     deleting,
-
     apiError,
     actionMessage,
-
     handleAddScheduleLocal,
     handleSaveSchedules,
     handleRemoveSchedule,
   } = useEmployerSchedules();
+
+  const confirmRemove = async (schedule) => {
+    const res = await Swal.fire({
+      title: "Confirmar remoção",
+      text: `Deseja remover o horário ${schedule.start_time} – ${schedule.end_time}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Remover",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
+
+    if (res.isConfirmed) {
+      await handleRemoveSchedule(schedule);
+    }
+  };
+
+  const confirmSave = async () => {
+    const res = await Swal.fire({
+      title: "Salvar alterações?",
+      text: "Deseja salvar os horários de atendimento?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Salvar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
+
+    if (res.isConfirmed) {
+      await handleSaveSchedules();
+    }
+  };
 
   if (loading) {
     return (
@@ -137,7 +165,7 @@ export default function EmployerSchedulesPage() {
                       size="sm"
                       variant="outline-danger"
                       disabled={deleting}
-                      onClick={() => handleRemoveSchedule(s)}
+                      onClick={() => confirmRemove(s)}
                     >
                       Remover
                     </Button>
@@ -150,11 +178,7 @@ export default function EmployerSchedulesPage() {
 
         <Row className="mt-4">
           <Col className="d-flex justify-content-end">
-            <Button
-              size="lg"
-              disabled={saving}
-              onClick={handleSaveSchedules}
-            >
+            <Button size="lg" disabled={saving} onClick={confirmSave}>
               {saving ? "Salvando..." : "Salvar horários"}
             </Button>
           </Col>
