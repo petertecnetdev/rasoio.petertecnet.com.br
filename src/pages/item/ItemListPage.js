@@ -5,7 +5,7 @@ import { Container, Row, Col, Spinner, Alert, ButtonGroup } from "react-bootstra
 import axios from "axios";
 import Swal from "sweetalert2";
 
-import NavlogComponent from "../../components/NavlogComponent";
+import GlobalNav from "../../components/GlobalNav";
 import GlobalCard from "../../components/GlobalCard";
 import GlobalButton from "../../components/GlobalButton";
 import GlobalHeroList from "../../components/GlobalHeroList";
@@ -62,40 +62,37 @@ export default function ItemListPage() {
       });
   }, [localItems, establishment, filter]);
 
-  const heroData = useMemo(() => {
-    const servicesCount = (localItems || []).filter(
-      (i) => i.type === "service" || i.category === "service"
-    ).length;
+ const heroData = useMemo(() => {
+  const servicesCount = (localItems || []).filter(
+    (i) => i.type === "service" || i.category === "service"
+  ).length;
 
-    const productsCount = (localItems || []).filter(
-      (i) => i.type === "product" || i.category === "product"
-    ).length;
+  const productsCount = (localItems || []).filter(
+    (i) => i.type === "product" || i.category === "product"
+  ).length;
 
-    if (!establishment) {
-      return {
-        logo: PLACEHOLDER,
-        background: null,
-        title: "Itens do estabelecimento",
-        subtitle: "",
-        servicesCount,
-        productsCount,
-      };
-    }
+  const subtitle =
+    establishment?.city && establishment?.uf
+      ? `${establishment.fantasy || establishment.name} · ${establishment.city} - ${establishment.uf}`
+      : establishment?.fantasy || establishment?.name || "";
 
-    const subtitle =
-      establishment.city && establishment.uf
-        ? `${establishment.city} - ${establishment.uf}`
-        : "";
+  return {
+    logo: establishment?.logo || PLACEHOLDER,
+    background: null,
 
-    return {
-      logo: establishment.logo || PLACEHOLDER,
-      background: null,
-      title: establishment.fantasy || establishment.name,
-      subtitle,
-      servicesCount,
-      productsCount,
-    };
-  }, [establishment, localItems]);
+    title: "Itens",
+    description: "Lista de serviços e produtos do estabelecimento",
+
+    subtitle,
+
+    metrics: [
+      { label: "Serviços", value: servicesCount },
+      { label: "Produtos", value: productsCount },
+      { label: "Total", value: servicesCount + productsCount },
+    ],
+  };
+}, [establishment, localItems]);
+
 
   const handleDelete = async (itemId) => {
     const token = localStorage.getItem("token");
@@ -145,18 +142,19 @@ export default function ItemListPage() {
 
   return (
     <>
-      <NavlogComponent />
+      <GlobalNav />
 
-      <GlobalHeroList
-        logo={heroData.logo}
-        background={heroData.background}
-        title={heroData.title}
-        subtitle={heroData.subtitle}
-        servicesCount={heroData.servicesCount}
-        productsCount={heroData.productsCount}
-        imageUrl={imageUrl}
-        handleImgError={handleImgError}
-      />
+   <GlobalHeroList
+  logo={heroData.logo}
+  background={heroData.background}
+  title={heroData.title}
+  subtitle={heroData.subtitle}
+  description={heroData.description}
+  metrics={heroData.metrics}
+  imageUrl={imageUrl}
+  handleImgError={handleImgError}
+/>
+
 
       <Container className="py-3">
         <Row className="mb-3 align-items-center">

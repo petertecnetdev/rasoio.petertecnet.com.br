@@ -5,31 +5,46 @@ import axios from "axios";
 
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
   const getToken = () => localStorage.getItem("token");
+const loadAvailableTimes = useCallback(
+  async (date, employer, totalDuration) => {
+    try {
+      const userToken = getToken();
+      if (!userToken || !employer?.id || !date) return [];
 
-  const loadAvailableTimes = useCallback(
-    async (date, employer, totalDuration) => {
-      try {
-        const userToken = getToken();
-        if (!userToken) return [];
-        const res = await axios.get(`${apiBaseUrl}/employer/available`, {
-          params: {
-            employer_id: employer?.id,
-            date,
-            duration: totalDuration,
-          },
+      const payload = {
+        employer_id: employer.id,
+        date:
+          typeof date === "string"
+            ? date
+            : new Date(date).toISOString(),
+        duration: Number(totalDuration || 0),
+      };
+
+      const res = await axios.post(
+        `${apiBaseUrl}/employer/available-times`,
+        payload,
+        {
           headers: {
             Authorization: `Bearer ${userToken}`,
             Accept: "application/json",
+            "Content-Type": "application/json",
           },
-        });
-        return res.data?.available_times || [];
-      } catch (err) {
-        console.error("❌ Erro ao carregar horários disponíveis:", err);
-        return [];
-      }
-    },
-    [apiBaseUrl]
-  );
+        }
+      );
+
+      return Array.isArray(res.data?.available_times)
+        ? res.data.available_times
+        : [];
+    } catch (err) {
+      console.error(
+        "❌ Erro ao carregar horários disponíveis:",
+        err?.response?.data || err
+      );
+      return [];
+    }
+  },
+  [apiBaseUrl]
+);
 
   const handleCreateAppointment = useCallback(
     async (initialService, preselectedEmployer = null) => {

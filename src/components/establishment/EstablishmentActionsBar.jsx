@@ -9,30 +9,21 @@ export default function EstablishmentActionsBar({ establishment }) {
     <Card bg="dark" text="light" className="m-2">
       <Card.Body className="p-2">
         <Row className="gx-2 gy-2 text-center">
+        
           <Col md={3}>
             <Button
               as={Link}
-              to={`/order/create/${establishment.id}`}
+              to={`/order/list/${establishment.slug}`}
               size="sm"
               className="dashboard-establishment-btn bg-black w-100"
             >
-              Novo atendimento
+              📑 Pedidos
             </Button>
           </Col>
           <Col md={3}>
             <Button
               as={Link}
-              to={`/order/list/${establishment.id}`}
-              size="sm"
-              className="dashboard-establishment-btn bg-black w-100"
-            >
-              📑 Atendimentos
-            </Button>
-          </Col>
-          <Col md={3}>
-            <Button
-              as={Link}
-              to={`/employer/list/${establishment.id}`}
+              to={`/establishment/employers/${establishment.slug}`}
               size="sm"
               className="dashboard-establishment-btn bg-black w-100"
             >

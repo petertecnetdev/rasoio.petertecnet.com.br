@@ -21,7 +21,6 @@ import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import PasswordPage from "./pages/auth/PasswordPage";
 
-/* 🔹 NOVOS IMPORTS — CONVITE */
 import InvitePage from "./pages/auth/InvitePage";
 import InviteCompletePage from "./pages/auth/InviteCompletePage";
 
@@ -43,13 +42,16 @@ import EmployerListPage from "./pages/employer/EmployerListPage";
 import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
 import EmployerUpdatePage from "./pages/employer/EmployerUpdatePage";
 import EmployerViewPage from "./pages/employer/EmployerViewPage";
-import EmployerDashboardPage from "./pages/employer/EmployerDashboardPage";
+import EmployerMePage from "./pages/employer/EmployerMePage";
+import EmployerSchedulesPage from "./pages/employer/EmployerSchedulesPage";
+import EmployerOrdersPage from "./pages/employer/EmployerOrdersPage.jsx";
 
 import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
 import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
 import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
 import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
+import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
 
 import "./index.css";
 
@@ -143,11 +145,8 @@ function AppInner() {
           <Route path="/password" element={protectedRoute(<PasswordPage />)} />
           <Route path="/logout" element={<LogoutPage />} />
 
-          <Route path="/invite" element={(<InvitePage />)} />
-          <Route
-            path="/invite-complete"
-            element={(<InviteCompletePage />)}
-          />
+          <Route path="/invite" element={<InvitePage />} />
+          <Route path="/invite-complete" element={<InviteCompletePage />} />
 
           <Route
             path="/dashboard"
@@ -155,7 +154,7 @@ function AppInner() {
           />
 
           <Route
-            path="/order/list/:entityId"
+            path="/order/list/:slug"
             element={protectedRoute(<OrderListPage />)}
           />
           <Route
@@ -184,15 +183,11 @@ function AppInner() {
             path="/item/create/:slug"
             element={protectedRoute(<ItemCreatePage />)}
           />
-          <Route
-            path="/item/view/:slug"
-            element={(<ItemViewPage />)}
-          />
+          <Route path="/item/view/:slug" element={<ItemViewPage />} />
           <Route
             path="/item/update/:id"
             element={protectedRoute(<ItemUpdatePage />)}
           />
-          <Route path="/item/:id" element={protectedRoute(<ItemViewPage />)} />
 
           <Route
             path="/employer/list/:slug"
@@ -212,7 +207,15 @@ function AppInner() {
           />
           <Route
             path="/employer/dashboard"
-            element={protectedRoute(<EmployerDashboardPage />)}
+            element={protectedRoute(<EmployerMePage />)}
+          />
+          <Route
+            path="/employer/schedules"
+            element={protectedRoute(<EmployerSchedulesPage />)}
+          />
+          <Route
+            path="/employer/orders"
+            element={protectedRoute(<EmployerOrdersPage />)}
           />
 
           <Route
@@ -223,7 +226,6 @@ function AppInner() {
             path="/establishment/update/:id"
             element={protectedRoute(<EstablishmentUpdatePage />)}
           />
-          
           <Route
             path="/establishment/my"
             element={protectedRoute(<EstablishmentMyPage />)}
@@ -231,6 +233,11 @@ function AppInner() {
           <Route
             path="/establishment/schedule/:slug"
             element={<EstablishmentSchedulePage />}
+          />
+
+          <Route
+            path="/establishment/employers/:slug"
+            element={<EstablishmentEmployersPage />}
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />

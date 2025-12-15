@@ -2,7 +2,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import NavlogComponent from "../../components/NavlogComponent";
+import GlobalNav from "../../components/GlobalNav";
 import ItemCreateForm from "../../components/item/ItemCreateForm";
 import useItemCreate from "../../hooks/useItemCreate.js";
 
@@ -26,11 +26,11 @@ export default function ItemCreatePage() {
     submitCreate,
   } = useItemCreate(navigate, reset, setValue);
 
-  if (loading) return <NavlogComponent />;
+  if (loading) return <GlobalNav />;
 
   return (
     <div className="item-root">
-      <NavlogComponent />
+      <GlobalNav />
 
       <div className="item-create-page">
         <h2 className="title mb-3">Criar Item</h2>

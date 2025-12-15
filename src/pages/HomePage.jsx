@@ -17,8 +17,6 @@ import GlobalNav from "../components/GlobalNav";
 import CircleGauge from "../components/home/CircleGauge";
 import CitySelectorModal from "../components/CitySelectorModal";
 import HomeHeader from "../components/home/HomeHeader";
-import StatsQuick from "../components/home/StatsQuick";
-import HighlightsSection from "../components/home/HighlightsSection";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -248,9 +246,6 @@ export default function HomePage() {
       <div className="hp-wrapper">
         <HomeHeader city={city} uf={uf} onChangeCity={handleChangeCity} />
 
-        <StatsQuick stats={stats} />
-
-        <HighlightsSection highlights={stats.highlights} />
 
         <GlobalCarousel
           title="Estabelecimentos"

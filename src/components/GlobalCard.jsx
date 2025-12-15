@@ -13,6 +13,7 @@ export default function GlobalCard({
   navigate,
   showSchedule,
   openSchedulePopup,
+  actions,
 }) {
   const { imageUrl, handleImgError: baseHandleImgError } = useImageUtils();
   const cardRef = useRef(null);
@@ -24,14 +25,16 @@ export default function GlobalCard({
   };
 
   const image = useMemo(() => {
-  const paths = [
-  item?.image,               // 👈 PRIORIDADE MÁXIMA (backend já resolveu)
-  item?.avatar,
-  item?.images?.avatar,
-  item?.images?.logo,
-  item?.images?.background,
-  Array.isArray(item?.images?.gallery) ? item.images.gallery[0] : null,
-];
+    const paths = [
+      item?.image,
+      item?.avatar,
+      item?.images?.avatar,
+      item?.images?.logo,
+      item?.images?.background,
+      Array.isArray(item?.images?.gallery)
+        ? item.images.gallery[0]
+        : null,
+    ];
 
     for (const p of paths) {
       const url = imageUrl(p);
@@ -67,13 +70,19 @@ export default function GlobalCard({
   };
 
   const shape = getShape();
+  const isEstablishment = item.type === "establishment";
 
   return (
     <div
       ref={cardRef}
-      className={`carousel-card hologram-container type-${item.type}`}
+      className={`carousel-card hologram-container type-${item.type} ${
+        isEstablishment ? "establishment-horizontal" : ""
+      }`}
     >
-      <div className={`carousel-image-wrap ${shape}`} onClick={handleDetails}>
+      <div
+        className={`carousel-image-wrap ${shape}`}
+        onClick={handleDetails}
+      >
         {image && !broken ? (
           <img
             src={image}
@@ -83,7 +92,9 @@ export default function GlobalCard({
             onError={handleImgError}
           />
         ) : (
-          <div className={`carousel-placeholder ${shape}`}>{getInitials()}</div>
+          <div className={`carousel-placeholder ${shape}`}>
+            {getInitials()}
+          </div>
         )}
       </div>
 
@@ -103,7 +114,9 @@ export default function GlobalCard({
         )}
 
         {item.price !== undefined && (
-          <div className="carousel-item-price">{fmtBRL(item.price)}</div>
+          <div className="carousel-item-price">
+            {fmtBRL(item.price)}
+          </div>
         )}
 
         {item.duration !== null && item.duration !== undefined && (
@@ -112,34 +125,23 @@ export default function GlobalCard({
           </div>
         )}
 
-        {item.establishment && item.type !== "establishment" && (
-          <div
-            className="globalcard-entity"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/establishment/view/${item.establishment.slug}`);
-            }}
-          >
-            {item.establishment.name}
-          </div>
-        )}
-
-        <div className="d-flex flex-column align-items-center gap-2 mt-2">
+        <div className="d-flex align-items-center gap-2 mt-2">
           <Badge bg="secondary" className="px-2 py-1 rounded-pill">
             {item.total_views ?? 0} Views
           </Badge>
         </div>
 
-        <GlobalButton
-          className="mt-3"
-          size="sm"
-          full
-          variant="outline"
-          stopPropagation
-          onClick={handleDetails}
-        >
-          Detalhes
-        </GlobalButton>
+        <div className="mt-2">
+          <GlobalButton
+            size="sm"
+            variant="outline"
+            stopPropagation
+            className="px-4"
+            onClick={handleDetails}
+          >
+            Detalhes
+          </GlobalButton>
+        </div>
 
         {showSchedule && typeof openSchedulePopup === "function" && (
           <GlobalButton
@@ -153,6 +155,12 @@ export default function GlobalCard({
             Agendar
           </GlobalButton>
         )}
+
+        {actions && (
+          <div className="mt-3 establishment-actions-slot">
+            {actions}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -164,6 +172,7 @@ GlobalCard.propTypes = {
   navigate: PropTypes.func.isRequired,
   showSchedule: PropTypes.bool,
   openSchedulePopup: PropTypes.func,
+  actions: PropTypes.node,
 };
 
 GlobalCard.defaultProps = {

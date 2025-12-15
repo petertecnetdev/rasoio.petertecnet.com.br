@@ -1,89 +1,72 @@
 // src/pages/establishment/EstablishmentMyPage.jsx
-import React, { useMemo } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import NavlogComponent from "../../components/NavlogComponent";
-import GlobalHero from "../../components/GlobalHero";
-import EstablishmentMyCard from "../../components/establishment/EstablishmentMyCard";
+import GlobalHeroList from "../../components/GlobalHeroList";
+import EstablishmentDashboard from "../../components/establishment/EstablishmentDashboard";
 import useEstablishmentMy from "../../hooks/useEstablishmentMy";
 import useImageUtils from "../../hooks/useImageUtils";
-import { apiBaseUrl } from "../../config";
-import "./EstablishmentMy.css";
+import { appId } from "../../config";
+
+const PLACEHOLDER = "/images/logo.png";
 
 export default function EstablishmentMyPage() {
-  const { establishments, metrics, isLoading } = useEstablishmentMy(apiBaseUrl);
-  const { imageUrl, handleImgError } = useImageUtils();
-
-  const heroData = useMemo(() => {
-    const first = establishments?.[0] || null;
-    return {
-      background: first?.background || null,
-      logo: first?.logo || null,
-    };
-  }, [establishments]);
+  const navigate = useNavigate();
+  const { establishments, isLoading, apiError } = useEstablishmentMy(appId);
+  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
   if (isLoading) {
-    return <Container className="text-center mt-5"></Container>;
+    return (
+      <>
+        <NavlogComponent />
+        <Container className="text-center mt-5">
+          <Spinner animation="border" />
+        </Container>
+      </>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <>
+        <NavlogComponent />
+        <Container className="mt-4">
+          <Alert variant="danger">{apiError}</Alert>
+        </Container>
+      </>
+    );
   }
 
   return (
-    <div className="dashboard-root">
+    <>
       <NavlogComponent />
 
-      <GlobalHero
-        entity="list"
+      <GlobalHeroList
         title="Meus Estabelecimentos"
-        description="Gerencie seus estabelecimentos, acompanhe métricas e edite informações."
-        background={heroData.background}
-        logo={heroData.logo}
+        subtitle="Gerencie seus estabelecimentos"
+        metrics={[{ label: "Total", value: establishments.length }]}
         imageUrl={imageUrl}
         handleImgError={handleImgError}
-        overlay
-      >
-        <Button
-          as={Link}
-          to="/establishment/create"
-          size="sm"
-          className="dashboard-establishment-btn bg-black"
-        >
-          Criar meu estabelecimento
-        </Button>
-      </GlobalHero>
+      />
 
-      <Container fluid className="dashboard-main">
-        <div className="dashboard-section">
-          <Row className="dashboard-establishments-list gx-3 gy-4">
-            {establishments.length === 0 && (
-              <Col md={12}>
-                <Card className="dashboard-empty-card">
-                  <Card.Body className="text-center">
-                    <div className="dashboard-empty mb-3">
-                      Nenhum estabelecimento encontrado.
-                    </div>
-                    <Button
-                      as={Link}
-                      to="/establishment/create"
-                      size="sm"
-                      className="dashboard-establishment-btn bg-black"
-                    >
-                      Criar meu estabelecimento
-                    </Button>
-                  </Card.Body>
-                </Card>
-              </Col>
-            )}
-
-            {establishments.map((est) => (
-              <Col key={est.id} md={12}>
-                <EstablishmentMyCard
-                  establishment={est}
-                  metrics={metrics[est.id]}
-                />
-              </Col>
-            ))}
+      <Container fluid className="establishment-my-wrapper mt-4">
+        {establishments.length === 0 && (
+          <Row>
+            <Col xs={12} className="text-center text-muted">
+              Nenhum estabelecimento encontrado.
+            </Col>
           </Row>
-        </div>
+        )}
+
+        {establishments.map((est) => (
+          <EstablishmentDashboard
+            key={est.id}
+            establishment={est}
+            navigate={navigate}
+          />
+        ))}
       </Container>
-    </div>
+    </>
   );
 }
