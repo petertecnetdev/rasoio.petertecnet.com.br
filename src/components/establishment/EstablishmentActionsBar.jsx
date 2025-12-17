@@ -13,7 +13,7 @@ export default function EstablishmentActionsBar({ establishment }) {
           <Col md={3}>
             <Button
               as={Link}
-              to={`/order/list/${establishment.slug}`}
+              to={`/establishment/orders/${establishment.slug}`}
               size="sm"
               className="dashboard-establishment-btn bg-black w-100"
             >
@@ -33,17 +33,7 @@ export default function EstablishmentActionsBar({ establishment }) {
           <Col md={3}>
             <Button
               as={Link}
-              to={`/report/order/${establishment.id}`}
-              size="sm"
-              className="dashboard-establishment-btn bg-black w-100"
-            >
-              📊 Relatório
-            </Button>
-          </Col>
-          <Col md={3}>
-            <Button
-              as={Link}
-              to={`/item/list/${establishment.slug}`}
+               to={`/establishment/item/${establishment.slug}`}
               size="sm"
               className="dashboard-establishment-btn bg-black w-100"
             >

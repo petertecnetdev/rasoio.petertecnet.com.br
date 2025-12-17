@@ -49,9 +49,10 @@ import EmployerOrdersPage from "./pages/employer/EmployerOrdersPage.jsx";
 import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
 import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
-import EstablishmentSchedulePage from "./pages/establishment/EstablishmentSchedulePage";
+import EstablishmentOrderPage from "./pages/establishment/EstablishmentOrderPage";
 import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
 import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
+import EstablishmentItemPage from "./pages/establishment/EstablishmentItemPage";
 
 import "./index.css";
 
@@ -158,9 +159,10 @@ function AppInner() {
             element={protectedRoute(<OrderListPage />)}
           />
           <Route
-            path="/order/create/:entityId"
+            path="/order/create/:slug"
             element={protectedRoute(<OrderCreatePage />)}
           />
+
           <Route
             path="/order/edit/:entityId/:id"
             element={protectedRoute(<OrderEditPage />)}
@@ -231,8 +233,12 @@ function AppInner() {
             element={protectedRoute(<EstablishmentMyPage />)}
           />
           <Route
-            path="/establishment/schedule/:slug"
-            element={<EstablishmentSchedulePage />}
+            path="/establishment/orders/:slug"
+            element={<EstablishmentOrderPage />}
+          />
+          <Route
+            path="/establishment/item/:slug"
+            element={<EstablishmentItemPage />}
           />
 
           <Route

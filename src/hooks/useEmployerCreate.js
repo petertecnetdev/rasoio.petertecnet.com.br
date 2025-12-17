@@ -13,6 +13,8 @@ export default function useEmployerCreate(slug) {
   const [searching, setSearching] = useState(false);
   const [errors, setErrors] = useState({});
 
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     if (!slug) return;
 
@@ -26,11 +28,14 @@ export default function useEmployerCreate(slug) {
 
         if (!mounted) return;
         setEstablishment(data.establishment);
-      } catch {
+      } catch (error) {
         await Swal.fire({
           icon: "error",
           title: "Erro",
-          text: "Estabelecimento não encontrado.",
+          text:
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            "Estabelecimento não encontrado.",
         });
       }
     })();
@@ -41,8 +46,6 @@ export default function useEmployerCreate(slug) {
   }, [slug]);
 
   const searchUsers = async (payload) => {
-    const token = localStorage.getItem("token");
-
     if (!payload || Object.keys(payload).length === 0) {
       await Swal.fire({
         icon: "warning",
@@ -59,7 +62,9 @@ export default function useEmployerCreate(slug) {
       const { data } = await axios.post(
         `${apiBaseUrl}/user/find-for-employer`,
         payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       setUsers(data.users || []);
@@ -77,23 +82,20 @@ export default function useEmployerCreate(slug) {
     }
   };
 
-  const createEmployer = async (userId) => {
-    if (!establishment) return;
-
-    const token = localStorage.getItem("token");
+  const createEmployer = async (user) => {
+    if (!establishment || !user?.id) return;
 
     try {
       setLoading(true);
       setErrors({});
 
       const { data } = await axios.post(
-        `${apiBaseUrl}/employer`,
+        `${apiBaseUrl}/employer/store`,
         {
-          user_id: userId,
+          user_id: user.id,
           establishment_id: establishment.id,
           role,
           permissions,
-          link: window.location.origin,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -103,20 +105,13 @@ export default function useEmployerCreate(slug) {
       await Swal.fire({
         icon: "success",
         title: "Sucesso",
-        text: data?.message || "Colaborador associado com sucesso.",
+        text: data?.message,
       });
 
       setUsers((prev) =>
         prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                is_employer: true,
-                establishments: [
-                  ...(u.establishments || []),
-                  { id: establishment.id },
-                ],
-              }
+          u.id === user.id
+            ? { ...u, is_employer: true, employer: data.employer }
             : u
         )
       );
@@ -140,10 +135,8 @@ export default function useEmployerCreate(slug) {
     }
   };
 
-  const detachEmployer = async (userId) => {
+  const detachEmployer = async (employerId) => {
     if (!establishment) return;
-
-    const token = localStorage.getItem("token");
 
     try {
       setLoading(true);
@@ -151,7 +144,7 @@ export default function useEmployerCreate(slug) {
       const { data } = await axios.post(
         `${apiBaseUrl}/employer/detach`,
         {
-          employer_id: userId,
+          employer_id: employerId,
           establishment_id: establishment.id,
         },
         {
@@ -162,22 +155,13 @@ export default function useEmployerCreate(slug) {
       await Swal.fire({
         icon: "success",
         title: "Sucesso",
-        text: data?.message || "Associação removida com sucesso.",
+        text: data?.message,
       });
 
       setUsers((prev) =>
         prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                establishments: (u.establishments || []).filter(
-                  (e) => e.id !== establishment.id
-                ),
-                is_employer:
-                  (u.establishments || []).filter(
-                    (e) => e.id !== establishment.id
-                  ).length > 0,
-              }
+          u.employer?.id === employerId
+            ? { ...u, is_employer: false, employer: null }
             : u
         )
       );

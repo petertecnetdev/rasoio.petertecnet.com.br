@@ -1,139 +1,139 @@
 /* src/components/establishment/EstablishmentHero.css */
 
-:root {
-  --esh-bg: linear-gradient(
-    135deg,
-    #020617 0%,
-    #020617 30%,
-    #020617 100%
-  );
-  --esh-card: rgba(11, 18, 32, 0.96);
-  --esh-border: rgba(148, 163, 184, 0.14);
-
-  --esh-text-main: #e5e7eb;
-  --esh-text-soft: #94a3b8;
-  --esh-accent: #38bdf8;
-  --esh-accent-soft: rgba(56, 189, 248, 0.35);
-}
-
-.esh-root {
-  width: 100%;
-}
-
-.esh-card {
+.eshlist-root {
   position: relative;
-  background: var(--esh-card);
-  border: 1px solid var(--esh-border);
-  border-radius: 18px;
-  padding: 22px 26px;
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  width: 100vw;
+  min-height: 320px;
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  margin-bottom: 30px;
+
+  background-color: #000;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   overflow: hidden;
 }
 
-.esh-card::before {
+/* overlay escuro consistente */
+.eshlist-root::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--esh-bg);
-  opacity: 0.85;
-  z-index: 0;
-}
-
-.esh-top {
-  position: relative;
-  z-index: 2;
-  margin-bottom: 18px;
-}
-
-.esh-back-btn {
-  padding: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--esh-text-soft);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.esh-back-btn:hover {
-  color: var(--esh-accent);
-  text-decoration: none;
-}
-
-.esh-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.esh-left {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.esh-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
   background: linear-gradient(
-    135deg,
-    rgba(56, 189, 248, 0.15),
-    rgba(30, 41, 59, 0.85)
+    rgba(55, 54, 54, 0.6),
+    rgba(0, 0, 0, 0.9)
   );
+  z-index: 1;
+}
+
+/* container interno */
+.eshlist-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 44px 24px 52px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  color: #ffffff;
+}
+
+/* botão voltar */
+.eshlist-back {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+/* box do logo */
+.eshlist-logo-box {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+
+  background-color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--esh-accent);
-  font-size: 1.6rem;
-  box-shadow:
-    0 0 0 1px rgba(56, 189, 248, 0.25),
-    0 10px 25px rgba(0, 0, 0, 0.45);
+
+  margin-bottom: 18px;
 }
 
-.esh-text h1 {
-  margin: 0;
-  font-size: 1.6rem;
+/* logo */
+.eshlist-logo {
+  max-width: 70%;
+  max-height: 70%;
+  object-fit: contain;
+}
+
+/* título principal */
+.eshlist-title {
+  font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
-  color: var(--esh-text-main);
-  letter-spacing: 0.3px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
 }
 
-.esh-text p {
-  margin: 6px 0 4px;
-  font-size: 0.95rem;
-  color: var(--esh-text-soft);
+/* subtítulo */
+.eshlist-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 8px;
+  max-width: 760px;
 }
 
-.esh-location {
+/* descrição */
+.eshlist-description {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 16px;
+  max-width: 820px;
+}
+
+/* localização */
+.eshlist-location {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: var(--esh-accent);
+
+  padding: 6px 14px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+
+  background-color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+/* mobile */
 @media (max-width: 768px) {
-  .esh-card {
-    padding: 18px;
+  .eshlist-inner {
+    padding: 32px 16px 40px;
   }
 
-  .esh-left {
-    gap: 14px;
+  .eshlist-back {
+    top: 14px;
+    right: 14px;
   }
 
-  .esh-icon {
-    width: 48px;
-    height: 48px;
-    font-size: 1.4rem;
+  .eshlist-logo-box {
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
   }
 
-  .esh-text h1 {
-    font-size: 1.35rem;
+  .eshlist-title {
+    font-size: 24px;
   }
 }

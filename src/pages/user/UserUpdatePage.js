@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import NavlogComponent from "../../components/NavlogComponent";
+import GlobalNav from "../../components/GlobalNav";
 import useUserUpdate from "../../hooks/useUserUpdate";
 import UserUpdateForm from "../../components/user/UserUpdateForm";
 
@@ -22,11 +22,11 @@ export default function UserUpdatePage() {
     submitUpdate,
   } = useUserUpdate(reset);
 
-  if (loading) return <NavlogComponent />;
+  if (loading) return <GlobalNav/>;
 
   return (
     <div className="user-root">
-      <NavlogComponent />
+      <GlobalNav/>
 
       <div className="user-update-page">
         <h2 className="title mb-3">Editar Perfil</h2>

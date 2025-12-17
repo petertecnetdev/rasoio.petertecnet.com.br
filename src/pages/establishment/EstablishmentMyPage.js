@@ -2,24 +2,20 @@
 import React from "react";
 import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import NavlogComponent from "../../components/NavlogComponent";
-import GlobalHeroList from "../../components/GlobalHeroList";
+import GlobalNav from "../../components/GlobalNav";
+import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import EstablishmentDashboard from "../../components/establishment/EstablishmentDashboard";
 import useEstablishmentMy from "../../hooks/useEstablishmentMy";
-import useImageUtils from "../../hooks/useImageUtils";
 import { appId } from "../../config";
-
-const PLACEHOLDER = "/images/logo.png";
 
 export default function EstablishmentMyPage() {
   const navigate = useNavigate();
   const { establishments, isLoading, apiError } = useEstablishmentMy(appId);
-  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
   if (isLoading) {
     return (
       <>
-        <NavlogComponent />
+        <GlobalNav />
         <Container className="text-center mt-5">
           <Spinner animation="border" />
         </Container>
@@ -30,7 +26,7 @@ export default function EstablishmentMyPage() {
   if (apiError) {
     return (
       <>
-        <NavlogComponent />
+        <GlobalNav />
         <Container className="mt-4">
           <Alert variant="danger">{apiError}</Alert>
         </Container>
@@ -40,15 +36,13 @@ export default function EstablishmentMyPage() {
 
   return (
     <>
-      <NavlogComponent />
-
-      <GlobalHeroList
-        title="Meus Estabelecimentos"
-        subtitle="Gerencie seus estabelecimentos"
-        metrics={[{ label: "Total", value: establishments.length }]}
-        imageUrl={imageUrl}
-        handleImgError={handleImgError}
-      />
+      <GlobalNav />
+<EstablishmentHero
+  title="Meus estabelecimentos"
+  subtitle="Gestão central dos seus negócios"
+  description="Acompanhe métricas, acesse rapidamente cada estabelecimento e gerencie serviços, itens, colaboradores e pedidos em um só lugar."
+  showBack={true}
+/>
 
       <Container fluid className="establishment-my-wrapper mt-4">
         {establishments.length === 0 && (

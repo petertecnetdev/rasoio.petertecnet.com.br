@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { storageUrl } from "../../config";
 import GlobalNavAdminMenu from "./GlobalNavAdminMenu";
@@ -13,8 +13,23 @@ export default function GlobalNavMenu({
   showEstSubmenu,
   setShowEstSubmenu,
   handleToggleMobileMenu,
-  handleLogout
+  handleLogout,
 }) {
+  const avatarSrc = useMemo(() => {
+    const paths = [
+      user?.avatar,
+      user?.images?.avatar,
+      user?.images?.profile,
+    ].filter(Boolean);
+
+    if (!paths.length) return "/images/user.png";
+
+    const path = paths[0];
+    if (path.startsWith("http")) return path;
+
+    return `${storageUrl}/${path}`;
+  }, [user]);
+
   const handleImageError = (e) => {
     e.target.onerror = null;
     e.target.src = "/images/user.png";
@@ -34,21 +49,28 @@ export default function GlobalNavMenu({
         ) : (
           <>
             <img
-              src={user.avatar ? `${storageUrl}/${user.avatar}` : "/images/user.png"}
+              src={avatarSrc}
               alt="Avatar"
               onError={handleImageError}
               className="navlog__avatar"
             />
 
-            <h5 className="navlog__user-name">{user.first_name}</h5>
+            <h5 className="navlog__user-name">{user?.first_name}</h5>
 
             <nav className="navlog__mobile-links">
-
-              <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">
+              <Link
+                to="/user/update"
+                onClick={handleToggleMobileMenu}
+                className="navlog__link"
+              >
                 Gerenciar Conta
               </Link>
 
-              <Link to="/invite" onClick={handleToggleMobileMenu} className="navlog__link">
+              <Link
+                to="/invite"
+                onClick={handleToggleMobileMenu}
+                className="navlog__link"
+              >
                 Convidar Usuário
               </Link>
 
@@ -59,13 +81,17 @@ export default function GlobalNavMenu({
                 handleToggleMobileMenu={handleToggleMobileMenu}
               />
 
-              {user.isEmployer && (
-                <Link to="/employer/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">
+              {user?.isEmployer && (
+                <Link
+                  to="/employer/dashboard"
+                  onClick={handleToggleMobileMenu}
+                  className="navlog__link"
+                >
                   Área do Colaborador
                 </Link>
               )}
 
-              {user.profile.name === "Administrador" && (
+              {user?.profile?.name === "Administrador" && (
                 <GlobalNavAdminMenu
                   showAdminSubmenu={showAdminSubmenu}
                   setShowAdminSubmenu={setShowAdminSubmenu}

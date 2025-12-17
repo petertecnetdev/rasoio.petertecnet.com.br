@@ -1,13 +1,12 @@
-// src/hooks/useEmployerOrders.js
+// src/hooks/useOrderListByEmployer.js
 import { useEffect, useState, useCallback } from "react";
 import api from "../services/api";
 
-export default function useEmployerOrders() {
-  const [orders, setOrders] = useState([]);
+export default function useOrderListByEmployer() {
   const [employer, setEmployer] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
-  const [actionLoading, setActionLoading] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -29,36 +28,15 @@ export default function useEmployerOrders() {
     }
   }, []);
 
-  const updateOrderStatus = useCallback(async (orderId, status) => {
-    setActionLoading(orderId);
-
-    try {
-      await api.put(`/order/${orderId}/update-status`, {
-        status,
-      });
-
-      await fetchOrders();
-    } catch (err) {
-      throw new Error(
-        err?.response?.data?.error ||
-          "Erro ao atualizar status do pedido."
-      );
-    } finally {
-      setActionLoading(null);
-    }
-  }, [fetchOrders]);
-
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
   return {
-    orders,
     employer,
+    orders,
     loading,
     apiError,
-    actionLoading,
-    updateOrderStatus,
     refetch: fetchOrders,
   };
 }

@@ -1,24 +1,24 @@
 /* =========================================================
    GLOBAL CARD – SISTEMA VISUAL DEFINITIVO
-   Diferencia claramente: EMPLOYER / ESTABLISHMENT / ITEM
-   Foco em UX, hierarquia e reconhecimento por forma
+   Letras claras + fundo escuro (legibilidade máxima)
 ========================================================= */
 
 /* ===============================
    BASE DO CARD
 ================================ */
 .carousel-card {
-  position: relative;
   background: linear-gradient(
     180deg,
-    rgba(18, 20, 26, 0.94),
-    rgba(10, 12, 16, 0.98)
+    #0b0f1a,
+    #070a12
   );
+  color: #e5e7eb;
   border-radius: 20px;
   padding: 22px;
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.05),
-    0 25px 60px rgba(0,0,0,0.7);
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 25px 60px rgba(0,0,0,0.8);
+  color: #f2f4f8;
   transition:
     transform 0.35s cubic-bezier(.22,1,.36,1),
     box-shadow 0.35s cubic-bezier(.22,1,.36,1);
@@ -27,12 +27,12 @@
 .carousel-card:hover {
   transform: translateY(-6px);
   box-shadow:
-    inset 0 0 0 1px rgba(120,170,255,0.35),
-    0 45px 120px rgba(0,0,0,0.85);
+    inset 0 0 0 1px rgba(140,190,255,0.45),
+    0 45px 120px rgba(0,0,0,0.9);
 }
 
 /* ===============================
-   IMAGE WRAP – BASE
+   IMAGE WRAP
 ================================ */
 .carousel-image-wrap {
   position: relative;
@@ -43,31 +43,29 @@
   cursor: pointer;
 }
 
-/* imagem */
 .carousel-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* placeholder */
 .carousel-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ffffff;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.15),
-    rgba(255,255,255,0.03)
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
   );
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
 
 /* ===============================
-   👤 EMPLOYER (PESSOA)
-   Forma orgânica / humana
+   EMPLOYER
 ================================ */
 .type-employer .carousel-image-wrap {
   width: 84px;
@@ -75,12 +73,12 @@
   border-radius: 50%;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.18),
-    rgba(255,255,255,0.05)
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
   );
   box-shadow:
-    inset 0 0 0 2px rgba(255,255,255,0.35),
-    0 12px 35px rgba(0,0,0,0.6);
+    inset 0 0 0 2px rgba(255,255,255,0.4),
+    0 12px 35px rgba(0,0,0,0.7);
 }
 
 .type-employer .carousel-image,
@@ -90,17 +88,8 @@
   font-size: 1.2rem;
 }
 
-.type-employer .carousel-image-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  border: 1px dashed rgba(255,255,255,0.35);
-}
-
 /* ===============================
-   🏢 ESTABLISHMENT (NEGÓCIO)
-   Forma sólida / institucional
+   ESTABLISHMENT
 ================================ */
 .type-establishment .carousel-image-wrap {
   width: 96px;
@@ -108,12 +97,12 @@
   border-radius: 18px;
   background: linear-gradient(
     180deg,
-    rgba(30,40,60,0.95),
-    rgba(12,14,20,0.98)
+    rgba(40,60,95,0.95),
+    rgba(14,18,26,0.98)
   );
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.2),
-    0 18px 50px rgba(0,0,0,0.75);
+    inset 0 0 0 1px rgba(255,255,255,0.25),
+    0 18px 50px rgba(0,0,0,0.85);
 }
 
 .type-establishment .carousel-image,
@@ -123,17 +112,8 @@
   font-size: 1.1rem;
 }
 
-.type-establishment .carousel-image-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 14px;
-  border: 1px solid rgba(120,170,255,0.35);
-}
-
 /* ===============================
-   🛒 ITEM (PRODUTO / SERVIÇO)
-   Forma funcional / cartão
+   ITEM
 ================================ */
 .type-item .carousel-image-wrap {
   width: 88px;
@@ -141,12 +121,12 @@
   border-radius: 10px;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.12),
-    rgba(255,255,255,0.03)
+    rgba(255,255,255,0.16),
+    rgba(255,255,255,0.04)
   );
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.18),
-    0 14px 40px rgba(0,0,0,0.6);
+    inset 0 0 0 1px rgba(255,255,255,0.22),
+    0 14px 40px rgba(0,0,0,0.7);
 }
 
 .type-item .carousel-image,
@@ -156,16 +136,8 @@
   font-size: 1rem;
 }
 
-.type-item .carousel-image-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.25);
-}
-
 /* ===============================
-   CONTEÚDO
+   CONTEÚDO (TEXTOS CLAROS)
 ================================ */
 .carousel-item-content {
   margin-top: 14px;
@@ -178,40 +150,42 @@
 .carousel-item-name {
   font-size: 1rem;
   font-weight: 600;
+  color: #ffffff;
   cursor: pointer;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
 
 .globalcard-location {
   font-size: 0.8rem;
-  opacity: 0.75;
+  color: rgba(230,235,245,0.75);
 }
 
 .carousel-item-price {
   font-size: 0.95rem;
   font-weight: 600;
-  margin-top: 2px;
+  color: #9fd1ff;
 }
 
-.globalcard-entity {
-  font-size: 0.75rem;
-  opacity: 0.8;
-  cursor: pointer;
+.text-light-50,
+.small {
+  color: rgba(220,225,235,0.7) !important;
 }
 
 /* ===============================
-   METRICS
+   BADGES / METRICS
 ================================ */
 .carousel-card .badge {
   font-size: 0.7rem;
   padding: 5px 12px;
   border-radius: 999px;
+  color: #ffffff;
   background: linear-gradient(
     180deg,
-    rgba(255,255,255,0.16),
-    rgba(255,255,255,0.05)
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.08)
   );
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.2);
+    inset 0 0 0 1px rgba(255,255,255,0.25);
 }
 
 /* ===============================
@@ -221,6 +195,7 @@
   border-radius: 999px;
   font-size: 0.75rem;
   letter-spacing: 0.4px;
+  color: #ffffff;
 }
 
 .carousel-card .global-button.full {
@@ -228,13 +203,13 @@
 }
 
 /* ===============================
-   ACTION BAR SLOT
+   ACTION SLOT
 ================================ */
 .establishment-actions-slot {
   width: 100%;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 /* ===============================
@@ -246,7 +221,61 @@
   }
 
   .carousel-item-content {
-    text-align: center;
     align-items: center;
+    text-align: center;
   }
+}
+/* src/components/GlobalCard.css */
+
+/* ÁREA DA IMAGEM — tamanho único para imagem real e placeholder */
+.carousel-image-wrap {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* imagem real */
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
+/* formas */
+.carousel-image-wrap.img-round .carousel-image {
+  border-radius: 50%;
+}
+
+.carousel-image-wrap.img-establishment .carousel-image {
+  border-radius: 22px;
+}
+
+/* garante alinhamento vertical igual no carrossel */
+.carousel-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* evita cards “mais altos” só por causa da imagem */
+.carousel-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* tipografia menor para combinar com a imagem menor */
+.carousel-item-name {
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.carousel-item-price {
+  font-size: 0.9rem;
+  text-align: center;
 }

@@ -1,71 +1,90 @@
 // src/components/establishment/EstablishmentHero.jsx
 import React from "react";
-import { Row, Col, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
+import GlobalButton from "../GlobalButton";
 import "./EstablishmentHero.css";
 
 export default function EstablishmentHero({
+  logo,
+  background,
   title,
   subtitle,
+  description,
   city,
   uf,
-  icon,
-  backLabel,
+  showBack,
 }) {
   const navigate = useNavigate();
 
   return (
-    <Row className="esh-root mb-5">
-      <Col>
-        <div className="esh-card">
-          <div className="esh-top">
-            <Button
-              variant="link"
-              className="esh-back-btn"
+    <div
+      className="eshlist-root"
+      style={{
+        backgroundImage: background
+          ? `linear-gradient(
+              rgba(0,0,0,0.65),
+              rgba(0,0,0,0.85)
+            ), url("${background}")`
+          : undefined,
+      }}
+    >
+      <div className="eshlist-inner">
+        {showBack && (
+          <div className="eshlist-back">
+            <GlobalButton
+              size="md"
+              variant="outline"
               onClick={() => navigate(-1)}
             >
-              <i className="bi bi-arrow-left me-2" />
-              {backLabel}
-            </Button>
+              Voltar
+            </GlobalButton>
           </div>
+        )}
 
-          <div className="esh-content">
-            <div className="esh-left">
-              <div className="esh-icon">
-                <i className={`bi ${icon}`} />
-              </div>
-
-              <div className="esh-text">
-                <h1>{title}</h1>
-                {subtitle && <p>{subtitle}</p>}
-                {(city || uf) && (
-                  <span className="esh-location">
-                    <i className="bi bi-geo-alt-fill me-1" />
-                    {city}
-                    {city && uf ? " / " : ""}
-                    {uf}
-                  </span>
-                )}
-              </div>
-            </div>
+        {logo && (
+          <div className="eshlist-logo-box">
+            <img
+              src={logo}
+              alt="Logo"
+              className="eshlist-logo"
+            />
           </div>
-        </div>
-      </Col>
-    </Row>
+        )}
+
+        <h1 className="eshlist-title">{title}</h1>
+
+        {subtitle && (
+          <p className="eshlist-subtitle">{subtitle}</p>
+        )}
+
+        {description && (
+          <p className="eshlist-description">{description}</p>
+        )}
+
+        {(city || uf) && (
+          <div className="eshlist-location">
+            {city}
+            {city && uf ? " / " : ""}
+            {uf}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
 EstablishmentHero.propTypes = {
+  logo: PropTypes.string,
+  background: PropTypes.string,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
+  description: PropTypes.string,
   city: PropTypes.string,
   uf: PropTypes.string,
-  icon: PropTypes.string,
-  backLabel: PropTypes.string,
+  showBack: PropTypes.bool,
 };
 
 EstablishmentHero.defaultProps = {
-  icon: "bi-shop",
-  backLabel: "Voltar",
+  showBack: true,
 };

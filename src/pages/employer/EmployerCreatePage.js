@@ -1,6 +1,6 @@
 // src/pages/employer/EmployerCreatePage.jsx
 import React, { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 
 import GlobalNav from "../../components/GlobalNav";
@@ -13,7 +13,6 @@ const PLACEHOLDER = "/images/logo.png";
 
 export default function EmployerCreatePage() {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
 
   const {
@@ -86,10 +85,10 @@ export default function EmployerCreatePage() {
               setRole={setRole}
               establishmentId={establishment.id}
               onAssociate={async (user) => {
-                await createEmployer(user.id);
+                await createEmployer(user);
               }}
-              onDetach={async (userId) => {
-                await detachEmployer(userId);
+              onDetach={async (employerId) => {
+                await detachEmployer(employerId);
               }}
             />
           </Col>

@@ -8,7 +8,6 @@ import {
   Alert,
   Card,
   Badge,
-  Button,
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -16,6 +15,7 @@ import Swal from "sweetalert2";
 import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import GlobalCard from "../../components/GlobalCard";
+import GlobalButton from "../../components/GlobalButton";
 import useEstablishmentEmployersBySlug from "../../hooks/useEstablishmentEmployersBySlug";
 import api from "../../services/api";
 
@@ -23,18 +23,15 @@ export default function EstablishmentEmployersPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const {
-    establishment,
-    employers,
-    count,
-    loading,
-    apiError,
-  } = useEstablishmentEmployersBySlug(slug);
+  const { establishment, employers, count, loading, apiError } =
+    useEstablishmentEmployersBySlug(slug);
 
   const handleDetach = async (employer) => {
     const res = await Swal.fire({
       title: "Remover colaborador?",
-      text: `Deseja remover ${employer.user?.first_name} do estabelecimento?`,
+      text: `Deseja remover ${
+        employer.user?.first_name || "este colaborador"
+      } do estabelecimento?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Sim, remover",
@@ -52,11 +49,11 @@ export default function EstablishmentEmployersPage() {
         establishment_id: establishment.id,
       });
 
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "Removido",
         text: "Colaborador removido com sucesso.",
-        timer: 1600,
+        timer: 1500,
         showConfirmButton: false,
         background: "#0b1220",
         color: "#e5e7eb",
@@ -64,7 +61,7 @@ export default function EstablishmentEmployersPage() {
 
       window.location.reload();
     } catch (err) {
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Erro",
         text:
@@ -93,9 +90,7 @@ export default function EstablishmentEmployersPage() {
       <>
         <GlobalNav />
         <Container className="py-4">
-          <Alert variant="danger">
-            Estabelecimento não encontrado.
-          </Alert>
+          <Alert variant="danger">Estabelecimento não encontrado.</Alert>
         </Container>
       </>
     );
@@ -107,32 +102,19 @@ export default function EstablishmentEmployersPage() {
 
       <Container className="py-4">
         <EstablishmentHero
-          title={establishment.fantasy || establishment.name}
-          subtitle="Gestão de colaboradores"
+          title={`Equipe da ${establishment.name}`}
+          subtitle="Colaboradores vinculados ao estabelecimento"
+          description="Gerencie os profissionais do time, controle acessos, permissões e acompanhe métricas individuais."
           city={establishment.city}
           uf={establishment.uf}
-          icon="bi-people-fill"
+          logo={establishment?.images?.logo}
+          background={establishment?.images?.background}
         />
 
         {apiError && <Alert variant="danger">{apiError}</Alert>}
 
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div style={{ color: "#e5e7eb" }}>
-            Total de colaboradores
-          </div>
-
-          <Button
-            variant="primary"
-            onClick={() =>
-              navigate(`/employer/create/${establishment.slug}`)
-            }
-          >
-            <i className="bi bi-plus-lg me-2" />
-            Adicionar colaborador
-          </Button>
-        </div>
-
         <Card
+          className="mb-4"
           style={{
             background: "#0b1220",
             border: "1px solid rgba(148,163,184,.12)",
@@ -141,18 +123,28 @@ export default function EstablishmentEmployersPage() {
         >
           <Card.Header
             className="d-flex justify-content-between align-items-center"
-            style={{
-              background: "transparent",
-              color: "#e5e7eb",
-            }}
+            style={{ background: "transparent", color: "#e5e7eb" }}
           >
-            <span>Equipe</span>
-            <Badge bg="secondary">{count}</Badge>
+            <div className="d-flex align-items-center gap-2">
+              <span>Equipe</span>
+              <Badge bg="secondary">{count}</Badge>
+            </div>
+
+            <GlobalButton
+              size="sm"
+              variant="primary"
+              onClick={() =>
+                navigate(`/employer/create/${establishment.slug}`)
+              }
+            >
+              <i className="bi bi-plus-lg me-2" />
+              Adicionar colaborador
+            </GlobalButton>
           </Card.Header>
 
           <Card.Body>
             {employers.length === 0 && (
-              <Alert variant="secondary">
+              <Alert variant="secondary" className="mb-0">
                 Nenhum colaborador vinculado.
               </Alert>
             )}
@@ -163,31 +155,59 @@ export default function EstablishmentEmployersPage() {
                   emp.user?.last_name || ""
                 }`.trim();
 
+                const avatar =
+                  emp.images?.avatar || emp.user?.avatar || null;
+
+                const metrics = emp.metrics || {};
+
                 return (
                   <Col key={emp.id} xl={3} lg={4} md={6} xs={12}>
                     <GlobalCard
                       item={{
                         type: "employer",
                         id: emp.id,
-                        name: fullName || emp.user?.user_name,
-                        slug: emp.user?.user_name,
-                        city: emp.user?.city,
-                        uf: emp.user?.uf,
-                        avatar: emp.user?.images?.avatar,
-                        images: {
-                          avatar: emp.user?.images?.avatar,
-                        },
+                        name: fullName || emp.user?.email,
+                        slug: emp.id,
+                        avatar,
+                        images: { avatar },
+                        total_views: metrics.total_views ?? 0,
                       }}
                       navigate={(path) => navigate(path)}
                       actions={
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          className="w-100"
-                          onClick={() => handleDetach(emp)}
-                        >
-                          Remover vínculo
-                        </Button>
+                        <div className="d-flex flex-column gap-2">
+                          <div className="d-flex flex-wrap gap-1">
+                            <Badge bg="secondary">
+                              Pedidos: {metrics.total_orders ?? 0}
+                            </Badge>
+                            <Badge bg="success">
+                              Concluídos: {metrics.completed_orders ?? 0}
+                            </Badge>
+                            <Badge bg="warning">
+                              Pendentes: {metrics.pending_orders ?? 0}
+                            </Badge>
+                            <Badge bg="danger">
+                              Cancelados: {metrics.cancelled_orders ?? 0}
+                            </Badge>
+                          </div>
+
+                          <div className="d-flex flex-wrap gap-1">
+                            <Badge bg="info">
+                              Eficiência: {metrics.efficiency_rate ?? 0}%
+                            </Badge>
+                            <Badge bg="dark">
+                              Engajamento: {metrics.engagement_score ?? 0}
+                            </Badge>
+                          </div>
+
+                          <GlobalButton
+                            size="sm"
+                            variant="danger"
+                            full
+                            onClick={() => handleDetach(emp)}
+                          >
+                            Remover vínculo
+                          </GlobalButton>
+                        </div>
                       }
                     />
                   </Col>
