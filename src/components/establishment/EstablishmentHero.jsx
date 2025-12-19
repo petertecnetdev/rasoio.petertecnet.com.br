@@ -6,6 +6,7 @@ import GlobalButton from "../GlobalButton";
 import "./EstablishmentHero.css";
 
 export default function EstablishmentHero({
+  entity,
   logo,
   background,
   title,
@@ -17,15 +18,35 @@ export default function EstablishmentHero({
 }) {
   const navigate = useNavigate();
 
+ const resolved = entity || {};
+
+const finalLogo =
+  logo ??
+  resolved?.images?.logo ??
+  resolved?.logo ??
+  null;
+
+const finalBackground =
+  background ??
+  resolved?.images?.background ??
+  resolved?.background ??
+  null;
+
+const finalTitle = title ?? resolved.fantasy ?? resolved.name;
+const finalDescription = description ?? resolved.description;
+const finalCity = city ?? resolved.city;
+const finalUf = uf ?? resolved.uf;
+
+
   return (
     <div
       className="eshlist-root"
       style={{
-        backgroundImage: background
+        backgroundImage: finalBackground
           ? `linear-gradient(
               rgba(0,0,0,0.65),
               rgba(0,0,0,0.85)
-            ), url("${background}")`
+            ), url("${finalBackground}")`
           : undefined,
       }}
     >
@@ -42,31 +63,25 @@ export default function EstablishmentHero({
           </div>
         )}
 
-        {logo && (
+        {finalLogo && (
           <div className="eshlist-logo-box">
-            <img
-              src={logo}
-              alt="Logo"
-              className="eshlist-logo"
-            />
+            <img src={finalLogo} alt="Logo" className="eshlist-logo" />
           </div>
         )}
 
-        <h1 className="eshlist-title">{title}</h1>
+        {finalTitle && <h1 className="eshlist-title">{finalTitle}</h1>}
 
-        {subtitle && (
-          <p className="eshlist-subtitle">{subtitle}</p>
+        {subtitle && <p className="eshlist-subtitle">{subtitle}</p>}
+
+        {finalDescription && (
+          <p className="eshlist-description">{finalDescription}</p>
         )}
 
-        {description && (
-          <p className="eshlist-description">{description}</p>
-        )}
-
-        {(city || uf) && (
+        {(finalCity || finalUf) && (
           <div className="eshlist-location">
-            {city}
-            {city && uf ? " / " : ""}
-            {uf}
+            {finalCity}
+            {finalCity && finalUf ? " / " : ""}
+            {finalUf}
           </div>
         )}
       </div>
@@ -75,9 +90,10 @@ export default function EstablishmentHero({
 }
 
 EstablishmentHero.propTypes = {
+  entity: PropTypes.object,
   logo: PropTypes.string,
   background: PropTypes.string,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.string,
   subtitle: PropTypes.string,
   description: PropTypes.string,
   city: PropTypes.string,

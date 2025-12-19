@@ -5,27 +5,83 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { apiBaseUrl, appId } from "../config";
 
-export default function useItemCreate(navigate, reset, setValue) {
-  const { slug } = useParams(); // AQUI slug É O ID DO ESTABELECIMENTO
+export default function useItemCreate(
+  navigate,
+  reset,
+  setValue,
+  establishmentFromState = null
+) {
+  const { slug } = useParams();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
-  const [images, setImages] = useState([]);
+  const [image, setImage] = useState(null);
+  const [establishment, setEstablishment] = useState(null);
 
   useEffect(() => {
-    if (!slug) {
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: "Estabelecimento não identificado.",
-      }).then(() => navigate(-1));
-      return;
-    }
+    let active = true;
 
-    setValue("app_id", appId);
-    setValue("entity_id", Number(slug));
-    setValue("entity_name", "establishment");
-  }, [slug, setValue, navigate]);
+    const setupFromEstablishment = (est) => {
+      setEstablishment(est);
+      setValue("app_id", appId);
+      setValue("entity_id", est.id);
+      setValue("entity_name", "establishment");
+      setValue("status", true);
+    };
+
+    (async () => {
+      if (establishmentFromState?.id) {
+        setupFromEstablishment(establishmentFromState);
+        setLoading(false);
+        return;
+      }
+
+      if (!slug) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Estabelecimento não identificado.",
+        }).then(() => navigate(-1));
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await axios.get(
+          `${apiBaseUrl}/establishment/view/${slug}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+
+        if (!active) return;
+
+        const est = res.data?.establishment;
+
+        if (!est?.id) {
+          throw new Error("Estabelecimento inválido");
+        }
+
+        setupFromEstablishment(est);
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text:
+            err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            "Erro ao identificar o estabelecimento.",
+        }).then(() => navigate(-1));
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [slug, navigate, setValue, establishmentFromState]);
 
   useEffect(() => {
     return () => {
@@ -33,21 +89,21 @@ export default function useItemCreate(navigate, reset, setValue) {
     };
   }, [imagePreview]);
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  function handleImageChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setImages(files);
-    setImagePreview(URL.createObjectURL(files[0]));
-  };
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
-  const handleRemoveImage = () => {
-    setImages([]);
+  function handleRemoveImage() {
+    setImage(null);
     setImagePreview(null);
-    setValue("images", null);
-  };
+    setValue("image", null);
+  }
 
-  const submitCreate = async (data) => {
+  async function submitCreate(data) {
     try {
       setLoading(true);
 
@@ -60,9 +116,9 @@ export default function useItemCreate(navigate, reset, setValue) {
         }
       });
 
-      images.forEach((file) => {
-        formData.append("images[]", file);
-      });
+      if (image) {
+        formData.append("image", image);
+      }
 
       const { data: response } = await axios.post(
         `${apiBaseUrl}/item`,
@@ -81,7 +137,11 @@ export default function useItemCreate(navigate, reset, setValue) {
         text: response.message,
       }).then(() => {
         reset();
-        navigate(-1);
+        if (establishment?.slug) {
+          navigate(`/establishment/item/${establishment.slug}`);
+        } else {
+          navigate(-1);
+        }
       });
     } catch (err) {
       if (err.response?.data?.errors) {
@@ -102,10 +162,11 @@ export default function useItemCreate(navigate, reset, setValue) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return {
     loading,
+    establishment,
     imagePreview,
     handleImageChange,
     handleRemoveImage,

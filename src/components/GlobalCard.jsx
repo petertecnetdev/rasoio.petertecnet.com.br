@@ -1,4 +1,3 @@
-// src/components/GlobalCard.jsx
 import { useRef, useState, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Badge } from "react-bootstrap";
@@ -20,6 +19,7 @@ export default function GlobalCard({
   const [broken, setBroken] = useState(false);
 
   const safeItem = item || {};
+  const establishment = safeItem.establishment || {};
 
   const handleImgError = (e) => {
     baseHandleImgError(e);
@@ -27,8 +27,6 @@ export default function GlobalCard({
   };
 
   const image = useMemo(() => {
-    if (!safeItem) return null;
-
     const paths = [
       safeItem.image,
       safeItem.avatar,
@@ -46,6 +44,20 @@ export default function GlobalCard({
     }
     return null;
   }, [safeItem, imageUrl]);
+
+  const establishmentLogo = useMemo(() => {
+    const paths = [
+      establishment?.images?.logo,
+      establishment?.logo,
+      establishment?.images?.background,
+    ];
+
+    for (const p of paths) {
+      const url = imageUrl(p);
+      if (url) return url;
+    }
+    return null;
+  }, [establishment, imageUrl]);
 
   const getInitials = useCallback(() => {
     if (!safeItem.name) return "?";
@@ -77,6 +89,12 @@ export default function GlobalCard({
     }
 
     navigate(`/item/view/${safeItem.slug}`);
+  };
+
+  const handleEstablishmentClick = (e) => {
+    e.stopPropagation();
+    if (!navigate || !establishment?.slug) return;
+    navigate(`/establishment/view/${establishment.slug}`);
   };
 
   const shape = getShape();
@@ -142,6 +160,26 @@ export default function GlobalCard({
         >
           {safeItem.name}
         </div>
+
+        {!isEstablishment && establishment?.name && (
+          <div
+            className="globalcard-establishment d-flex align-items-center gap-2 mt-1"
+            role="button"
+            onClick={handleEstablishmentClick}
+          >
+            {establishmentLogo && (
+              <img
+                src={establishmentLogo}
+                alt={establishment.name}
+                className="globalcard-establishment-logo"
+                onError={handleImgError}
+              />
+            )}
+            <span className="globalcard-establishment-name">
+              {establishment.name}
+            </span>
+          </div>
+        )}
 
         {(safeItem.city || safeItem.uf) && (
           <div className="globalcard-location d-flex align-items-center gap-1 mt-1">

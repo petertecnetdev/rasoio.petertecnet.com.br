@@ -33,7 +33,8 @@ export default function ItemViewPage() {
     ordersSummary,
     otherEstablishments,
     otherEmployers,
-    otherItems
+    otherItems,
+    isLoading,
   } = useItemView(apiBaseUrl, slug, token, navigate);
 
   const whatsappLink = useWhatsappLink(entity);
@@ -47,7 +48,7 @@ export default function ItemViewPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  if (!item) return null;
+  if (isLoading || !item) return null;
 
   const fmtBRL = (v) =>
     `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
@@ -61,7 +62,7 @@ export default function ItemViewPage() {
         title={item.name}
         description={item.description}
         background={entity?.background}
-        logo={item.image || entity?.logo}
+        logo={item.image_url || item.image || entity?.logo}
         imageUrl={imageUrl}
         handleImgError={handleImgError}
         establishment={entity}

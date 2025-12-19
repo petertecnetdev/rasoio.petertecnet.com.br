@@ -1,95 +1,151 @@
-// src/components/order/OrderClientSearch.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Form, ListGroup, Spinner } from "react-bootstrap";
-
-import OrderSelectedClientCard from "./OrderSelectedClientCard";
+import useImageUtils from "../../hooks/useImageUtils";
 
 export default function OrderClientSearch({
   searchClients,
   clients = [],
-  searching,
+  searching = false,
   selectedClient,
   onSelect,
   onClear,
 }) {
+  const { imageUrl } = useImageUtils();
   const [query, setQuery] = useState("");
-  const debounceRef = useRef(null);
 
-  useEffect(() => {
-    if (!query || query.length < 2 || selectedClient) return;
+  const buildInitials = useCallback((name) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : parts[0][0].toUpperCase() + parts.at(-1)[0].toUpperCase();
+  }, []);
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
+  const buildPlaceholder = useCallback(
+    (name) => {
+      const initials = buildInitials(name);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#0b1c2d" />
+              <stop offset="100%" stop-color="#020617" />
+            </linearGradient>
+          </defs>
+          <rect width="200" height="200" rx="100" ry="100" fill="url(#g)" />
+          <text
+            x="50%"
+            y="54%"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            font-size="72"
+            font-weight="700"
+            fill="#e5e7eb"
+            font-family="Inter, Arial, sans-serif"
+            letter-spacing="2"
+          >
+            ${initials}
+          </text>
+        </svg>
+      `;
+      return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+    },
+    [buildInitials]
+  );
 
-    debounceRef.current = setTimeout(() => {
-      searchClients(query);
-    }, 400);
+  const resolvedClients = useMemo(() => {
+    return clients.map((c) => {
+      const name = `${c.first_name || ""} ${c.last_name || ""}`.trim();
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [query, selectedClient, searchClients]);
+      const paths = [
+        c.image,
+        c.avatar,
+        c.images?.avatar,
+        Array.isArray(c.images?.gallery) ? c.images.gallery[0] : null,
+      ];
 
-  const handleSelect = (client) => {
-    onSelect(client);
-    setQuery(
-      `${client.first_name || ""} ${client.last_name || ""}`.trim()
-    );
+      let image = null;
+      for (const p of paths) {
+        const url = imageUrl(p);
+        if (url) {
+          image = url;
+          break;
+        }
+      }
+
+      if (!image) {
+        image = buildPlaceholder(name);
+      }
+
+      return {
+        client: c,
+        name,
+        email: c.email,
+        image,
+      };
+    });
+  }, [clients, imageUrl, buildPlaceholder]);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    searchClients(value);
   };
 
-  const clear = () => {
-    setQuery("");
-    onClear();
-  };
+  if (selectedClient) return null;
 
   return (
-    <Form.Group className="mb-3">
-      <Form.Label>Cliente</Form.Label>
+    <div className="position-relative">
+      <Form.Control
+        type="text"
+        placeholder="Buscar cliente por nome, email ou CPF"
+        value={query}
+        onChange={handleChange}
+        autoComplete="off"
+      />
 
-      {!selectedClient && (
-        <>
-          <Form.Control
-            type="text"
-            placeholder="Buscar por nome, email, CPF ou telefone"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          {searching && (
-            <div className="mt-2">
-              <Spinner size="sm" animation="border" />
-            </div>
-          )}
-
-          {!searching && clients.length > 0 && (
-            <ListGroup className="mt-2">
-              {clients.map((client) => (
-                <ListGroup.Item
-                  key={client.id}
-                  action
-                  onClick={() => handleSelect(client)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <strong>
-                    {client.first_name} {client.last_name}
-                  </strong>
-                  <div className="text-muted small">
-                    {client.email || client.phone || client.cpf}
-                  </div>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          )}
-        </>
+      {searching && (
+        <div className="text-center mt-2">
+          <Spinner animation="border" size="sm" />
+        </div>
       )}
 
-      {selectedClient && (
-        <OrderSelectedClientCard
-          client={selectedClient}
-          onClear={clear}
-        />
+      {!!resolvedClients.length && (
+        <ListGroup className="position-absolute w-100 mt-1 shadow z-3">
+          {resolvedClients.map(({ client, name, email, image }) => (
+            <ListGroup.Item
+              key={client.id}
+              action
+              onClick={() => {
+                onSelect(client);
+                setQuery("");
+              }}
+              className="d-flex align-items-center gap-3"
+            >
+              <img
+                src={image}
+                alt={name}
+                width={40}
+                height={40}
+                style={{
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flexShrink: 0,
+                }}
+              />
+
+              <div className="flex-grow-1">
+                <strong>{name}</strong>
+                {email && (
+                  <div className="text-muted small">{email}</div>
+                )}
+              </div>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
       )}
-    </Form.Group>
+    </div>
   );
 }
 
@@ -99,5 +155,5 @@ OrderClientSearch.propTypes = {
   searching: PropTypes.bool,
   selectedClient: PropTypes.object,
   onSelect: PropTypes.func.isRequired,
-  onClear: PropTypes.func.isRequired,
+  onClear: PropTypes.func,
 };

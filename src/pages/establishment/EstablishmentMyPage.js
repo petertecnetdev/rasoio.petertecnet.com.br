@@ -11,6 +11,7 @@ import { appId } from "../../config";
 export default function EstablishmentMyPage() {
   const navigate = useNavigate();
   const { establishments, isLoading, apiError } = useEstablishmentMy(appId);
+  const heroEstablishment = establishments?.[0] || null;
 
   if (isLoading) {
     return (
@@ -37,12 +38,18 @@ export default function EstablishmentMyPage() {
   return (
     <>
       <GlobalNav />
-<EstablishmentHero
-  title="Meus estabelecimentos"
-  subtitle="Gestão central dos seus negócios"
-  description="Acompanhe métricas, acesse rapidamente cada estabelecimento e gerencie serviços, itens, colaboradores e pedidos em um só lugar."
-  showBack={true}
-/>
+{heroEstablishment && (
+  <EstablishmentHero
+    title={heroEstablishment.fantasy || heroEstablishment.name}
+    subtitle="Gestão central dos seus negócios"
+    description="Acompanhe métricas, acesse rapidamente cada estabelecimento e gerencie serviços, itens, colaboradores e pedidos em um só lugar."
+    city={heroEstablishment.city}
+    uf={heroEstablishment.uf}
+    logo={heroEstablishment?.images?.logo}
+    background={heroEstablishment?.images?.background}
+    showBack
+  />
+)}
 
       <Container fluid className="establishment-my-wrapper mt-4">
         {establishments.length === 0 && (

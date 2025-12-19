@@ -51,20 +51,13 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
         setCompletedAppointments(d.completed_appointments || []);
 
         setItems(
-          (d.items || []).map((it) => {
-            const img = it.images || {};
-            return {
-              ...it,
-              type: it.type || "item",
-              slug: it.slug,
-              images: {
-                avatar: img.avatar ?? it.image ?? null,
-                gallery: img.gallery ?? [],
-                files: img.files ?? [],
-              },
-            };
-          })
-        );
+  (d.items || []).map((it) => ({
+    ...it,
+    type: it.type || "item",
+    slug: it.slug,
+    image: it.image || null,
+  }))
+);
 
         setEmployers(
           (d.employers || []).map((emp) => {

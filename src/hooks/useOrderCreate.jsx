@@ -30,12 +30,8 @@ export default function useOrderCreate(identifier) {
       ]);
 
       setEstablishment(estRes.data.establishment || null);
-      setItems(Array.isArray(itemsRes.data.items) ? itemsRes.data.items : []);
-      setEmployers(
-        Array.isArray(employersRes.data.employers)
-          ? employersRes.data.employers
-          : []
-      );
+      setItems(itemsRes.data.items || []);
+      setEmployers(employersRes.data.employers || []);
     } catch (err) {
       setApiError(
         err?.response?.data?.error ||
@@ -56,9 +52,7 @@ export default function useOrderCreate(identifier) {
       return;
     }
 
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
+    if (abortRef.current) abortRef.current.abort();
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -72,49 +66,28 @@ export default function useOrderCreate(identifier) {
         { signal: controller.signal }
       );
 
-      setClients(Array.isArray(data.users) ? data.users : []);
+      setClients(data.users || []);
     } catch (err) {
-      if (err.name === "CanceledError" || err.name === "AbortError") return;
-      setClients([]);
+      if (err.name !== "AbortError") setClients([]);
     } finally {
       setSearchingClients(false);
     }
   }, []);
 
   const fetchAvailableTimes = useCallback(async (payload) => {
-    try {
-      const { data } = await api.post("/employer/available-times", payload);
-      return Array.isArray(data.available_times)
-        ? data.available_times
-        : [];
-    } catch {
-      return [];
-    }
+    const { data } = await api.post("/employer/available-times", payload);
+    return data.available_times || [];
   }, []);
 
-  const createOrder = useCallback(
-    async (payload) => {
-      if (!establishment) {
-        throw new Error("Estabelecimento não carregado.");
-      }
-
-      setSubmitting(true);
-      setApiError(null);
-
-      try {
-        const { data } = await api.post("/order", payload);
-        return data;
-      } catch (err) {
-        setApiError(
-          err?.response?.data?.error || "Erro ao criar pedido."
-        );
-        throw err;
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [establishment]
-  );
+  const createOrder = useCallback(async (payload) => {
+    setSubmitting(true);
+    try {
+      const { data } = await api.post("/order", payload);
+      return data;
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
 
   return {
     establishment,
@@ -125,12 +98,11 @@ export default function useOrderCreate(identifier) {
     searchingClients,
     searchClients,
 
+    fetchAvailableTimes,
+    createOrder,
+
     loading,
     submitting,
     apiError,
-
-    fetchAvailableTimes,
-    createOrder,
-    reload: loadData,
   };
 }

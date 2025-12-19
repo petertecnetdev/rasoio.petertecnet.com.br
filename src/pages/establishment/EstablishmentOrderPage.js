@@ -31,14 +31,15 @@ export default function EstablishmentOrderPage() {
 
         {!loading && establishment && (
           <>
-            <EstablishmentHero
-              title={`Pedidos da ${establishment.fantasy || establishment.name}`}
-              subtitle="Histórico e gestão de pedidos"
-              city={establishment.city}
-              uf={establishment.uf}
-              icon="bi-receipt"
-              backLabel="Voltar"
-            />
+    <EstablishmentHero
+  entity={establishment}
+  title={`Pedidos da ${establishment?.fantasy || establishment?.name}`}
+  subtitle="Histórico e gestão de pedidos"
+  description="Acompanhe todos os pedidos do estabelecimento, visualize detalhes, status e tempos de execução dos serviços."
+  showBack
+/>
+
+
 
             <Row className="mb-4">
               <Col className="d-flex justify-content-end">

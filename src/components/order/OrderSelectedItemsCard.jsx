@@ -1,33 +1,55 @@
-// src/components/order/OrderSelectedClientCard.jsx
+// src/components/order/OrderSelectedItemsCard.jsx
 import { useState, useMemo, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Card } from "react-bootstrap";
-import useImageUtils from "../hooks/useImageUtils";
+import useImageUtils from "../../hooks/useImageUtils";
 import GlobalButton from "../GlobalButton";
 
-export default function OrderSelectedClientCard({ client, onClear }) {
-  const { imageUrl, handleImgError: baseHandleImgError } = useImageUtils();
+export default function OrderSelectedItemsCard({
+  items = {},
+  onIncrease,
+  onDecrease,
+  onRemove,
+}) {
+  const { imageUrl } = useImageUtils();
+  const list = useMemo(() => Object.values(items), [items]);
+
+  if (!list.length) return null;
+
+  return (
+    <div className="mt-4">
+      <h5>Serviços selecionados</h5>
+
+      {list.map((item) => (
+        <ItemCard
+          key={item.item_id}
+          item={item}
+          imageUrl={imageUrl}
+          onIncrease={onIncrease}
+          onDecrease={onDecrease}
+          onRemove={onRemove}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ItemCard({ item, imageUrl, onIncrease, onDecrease, onRemove }) {
   const [broken, setBroken] = useState(false);
 
-  if (!client) return null;
-
-  // 🔑 IGUAL AO GLOBAL CARD
-  const safeItem = {
-    ...client,
-    name: `${client.first_name || ""} ${client.last_name || ""}`.trim(),
-    avatar: client.avatar,
-    images: client.images || null,
-  };
-
-  const handleImgError = (e) => {
-    baseHandleImgError(e);
-    setBroken(true);
-  };
+  const safeItem = useMemo(
+    () => ({
+      ...item,
+      name: item.name || "Item",
+      images: item.images || null,
+      image: item.image || null,
+    }),
+    [item]
+  );
 
   const image = useMemo(() => {
     const paths = [
       safeItem.image,
-      safeItem.avatar,
       safeItem.images?.avatar,
       Array.isArray(safeItem.images?.gallery)
         ? safeItem.images.gallery[0]
@@ -60,7 +82,7 @@ export default function OrderSelectedClientCard({ client, onClear }) {
             <stop offset="100%" stop-color="#020617" />
           </linearGradient>
         </defs>
-        <rect width="200" height="200" rx="100" ry="100" fill="url(#g)" />
+        <rect width="200" height="200" rx="24" ry="24" fill="url(#g)" />
         <text
           x="50%"
           y="54%"
@@ -80,52 +102,64 @@ export default function OrderSelectedClientCard({ client, onClear }) {
   }, [getInitials]);
 
   return (
-    <Card className="mt-3">
+    <Card className="mb-2">
       <Card.Body className="d-flex align-items-center gap-3">
         <img
           src={image && !broken ? image : placeholderSvg}
           alt={safeItem.name}
           loading="lazy"
-          onError={handleImgError}
+          onError={() => setBroken(true)}
           style={{
-            width: 64,
-            height: 64,
-            borderRadius: "50%",
+            width: 56,
+            height: 56,
+            borderRadius: 12,
             objectFit: "cover",
             flexShrink: 0,
           }}
         />
 
         <div className="flex-grow-1">
-          <div className="fw-semibold">{safeItem.name} Teste</div>
-
-          {client.email && (
-            <div className="text-muted small">{client.email}</div>
-          )}
-
-          {client.phone && (
-            <div className="text-muted small">{client.phone}</div>
-          )}
-
-          {client.cpf && (
-            <div className="text-muted small">{client.cpf}</div>
-          )}
+          <div className="fw-semibold">{safeItem.name}</div>
+          <div className="text-muted small">
+            R$ {Number(safeItem.price || 0).toFixed(2).replace(".", ",")}
+          </div>
         </div>
 
-        <GlobalButton
-          type="button"
-          size="sm"
-          variant="outline-danger"
-          onClick={onClear}
-        >
-          Remover
-        </GlobalButton>
+        <div className="d-flex align-items-center gap-2">
+          <GlobalButton
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => onDecrease(safeItem.item_id)}
+          >
+            −
+          </GlobalButton>
+
+          <strong>{safeItem.quantity}</strong>
+
+          <GlobalButton
+            size="sm"
+            variant="outline-secondary"
+            onClick={() => onIncrease(safeItem.item_id)}
+          >
+            +
+          </GlobalButton>
+
+          <GlobalButton
+            size="sm"
+            variant="outline-danger"
+            onClick={() => onRemove(safeItem.item_id)}
+          >
+            Remover
+          </GlobalButton>
+        </div>
       </Card.Body>
     </Card>
   );
 }
 
-OrderSelectedClientCard.propTypes = {
-  client: PropTypes.object.isRequired,
-  onClear: PropTypes.func.isRequired,
+OrderSelectedItemsCard.propTypes = {
+  items: PropTypes.object.isRequired,
+  onIncrease: PropTypes.func.isRequired,
+  onDecrease: PropTypes.func.isRequired,
+  onRemove: PropTypes.func.isRequired,
 };

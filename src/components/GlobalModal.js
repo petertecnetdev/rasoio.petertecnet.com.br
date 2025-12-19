@@ -1,54 +1,65 @@
-// src/components/GlobalModal.js
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
+import { createContext, useContext, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
+import "./GlobalModal.css";
 
-const MySwal = withReactContent(Swal);
+const GlobalModalContext = createContext(null);
+
+export function GlobalModalProvider({ children }) {
+  const [modal, setModal] = useState(null);
+
+  const open = useCallback((content, options = {}) => {
+    setModal({
+      content,
+      options: {
+        width: options.width || 720,
+        closeOnBackdrop: options.closeOnBackdrop ?? false,
+      },
+    });
+  }, []);
+
+  const close = useCallback(() => {
+    setModal(null);
+  }, []);
+
+  return (
+    <GlobalModalContext.Provider value={{ open, close }}>
+      {children}
+
+      {modal &&
+        createPortal(
+          <div
+            className="global-modal-overlay"
+            onClick={() =>
+              modal.options.closeOnBackdrop && close()
+            }
+          >
+            <div
+              className="global-modal-container"
+              style={{ width: modal.options.width }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {modal.content}
+            </div>
+          </div>,
+          document.body
+        )}
+    </GlobalModalContext.Provider>
+  );
+}
+
+let modalApi = null;
+
+export function GlobalModalBridge() {
+  modalApi = useContext(GlobalModalContext);
+  return null;
+}
 
 const GlobalModal = {
-  open: ({
-    title,
-    html,
-    confirmText = "Confirmar",
-    cancelText = "Cancelar",
-    showCancel = true,
-    icon = null,
-    onConfirm,
-    onCancel,
-    width = 600,
-  }) => {
-    MySwal.fire({
-      title,
-      html,
-      icon,
-      showCancelButton: showCancel,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText,
-      width,
-      focusConfirm: false,
-      customClass: {
-        popup: "global-modal-popup",
-        confirmButton: "global-modal-confirm",
-        cancelButton: "global-modal-cancel",
-      },
-    }).then((result) => {
-      if (result.isConfirmed && onConfirm) onConfirm();
-      if (result.isDismissed && onCancel) onCancel();
-    });
+  open: (content, options) => {
+    modalApi?.open(content, options);
   },
-
   close: () => {
-    Swal.close();
-  },
-
-  loading: (title = "Carregando...") => {
-    Swal.fire({
-      title,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+    modalApi?.close();
   },
 };
 

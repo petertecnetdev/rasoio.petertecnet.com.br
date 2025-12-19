@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../config";
 
-import useHomePage from "../hooks/useHomePage";
+import useHome from "../hooks/useHome";
 import useAppointment from "../hooks/useAppointment";
 import useImageUtils from "../hooks/useImageUtils";
 
@@ -31,10 +31,9 @@ export default function HomePage() {
     city,
     uf,
     fmtBRL,
-  } = useHomePage(apiBaseUrl, appId);
+  } = useHome(apiBaseUrl, appId);
 
   const navigate = useNavigate();
-
   const token = useMemo(() => localStorage.getItem("token"), []);
 
   const [showCityModal, setShowCityModal] = useState(false);
@@ -64,21 +63,14 @@ export default function HomePage() {
 
   const resolveEstablishmentSlugFromTarget = (target) => {
     if (!target) return null;
-
-    if (target.type === "establishment" && target.slug) {
-      return target.slug;
-    }
-
-    if (target.establishment && target.establishment.slug) {
+    if (target.type === "establishment" && target.slug) return target.slug;
+    if (target.establishment && target.establishment.slug)
       return target.establishment.slug;
-    }
-
     return null;
   };
 
   const mapEstablishmentFromPayload = (est) => {
     if (!est) return null;
-
     return {
       ...est,
       images: {
@@ -91,30 +83,32 @@ export default function HomePage() {
   };
 
   const mapItemsFromPayload = (rawItems) => {
-    return (rawItems || []).map((it) => {
-      const img = it.images || {};
-      return {
-        ...it,
-        type: it.type || "item",
-        slug: it.slug,
-        images: {
-          avatar: img.avatar ?? it.image ?? null,
-          gallery: img.gallery ?? [],
-          files: img.files ?? [],
-        },
-      };
-    });
-  };
+  return (rawItems || []).map((it) => {
+    const avatar = it.images?.avatar || null;
+
+    return {
+      ...it,
+      type: it.type || "item",
+
+      // 🔴 ISSO É O QUE FALTAVA
+      image: avatar,
+      avatar: avatar,
+
+      images: {
+        avatar,
+        gallery: it.images?.gallery || [],
+      },
+    };
+  });
+};
+
+
 
   const mapEmployersFromPayload = (rawEmployers) => {
     return (rawEmployers || []).map((e) => {
       const img = e.images || {};
       const avatar =
-        img.avatar ||
-        e.avatar ||
-        e.image ||
-        e.user?.avatar ||
-        PLACEHOLDER;
+        img.avatar || e.avatar || e.image || e.user?.avatar || PLACEHOLDER;
 
       return {
         ...e,
@@ -133,6 +127,11 @@ export default function HomePage() {
     });
   };
 
+  const mappedHomeItems = useMemo(
+    () => mapItemsFromPayload(items),
+    [items]
+  );
+
   const openSchedulePopup = async (target = {}) => {
     if (!target) return;
 
@@ -141,9 +140,7 @@ export default function HomePage() {
 
     try {
       const headers = token
-        ? {
-            Authorization: `Bearer ${token}`,
-          }
+        ? { Authorization: `Bearer ${token}` }
         : {};
 
       const res = await axios.get(
@@ -160,22 +157,22 @@ export default function HomePage() {
       const servicesList = mappedItems.filter(
         (i) => (i.type || "").toLowerCase() !== "product"
       );
+
       const productsList = mappedItems.filter(
         (i) => (i.type || "").toLowerCase() === "product"
       );
 
-      const hasServices = servicesList.length > 0;
-      const hasProducts = productsList.length > 0;
-
       const genericItems =
-        !hasServices && !hasProducts && mappedItems.length
+        !servicesList.length && !productsList.length && mappedItems.length
           ? mappedItems.map((i) => ({
               ...i,
               type: i.type === "product" ? "product" : "service",
             }))
           : [];
 
-      const servicesForWizard = hasServices ? servicesList : genericItems;
+      const servicesForWizard = servicesList.length
+        ? servicesList
+        : genericItems;
 
       let preselectedService = null;
       let preselectedEmployer = null;
@@ -246,7 +243,6 @@ export default function HomePage() {
       <div className="hp-wrapper">
         <HomeHeader city={city} uf={uf} onChangeCity={handleChangeCity} />
 
-
         <GlobalCarousel
           title="Estabelecimentos"
           items={establishments}
@@ -269,7 +265,7 @@ export default function HomePage() {
 
         <GlobalCarousel
           title="Serviços"
-          items={items}
+          items={mappedHomeItems}
           fmtBRL={fmtBRL}
           navigate={(path) => (window.location.href = path)}
           openSchedulePopup={openSchedulePopup}

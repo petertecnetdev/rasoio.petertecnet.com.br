@@ -1,4 +1,3 @@
-// src/hooks/useEstablishmentEmployersBySlug.js
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { apiBaseUrl } from "../config";
@@ -13,16 +12,17 @@ export default function useEstablishmentEmployersBySlug(slug) {
   useEffect(() => {
     if (!slug) {
       setLoading(false);
+      setApiError(null);
       return;
     }
 
     const controller = new AbortController();
 
     const load = async () => {
-      try {
-        setLoading(true);
-        setApiError(null);
+      setLoading(true);
+      setApiError(null);
 
+      try {
         const res = await axios.get(
           `${apiBaseUrl}/employer/list-by-entity/${slug}`,
           {

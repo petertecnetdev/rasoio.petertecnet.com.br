@@ -101,13 +101,13 @@ export default function EstablishmentViewPage() {
   const mappedServices = services.map((i) => ({
     ...i,
     type: "service",
-    image: i.image || i.images?.avatar || null,
+    image: i.image || null
   }));
 
   const mappedProducts = products.map((i) => ({
     ...i,
     type: "product",
-    image: i.image || i.images?.avatar || null,
+    image: i.image || null
   }));
 
   const hasServices = mappedServices.length > 0;
@@ -118,7 +118,8 @@ export default function EstablishmentViewPage() {
       ? items.map((i) => ({
           ...i,
           type: i.type === "product" ? "product" : "service",
-          image: i.image || i.images?.avatar || null,
+          image: i.image || null
+,
         }))
       : [];
 
@@ -199,7 +200,8 @@ export default function EstablishmentViewPage() {
   const mappedOtherItems = otherItems.map((i) => ({
     ...i,
     type: i.type === "product" ? "product" : "service",
-    image: i.image || i.images?.avatar || null,
+    image: i.image || null
+,
   }));
 
   return (
@@ -232,47 +234,6 @@ export default function EstablishmentViewPage() {
           <Col md={8}>
             <GlobalGallery images={establishment.images?.gallery || []} />
 
-            {mappedEmployers.length > 0 && (
-              <GlobalCarousel
-                title="Profissionais"
-                items={mappedEmployers}
-                carouselActive
-                fmtBRL={fmtBRL}
-                apiBaseUrl={apiBaseUrl}
-                openSchedulePopup={openSchedulePopup}
-                navigate={navigate}
-                showSchedule
-              />
-            )}
-
-            {hasServices && (
-              <GlobalCarousel
-                title="Serviços"
-                items={mappedServices}
-                carouselActive
-                trackRef={serviceRef}
-                handleScroll={handleServiceScroll}
-                fmtBRL={fmtBRL}
-                apiBaseUrl={apiBaseUrl}
-                openSchedulePopup={openSchedulePopup}
-                navigate={navigate}
-                showSchedule
-              />
-            )}
-
-            {hasProducts && (
-              <GlobalCarousel
-                title="Produtos"
-                items={mappedProducts}
-                carouselActive
-                trackRef={productRef}
-                handleScroll={handleProductScroll}
-                fmtBRL={fmtBRL}
-                apiBaseUrl={apiBaseUrl}
-                navigate={navigate}
-                showSchedule={false}
-              />
-            )}
 
             {!hasServices && !hasProducts && mappedGenericItems.length > 0 && (
               <GlobalCarousel
@@ -287,15 +248,17 @@ export default function EstablishmentViewPage() {
               />
             )}
 
-            {mappedCompleted.length > 0 && (
+            
+            {mappedEmployers.length > 0 && (
               <GlobalCarousel
-                title="Atendimentos Concluídos"
-                items={mappedCompleted}
+                title="Profissionais"
+                items={mappedEmployers}
                 carouselActive
                 fmtBRL={fmtBRL}
                 apiBaseUrl={apiBaseUrl}
+                openSchedulePopup={openSchedulePopup}
                 navigate={navigate}
-                showSchedule={false}
+                showSchedule
               />
             )}
 

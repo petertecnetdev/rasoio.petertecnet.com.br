@@ -1,7 +1,8 @@
 // src/components/item/ItemCreateForm.jsx
-import React from "react";
-import { Row, Col, Form, Button } from "react-bootstrap";
+import React, { useState } from "react";
+import { Row, Col, Form } from "react-bootstrap";
 import GlobalHeroEditorPreview from "../GlobalHeroEditorPreview";
+import GlobalImageUploader from "../GlobalImageUploader";
 import { appId } from "../../config";
 import "./ItemCreateForm.css";
 
@@ -10,12 +11,19 @@ export default function ItemCreateForm({
   handleSubmit,
   watch,
   isSubmitting,
-  imagePreview,
-  handleImageChange,
-  handleRemoveImage,
   onSubmit,
 }) {
   const type = watch("type");
+
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleFormSubmit = (data) => {
+    onSubmit({
+      ...data,
+      image: imageFile,
+    });
+  };
 
   return (
     <>
@@ -23,47 +31,31 @@ export default function ItemCreateForm({
         entity="item"
         title={watch("name") || "Novo Item"}
         subtitle="Visualização do cadastro"
-        logoPreview={imagePreview ?? null}
+        logoPreview={imagePreview}
         data={{ name: watch("name") }}
       />
 
-      <div className="d-flex justify-content-center gap-3 my-3">
-        <Button
-          variant="secondary"
-          className="action-button"
-          onClick={() => document.getElementById("itemImageInput")?.click()}
-        >
-          Adicionar Imagem
-        </Button>
-
-        {imagePreview && (
-          <Button
-            variant="secondary"
-            className="action-button"
-            onClick={handleRemoveImage}
-          >
-            Remover Imagem
-          </Button>
-        )}
-      </div>
-
-      <Form.Control
-        id="itemImageInput"
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleImageChange}
-        style={{ display: "none" }}
+      <GlobalImageUploader
+        onChange={setImageFile}
+        onPreview={setImagePreview}
+        maxResolution={800}
+        addLabel="Adicionar imagem"
+        removeLabel="Remover imagem"
+        disabled={isSubmitting}
       />
 
-      <Form onSubmit={handleSubmit(onSubmit)}>
+      <Form onSubmit={handleSubmit(handleFormSubmit)}>
         <input type="hidden" value={appId} {...register("app_id")} />
 
         <Row className="gy-3 mt-3">
           <Col xs={12} md={6} lg={4}>
             <div className="form-group">
               <label>Nome*</label>
-              <input type="text" {...register("name", { required: true })} required />
+              <input
+                type="text"
+                {...register("name", { required: true })}
+                required
+              />
             </div>
           </Col>
 
@@ -158,7 +150,11 @@ export default function ItemCreateForm({
           </Col>
 
           <Col xs={12} className="text-end">
-            <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="submit-btn"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Salvando..." : "Criar Item"}
             </button>
           </Col>

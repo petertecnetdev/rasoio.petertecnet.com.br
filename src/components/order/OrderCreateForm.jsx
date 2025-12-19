@@ -1,7 +1,7 @@
 // src/components/order/OrderCreateForm.jsx
 import React, { useState, useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Form, Row, Col, Spinner } from "react-bootstrap";
+import { Form, Row, Col, Spinner, Badge } from "react-bootstrap";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
@@ -15,7 +15,7 @@ import OrderEmployerModal from "./OrderEmployerModal";
 import OrderClientSearch from "./OrderClientSearch";
 import OrderSelectedEmployerCard from "./OrderSelectedEmployerCard";
 import OrderSelectedClientCard from "./OrderSelectedClientCard";
-import OrderSelectedItems from "./OrderSelectedItems";
+import OrderSelectedItemsCard from "./OrderSelectedItemsCard";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -23,6 +23,7 @@ dayjs.extend(localeData);
 dayjs.locale("pt-br");
 
 export default function OrderCreateForm({
+  establishment,
   items = [],
   employers = [],
   clients = [],
@@ -30,6 +31,7 @@ export default function OrderCreateForm({
   searchClients,
   selectedClient,
   setSelectedClient,
+  fetchAvailableTimes,
   onSubmit,
   isSubmitting = false,
 }) {
@@ -47,6 +49,9 @@ export default function OrderCreateForm({
   const [selectedItems, setSelectedItems] = useState({});
   const [showItemsModal, setShowItemsModal] = useState(false);
   const [showEmployerModal, setShowEmployerModal] = useState(false);
+
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [loadingTimes, setLoadingTimes] = useState(false);
 
   useEffect(() => {
     if (!selectedClient) {
@@ -89,6 +94,48 @@ export default function OrderCreateForm({
       ),
     [selectedArray]
   );
+
+  useEffect(() => {
+    if (
+      mode !== "appointment" ||
+      !attendant ||
+      !date ||
+      totalDuration <= 0
+    ) {
+      setAvailableTimes([]);
+      setTime(null);
+      return;
+    }
+
+    let active = true;
+
+    (async () => {
+      try {
+        setLoadingTimes(true);
+
+        const payload = {
+          employer_id: attendant.id,
+          date: dayjs(date)
+            .hour(14)
+            .minute(0)
+            .second(0)
+            .format("YYYY-MM-DDTHH:mm:ss"),
+          duration: totalDuration,
+        };
+
+        const times = await fetchAvailableTimes(payload);
+        if (!active) return;
+
+        setAvailableTimes(Array.isArray(times) ? times : []);
+      } finally {
+        if (active) setLoadingTimes(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [mode, attendant, date, totalDuration, fetchAvailableTimes]);
 
   const toggleItem = (item) => {
     setSelectedItems((prev) => {
@@ -140,6 +187,11 @@ export default function OrderCreateForm({
       })),
     });
   };
+
+  const uniqueTimes = useMemo(
+    () => [...new Set(availableTimes)],
+    [availableTimes]
+  );
 
   return (
     <>
@@ -224,7 +276,7 @@ export default function OrderCreateForm({
         />
 
         {!!selectedArray.length && (
-          <OrderSelectedItems
+          <OrderSelectedItemsCard
             items={selectedItems}
             onIncrease={(id) =>
               setSelectedItems((prev) => ({
@@ -263,16 +315,35 @@ export default function OrderCreateForm({
         )}
 
         {mode === "appointment" && date && (
-          <Row className="mt-4">
-            <Col>
-              <h4 className="text-center text-info mb-3">Escolha o Horário</h4>
-              <div className="d-flex flex-wrap justify-content-center gap-2 mt-2">
-                {Array.isArray([]) && (
-                  <Spinner animation="border" size="sm" />
-                )}
+          <div className="step-container mt-4">
+            <h4>Horários Disponíveis</h4>
+
+            {loadingTimes && (
+              <div className="text-center mt-2">
+                <Spinner animation="border" size="sm" />
               </div>
-            </Col>
-          </Row>
+            )}
+
+            {!loadingTimes && uniqueTimes.length === 0 && (
+              <div className="text-muted">Nenhum horário disponível</div>
+            )}
+
+            {!loadingTimes && uniqueTimes.length > 0 && (
+              <div className="d-flex flex-wrap gap-2">
+                {uniqueTimes.map((t) => (
+                  <Badge
+                    key={t}
+                    pill
+                    bg={time === t ? "primary" : "secondary"}
+                    style={{ cursor: "pointer", padding: "10px 14px" }}
+                    onClick={() => setTime(t)}
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         <div className="mt-3">
@@ -303,6 +374,7 @@ export default function OrderCreateForm({
 }
 
 OrderCreateForm.propTypes = {
+  establishment: PropTypes.object,
   items: PropTypes.array,
   employers: PropTypes.array,
   clients: PropTypes.array,
@@ -310,6 +382,7 @@ OrderCreateForm.propTypes = {
   searchClients: PropTypes.func.isRequired,
   selectedClient: PropTypes.object,
   setSelectedClient: PropTypes.func.isRequired,
+  fetchAvailableTimes: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   isSubmitting: PropTypes.bool,
 };

@@ -12,57 +12,61 @@ export default function ItemUpdateForm({
   item,
   imagePreview,
   backgroundPreview,
-  handleImageChange,
-  handleBackgroundChange,
-  handleRemoveImage,
+  onImageChange,
+  onBackgroundChange,
+  onRemoveImage,
   onSubmit,
 }) {
+  if (!item) return null;
+
   const type = watch("type");
 
   return (
     <>
       <GlobalHeroEditorPreview
         entity="item"
-        title={item?.name}
+        title={item.name ?? ""}
         subtitle="Visualização da edição"
-        logoPreview={imagePreview ?? null}   // 👈 sempre passa preview
+        logoPreview={imagePreview ?? null}
         backgroundPreview={backgroundPreview ?? null}
         data={item}
       />
 
-      {/* BOTÕES */}
       <div className="d-flex justify-content-center gap-3 my-3">
         <Button
           variant="secondary"
           className="action-button"
+          type="button"
           onClick={() => document.getElementById("itemImageInput")?.click()}
         >
           Alterar Imagem
         </Button>
 
-        <Button
-          variant="secondary"
-          className="action-button"
-          onClick={handleRemoveImage}
-        >
-          Remover Imagem
-        </Button>
+        {imagePreview && (
+          <Button
+            variant="secondary"
+            className="action-button"
+            type="button"
+            onClick={onRemoveImage}
+          >
+            Remover Imagem
+          </Button>
+        )}
       </div>
 
-      {/* INPUT DE UPLOAD */}
       <Form.Control
         id="itemImageInput"
         type="file"
         accept="image/*"
-        onChange={handleImageChange}
+        onChange={onImageChange}
         style={{ display: "none" }}
       />
 
-      {/* BACKGROUND */}
       <div className="d-flex justify-content-center gap-3 mt-2">
         <Button
           variant="secondary"
           className="action-button"
+          type="button"
           onClick={() => document.getElementById("itemBgInput")?.click()}
         >
           Alterar Background
@@ -73,24 +77,23 @@ export default function ItemUpdateForm({
         id="itemBgInput"
         type="file"
         accept="image/*"
-        onChange={handleBackgroundChange}
+        onChange={onBackgroundChange}
         style={{ display: "none" }}
       />
 
-      {/* FORM */}
       <Form onSubmit={handleSubmit(onSubmit)}>
         <Row className="gy-3 mt-3">
           <Col xs={12} md={6} lg={4}>
             <div className="form-group">
               <label>Nome*</label>
-              <input type="text" {...register("name", { required: true })} required />
+              <input type="text" {...register("name", { required: true })} />
             </div>
           </Col>
 
           <Col xs={12} md={6} lg={3}>
             <div className="form-group">
               <label>Tipo*</label>
-              <select {...register("type", { required: true })} required>
+              <select {...register("type", { required: true })}>
                 <option value="service">Serviço</option>
                 <option value="product">Produto</option>
               </select>
@@ -100,7 +103,7 @@ export default function ItemUpdateForm({
           {type === "service" && (
             <Col xs={12} md={4} lg={2}>
               <div className="form-group">
-                <label>Duração (minutos)*</label>
+                <label>Duração (min)*</label>
                 <input type="number" min="1" {...register("duration", { required: true })} />
               </div>
             </Col>
@@ -124,18 +127,18 @@ export default function ItemUpdateForm({
             <div className="form-group">
               <label>Status</label>
               <select {...register("status")}>
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
+                <option value="1">Ativo</option>
+                <option value="0">Inativo</option>
               </select>
             </div>
           </Col>
 
           <Col xs={12} md={6} lg={3}>
             <div className="form-group">
-              <label>Limitar p/ Usuário</label>
+              <label>Limitar por usuário</label>
               <select {...register("limited_by_user")}>
-                <option value="no">Não</option>
-                <option value="yes">Sim</option>
+                <option value="0">Não</option>
+                <option value="1">Sim</option>
               </select>
             </div>
           </Col>

@@ -12,8 +12,15 @@ export default function useImageUtils(fallback = null) {
   };
 
   const imageUrl = (path) => {
-    if (!path) return null;
+    if (!path || typeof path !== "string") return null;
+
     if (isAbsolute(path)) return path;
+
+    if (path.startsWith("storage/")) {
+      const base = storageUrl.replace(/\/storage\/?$/, "");
+      return normalize(base, path);
+    }
+
     return normalize(storageUrl, path);
   };
 

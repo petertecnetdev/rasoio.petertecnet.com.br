@@ -58,17 +58,16 @@ export default function EstablishmentItemPage() {
       <GlobalNav />
 
       {!loading && establishment && (
-  <EstablishmentHero
-  title={`Itens da ${establishment.name}`}
-  subtitle="Produtos e serviços cadastrados"
-  description="Gerencie os itens disponíveis no estabelecimento, edite informações, controle valores e cadastre novos produtos ou serviços."
-  city={establishment.city}
-  uf={establishment.uf}
-  logo={establishment?.images?.logo}
-  background={establishment?.images?.background}
-/>
-
-
+        <EstablishmentHero
+          title={establishment.fantasy || establishment.name}
+          subtitle="Produtos e serviços cadastrados"
+          description="Gerencie os produtos e serviços do estabelecimento. Serviços utilizam o tempo de duração para calcular automaticamente o tempo das ordens de serviço."
+          city={establishment.city}
+          uf={establishment.uf}
+          logo={establishment?.images?.logo || establishment.logo}
+          background={establishment?.images?.background || establishment.background}
+          showBack
+        />
       )}
 
       <Container className="mt-4">
@@ -88,7 +87,24 @@ export default function EstablishmentItemPage() {
               <GlobalButton
                 variant="success"
                 onClick={() =>
-                  navigate(`/item/create/${establishment.slug}`)
+                  navigate(`/item/create/${establishment.slug}`, {
+                    state: {
+                      establishment: {
+                        id: establishment.id,
+                        slug: establishment.slug,
+                        name: establishment.name,
+                        fantasy: establishment.fantasy,
+                        description: establishment.description,
+                        city: establishment.city,
+                        uf: establishment.uf,
+                        logo:
+                          establishment?.images?.logo || establishment.logo,
+                        background:
+                          establishment?.images?.background ||
+                          establishment.background,
+                      },
+                    },
+                  })
                 }
               >
                 + Novo item
@@ -114,9 +130,7 @@ export default function EstablishmentItemPage() {
                           variant="outline"
                           size="sm"
                           full
-                          onClick={() =>
-                            navigate(`/item/${item.slug}`)
-                          }
+                          onClick={() => navigate(`/item/${item.slug}`)}
                         >
                           Ver
                         </GlobalButton>
@@ -125,9 +139,7 @@ export default function EstablishmentItemPage() {
                           variant="warning"
                           size="sm"
                           full
-                          onClick={() =>
-                            navigate(`/item/update/${item.id}`)
-                          }
+                          onClick={() => navigate(`/item/update/${item.id}`)}
                         >
                           Editar
                         </GlobalButton>

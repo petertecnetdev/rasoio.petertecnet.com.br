@@ -12,7 +12,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
   const [otherEstablishments, setOtherEstablishments] = useState([]);
   const [otherEmployers, setOtherEmployers] = useState([]);
   const [otherItems, setOtherItems] = useState([]);
-  const [topEmployer, setTopEmployer] = useState(null); // ✅ novo estado
+  const [topEmployer, setTopEmployer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,25 +23,27 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
         const res = await axios.get(`${apiBaseUrl}/item/view/${slug}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+
         if (!active) return;
 
         const d = res.data || {};
 
-        setItem(d.item || null);
-        setEntity(d.entity || null);
-        setMetrics(d.metrics || null);
-        setInteractionSummary(d.interaction_summary || null);
-        setUserInteractions(d.user_interactions || []);
-        setOrdersSummary(d.orders_summary || null);
-        setOtherEstablishments(d.other_establishments || []);
-        setOtherEmployers(d.other_employers || []);
-        setOtherItems(d.other_items || []);
-        setTopEmployer(d.top_employer || null); // ✅ adiciona o colaborador destaque
+        setItem(d.item ?? null);
+        setEntity(d.entity ?? null);
+        setMetrics(d.metrics ?? null);
+        setInteractionSummary(d.interaction_summary ?? null);
+        setUserInteractions(d.user_interactions ?? []);
+        setOrdersSummary(d.orders_summary ?? null);
+        setOtherEstablishments(d.other_establishments ?? []);
+        setOtherEmployers(d.other_employers ?? []);
+        setOtherItems(d.other_items ?? []);
+        setTopEmployer(d.top_employer ?? null);
       } catch (err) {
         const msg =
           err?.response?.data?.error ||
           err?.message ||
           "Erro ao carregar o item.";
+
         Swal.fire({
           icon: "error",
           title: "Erro",
@@ -55,7 +57,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
     return () => {
       active = false;
     };
-  }, [slug, token, navigate]);
+  }, [apiBaseUrl, slug, token, navigate]);
 
   return {
     item,
@@ -67,7 +69,7 @@ export default function useItemView(apiBaseUrl, slug, token, navigate) {
     otherEstablishments,
     otherEmployers,
     otherItems,
-    topEmployer, // ✅ retorna também
+    topEmployer,
     isLoading,
   };
 }
