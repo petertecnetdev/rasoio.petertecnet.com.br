@@ -204,11 +204,20 @@ export default function GlobalCard({
             </div>
           )}
 
-        <div className="d-flex align-items-center gap-2 mt-2">
-          <Badge bg="secondary" className="px-2 py-1 rounded-pill">
-            {safeItem.total_views ?? 0} Views
-          </Badge>
-        </div>
+        <div className="d-flex flex-wrap gap-2 mt-2">
+  {safeItem.metrics && (
+    <>
+      <Badge bg="secondary" className="px-2 py-1 rounded-pill">
+        {safeItem.metrics.total_views ?? 0} Views
+      </Badge>
+      {'completed_orders' in safeItem.metrics && (
+        <Badge bg="secondary" className="px-2 py-1 rounded-pill">
+          {safeItem.metrics.completed_orders ?? 0} Pedidos
+        </Badge>
+      )}
+    </>
+  )}
+</div>
 
         {navigate && (
           <div className="mt-2">

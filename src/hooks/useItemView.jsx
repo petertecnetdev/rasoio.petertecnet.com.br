@@ -1,67 +1,95 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function useItemView(apiBaseUrl, slug, token, navigate) {
+export default function useItemView(apiBaseUrl, slug, token) {
   const [item, setItem] = useState(null);
-  const [establishment, setEstablishment] = useState(null);
-  const [metrics, setMetrics] = useState({});
-  const [interactionSummary, setInteractionSummary] = useState({});
-  const [userInteractions, setUserInteractions] = useState([]);
-  const [ordersSummary, setOrdersSummary] = useState(null);
-  const [otherEstablishments, setOtherEstablishments] = useState([]);
-  const [otherEmployers, setOtherEmployers] = useState([]);
+  const [employers, setEmployers] = useState([]);
   const [otherItems, setOtherItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [establishment, setEstablishment] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!slug) return;
-    let isMounted = true;
-    setIsLoading(true);
 
-    axios
-      .get(`${apiBaseUrl}/items/view/${slug}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-      .then((res) => {
-        if (!isMounted) return;
-        const data = res.data || {};
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    setLoading(true);
+    setError(null);
 
-        setItem(data.item ?? null);
-        setEstablishment(data.establishment ?? null);
-        setMetrics(data.metrics ?? {});
-        setInteractionSummary(data.interaction_summary ?? {});
-        setUserInteractions(data.user_interactions ?? []);
-        setOrdersSummary(data.orders_summary ?? null);
-        setOtherEstablishments(data.other_establishments ?? []);
-        setOtherEmployers(data.other_employers ?? []);
-        setOtherItems(data.other_items ?? []);
+    const fetchData = async () => {
+      try {
+        const itemRes = await axios.get(
+          `${apiBaseUrl}/item/view/${slug}`,
+          { headers }
+        );
 
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (!isMounted) return;
-        setIsLoading(false);
-        if (err.response?.status === 404) {
-          navigate("/404");
-        }
-      });
+        const itemData = itemRes.data.item;
+        const establishmentData = itemRes.data.establishment;
 
-    return () => {
-      isMounted = false;
+        const itemImage =
+          itemData.image_url ||
+          itemData.files?.find((f) => f.type === "image")?.public_url ||
+          null;
+
+        const establishmentLogo =
+          establishmentData?.logo ||
+          establishmentData?.files?.find((f) => f.type === "image")?.public_url ||
+          null;
+
+        setItem({ ...itemData, imageUrl: itemImage });
+        setEstablishment({ ...establishmentData, logoImage: establishmentLogo });
+
+        const otherItemsRes = await axios.get(
+          `${apiBaseUrl}/item/list-other-by-slug/${slug}`,
+          { headers }
+        );
+
+        setOtherItems(
+          otherItemsRes.data.items?.map((i) => ({
+            ...i,
+            imageUrl:
+              i.image_url ||
+              i.files?.find((f) => f.type === "image")?.public_url ||
+              null,
+          })) || []
+        );
+
+        const employersRes = await axios.get(
+          `${apiBaseUrl}/employer/list-by-item/${slug}`,
+          { headers }
+        );
+
+        setEmployers(
+          employersRes.data.employers?.map((e) => ({
+            id: e.id,
+            type: "employer",
+            name: `${e.user?.first_name || ""} ${e.user?.last_name || ""}`.trim(),
+            role: e.role,
+            attended_count: e.attended_count,
+            image: e.user?.avatar || "/images/logo.png",
+            user: {
+              id: e.user?.id,
+              first_name: e.user?.first_name || "",
+              last_name: e.user?.last_name || "",
+              avatar: e.user?.avatar || "/images/logo.png",
+              city: e.user?.city || "",
+              uf: e.user?.uf || "",
+            },
+          })) || []
+        );
+      } catch (err) {
+        setError(err.response?.data || err);
+        setItem(null);
+        setEmployers([]);
+        setOtherItems([]);
+        setEstablishment(null);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [slug, token, apiBaseUrl, navigate]);
 
-  return {
-    item,
-    establishment,
-    metrics,
-    interactionSummary,
-    userInteractions,
-    ordersSummary,
-    otherEstablishments,
-    otherEmployers,
-    otherItems,
-    isLoading,
-  };
+    fetchData();
+  }, [apiBaseUrl, slug, token]);
+
+  return { item, employers, otherItems, establishment, loading, error };
 }
