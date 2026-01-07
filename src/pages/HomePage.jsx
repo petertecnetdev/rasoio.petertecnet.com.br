@@ -1,13 +1,12 @@
 // src/pages/HomePage.jsx
-import React, { useState, useMemo } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../config";
 
 import useHome from "../hooks/useHome";
 import useAppointment from "../hooks/useAppointment";
 import useImageUtils from "../hooks/useImageUtils";
+import useSchedulePopup from "../hooks/useSchedulePopup";
 
 import "./HomePage.css";
 
@@ -17,6 +16,8 @@ import GlobalNav from "../components/GlobalNav";
 import CircleGauge from "../components/home/CircleGauge";
 import CitySelectorModal from "../components/CitySelectorModal";
 import HomeHeader from "../components/home/HomeHeader";
+import StatsQuick from "../components/home/StatsQuick";
+import HighlightsSection from "../components/home/HighlightsSection";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -27,6 +28,7 @@ export default function HomePage() {
     employers,
     items,
     stats,
+    highlights,
     isLoading,
     city,
     uf,
@@ -34,21 +36,24 @@ export default function HomePage() {
   } = useHome(apiBaseUrl, appId);
 
   const navigate = useNavigate();
-  const token = useMemo(() => localStorage.getItem("token"), []);
+  const token = localStorage.getItem("token");
 
   const [showCityModal, setShowCityModal] = useState(false);
-  const [user] = useState(() => {
-    const cached = localStorage.getItem("user");
-    return cached ? JSON.parse(cached) : {};
-  });
-
-  const [showWizard, setShowWizard] = useState(false);
-  const [wizardOptions, setWizardOptions] = useState({});
-  const [wizardEstablishment, setWizardEstablishment] = useState(null);
-  const [wizardEmployers, setWizardEmployers] = useState([]);
-  const [wizardServices, setWizardServices] = useState([]);
+  const [currentCity, setCurrentCity] = useState(city);
+  const [currentUF, setCurrentUF] = useState(uf);
 
   const { imageUrl } = useImageUtils(PLACEHOLDER);
+
+  const {
+    showWizard,
+    setShowWizard,
+    wizardEstablishment,
+    wizardEmployers,
+    wizardServices,
+    preselectedEmployer,
+    preselectedService,
+    openSchedulePopup,
+  } = useSchedulePopup(apiBaseUrl, token, PLACEHOLDER);
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
@@ -57,165 +62,12 @@ export default function HomePage() {
     wizardEstablishment
   );
 
-  const handleChangeCity = () => {
-    setShowCityModal(true);
-  };
+  const handleChangeCity = () => setShowCityModal(true);
 
-  const resolveEstablishmentSlugFromTarget = (target) => {
-    if (!target) return null;
-    if (target.type === "establishment" && target.slug) return target.slug;
-    if (target.establishment && target.establishment.slug)
-      return target.establishment.slug;
-    return null;
-  };
-
-  const mapEstablishmentFromPayload = (est) => {
-    if (!est) return null;
-    return {
-      ...est,
-      images: {
-        logo: est.images?.logo ?? est.logo ?? null,
-        background: est.images?.background ?? est.background ?? null,
-        gallery: est.images?.gallery ?? [],
-        files: est.images?.files ?? [],
-      },
-    };
-  };
-
-  const mapItemsFromPayload = (rawItems) => {
-  return (rawItems || []).map((it) => {
-    const avatar = it.images?.avatar || null;
-
-    return {
-      ...it,
-      type: it.type || "item",
-
-      // 🔴 ISSO É O QUE FALTAVA
-      image: avatar,
-      avatar: avatar,
-
-      images: {
-        avatar,
-        gallery: it.images?.gallery || [],
-      },
-    };
-  });
-};
-
-
-
-  const mapEmployersFromPayload = (rawEmployers) => {
-    return (rawEmployers || []).map((e) => {
-      const img = e.images || {};
-      const avatar =
-        img.avatar || e.avatar || e.image || e.user?.avatar || PLACEHOLDER;
-
-      return {
-        ...e,
-        type: "employer",
-        image: avatar,
-        images: {
-          avatar,
-          gallery: img.gallery || [],
-          files: img.files || [],
-        },
-        user: e.user || {
-          first_name: e.name || "",
-          avatar,
-        },
-      };
-    });
-  };
-
-  const mappedHomeItems = useMemo(
-    () => mapItemsFromPayload(items),
-    [items]
-  );
-
-  const openSchedulePopup = async (target = {}) => {
-    if (!target) return;
-
-    const estSlug = resolveEstablishmentSlugFromTarget(target);
-    if (!estSlug) return;
-
-    try {
-      const headers = token
-        ? { Authorization: `Bearer ${token}` }
-        : {};
-
-      const res = await axios.get(
-        `${apiBaseUrl}/establishment/view/${estSlug}`,
-        { headers }
-      );
-
-      const data = res.data || {};
-
-      const est = mapEstablishmentFromPayload(data.establishment || null);
-      const mappedItems = mapItemsFromPayload(data.items || []);
-      const mappedEmployers = mapEmployersFromPayload(data.employers || []);
-
-      const servicesList = mappedItems.filter(
-        (i) => (i.type || "").toLowerCase() !== "product"
-      );
-
-      const productsList = mappedItems.filter(
-        (i) => (i.type || "").toLowerCase() === "product"
-      );
-
-      const genericItems =
-        !servicesList.length && !productsList.length && mappedItems.length
-          ? mappedItems.map((i) => ({
-              ...i,
-              type: i.type === "product" ? "product" : "service",
-            }))
-          : [];
-
-      const servicesForWizard = servicesList.length
-        ? servicesList
-        : genericItems;
-
-      let preselectedService = null;
-      let preselectedEmployer = null;
-
-      if (target.type === "employer") {
-        preselectedEmployer =
-          mappedEmployers.find(
-            (e) => e.id === target.id || e.slug === target.slug
-          ) || null;
-      }
-
-      if (
-        target.type !== "establishment" &&
-        (!target.type || target.type !== "employer")
-      ) {
-        preselectedService =
-          servicesForWizard.find(
-            (s) => s.id === target.id || s.slug === target.slug
-          ) || null;
-      }
-
-      setWizardEstablishment(est);
-      setWizardEmployers(mappedEmployers);
-      setWizardServices(servicesForWizard);
-      setWizardOptions({
-        preselectedService,
-        preselectedEmployer,
-      });
-
-      setShowWizard(true);
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Erro ao carregar dados do estabelecimento.";
-
-      Swal.fire({
-        icon: "error",
-        title: "Erro",
-        text: msg,
-      });
-    }
+  const handleSelectCity = ({ city, uf }) => {
+    setCurrentCity(city);
+    setCurrentUF(uf);
+    setShowCityModal(false);
   };
 
   if (isLoading) {
@@ -223,14 +75,14 @@ export default function HomePage() {
       <>
         <GlobalNav />
         <div className="hp-wrapper">
-          <HomeHeader city={city} uf={uf} onChangeCity={handleChangeCity} />
+          <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
           <div className="hp-loading">Carregando…</div>
         </div>
-
         <CitySelectorModal
-          user={user}
+          user={JSON.parse(localStorage.getItem("user") || "{}")}
           show={showCityModal}
           onClose={() => setShowCityModal(false)}
+          onSelectCity={handleSelectCity}
         />
       </>
     );
@@ -241,31 +93,47 @@ export default function HomePage() {
       <GlobalNav />
 
       <div className="hp-wrapper">
-        <HomeHeader city={city} uf={uf} onChangeCity={handleChangeCity} />
+        <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
+        <StatsQuick stats={stats} />
+        <HighlightsSection highlights={highlights} />
 
-        <GlobalCarousel
-          title="Estabelecimentos"
-          items={establishments}
-          fmtBRL={fmtBRL}
-          navigate={(path) => (window.location.href = path)}
-          openSchedulePopup={openSchedulePopup}
-          showSchedule
-        />
+   <GlobalCarousel
+  title="Estabelecimentos"
+  items={establishments}
+  fmtBRL={fmtBRL}
+  navigate={(path) => (window.location.href = path)}
+  openSchedulePopup={async (item) => {
+    // Filtra os employers deste estabelecimento
+    const filteredEmployers = employers.filter(
+      (emp) => emp.establishment_id === item.id
+    );
 
-        <GlobalCarousel
-          title="Profissionais"
-          items={employers}
-          carouselActive
-          fmtBRL={fmtBRL}
-          apiBaseUrl={apiBaseUrl}
-          openSchedulePopup={openSchedulePopup}
-          navigate={navigate}
-          showSchedule
-        />
+    await openSchedulePopup({
+      establishment: item,
+      employer: null, // sem preselected
+      service: null,
+      filteredEmployers, // novo parâmetro
+    });
+  }}
+  showSchedule
+/>
+ 
+
+<GlobalCarousel
+  title="Profissionais"
+  items={employers}
+  fmtBRL={fmtBRL}
+  navigate={navigate}
+  openSchedulePopup={(item) =>
+    openSchedulePopup({ employer: item })
+  }
+  showSchedule
+/>
+
 
         <GlobalCarousel
           title="Serviços"
-          items={mappedHomeItems}
+          items={items}
           fmtBRL={fmtBRL}
           navigate={(path) => (window.location.href = path)}
           openSchedulePopup={openSchedulePopup}
@@ -277,7 +145,6 @@ export default function HomePage() {
             title="Top Estabelecimentos (views)"
             items={stats.top_establishments_views}
           />
-
           <TopList
             title="Serviços mais vendidos"
             items={stats.top_items_sold}
@@ -285,9 +152,7 @@ export default function HomePage() {
 
           <div className="hp-activity">
             <h4>Atividade Global</h4>
-
             <CircleGauge value={stats.dau} />
-
             <div className="hp-activity-info">
               <div>DAU: {stats.dau}</div>
               <div>MAU: {stats.mau}</div>
@@ -305,15 +170,16 @@ export default function HomePage() {
         loadAvailableTimes={loadAvailableTimes}
         handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}
-        preselectedService={wizardOptions.preselectedService || null}
-        preselectedEmployer={wizardOptions.preselectedEmployer || null}
+        preselectedService={preselectedService}
+        preselectedEmployer={preselectedEmployer}
         establishment={wizardEstablishment}
       />
 
       <CitySelectorModal
-        user={user}
+        user={JSON.parse(localStorage.getItem("user") || "{}")}
         show={showCityModal}
         onClose={() => setShowCityModal(false)}
+        onSelectCity={handleSelectCity}
       />
     </>
   );

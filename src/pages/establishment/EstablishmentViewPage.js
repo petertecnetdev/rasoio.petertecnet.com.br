@@ -124,28 +124,29 @@ export default function EstablishmentViewPage() {
       : [];
 
   const mappedEmployers =
-    employers?.map((e) => {
-      const avatar =
-        e.images?.avatar ||
-        e.avatar ||
-        e.image ||
-        e.user?.avatar ||
-        PLACEHOLDER;
+  employers?.map((e) => {
+    const avatar =
+      e.user?.files?.find((f) => f.type === "avatar")?.public_url ||
+      PLACEHOLDER;
 
-      return {
-        ...e,
-        type: "employer",
-        image: avatar,
-        images: {
-          avatar,
-          gallery: e.images?.gallery || [],
-        },
-        user: e.user || {
-          first_name: e.name || "",
-          avatar,
-        },
-      };
-    }) || [];
+    const name = `${e.user?.first_name || ""} ${e.user?.last_name || ""}`.trim();
+
+    return {
+      id: e.id,
+      type: "employer",
+      name,
+      image: avatar,
+      images: {
+        avatar,
+        gallery: e.files
+          ?.filter((f) => f.type !== "avatar")
+          .map((f) => f.public_url) || [],
+      },
+      user: e.user,
+    };
+  }) || [];
+
+
 
   const mappedCompleted =
     completedAppointments?.map((a) => ({

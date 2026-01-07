@@ -32,27 +32,28 @@ export default function useItemView(apiBaseUrl, slug, token) {
           null;
 
         const establishmentLogo =
-          establishmentData?.logo ||
-          establishmentData?.files?.find((f) => f.type === "image")?.public_url ||
+          establishmentData?.files?.find((f) => f.type === "logo")?.public_url ||
           null;
 
         setItem({ ...itemData, imageUrl: itemImage });
         setEstablishment({ ...establishmentData, logoImage: establishmentLogo });
 
-        const otherItemsRes = await axios.get(
-          `${apiBaseUrl}/item/list-other-by-slug/${slug}`,
-          { headers }
-        );
+        if (establishmentData?.slug || establishmentData?.id) {
+          const otherItemsRes = await axios.get(
+            `${apiBaseUrl}/item/list-others/${establishmentData.slug ?? establishmentData.id}`,
+            { headers }
+          );
 
-        setOtherItems(
-          otherItemsRes.data.items?.map((i) => ({
-            ...i,
-            imageUrl:
-              i.image_url ||
-              i.files?.find((f) => f.type === "image")?.public_url ||
-              null,
-          })) || []
-        );
+          setOtherItems(
+            otherItemsRes.data?.map((i) => ({
+              ...i,
+              imageUrl:
+                i.image_url ||
+                i.files?.find((f) => f.type === "image")?.public_url ||
+                null,
+            })) || []
+          );
+        }
 
         const employersRes = await axios.get(
           `${apiBaseUrl}/employer/list-by-item/${slug}`,
@@ -66,12 +67,16 @@ export default function useItemView(apiBaseUrl, slug, token) {
             name: `${e.user?.first_name || ""} ${e.user?.last_name || ""}`.trim(),
             role: e.role,
             attended_count: e.attended_count,
-            image: e.user?.avatar || "/images/logo.png",
+            image:
+              e.user?.files?.find((f) => f.type === "avatar")?.public_url ||
+              "/images/logo.png",
             user: {
               id: e.user?.id,
               first_name: e.user?.first_name || "",
               last_name: e.user?.last_name || "",
-              avatar: e.user?.avatar || "/images/logo.png",
+              avatar:
+                e.user?.files?.find((f) => f.type === "avatar")?.public_url ||
+                "/images/logo.png",
               city: e.user?.city || "",
               uf: e.user?.uf || "",
             },

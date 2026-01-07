@@ -1,4 +1,3 @@
-// src/hooks/useEstablishmentView.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -22,106 +21,134 @@ export default function useEstablishmentView(apiBaseUrl, slug, token, navigate) 
 
     (async () => {
       try {
-        const res = await axios.get(`${apiBaseUrl}/establishment/view/${slug}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const res = await axios.get(
+          `${apiBaseUrl}/establishment/view/${slug}`,
+          { headers }
+        );
+
         if (!active) return;
 
         const d = res.data || {};
-
         const est = d.establishment || null;
+
         setEstablishment(
           est
             ? {
                 ...est,
                 images: {
-                  logo: est.images?.logo ?? est.logo ?? null,
-                  background: est.images?.background ?? est.background ?? null,
-                  gallery: est.images?.gallery ?? [],
-                  files: est.images?.files ?? [],
+                  logo:
+                    est.files?.find((f) => f.type === "logo")?.public_url ??
+                    est.logo ??
+                    null,
+                  background:
+                    est.files?.find((f) => f.type === "background")
+                      ?.public_url ??
+                    est.background ??
+                    null,
+                  gallery: est.files
+                    ?.filter(
+                      (f) => !["logo", "background"].includes(f.type)
+                    )
+                    .map((f) => f.public_url),
                 },
               }
             : null
         );
 
-        setMetrics(d.metrics || null);
+        setMetrics(est?.metrics || null);
         setInteractionSummary(d.interaction_summary || null);
         setUserInteractions(d.user_interactions || []);
         setOrdersSummary(d.orders_summary || null);
         setCompletedAppointments(d.completed_appointments || []);
 
+        const [
+          itemsRes,
+          employersRes,
+          otherEstRes,
+          otherItemsRes,
+          otherEmpRes,
+        ] = await Promise.all([
+          axios.get(
+            `${apiBaseUrl}/item/list-by-entity/${slug}`,
+            { headers }
+          ),
+          axios.get(
+            `${apiBaseUrl}/employer/list-by-entity/${slug}`,
+            { headers }
+          ),
+          axios.get(
+            `${apiBaseUrl}/establishment/list-others/${slug}`,
+            { headers }
+          ),
+          axios.get(
+            `${apiBaseUrl}/item/list-others/${slug}`,
+            { headers }
+          ),
+          axios.get(
+            `${apiBaseUrl}/employer/list-others/${slug}`,
+            { headers }
+          ),
+        ]);
+
         setItems(
-  (d.items || []).map((it) => ({
-    ...it,
-    type: it.type || "item",
-    slug: it.slug,
-    image: it.image || null,
-  }))
-);
+          (itemsRes.data.items || []).map((it) => ({
+            ...it,
+            type: "item",
+            image:
+              it.files?.find((f) => f.type === "image")?.public_url ??
+              it.image ??
+              null,
+          }))
+        );
 
         setEmployers(
-          (d.employers || []).map((emp) => {
-            const img = emp.images || {};
-            return {
-              ...emp,
-              type: "employer",
-              slug: emp.slug,
-              images: {
-                avatar: img.avatar ?? null,
-                gallery: img.gallery ?? [],
-                files: img.files ?? [],
-              },
-            };
-          })
+          (employersRes.data.employers || []).map((emp) => ({
+            ...emp,
+            type: "employer",
+            avatar:
+              emp.user?.files?.find((f) => f.type === "avatar")?.public_url ??
+              null,
+          }))
         );
 
         setOtherEstablishments(
-          (d.other_establishments || []).map((e) => {
-            const img = e.images || {};
-            return {
-              ...e,
-              type: "establishment",
-              slug: e.slug,
-              images: {
-                logo: img.logo ?? e.logo ?? null,
-                background: img.background ?? e.background ?? null,
-                gallery: img.gallery ?? [],
-                files: img.files ?? [],
-              },
-            };
-          })
-        );
-
-        setOtherEmployers(
-          (d.other_employers || []).map((emp) => {
-            const img = emp.images || {};
-            return {
-              ...emp,
-              type: "employer",
-              slug: emp.slug || emp.user_name,
-              images: {
-                avatar: img.avatar ?? emp.avatar ?? null,
-                gallery: img.gallery ?? [],
-                files: img.files ?? [],
-              },
-            };
-          })
+          (otherEstRes.data.establishments || []).map((e) => ({
+            ...e,
+            type: "establishment",
+            images: {
+              logo:
+                e.files?.find((f) => f.type === "logo")?.public_url ??
+                e.logo ??
+                null,
+              background:
+                e.files?.find((f) => f.type === "background")?.public_url ??
+                e.background ??
+                null,
+            },
+          }))
         );
 
         setOtherItems(
-          (d.other_items || []).map((it) => {
-            const img = it.images || {};
-            return {
-              ...it,
-              type: "item",
-              slug: it.slug,
-              images: {
-                avatar: img.avatar ?? it.image ?? null,
-                gallery: img.gallery ?? [],
-                files: img.files ?? [],
-              },
-            };
-          })
+          (otherItemsRes.data.items || []).map((it) => ({
+            ...it,
+            type: "item",
+            image:
+              it.files?.find((f) => f.type === "image")?.public_url ??
+              it.image ??
+              null,
+          }))
+        );
+
+        setOtherEmployers(
+          (otherEmpRes.data.employers || []).map((emp) => ({
+            ...emp,
+            type: "employer",
+            avatar:
+              emp.user?.files?.find((f) => f.type === "avatar")?.public_url ??
+              null,
+          }))
         );
       } catch (err) {
         const msg =

@@ -53,7 +53,7 @@ export default function StepEmployer({
               onClick={() => handleSelect(e)}
             >
               <img
-                src={imageUrl(e.user?.avatar)}
+                src={e.image || "/images/logo.png"}
                 onError={(ev) =>
                   (ev.target.src = "/images/logo.png")
                 }

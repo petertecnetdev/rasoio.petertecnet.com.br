@@ -43,8 +43,16 @@ export default function AppointmentWizardModal({
     if (!show) return;
 
     setStep(1);
-    setSelectedServices(preselectedService ? [preselectedService] : []);
-    setSelectedEmployer(preselectedEmployer || null);
+    if (!show) return;
+  if (preselectedService) {
+  const serviceFromList = services.find(
+    (s) => (s.id || s.item_id) === (preselectedService.id || preselectedService.item_id)
+  );
+  setSelectedServices(serviceFromList ? [serviceFromList] : []);
+} else {
+  setSelectedServices([]);
+}
+    setSelectedEmployer(preselectedEmployer || null); // ✅ garante pré-seleção
     setSelectedDate(null);
     setAvailableTimes([]);
     setSelectedTime(null);
@@ -79,10 +87,7 @@ export default function AppointmentWizardModal({
 
   const totalValue = useMemo(
     () =>
-      selectedServices.reduce(
-        (sum, s) => sum + (parseFloat(s.price) || 0),
-        0
-      ),
+      selectedServices.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0),
     [selectedServices]
   );
 
@@ -279,6 +284,11 @@ export default function AppointmentWizardModal({
                 className={`card-service ${active ? "active" : ""}`}
                 onClick={() => handleServiceToggle(s)}
               >
+                <img
+                  src={imageUrl(s.files?.[0]?.path)}
+                  alt={s.name}
+                  onError={(e) => (e.currentTarget.src = "/images/logo.png")}
+                />
                 <h5>{s.name || "Serviço"}</h5>
                 <p>{fmtBRL(s.price)}</p>
                 <small>{s.duration || 30} min</small>
@@ -293,7 +303,6 @@ export default function AppointmentWizardModal({
       </div>
     </div>
   );
-
   const renderEmployersStep = () => {
     if (hasPreselectedEmployer) return null;
 
@@ -311,7 +320,7 @@ export default function AppointmentWizardModal({
                 onClick={() => setSelectedEmployer(e)}
               >
                 <img
-                  src={imageUrl(e.user?.avatar)}
+                  src={e.image || "/images/logo.png"}
                   alt={e.user?.first_name}
                   onError={(ev) => (ev.currentTarget.src = "/images/logo.png")}
                 />
@@ -425,8 +434,8 @@ export default function AppointmentWizardModal({
           </ul>
           <hr />
           <p>
-            <b>Total:</b> {fmtBRL(totalValue)} | <b>Duração:</b>{" "}
-            {totalDuration} min
+            <b>Total:</b> {fmtBRL(totalValue)} | <b>Duração:</b> {totalDuration}{" "}
+            min
           </p>
         </div>
       </div>
@@ -453,7 +462,7 @@ export default function AppointmentWizardModal({
           <div className="employer-selected-header">
             <div className="d-flex align-items-center gap-3 mb-3">
               <img
-                src={imageUrl(preselectedEmployer.user?.avatar)}
+                src={preselectedEmployer?.image || "/images/logo.png"}
                 alt={preselectedEmployer.user?.first_name}
                 className="rounded-circle"
                 width="60"
