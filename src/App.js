@@ -38,6 +38,7 @@ import ItemListPage from "./pages/item/ItemListPage";
 import ItemCreatePage from "./pages/item/ItemCreatePage";
 import ItemViewPage from "./pages/item/ItemViewPage";
 import ItemUpdatePage from "./pages/item/ItemUpdatePage";
+import ItemServiceHomePage from "./pages/item/ItemServiceHomePage";
 
 import EmployerListPage from "./pages/employer/EmployerListPage";
 import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
@@ -46,6 +47,7 @@ import EmployerViewPage from "./pages/employer/EmployerViewPage";
 import EmployerMePage from "./pages/employer/EmployerMePage";
 import EmployerSchedulesPage from "./pages/employer/EmployerSchedulesPage";
 import EmployerOrdersPage from "./pages/employer/EmployerOrdersPage";
+import EmployerHome from "./pages/employer/EmployerHomePage";
 
 import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
 import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
@@ -54,6 +56,7 @@ import EstablishmentOrderPage from "./pages/establishment/EstablishmentOrderPage
 import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
 import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
 import EstablishmentItemPage from "./pages/establishment/EstablishmentItemPage";
+import EstablishmentHome from "./pages/establishment/EstablishmentHomePage";
 
 import "./index.css";
 
@@ -100,10 +103,7 @@ function AppInner() {
 
   if (initialLoading) {
     return (
-      <ProcessingIndicatorComponent
-        interval={100}
-        gifSrc="/images/logo.gif"
-      />
+      <ProcessingIndicatorComponent interval={100} gifSrc="/images/logo.gif" />
     );
   }
 
@@ -129,8 +129,7 @@ function AppInner() {
       <Navigate to="/login" replace />
     );
 
-  const restrictedRoute = (el) =>
-    user ? <Navigate to="/" replace /> : el;
+  const restrictedRoute = (el) => (user ? <Navigate to="/" replace /> : el);
 
   return (
     <AuthContext.Provider
@@ -167,10 +166,7 @@ function AppInner() {
               path="/register"
               element={restrictedRoute(<RegisterPage />)}
             />
-            <Route
-              path="/login"
-              element={restrictedRoute(<LoginPage />)}
-            />
+            <Route path="/login" element={restrictedRoute(<LoginPage />)} />
             <Route
               path="/password-email"
               element={restrictedRoute(<PasswordEmailPage />)}
@@ -233,6 +229,9 @@ function AppInner() {
               element={protectedRoute(<ItemUpdatePage />)}
             />
 
+            
+            <Route path="/item/services" element={<ItemServiceHomePage />} />
+
             <Route
               path="/employer/list/:slug"
               element={protectedRoute(<EmployerListPage />)}
@@ -262,6 +261,9 @@ function AppInner() {
               element={protectedRoute(<EmployerOrdersPage />)}
             />
 
+            
+            <Route path="/employers" element={<EmployerHome />} />
+
             <Route
               path="/establishment/create"
               element={protectedRoute(<EstablishmentCreatePage />)}
@@ -286,6 +288,7 @@ function AppInner() {
               path="/establishment/employers/:slug"
               element={<EstablishmentEmployersPage />}
             />
+            <Route path="/establishments" element={<EstablishmentHome />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

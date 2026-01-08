@@ -34,8 +34,9 @@ export default function GlobalNavHeader({ user, loadingMenu, handleToggleMobileM
     if (user.isEmployer) {
       return (
         <div className="globalnav__desktop-menu d-none d-lg-flex">
-          <MenuLink to="/employer/dashboard">Minha Agenda</MenuLink>
-          <MenuLink to="/establishment/view">Minha Barbearia</MenuLink>
+          <MenuLink to="/establishments">Estabelecimentos</MenuLink>
+          <MenuLink to="/employers">Profissionais</MenuLink>
+          <MenuLink to="/item/services">Serviços</MenuLink>
         </div>
       );
     }

@@ -1,10 +1,16 @@
+// src/components/CitySelectorModal.jsx// 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { apiBaseUrl } from "../config";
 import "./CitySelectorModal.css";
 
-export default function CitySelectorModal({ user = {}, show, onClose, onSelectCity }) {
+export default function CitySelectorModal({
+  user = {},
+  show,
+  onClose,
+  onSelectCity,
+}) {
   const appId = 2;
 
   const [cities, setCities] = useState([]);
@@ -26,7 +32,9 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
     async function fetchCities() {
       setLoading(true);
       try {
-        const res = await axios.get(`${apiBaseUrl}/establishment/cities/${appId}`);
+        const res = await axios.get(
+          `${apiBaseUrl}/establishment/cities/${appId}`
+        );
         setCities(res.data.cities || []);
       } catch (e) {
         console.error("Erro ao buscar cidades:", e);
@@ -54,12 +62,20 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
   const filteredCities = useMemo(() => {
     if (!search.trim()) return cities;
     const term = search.toLowerCase();
-    return cities.filter((c) => `${c.city} ${c.uf}`.toLowerCase().includes(term));
+    return cities.filter((c) =>
+      `${c.city} ${c.uf}`.toLowerCase().includes(term)
+    );
   }, [cities, search]);
 
   const handleSelect = (c) => {
     setCity(c.city);
     setUf(c.uf);
+    setOpen(false);
+  };
+
+  const handleSelectAll = () => {
+    setCity("Todas");
+    setUf("ALL");
     setOpen(false);
   };
 
@@ -103,11 +119,29 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
                 onChange={(e) => setSearch(e.target.value)}
                 onFocus={() => setOpen(true)}
               />
-              <div className={`city-dropdown ${open ? "open" : ""}`} onClick={() => setOpen((v) => !v)}>
-                <span className="city-selected">{city && uf ? `${city} / ${uf}` : "Selecionar"}</span>
+              <div
+                className={`city-dropdown ${open ? "open" : ""}`}
+                onClick={() => setOpen((v) => !v)}
+              >
+                <span className="city-selected">
+                  {city && uf
+                    ? uf === "ALL"
+                      ? "Todas as cidades"
+                      : `${city} / ${uf}`
+                    : "Selecionar"}
+                </span>
                 <span className="city-arrow">▾</span>
               </div>
               <div className={`city-options ${open ? "show" : ""}`}>
+                <button
+                  type="button"
+                  className={`city-option ${uf === "ALL" ? "active" : ""}`}
+                  onClick={handleSelectAll}
+                >
+                  <strong>Todas as cidades</strong>
+                  <span>Brasil</span>
+                </button>
+
                 {filteredCities.length === 0 ? (
                   <div className="city-empty">Nenhuma cidade encontrada</div>
                 ) : (
@@ -115,7 +149,9 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
                     <button
                       type="button"
                       key={`${c.city}-${c.uf}`}
-                      className={`city-option ${c.city === city && c.uf === uf ? "active" : ""}`}
+                      className={`city-option ${
+                        c.city === city && c.uf === uf ? "active" : ""
+                      }`}
                       onClick={() => handleSelect(c)}
                     >
                       <strong>{c.city}</strong>
@@ -132,7 +168,11 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
           <button className="city-btn secondary" onClick={onClose}>
             Cancelar
           </button>
-          <button className="city-btn primary" onClick={handleSave} disabled={!city || !uf}>
+          <button
+            className="city-btn primary"
+            onClick={handleSave}
+            disabled={!city || !uf}
+          >
             Confirmar cidade
           </button>
         </div>

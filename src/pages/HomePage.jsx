@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../config";
@@ -11,13 +10,9 @@ import useSchedulePopup from "../hooks/useSchedulePopup";
 import "./HomePage.css";
 
 import GlobalCarousel from "../components/GlobalCarousel";
-import TopList from "../components/home/TopList";
 import GlobalNav from "../components/GlobalNav";
-import CircleGauge from "../components/home/CircleGauge";
 import CitySelectorModal from "../components/CitySelectorModal";
 import HomeHeader from "../components/home/HomeHeader";
-import StatsQuick from "../components/home/StatsQuick";
-import HighlightsSection from "../components/home/HighlightsSection";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -26,21 +21,27 @@ export default function HomePage() {
   const {
     establishments,
     employers,
-    items,
+    serviceItems,
+    productItems,
     stats,
     highlights,
+    homePayload,
+    recentOrders,
+    recentInteractions,
     isLoading,
-    city,
-    uf,
-    fmtBRL,
+    error,
   } = useHome(apiBaseUrl, appId);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   const [showCityModal, setShowCityModal] = useState(false);
-  const [currentCity, setCurrentCity] = useState(city);
-  const [currentUF, setCurrentUF] = useState(uf);
+  const [currentCity, setCurrentCity] = useState(
+    localStorage.getItem("selectedCity")
+  );
+  const [currentUF, setCurrentUF] = useState(
+    localStorage.getItem("selectedUF")
+  );
 
   const { imageUrl } = useImageUtils(PLACEHOLDER);
 
@@ -51,9 +52,9 @@ export default function HomePage() {
     wizardEmployers,
     wizardServices,
     preselectedEmployer,
-    preselectedService,
+    preselectedServiceId,
     openSchedulePopup,
-  } = useSchedulePopup(apiBaseUrl, token, PLACEHOLDER);
+  } = useSchedulePopup(apiBaseUrl, token);
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
@@ -65,6 +66,8 @@ export default function HomePage() {
   const handleChangeCity = () => setShowCityModal(true);
 
   const handleSelectCity = ({ city, uf }) => {
+    localStorage.setItem("selectedCity", city);
+    localStorage.setItem("selectedUF", uf);
     setCurrentCity(city);
     setCurrentUF(uf);
     setShowCityModal(false);
@@ -75,15 +78,24 @@ export default function HomePage() {
       <>
         <GlobalNav />
         <div className="hp-wrapper">
-          <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
+          <HomeHeader
+            city={currentCity}
+            uf={currentUF}
+            onChangeCity={handleChangeCity}
+          />
           <div className="hp-loading">Carregando…</div>
         </div>
-        <CitySelectorModal
-          user={JSON.parse(localStorage.getItem("user") || "{}")}
-          show={showCityModal}
-          onClose={() => setShowCityModal(false)}
-          onSelectCity={handleSelectCity}
-        />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <GlobalNav />
+        <div className="hp-wrapper">
+          <div className="hp-loading">{error}</div>
+        </div>
       </>
     );
   }
@@ -93,72 +105,58 @@ export default function HomePage() {
       <GlobalNav />
 
       <div className="hp-wrapper">
-        <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
-        <StatsQuick stats={stats} />
-        <HighlightsSection highlights={highlights} />
-
-   <GlobalCarousel
-  title="Estabelecimentos"
-  items={establishments}
-  fmtBRL={fmtBRL}
-  navigate={(path) => (window.location.href = path)}
-  openSchedulePopup={async (item) => {
-    // Filtra os employers deste estabelecimento
-    const filteredEmployers = employers.filter(
-      (emp) => emp.establishment_id === item.id
-    );
-
-    await openSchedulePopup({
-      establishment: item,
-      employer: null, // sem preselected
-      service: null,
-      filteredEmployers, // novo parâmetro
-    });
-  }}
-  showSchedule
-/>
- 
-
-<GlobalCarousel
-  title="Profissionais"
-  items={employers}
-  fmtBRL={fmtBRL}
-  navigate={navigate}
-  openSchedulePopup={(item) =>
-    openSchedulePopup({ employer: item })
-  }
-  showSchedule
-/>
-
+        <HomeHeader
+          city={currentCity}
+          uf={currentUF}
+          onChangeCity={handleChangeCity}
+        />
 
         <GlobalCarousel
-          title="Serviços"
-          items={items}
-          fmtBRL={fmtBRL}
+          title="Estabelecimentos"
+          items={establishments}
           navigate={(path) => (window.location.href = path)}
-          openSchedulePopup={openSchedulePopup}
+          openSchedulePopup={async (item) => {
+            const filteredEmployers = employers.filter(
+              (emp) => emp.establishment_id === item.id
+            );
+
+            await openSchedulePopup({
+              establishment: item,
+              filteredEmployers,
+            });
+          }}
           showSchedule
         />
 
-        <div className="hp-bottom-grid">
-          <TopList
-            title="Top Estabelecimentos (views)"
-            items={stats.top_establishments_views}
-          />
-          <TopList
-            title="Serviços mais vendidos"
-            items={stats.top_items_sold}
-          />
+        <GlobalCarousel
+          title="Profissionais"
+          items={employers}
+          navigate={navigate}
+          openSchedulePopup={(item) =>
+            openSchedulePopup({ employer: item })
+          }
+          showSchedule
+        />
 
-          <div className="hp-activity">
-            <h4>Atividade Global</h4>
-            <CircleGauge value={stats.dau} />
-            <div className="hp-activity-info">
-              <div>DAU: {stats.dau}</div>
-              <div>MAU: {stats.mau}</div>
-              <div>DAU/MAU Ratio: {stats.dau_mau_ratio}</div>
-            </div>
-          </div>
+        <GlobalCarousel
+          title="Serviços"
+          items={serviceItems}
+          navigate={(path) => (window.location.href = path)}
+          openSchedulePopup={(item) =>
+            openSchedulePopup({ service: item })
+          }
+          showSchedule
+        />
+
+        <GlobalCarousel
+          title="Produtos"
+          items={productItems}
+          navigate={(path) => (window.location.href = path)}
+          showSchedule={false}
+        />
+
+        <div className="hp-bottom-grid">
+          {/* outros elementos do grid */}
         </div>
       </div>
 
@@ -170,7 +168,7 @@ export default function HomePage() {
         loadAvailableTimes={loadAvailableTimes}
         handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}
-        preselectedService={preselectedService}
+        preselectedServiceId={preselectedServiceId}
         preselectedEmployer={preselectedEmployer}
         establishment={wizardEstablishment}
       />

@@ -22,10 +22,11 @@ export default function AppointmentWizardModal({
   services = [],
   loadAvailableTimes,
   imageUrl,
-  preselectedService = null,
+  preselectedServiceId = null,
   preselectedEmployer = null,
   establishment = null,
 }) {
+
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedEmployer, setSelectedEmployer] = useState(null);
@@ -40,41 +41,42 @@ export default function AppointmentWizardModal({
   const finalStep = hasPreselectedEmployer ? 4 : 5;
 
   useEffect(() => {
-    if (!show) return;
+  if (!show) return;
 
-    setStep(1);
-    if (!show) return;
-  if (preselectedService) {
-  const serviceFromList = services.find(
-    (s) => (s.id || s.item_id) === (preselectedService.id || preselectedService.item_id)
-  );
-  setSelectedServices(serviceFromList ? [serviceFromList] : []);
-} else {
-  setSelectedServices([]);
-}
-    setSelectedEmployer(preselectedEmployer || null); // ✅ garante pré-seleção
-    setSelectedDate(null);
-    setAvailableTimes([]);
-    setSelectedTime(null);
-    setLoading(false);
+  setStep(1);
 
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        const parsed = JSON.parse(userData);
-        const profile = parsed.profile || {};
-        setCustomerCpf(profile.cpf || parsed.cpf || "");
-        setCustomerPhone(profile.phone || parsed.phone || "");
-      } catch (err) {
-        console.error("Erro ao carregar usuário:", err);
-        setCustomerCpf("");
-        setCustomerPhone("");
-      }
-    } else {
+  if (preselectedServiceId && services.length) {
+    const serviceFromList = services.find(
+      (s) => (s.id || s.item_id) === preselectedServiceId
+    );
+    setSelectedServices(serviceFromList ? [serviceFromList] : []);
+  } else {
+    setSelectedServices([]);
+  }
+
+  setSelectedEmployer(preselectedEmployer || null);
+  setSelectedDate(null);
+  setAvailableTimes([]);
+  setSelectedTime(null);
+  setLoading(false);
+
+  const userData = localStorage.getItem("user");
+  if (userData) {
+    try {
+      const parsed = JSON.parse(userData);
+      const profile = parsed.profile || {};
+      setCustomerCpf(profile.cpf || parsed.cpf || "");
+      setCustomerPhone(profile.phone || parsed.phone || "");
+    } catch {
       setCustomerCpf("");
       setCustomerPhone("");
     }
-  }, [show, preselectedService, preselectedEmployer, establishment]);
+  } else {
+    setCustomerCpf("");
+    setCustomerPhone("");
+  }
+}, [show, preselectedServiceId, preselectedEmployer, services]);
+
 
   const totalDuration = useMemo(
     () =>
