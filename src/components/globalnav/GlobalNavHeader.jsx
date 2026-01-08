@@ -5,7 +5,6 @@ import "./GlobalNavHeader.css";
 
 export default function GlobalNavHeader({ user, loadingMenu, handleToggleMobileMenu }) {
   const location = useLocation();
-
   const isActive = (path) => location.pathname.startsWith(path);
 
   const MenuLink = ({ to, children }) => (
@@ -16,39 +15,6 @@ export default function GlobalNavHeader({ user, loadingMenu, handleToggleMobileM
       {children}
     </Link>
   );
-
-  const renderMenus = () => {
-    if (!user) return null;
-
-    if (user.profile?.name === "Administrador") {
-      return (
-        <div className="globalnav__desktop-menu d-none d-lg-flex">
-          <MenuLink to="/user/list">Usuários</MenuLink>
-          <MenuLink to="/barber/list">Colaboradores</MenuLink>
-          <MenuLink to="/service/list">Serviços</MenuLink>
-          <MenuLink to="/appointments/list">Agendamentos</MenuLink>
-        </div>
-      );
-    }
-
-    if (user.isEmployer) {
-      return (
-        <div className="globalnav__desktop-menu d-none d-lg-flex">
-          <MenuLink to="/establishments">Estabelecimentos</MenuLink>
-          <MenuLink to="/employers">Profissionais</MenuLink>
-          <MenuLink to="/item/services">Serviços</MenuLink>
-        </div>
-      );
-    }
-
-    return (
-      <div className="globalnav__desktop-menu d-none d-lg-flex">
-        <MenuLink to="/services">Serviços</MenuLink>
-        <MenuLink to="/items">Produtos</MenuLink>
-        <MenuLink to="/appointments/my">Meus Agendamentos</MenuLink>
-      </div>
-    );
-  };
 
   return (
     <Navbar
@@ -68,24 +34,36 @@ export default function GlobalNavHeader({ user, loadingMenu, handleToggleMobileM
           />
         </Navbar.Brand>
 
-        {renderMenus()}
+        {/* MENU DESKTOP */}
+        <div className="globalnav__desktop-menu d-none d-lg-flex">
+          <MenuLink to="/establishments">Estabelecimentos</MenuLink>
+          <MenuLink to="/employers">Profissionais</MenuLink>
+          <MenuLink to="/item/services">Serviços</MenuLink>
+          <MenuLink to="/item/products">Produtos</MenuLink>
+
+          {user && user.profile?.name !== "Administrador" && (
+            <MenuLink to="/appointments/my">Meus Agendamentos</MenuLink>
+          )}
+
+          {user?.profile?.name === "Administrador" && (
+            <>
+              <MenuLink to="/user/list">Usuários</MenuLink>
+              <MenuLink to="/barber/list">Colaboradores</MenuLink>
+              <MenuLink to="/appointments/list">Agendamentos</MenuLink>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="globalnav__right">
         {!loadingMenu && (
-          user ? (
-            <button
-              onClick={handleToggleMobileMenu}
-              className="navlog__mobile-toggle-btn globalnav__mobile-btn"
-              aria-label="Abrir menu"
-            >
-              ☰
-            </button>
-          ) : (
-            <Link to="/login" className="navlog__login-btn globalnav__login-btn">
-              Login
-            </Link>
-          )
+          <button
+            onClick={handleToggleMobileMenu}
+            className="navlog__mobile-toggle-btn globalnav__mobile-btn"
+            aria-label="Abrir menu"
+          >
+            ☰
+          </button>
         )}
       </div>
     </Navbar>

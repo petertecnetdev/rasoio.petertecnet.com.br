@@ -1,3 +1,4 @@
+// src/components/GlobalNav.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
@@ -33,7 +34,6 @@ export default function GlobalNav() {
 
     const loadUser = async () => {
       const token = localStorage.getItem("token");
-
       if (!token) {
         if (!cancelled) {
           setUser(null);
@@ -54,7 +54,7 @@ export default function GlobalNav() {
             employer: data.employer,
             establishments: data.establishments || [],
             profile: data.profile || {},
-            is_barber: data.user?.is_barber ?? false, // 🔥 ADICIONADO
+            is_barber: data.user?.is_barber ?? false,
           };
 
           setUser(userData);
@@ -73,10 +73,8 @@ export default function GlobalNav() {
     };
 
     loadUser();
-
     const handleAuthChanged = () => loadUser();
     window.addEventListener("authChanged", handleAuthChanged);
-
     return () => {
       cancelled = true;
       window.removeEventListener("authChanged", handleAuthChanged);
@@ -105,20 +103,19 @@ export default function GlobalNav() {
         handleToggleMobileMenu={handleToggleMobileMenu}
       />
 
-      {showMobileMenu && user && (
-        <GlobalNavMenu
-          user={user}
-          loading={loading}
-          showAdminSubmenu={showAdminSubmenu}
-          setShowAdminSubmenu={setShowAdminSubmenu}
-          showEstSubmenu={showEstSubmenu}
-          setShowEstSubmenu={setShowEstSubmenu}
-          showBarberSubmenu={showBarberSubmenu}         // 🔥 ADICIONADO
-          setShowBarberSubmenu={setShowBarberSubmenu}   // 🔥 ADICIONADO
-          handleToggleMobileMenu={handleToggleMobileMenu}
-          handleLogout={handleLogout}
-        />
-      )}
+  {showMobileMenu && (
+  <GlobalNavMenu
+    user={user || {}}
+    loading={loading}
+    showAdminSubmenu={showAdminSubmenu}
+    setShowAdminSubmenu={setShowAdminSubmenu}
+    showEstSubmenu={showEstSubmenu}
+    setShowEstSubmenu={setShowEstSubmenu}
+    handleToggleMobileMenu={handleToggleMobileMenu}
+    handleLogout={handleLogout}
+  />
+)}
+
     </>
   );
 }

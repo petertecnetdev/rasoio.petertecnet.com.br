@@ -146,8 +146,23 @@
    RESPONSIVIDADE
 ============================================================ */
 
+/* Antes você tinha escondido o menu desktop no mobile */
 @media (max-width: 991px) {
   .globalnav__desktop-menu {
     display: none !important;
   }
+}
+
+/* Certifique-se de que navlog__mobile-menu pode aparecer em qualquer tela */
+.navlog__mobile-menu {
+  display: block; /* controlar via estado showMobileMenu */
+  position: fixed;
+  top: 72px;
+  left: 0;
+  width: 250px;
+  height: calc(100% - 72px);
+  background: rgba(11, 11, 12, 0.95);
+  z-index: 9999;
+  overflow-y: auto;
+  transition: transform 0.3s ease;
 }

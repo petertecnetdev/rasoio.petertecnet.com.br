@@ -39,6 +39,7 @@ import ItemCreatePage from "./pages/item/ItemCreatePage";
 import ItemViewPage from "./pages/item/ItemViewPage";
 import ItemUpdatePage from "./pages/item/ItemUpdatePage";
 import ItemServiceHomePage from "./pages/item/ItemServiceHomePage";
+import ItemProductHomePage from "./pages/item/ItemProductHomePage";
 
 import EmployerListPage from "./pages/employer/EmployerListPage";
 import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
@@ -231,6 +232,7 @@ function AppInner() {
 
             
             <Route path="/item/services" element={<ItemServiceHomePage />} />
+            <Route path="/item/products" element={<ItemProductHomePage />} />
 
             <Route
               path="/employer/list/:slug"
