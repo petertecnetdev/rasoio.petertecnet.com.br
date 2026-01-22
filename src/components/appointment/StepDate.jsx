@@ -5,7 +5,7 @@ import tz from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import localeData from "dayjs/plugin/localeData";
 import "dayjs/locale/pt-br";
-import "./steps.css";
+import "./StepDate.css";
 
 dayjs.extend(utc);
 dayjs.extend(tz);

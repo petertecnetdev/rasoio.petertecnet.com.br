@@ -1,350 +1,287 @@
-/* src/components/GlobalNav.css
-   =========================================================
-   GLOBAL NAV — RASOIO GRADE
-   Premium | Dark | Glass | Mobile-first | Acessível
-   ========================================================= */
+/* ============================
+   GlobalNav.css (RASOIO THEME)
+   Dark Cyber Neon (Azul/Ciano)
+   ============================ */
 
-/* =========================
-   DESIGN TOKENS
-   ========================= */
 :root {
-  /* Base */
-  --nav-bg: rgba(7, 10, 18, 0.72);
-  --nav-bg-2: rgba(10, 14, 26, 0.72);
-  --nav-border: rgba(255, 255, 255, 0.08);
-  --nav-border-2: rgba(255, 255, 255, 0.12);
+  /* Height */
+  --nav-h: 78px;
 
-  --nav-text: rgba(255, 255, 255, 0.92);
-  --nav-text-2: rgba(255, 255, 255, 0.68);
-  --nav-muted: rgba(255, 255, 255, 0.52);
+  /* Base colors (Rasoio) */
+  --bg-0: #05070b;
+  --bg-1: rgba(6, 10, 18, 0.82);
+  --bg-2: rgba(9, 16, 30, 0.78);
 
-  /* Accent (ciano da identidade) */
-  --nav-accent: #19d3ff;
-  --nav-accent-2: #7cf3ff;
-  --nav-accent-ink: rgba(25, 211, 255, 0.18);
+  --border: rgba(90, 220, 255, 0.10);
+  --border-strong: rgba(90, 220, 255, 0.20);
 
-  /* States */
-  --nav-danger: #ff4d6d;
-  --nav-success: #2fe07b;
+  --text: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.68);
 
-  /* Shadows */
-  --nav-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-  --nav-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --nav-glow: 0 0 0 1px rgba(25, 211, 255, 0.12),
-    0 18px 60px rgba(25, 211, 255, 0.10);
+  /* Rasoio neon palette */
+  --neon: #19d6ff;       /* cyan neon */
+  --neon-2: #00a8ff;     /* blue neon */
+  --neon-3: #6bf0ff;     /* bright highlight */
+  --danger: #ff4d6d;
+
+  /* Surfaces */
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-2: rgba(255, 255, 255, 0.09);
+
+  /* Shadows / glow */
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  --glow: 0 0 0 4px rgba(25, 214, 255, 0.18);
+  --glow-strong: 0 0 0 5px rgba(25, 214, 255, 0.22),
+                 0 18px 45px rgba(0, 168, 255, 0.12);
 
   /* Radius */
-  --nav-r-lg: 18px;
-  --nav-r-md: 14px;
-  --nav-r-sm: 12px;
-
-  /* Sizes */
-  --nav-h: 72px;
-  --nav-pad-x: 18px;
-  --nav-gap: 12px;
-
-  /* Anim */
-  --nav-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
-  --nav-fast: 140ms var(--nav-ease);
-  --nav-med: 220ms var(--nav-ease);
-
-  /* Focus */
-  --nav-focus: 0 0 0 4px rgba(25, 211, 255, 0.18);
+  --radius: 18px;
 }
 
-/* =========================
-   BASE / RESET
-   ========================= */
-.nav,
-.nav * {
+* {
   box-sizing: border-box;
 }
 
+/* ============================
+   NAV WRAPPER
+   ============================ */
 .nav {
   position: sticky;
   top: 0;
   z-index: 1200;
-
   width: 100%;
-  color: var(--nav-text);
+  height: var(--nav-h);
 
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: radial-gradient(
+      1200px 300px at 15% -20%,
+      rgba(25, 214, 255, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      900px 260px at 85% -30%,
+      rgba(0, 168, 255, 0.14),
+      transparent 55%
+    ),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
 
-  background: linear-gradient(180deg, var(--nav-bg), var(--nav-bg-2));
-  border-bottom: 1px solid var(--nav-border);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
 }
 
+@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+  .nav {
+    background: linear-gradient(180deg, rgba(6, 10, 18, 0.95), rgba(9, 16, 30, 0.92));
+  }
+}
+
+/* inner layout */
 .nav__bar {
+  height: var(--nav-h);
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  height: var(--nav-h);
-  padding: 0 var(--nav-pad-x);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+
+  padding: 10px 16px;
+  gap: 14px;
 }
 
-/* Subtle top highlight */
-.nav::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(25, 211, 255, 0),
-    rgba(25, 211, 255, 0.28),
-    rgba(25, 211, 255, 0)
-  );
-  pointer-events: none;
-}
-
-/* =========================
-   LEFT
-   ========================= */
+/* ============================
+   LEFT AREA
+   ============================ */
 .nav__left {
   display: flex;
   align-items: center;
-  gap: var(--nav-gap);
+  gap: 12px;
   min-width: 0;
-}
-
-/* Helper class exists in JSX */
-.nav__left--fb {
   flex: 1;
 }
 
 .nav__brand {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-
-  background: radial-gradient(
-      120% 120% at 20% 10%,
-      rgba(25, 211, 255, 0.20),
-      rgba(25, 211, 255, 0.06) 40%,
-      rgba(255, 255, 255, 0.02) 70%
-    ),
-    rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--nav-border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-
-  transition: transform var(--nav-fast), box-shadow var(--nav-fast),
-    border-color var(--nav-fast);
+  gap: 10px;
+  text-decoration: none;
   user-select: none;
+
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  transition: transform 0.15s ease, border 0.2s ease, background 0.2s ease;
 }
 
 .nav__brand:hover {
   transform: translateY(-1px);
-  border-color: rgba(25, 211, 255, 0.22);
-  box-shadow: var(--nav-glow);
-}
-
-.nav__brand:active {
-  transform: translateY(0px) scale(0.98);
+  border-color: rgba(25, 214, 255, 0.22);
+  background: rgba(25, 214, 255, 0.05);
 }
 
 .nav__logo {
-  width: 26px;
-  height: 26px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
-}
-
-/* =========================
-   SEARCH
-   ========================= */
-.nav__search {
-  flex: 1;
-  min-width: 180px;
-  max-width: 520px;
-  position: relative;
-}
-
-.nav__search--left {
-  margin-left: 6px;
-}
-
-.nav__search input[type="search"] {
-  width: 100%;
-  height: 44px;
   border-radius: 14px;
 
-  padding: 0 14px 0 42px;
-
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--nav-border);
-  color: var(--nav-text);
-
-  outline: none;
-
-  transition: border-color var(--nav-fast), box-shadow var(--nav-fast),
-    background var(--nav-fast), transform var(--nav-fast);
+  /* neon glow around logo */
+  filter:
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 12px rgba(25, 214, 255, 0.28))
+    drop-shadow(0 0 22px rgba(0, 168, 255, 0.14));
 }
 
-.nav__search input[type="search"]::placeholder {
-  color: rgba(255, 255, 255, 0.48);
+/* ============================
+   SEARCH (RASOIO STYLE)
+   ============================ */
+.nav__search {
+  display: flex;
+  align-items: center;
+
+  min-width: 260px;
+  max-width: 460px;
+  width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  position: relative;
+
+  /* subtle glow container */
+  border-radius: 999px;
 }
 
-/* Magnifier using CSS (no extra markup) */
 .nav__search::before {
-  content: "⌕";
+  content: "🔎";
   position: absolute;
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
 
-  width: 20px;
-  height: 20px;
-
-  display: grid;
-  place-items: center;
-
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.55);
-  opacity: 0.95;
+  font-size: 14px;
+  opacity: 0.78;
   pointer-events: none;
+
+  filter: drop-shadow(0 0 10px rgba(25, 214, 255, 0.22));
 }
 
-.nav__search input[type="search"]:hover {
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.14);
+.nav__search input {
+  width: 100%;
+  height: 46px;
+
+  padding: 10px 14px;
+  padding-left: 44px;
+
+  border-radius: 999px;
+
+  /* glass + neon border */
+  background: rgba(5, 9, 16, 0.60);
+  border: 1px solid rgba(25, 214, 255, 0.14);
+
+  color: var(--text);
+  outline: none;
+
+  font-size: 14px;
+  letter-spacing: 0.2px;
+
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(0, 168, 255, 0.06);
+
+  transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+    transform 0.15s ease;
 }
 
-.nav__search input[type="search"]:focus {
-  border-color: rgba(25, 211, 255, 0.35);
-  box-shadow: var(--nav-focus);
-  background: rgba(25, 211, 255, 0.06);
+.nav__search input::placeholder {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.nav__search input:hover {
+  border-color: rgba(25, 214, 255, 0.22);
+  background: rgba(5, 10, 18, 0.66);
+}
+
+.nav__search input:focus {
+  border-color: rgba(25, 214, 255, 0.55);
+  box-shadow: var(--glow-strong);
+  background: rgba(5, 10, 18, 0.72);
   transform: translateY(-1px);
 }
 
-/* Ctrl+K badge */
-.nav__search::after {
-  content: "Ctrl + K";
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 6px 10px;
-
-  font-size: 12px;
-  letter-spacing: 0.2px;
-  color: rgba(255, 255, 255, 0.56);
-
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 999px;
-
-  pointer-events: none;
+/* Cancel button cleanup */
+.nav__search input[type="search"]::-webkit-search-decoration,
+.nav__search input[type="search"]::-webkit-search-cancel-button,
+.nav__search input[type="search"]::-webkit-search-results-button,
+.nav__search input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
 }
 
-.nav__search input[type="search"]:focus + * {
-  /* no-op, mantém compatibilidade */
-}
-
-/* Hide badge on small widths */
-@media (max-width: 980px) {
-  .nav__search::after {
-    display: none;
-  }
-}
-
-/* =========================
+/* ============================
    ICON LINKS
-   ========================= */
+   ============================ */
 .nav__links {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.nav__links--icons {
-  padding-left: 6px;
-}
-
-.nav__link {
-  text-decoration: none;
-  color: inherit;
+  gap: 10px;
+  margin-left: 6px;
 }
 
 .nav__iconLink {
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;
+  width: 46px;
+  height: 46px;
 
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  text-decoration: none;
 
-  transition: transform var(--nav-fast), border-color var(--nav-fast),
-    background var(--nav-fast), box-shadow var(--nav-fast);
-  position: relative;
-  overflow: hidden;
-}
+  background:
+    radial-gradient(140px 50px at 30% 20%, rgba(25, 214, 255, 0.16), transparent 60%),
+    rgba(255, 255, 255, 0.06);
 
-.nav__iconLink::before {
-  content: "";
-  position: absolute;
-  inset: -60% -40%;
-  background: radial-gradient(
-    60% 60% at 30% 30%,
-    rgba(25, 211, 255, 0.22),
-    rgba(25, 211, 255, 0) 60%
-  );
-  opacity: 0;
-  transition: opacity var(--nav-fast);
-  pointer-events: none;
+  border: 1px solid rgba(25, 214, 255, 0.10);
+
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.30);
+
+  transition: transform 0.15s ease, background 0.2s ease, border 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav__iconLink:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(25, 211, 255, 0.20);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+  border-color: rgba(25, 214, 255, 0.28);
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.34),
+    0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
-.nav__iconLink:hover::before {
-  opacity: 1;
-}
+.nav__iconLink.active {
+  border-color: rgba(25, 214, 255, 0.65);
+  background:
+    radial-gradient(160px 60px at 30% 20%, rgba(25, 214, 255, 0.34), transparent 62%),
+    rgba(0, 168, 255, 0.10);
 
-.nav__iconLink:active {
-  transform: translateY(0px) scale(0.98);
+  box-shadow:
+    0 0 0 4px rgba(25, 214, 255, 0.16),
+    0 16px 34px rgba(0, 168, 255, 0.10);
 }
 
 .nav__icon {
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.82);
-  transition: color var(--nav-fast), transform var(--nav-fast);
+  color: rgba(255, 255, 255, 0.94);
+  filter: drop-shadow(0 0 10px rgba(25, 214, 255, 0.12));
 }
 
-.nav__iconLink:hover .nav__icon {
-  color: rgba(255, 255, 255, 0.96);
-  transform: translateY(-0.5px);
-}
-
-/* Active icon link */
-.nav__iconLink.active {
-  background: rgba(25, 211, 255, 0.10);
-  border-color: rgba(25, 211, 255, 0.38);
-  box-shadow: 0 0 0 1px rgba(25, 211, 255, 0.12),
-    0 20px 50px rgba(25, 211, 255, 0.12);
-}
-
-.nav__iconLink.active .nav__icon {
-  color: var(--nav-accent-2);
-}
-
-/* =========================
-   RIGHT
-   ========================= */
+/* ============================
+   RIGHT AREA
+   ============================ */
 .nav__right {
   display: flex;
   align-items: center;
@@ -353,53 +290,56 @@
   min-width: 0;
 }
 
-/* Location pill */
+/* City selector */
 .nav__locationWrap {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .nav__locationText {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 
-  height: 42px;
-  padding: 0 12px;
-
+  padding: 10px 12px;
   border-radius: 999px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.78);
 
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(140px 50px at 20% 20%, rgba(25, 214, 255, 0.16), transparent 55%),
+    rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(25, 214, 255, 0.12);
+
+  color: rgba(255, 255, 255, 0.90);
+  font-size: 13px;
+  font-weight: 800;
 
   cursor: pointer;
   user-select: none;
 
-  transition: background var(--nav-fast), border-color var(--nav-fast),
-    transform var(--nav-fast), box-shadow var(--nav-fast);
+  max-width: 290px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.26);
+
+  transition: background 0.2s ease, border 0.2s ease, transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav__locationText:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(25, 211, 255, 0.22);
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  border-color: rgba(25, 214, 255, 0.30);
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.30),
+    0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
-.nav__locationText:active {
-  transform: translateY(0px) scale(0.99);
-}
+.nav__changeCityBtn {}
 
-.nav__changeCityBtn {
-  /* hook class from JSX */
-}
-
-/* =========================
-   AUTH ACTIONS (GUEST)
-   ========================= */
+/* Auth buttons */
 .nav__authActions {
   display: flex;
   align-items: center;
@@ -407,60 +347,58 @@
 }
 
 .nav__btn {
-  height: 42px;
-  padding: 0 14px;
-  border-radius: 14px;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+
+  font-weight: 900;
+  font-size: 13px;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 0.2px;
-
   text-decoration: none;
   user-select: none;
 
   border: 1px solid transparent;
-  transition: transform var(--nav-fast), box-shadow var(--nav-fast),
-    background var(--nav-fast), border-color var(--nav-fast),
-    color var(--nav-fast);
+
+  transition: transform 0.15s ease, background 0.2s ease, border 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav__btn:hover {
+  transform: translateY(-1px);
 }
 
 .nav__btn--ghost {
-  color: rgba(255, 255, 255, 0.80);
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(25, 214, 255, 0.10);
+  color: var(--text);
 }
 
 .nav__btn--ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(25, 211, 255, 0.18);
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  border-color: rgba(25, 214, 255, 0.26);
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
 .nav__btn--primary {
-  color: rgba(0, 6, 12, 0.92);
-  background: linear-gradient(135deg, var(--nav-accent), var(--nav-accent-2));
-  border-color: rgba(25, 211, 255, 0.35);
-  box-shadow: 0 16px 40px rgba(25, 211, 255, 0.16);
+  background: linear-gradient(135deg, rgba(25, 214, 255, 0.95), rgba(0, 168, 255, 0.95));
+  color: #001018;
+  border-color: rgba(255, 255, 255, 0.10);
+
+  box-shadow:
+    0 16px 40px rgba(0, 168, 255, 0.16),
+    0 0 0 2px rgba(25, 214, 255, 0.18);
 }
 
 .nav__btn--primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 22px 60px rgba(25, 211, 255, 0.22);
-  filter: saturate(1.06);
+  box-shadow:
+    0 20px 46px rgba(0, 168, 255, 0.22),
+    0 0 0 5px rgba(25, 214, 255, 0.16);
 }
 
-.nav__btn:active {
-  transform: translateY(0px) scale(0.99);
-}
-
-/* =========================
-   USER
-   ========================= */
+/* User area */
 .nav__user {
   position: relative;
   display: flex;
@@ -468,326 +406,299 @@
 }
 
 .nav__userBtn {
-  height: 44px;
-  padding: 0 10px 0 8px;
+  height: 46px;
+  padding: 6px 12px 6px 8px;
   border-radius: 999px;
 
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
 
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(25, 214, 255, 0.10);
 
-  color: var(--nav-text);
   cursor: pointer;
   user-select: none;
 
-  transition: transform var(--nav-fast), box-shadow var(--nav-fast),
-    border-color var(--nav-fast), background var(--nav-fast);
+  transition: transform 0.15s ease, background 0.2s ease, border 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav__userBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(25, 211, 255, 0.22);
   transform: translateY(-1px);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.26);
-}
-
-.nav__userBtn:active {
-  transform: translateY(0px) scale(0.99);
+  border-color: rgba(25, 214, 255, 0.26);
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
 .nav__avatar {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  flex-shrink: 0;
+
+  border: 1px solid rgba(25, 214, 255, 0.22);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(25, 214, 255, 0.10);
 }
 
 .nav__userName {
-  max-width: 190px;
+  max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 
+  color: rgba(255, 255, 255, 0.92);
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.15px;
-  color: rgba(255, 255, 255, 0.86);
+  font-weight: 900;
 }
 
-@media (max-width: 1060px) {
-  .nav__userName {
-    max-width: 140px;
-  }
-}
-
-@media (max-width: 860px) {
-  .nav__userName {
-    display: none;
-  }
-}
-
-/* =========================
-   DROPDOWN MENU
-   ========================= */
+/* Dropdown menu */
 .nav__userMenu {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 300px;
 
-  background: linear-gradient(180deg, rgba(10, 14, 26, 0.92), rgba(7, 10, 18, 0.92));
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  width: 290px;
+  max-width: calc(100vw - 20px);
+
+  background:
+    radial-gradient(600px 180px at 30% -50%, rgba(25, 214, 255, 0.18), transparent 60%),
+    rgba(8, 12, 22, 0.92);
+
+  border: 1px solid rgba(25, 214, 255, 0.18);
   border-radius: 18px;
 
-  box-shadow: var(--nav-shadow);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.65),
+    0 0 0 5px rgba(25, 214, 255, 0.08);
+
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+
+  padding: 10px;
   overflow: hidden;
-
-  transform-origin: top right;
-  animation: navMenuIn 160ms var(--nav-ease);
-}
-
-@keyframes navMenuIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* little pointer */
-.nav__userMenu::before {
-  content: "";
-  position: absolute;
-  top: -8px;
-  right: 22px;
-  width: 14px;
-  height: 14px;
-  background: rgba(10, 14, 26, 0.92);
-  border-left: 1px solid rgba(255, 255, 255, 0.10);
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
-  transform: rotate(45deg);
 }
 
 .nav__menuGroup {
-  padding: 12px;
+  padding: 6px;
 }
 
 .nav__menuTitle {
   display: block;
-  font-size: 11px;
+  padding: 8px 10px 6px 10px;
+  font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.9px;
+  color: rgba(255, 255, 255, 0.62);
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 2px 6px 10px;
 }
 
 .nav__userMenuItem {
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
 
-  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(25, 214, 255, 0.10);
+
   border-radius: 14px;
+  padding: 10px 10px;
 
-  background: transparent;
-  border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 900;
+  font-size: 13px;
 
   cursor: pointer;
-  text-align: left;
+  user-select: none;
 
-  font-size: 13px;
-  font-weight: 750;
-  letter-spacing: 0.15px;
-
-  transition: background var(--nav-fast), border-color var(--nav-fast),
-    transform var(--nav-fast);
+  transition: background 0.2s ease, border 0.2s ease, transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .nav__userMenuItem:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
   transform: translateY(-1px);
-}
-
-.nav__userMenuItem:active {
-  transform: translateY(0px);
+  border-color: rgba(25, 214, 255, 0.26);
+  background: rgba(25, 214, 255, 0.06);
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
 .nav__divider {
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.00),
-    rgba(255, 255, 255, 0.10),
-    rgba(255, 255, 255, 0.00)
-  );
+  width: 100%;
+  background: rgba(25, 214, 255, 0.12);
+  margin: 8px 0;
 }
 
-/* Logout emphasis */
+/* Logout style */
 .nav__logout {
-  color: rgba(255, 255, 255, 0.88);
-  border-color: rgba(255, 77, 109, 0.0);
+  background: rgba(255, 77, 109, 0.10);
+  border-color: rgba(255, 77, 109, 0.22);
 }
 
 .nav__logout:hover {
-  background: rgba(255, 77, 109, 0.10);
-  border-color: rgba(255, 77, 109, 0.18);
+  background: rgba(255, 77, 109, 0.14);
+  border-color: rgba(255, 77, 109, 0.28);
+  box-shadow: 0 0 0 4px rgba(255, 77, 109, 0.12);
 }
 
-/* =========================
-   ACCESSIBILITY / FOCUS
-   ========================= */
-.nav a:focus-visible,
-.nav button:focus-visible,
-.nav input:focus-visible,
-.nav [role="button"]:focus-visible {
-  outline: none;
-  box-shadow: var(--nav-focus);
-  border-radius: 14px;
-}
+/* ============================
+   RESPONSIVO
+   ============================ */
 
-/* =========================
-   RESPONSIVE
-   ========================= */
-
-/* Hide search on mobile (requested behavior in JSX comment) */
-@media (max-width: 780px) {
-  :root {
-    --nav-h: 66px;
-    --nav-pad-x: 14px;
+/* >= 1200px */
+@media (min-width: 1200px) {
+  .nav__bar {
+    padding: 10px 20px;
   }
+}
 
-  .nav__search {
-    display: none;
+/* <= 980px */
+@media (max-width: 980px) {
+  :root {
+    --nav-h: 86px;
   }
 
   .nav__bar {
-    gap: 12px;
+    padding: 10px 12px;
   }
 
-  .nav__iconLink {
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+  .nav__search {
+    min-width: 200px;
+    max-width: 340px;
+  }
+
+  .nav__userName {
+    max-width: 120px;
+  }
+
+  .nav__locationText {
+    max-width: 240px;
+  }
+}
+
+/* <= 760px (MOBILE) */
+@media (max-width: 760px) {
+  :root {
+    --nav-h: 136px;
+  }
+
+  .nav__bar {
+    height: var(--nav-h);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .nav__left {
+    width: 100%;
+    flex: unset;
+    justify-content: space-between;
+    gap: 10px;
   }
 
   .nav__brand {
+    flex: 0 0 auto;
+    padding: 4px 6px;
+  }
+
+  .nav__links {
+    gap: 8px;
+    margin-left: 0;
+  }
+
+  .nav__iconLink {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Search line */
+  .nav__search {
+    order: 10;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 4px;
+  }
+
+  .nav__search input {
+    height: 50px;
+    border-radius: 16px;
+    font-size: 14px;
+  }
+
+  .nav__right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  /* city always visible */
+  .nav__locationText {
+    max-width: 52vw;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .nav__authActions .nav__btn {
+    height: 44px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .nav__userBtn {
+    height: 44px;
+    padding: 6px 10px 6px 8px;
+  }
+
+  .nav__userName {
+    display: none;
+  }
+
+  .nav__userMenu {
+    right: 0;
+    width: min(360px, calc(100vw - 20px));
+  }
+}
+
+/* <= 420px */
+@media (max-width: 420px) {
+  :root {
+    --nav-h: 144px;
+  }
+
+  .nav__logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .nav__iconLink {
     width: 42px;
     height: 42px;
   }
 
-  .nav__locationText {
-    height: 40px;
-    padding: 0 10px;
-    font-size: 12px;
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .nav__userMenu {
-    width: min(92vw, 320px);
-  }
-}
-
-/* Ultra small screens */
-@media (max-width: 420px) {
-  .nav__links--icons {
-    gap: 6px;
-  }
-
-  .nav__iconLink {
-    width: 38px;
-    height: 38px;
+  .nav__search input {
+    height: 52px;
+    padding: 10px 12px;
+    padding-left: 44px;
   }
 
   .nav__locationText {
-    display: none; /* ainda acessível via menu de usuário */
+    max-width: 60vw;
   }
 }
 
-/* =========================
-   REDUCED MOTION
-   ========================= */
-@media (prefers-reduced-motion: reduce) {
-  .nav__brand,
-  .nav__iconLink,
-  .nav__btn,
-  .nav__userBtn,
-  .nav__userMenu,
-  .nav__userMenuItem,
-  .nav__search input[type="search"] {
-    transition: none !important;
-    animation: none !important;
-  }
+/* ============================
+   Ajustes utilitários (do JSX)
+   ============================ */
+.nav .m-2 {
+  margin: 0 !important;
 }
 
-/* =========================
-   1) NAV SEMPRE FIXO
-   ========================= */
-.nav {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  z-index: 9999 !important;
-}
-
-/* Compensa a altura do nav para não “comer” o conteúdo */
-body {
-  padding-top: var(--nav-h) !important;
-}
-
-/* =========================
-   2) BADGE "Ctrl + K" TORTO
-   ========================= */
-
-/* garante espaço suficiente pro badge na direita */
-.nav__search input[type="search"] {
-  padding-right: 96px !important;
-  line-height: 44px !important; /* ajuda a centralizar texto dentro do input */
-}
-
-/* badge centralizado de verdade */
-.nav__search::after {
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-
-  height: 26px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  line-height: 1 !important;
-  padding: 0 10px !important; /* evita “pular” por padding vertical */
-}
-
-/* ícone/marcador do search também centralizado */
-.nav__search::before {
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  line-height: 1 !important;
-  display: grid !important;
-  place-items: center !important;
-}
-
-/* =========================
-   MOBILE (variável já muda no seu CSS, mas reforça a compensação do body)
-   ========================= */
-@media (max-width: 780px) {
-  body {
-    padding-top: var(--nav-h) !important;
-  }
+.nav .mt-4 {
+  margin-top: 0 !important;
 }

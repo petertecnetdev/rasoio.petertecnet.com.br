@@ -5,8 +5,11 @@ import withReactContent from "sweetalert2-react-content";
 import GlobalDateCarousel from "../GlobalDateCarousel";
 import GlobalModal from "../GlobalModal";
 import GlobalButton from "../GlobalButton";
+import ProcessingIndicatorComponent from "../ProcessingIndicatorComponent";
 import { apiBaseUrl } from "../../config";
 import useImageUtils from "../../hooks/useImageUtils";
+import StepTime from "./StepTime";
+
 import "./AppointmentWizardModal.css";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -153,6 +156,39 @@ export default function AppointmentWizardModal({
     );
   }, [establishment, preselectedEmployer, resolvedEmployer]);
 
+  // ✅ CORREÇÃO PRINCIPAL:
+  // Se trocar employer, APAGA horários e horário selecionado (evita agendar com horário errado)
+  useEffect(() => {
+    if (!show) return;
+
+    setSelectedTime(null);
+    setAvailableTimes([]);
+
+    // se já estava no step horário ou confirmação, volta para o step de data,
+    // para obrigar o usuário recarregar horários do employer correto
+    const stepDate = hasPreselectedEmployer ? 2 : 3;
+    if (step >= stepDate + 1) {
+      setStep(stepDate);
+    }
+  }, [resolvedEmployer?.id]); // ✅ quando muda o employer
+
+  // ✅ Se trocar a data, zera horário também
+  useEffect(() => {
+    if (!show) return;
+    setSelectedTime(null);
+    setAvailableTimes([]);
+  }, [selectedDate]);
+
+  // ✅ Segurança: se lista de horários mudou e não contém o horário selecionado, apaga
+  useEffect(() => {
+    if (!selectedTime) return;
+
+    const safe = Array.isArray(availableTimes) ? availableTimes : [];
+    if (!safe.includes(selectedTime)) {
+      setSelectedTime(null);
+    }
+  }, [availableTimes, selectedTime]);
+
   const resolveImage = useCallback(
     (entity, name) => {
       const fileCandidates = Array.isArray(entity?.files)
@@ -189,7 +225,10 @@ export default function AppointmentWizardModal({
 
   const establishmentLogoSrc = useMemo(() => {
     if (!resolvedEstablishment) return "/images/rasoio.png";
-    return resolveImage(resolvedEstablishment, resolvedEstablishment?.name || "Estabelecimento");
+    return resolveImage(
+      resolvedEstablishment,
+      resolvedEstablishment?.name || "Estabelecimento"
+    );
   }, [resolvedEstablishment, resolveImage]);
 
   const showResultModal = useCallback(async ({ type, title, html, text }) => {
@@ -307,8 +346,14 @@ export default function AppointmentWizardModal({
 
       try {
         setLoading(true);
+
+        // ✅ antes de carregar de novo, limpa seleção
+        setSelectedTime(null);
+        setAvailableTimes([]);
+
         const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
         const times = await loadAvailableTimes(dateSP, resolvedEmployer, totalDuration);
+
         setAvailableTimes(Array.isArray(times) ? times : []);
         setStep((prev) => prev + 1);
       } catch (e) {
@@ -367,8 +412,7 @@ export default function AppointmentWizardModal({
           })),
           client_id: parsed?.id || null,
           customer_name:
-            `${parsed?.first_name || ""} ${parsed?.last_name || ""}`.trim() ||
-            "Cliente App",
+            `${parsed?.first_name || ""} ${parsed?.last_name || ""}`.trim() || "Cliente App",
           customer_phone: customerPhone,
           customer_cpf: customerCpf,
           origin: "App",
@@ -438,10 +482,7 @@ export default function AppointmentWizardModal({
               <div class="awm-swal__title">Campos com erro:</div>
               <ul class="awm-swal__list">
                 ${fieldMessages
-                  .map(
-                    (x) =>
-                      `<li><b>${escapeHtml(x.field)}</b>: ${escapeHtml(x.message)}</li>`
-                  )
+                  .map((x) => `<li><b>${escapeHtml(x.field)}</b>: ${escapeHtml(x.message)}</li>`)
                   .join("")}
               </ul>
             </div>
@@ -461,9 +502,14 @@ export default function AppointmentWizardModal({
 
   const handleBack = () => setStep((s) => Math.max(1, s - 1));
 
+  const handleSafeHide = useCallback(() => {
+    if (loading) return;
+    onHide?.();
+  }, [loading, onHide]);
+
   const footer = (
     <>
-      <GlobalButton variant="secondary" onClick={onHide} disabled={loading}>
+      <GlobalButton variant="secondary" onClick={handleSafeHide} disabled={loading}>
         Cancelar
       </GlobalButton>
 
@@ -482,17 +528,34 @@ export default function AppointmentWizardModal({
   return (
     <GlobalModal
       show={show}
-      onHide={onHide}
+      onHide={handleSafeHide}
       size="xl"
       backdrop="static"
       title="Agendamento"
-      subtitle={resolvedEstablishment?.name ? resolvedEstablishment.name : "Selecione serviços e horário"}
+      subtitle={
+        resolvedEstablishment?.name
+          ? resolvedEstablishment.name
+          : "Selecione serviços e horário"
+      }
       logoSrc={establishmentLogoSrc}
       footer={footer}
       className="awm-modal awm-modal--fullscreen"
       dialogClassName="awm-modal__dialog"
       contentClassName="awm-modal__content"
     >
+      {loading && (
+        <ProcessingIndicatorComponent
+          messages={[
+            "Processando seu agendamento...",
+            "Verificando disponibilidade...",
+            "Registrando pedido...",
+            "Aguarde só mais um instante...",
+          ]}
+          interval={1100}
+          gifSrc="/images/logo.mp4"
+        />
+      )}
+
       <div className="awm__root">
         {(resolvedEstablishment || resolvedEmployer) && (
           <div className="awm__summary">
@@ -562,11 +625,17 @@ export default function AppointmentWizardModal({
             <div className="grid">
               {employers.map((e) => {
                 const active = selectedEmployer?.id === e.id;
+
                 return (
                   <div
                     key={e.id}
                     className={`card-emp text-white ${active ? "active" : ""}`}
-                    onClick={() => setSelectedEmployer(e)}
+                    onClick={() => {
+                      // ✅ AO TROCAR EMPLOYER, ZERA HORÁRIO ANTERIOR
+                      setSelectedEmployer(e);
+                      setSelectedTime(null);
+                      setAvailableTimes([]);
+                    }}
                   >
                     <img
                       src={resolveImage(e, e.name)}
@@ -582,22 +651,22 @@ export default function AppointmentWizardModal({
         )}
 
         {step === (hasPreselectedEmployer ? 2 : 3) && (
-          <GlobalDateCarousel selectedDate={selectedDate} onChange={setSelectedDate} daysToShow={14} />
+          <GlobalDateCarousel
+            selectedDate={selectedDate}
+            onChange={setSelectedDate}
+            daysToShow={14}
+          />
         )}
 
         {step === (hasPreselectedEmployer ? 3 : 4) && (
-          <div className="grid-times">
-            {availableTimes.map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`time-btn ${selectedTime === t ? "active" : ""}`}
-                onClick={() => setSelectedTime(t)}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <StepTime
+            availableTimes={availableTimes}
+            selected={selectedTime}
+            onChange={setSelectedTime}
+            loading={loading}
+            title="Escolha o Horário"
+            subtitle="Toque em um horário para selecionar"
+          />
         )}
 
         {step === finalStep && (

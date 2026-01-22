@@ -2,13 +2,16 @@
 import { useCallback } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import tz from "dayjs/plugin/timezone";
 
-export default function useAppointment(
-  apiBaseUrl,
-  appId,
-  token,
-  establishment
-) {
+dayjs.extend(utc);
+dayjs.extend(tz);
+
+export default function useAppointment(apiBaseUrl, appId, token, establishment) {
+  const TZ = "America/Sao_Paulo";
+
   const getToken = () => localStorage.getItem("token");
   const getUser = () => {
     try {
@@ -18,15 +21,32 @@ export default function useAppointment(
     }
   };
 
+  // ✅ padroniza SEMPRE como YYYY-MM-DD (evita UTC quebrando o dia)
+  const normalizeDateToYMD = (date) => {
+    if (!date) return null;
+
+    if (typeof date === "string") {
+      // aceita "YYYY-MM-DD" ou "YYYY-MM-DDTHH:mm..."
+      return date.slice(0, 10);
+    }
+
+    // caso venha Date/objeto
+    return dayjs(date).tz(TZ).format("YYYY-MM-DD");
+  };
+
   const loadAvailableTimes = useCallback(
     async (date, employer, totalDuration) => {
       try {
         const userToken = getToken();
         if (!userToken || !employer?.id || !date) return [];
 
+        const dateYMD = normalizeDateToYMD(date);
+        if (!dateYMD) return [];
+
         const payload = {
           employer_id: employer.id,
-          date: typeof date === "string" ? date : new Date(date).toISOString(),
+          // ✅ IMPORTANTÍSSIMO: SEMPRE "YYYY-MM-DD"
+          date: dateYMD,
           duration: Number(totalDuration || 0),
         };
 
@@ -73,6 +93,7 @@ export default function useAppointment(
         let selectedServices = Array.isArray(initialService)
           ? [...initialService]
           : [initialService];
+
         let selectedEmployer = preselectedEmployer;
         let selectedDate = null;
         let selectedTime = null;
@@ -125,13 +146,11 @@ export default function useAppointment(
                 headers: { Authorization: `Bearer ${userToken}` },
               });
 
-              const container =
-                Swal.getPopup().querySelector("#employers");
+              const container = Swal.getPopup().querySelector("#employers");
 
               container.innerHTML = res.data
                 .map((emp) => {
-                  const isSelf =
-                    Number(emp.id) === Number(authUser.id);
+                  const isSelf = Number(emp.id) === Number(authUser.id);
 
                   return `
                     <div style="margin-bottom:8px;">
@@ -143,9 +162,7 @@ export default function useAppointment(
                         ${isSelf ? "disabled" : ""}
                       >
                       <label for="emp-${emp.id}" style="${
-                    isSelf
-                      ? "color:#ff7777;font-style:italic;"
-                      : ""
+                    isSelf ? "color:#ff7777;font-style:italic;" : ""
                   }">
                         ${emp.name}
                         ${
@@ -193,10 +210,13 @@ export default function useAppointment(
         });
 
         if (!date) return false;
-        selectedDate = date;
 
+        // ✅ Garante YYYY-MM-DD limpo
+        selectedDate = normalizeDateToYMD(date);
+
+        // ✅ duração com fallback (se duration vier vazio)
         const totalDuration = selectedServices.reduce(
-          (sum, s) => sum + (parseInt(s?.duration) || 0),
+          (sum, s) => sum + (parseInt(s?.duration, 10) || 30),
           0
         );
 
@@ -248,7 +268,15 @@ export default function useAppointment(
         if (!time) return false;
         selectedTime = time;
 
+        // ✅ ISO completo com timezone SP (resolve 100% UTC bugs)
+        const datetimeSP = dayjs.tz(
+          `${selectedDate} ${selectedTime}`,
+          "YYYY-MM-DD HH:mm",
+          TZ
+        );
+
         const payload = {
+          mode: "appointment",
           app_id: appId,
           entity_name: "establishment",
           entity_id: establishment?.id,
@@ -256,15 +284,27 @@ export default function useAppointment(
             item_id: Number(s?.item_id ?? s?.id),
             quantity: 1,
           })),
-          customer_name: authUser.name,
-          customer_phone: authUser.phone ?? null,
-          order_datetime: `${selectedDate}T${selectedTime}:00`,
+          customer_name: authUser?.name || authUser?.first_name || "Cliente App",
+          customer_phone: authUser?.phone ?? null,
+
+          // ✅ MUITO IMPORTANTE:
+          // envia timezone (-03:00)
+          order_datetime: datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ"),
+
           attendant_id: selectedEmployer.id,
-          appointment_status: "pending",
+          origin: "App",
+          fulfillment: "dine-in",
+          payment_status: "pending",
+          payment_method: "Pix",
+          notes: "Agendamento feito pelo aplicativo.",
         };
 
         await axios.post(`${apiBaseUrl}/order`, payload, {
-          headers: { Authorization: `Bearer ${userToken}` },
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
         });
 
         await Swal.fire({
@@ -284,6 +324,7 @@ export default function useAppointment(
           title: "Erro",
           text:
             error?.response?.data?.message ||
+            error?.message ||
             "Erro ao realizar o agendamento.",
         });
         return false;

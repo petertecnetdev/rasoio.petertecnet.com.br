@@ -393,3 +393,49 @@
 .awm-swal__list li {
   margin: 4px 0;
 }
+/* src/components/appointment/AppointmentWizardModal.css */
+
+/* ✅ impede qualquer scroll horizontal dentro do modal */
+.awm-modal,
+.awm-modal * {
+  box-sizing: border-box;
+}
+
+/* ✅ essa regra é a que resolve o “estoura pro lado” */
+.awm-modal,
+.awm-modal__dialog,
+.awm-modal__content,
+.awm__root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* ✅ garante que conteúdo interno não empurre o modal */
+.awm__root {
+  padding: 0;
+}
+
+/* ✅ se tiver grid com width fixo isso explode no mobile */
+.awm-modal .grid,
+.awm-modal .grid-times,
+.awm-modal .wizard-step {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* ✅ evita cards forçando largura */
+.awm-modal .card-service,
+.awm-modal .card-emp {
+  min-width: 0;
+}
+
+/* ✅ em telas pequenas, modal ocupa tudo sem cortar */
+@media (max-width: 560px) {
+  .awm-modal__content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+}

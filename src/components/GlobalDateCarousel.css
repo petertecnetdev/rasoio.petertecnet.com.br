@@ -1,93 +1,256 @@
+/* src/components/GlobalDateCarousel.css */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .date-carousel {
-  position: relative;
   width: 100%;
-  overflow: hidden;
-  padding: 10px 0;
-}
+  max-width: 100%;
+  min-width: 0; /* ✅ crucial para flex containers */
+  overflow: hidden; /* ✅ impede estourar */
 
-.date-track {
   display: flex;
+  align-items: center;
   gap: 10px;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 6px 45px; /* espaço para as setas */
+
+  padding: 10px 10px;
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
 }
 
+/* ✅ Track nunca pode empurrar largura */
+.date-track {
+  flex: 1;
+  min-width: 0; /* ✅ MAIS IMPORTANTE */
+  width: 100%;
+  max-width: 100%;
+
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 6px 2px;
+
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none; /* Firefox */
+}
+
+.date-track::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Items */
 .date-item {
   flex: 0 0 auto;
-  width: 90px;
-  text-align: center;
-  background-color: rgba(25, 25, 25, 0.9);
-  color: #fff;
-  border-radius: 10px;
-  padding: 10px 0;
+
+  width: 86px;
+  min-width: 86px;
+  max-width: 86px;
+
+  height: 94px;
+  max-height: 94px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  border-radius: 18px;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s ease;
+
+  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  transition: transform 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease, box-shadow 0.18s ease;
+
+  scroll-snap-align: start;
 }
 
 .date-item:hover {
-  background-color: rgba(0, 224, 255, 0.3);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.28);
 }
 
 .date-item.active {
-  background-color: #00e0ff;
-  color: #000;
-  font-weight: bold;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+  transform: translateY(-2px);
 }
 
+/* Text */
 .date-week {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .date-day {
-  font-size: 1.6rem;
-  font-weight: bold;
-  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .date-month {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  opacity: 0.8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.68);
 }
 
-/* Botões laterais */
+/* Buttons */
 .date-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background-color: rgba(0, 224, 255, 0.8);
-  color: #000;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  z-index: 2;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.55);
+
+  transition: transform 0.18s ease, background 0.18s ease,
+    border-color 0.18s ease, box-shadow 0.18s ease;
+
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.date-btn.left {
-  left: 5px;
-}
-
-.date-btn.right {
-  right: 5px;
+.date-btn svg {
+  font-size: 15px;
 }
 
 .date-btn:hover {
-  background-color: #00ffff;
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
 }
 
-/* Oculta setas no mobile pequeno */
-@media (max-width: 576px) {
+.date-btn:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+.date-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+  outline-offset: 2px;
+}
+
+/* ===========================
+   RESPONSIVO REAL
+   =========================== */
+
+@media (max-width: 768px) {
+  .date-carousel {
+    padding: 10px 10px;
+    border-radius: 16px;
+    gap: 8px;
+  }
+
+  .date-item {
+    width: 78px;
+    min-width: 78px;
+    max-width: 78px;
+    height: 90px;
+  }
+
+  .date-day {
+    font-size: 24px;
+  }
+
+  .date-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+}
+
+/* ✅ IMPORTANTÍSSIMO: no mobile some setas e evita overflow horizontal */
+@media (max-width: 560px) {
+  .date-carousel {
+    padding: 10px 10px;
+    gap: 0;
+  }
+
   .date-btn {
     display: none;
+  }
+
+  .date-track {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 10px;
+    padding: 6px 2px;
+  }
+
+  .date-item {
+    width: 76px;
+    min-width: 76px;
+    max-width: 76px;
+    height: 88px;
+    border-radius: 16px;
+  }
+
+  .date-week {
+    font-size: 11px;
+  }
+
+  .date-day {
+    font-size: 23px;
+  }
+
+  .date-month {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .date-carousel {
+    padding: 8px 8px;
+  }
+
+  .date-item {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    height: 84px;
+    border-radius: 14px;
+  }
+
+  .date-day {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .date-track {
+    scroll-behavior: auto;
+  }
+  .date-item,
+  .date-btn {
+    transition: none !important;
   }
 }

@@ -3,8 +3,6 @@ import React, { useMemo } from "react";
 import { useForm } from "react-hook-form";
 
 import useUserUpdate from "../../hooks/useUserUpdate";
-
-import GlobalNav from "../../components/GlobalNav";
 import GlobalPageHeader from "../../components/GlobalPageHeader";
 import UserUpdateForm from "../../components/user/UserUpdateForm";
 
@@ -35,7 +33,6 @@ export default function UserUpdatePage({ loadingMenu = false, handleLogout = () 
 
   return (
     <div className="uup-page">
-      <GlobalNav loadingMenu={loadingMenu} handleLogout={handleLogout} />
 
       <div className="uup-container">
         <GlobalPageHeader

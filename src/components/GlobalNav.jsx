@@ -126,7 +126,7 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
             </Link>
 
             {/* ✅ SEARCH (no mobile será oculto via CSS) */}
-            <form className="nav__search nav__search--left m-2" onSubmit={handleSearch}>
+            <form className="nav__search nav__search--left mt-4" onSubmit={handleSearch}>
               <input
                 ref={searchRef}
                 type="search"
