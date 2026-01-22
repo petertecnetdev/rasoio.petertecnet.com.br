@@ -1,0 +1,192 @@
+/* =========================================================
+   RASOIO — LOGIN PAGE
+   Dark / Neon / Premium
+   Google Button Centralizado
+========================================================= */
+
+/* =========================
+   WRAPPER GERAL
+========================= */
+.lp-wrapper {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(circle at top, rgba(0, 229, 255, 0.14), transparent 45%),
+    radial-gradient(circle at bottom, rgba(0, 157, 255, 0.12), transparent 50%),
+    linear-gradient(160deg, #020b13, #021a2a 45%, #020b13);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* =========================
+   GLOW DE FUNDO
+========================= */
+.lp-bg-effect {
+  position: absolute;
+  width: 620px;
+  height: 620px;
+
+  background: radial-gradient(
+    circle,
+    rgba(0, 229, 255, 0.28),
+    rgba(0, 157, 255, 0.12),
+    transparent 70%
+  );
+
+  filter: blur(140px);
+  top: -220px;
+  right: -220px;
+  pointer-events: none;
+}
+
+/* =========================
+   CONTEÚDO CENTRAL
+========================= */
+.lp-content {
+  width: 100%;
+  max-width: 460px;
+  padding: 1.6rem;
+  z-index: 1;
+
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   CARD LOGIN
+========================= */
+.lp-card {
+  width: 100%;
+
+  background: linear-gradient(
+    180deg,
+    rgba(3, 34, 56, 0.88),
+    rgba(2, 18, 30, 0.96)
+  );
+
+  border-radius: 24px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.75),
+    inset 0 0 45px rgba(0, 229, 255, 0.05);
+
+  backdrop-filter: blur(18px);
+
+  padding: 2.6rem 2.3rem;
+}
+
+/* =========================
+   HEADER
+========================= */
+.lp-card__header {
+  text-align: center;
+  margin-bottom: 2.2rem;
+}
+
+/* =========================
+   LOGO
+========================= */
+.lp-logo-wrapper {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 1.2rem;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(0, 229, 255, 0.35),
+    rgba(0, 157, 255, 0.18)
+  );
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 0 42px rgba(0, 229, 255, 0.75),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.lp-logo {
+  width: 58px;
+  height: auto;
+
+  filter:
+    drop-shadow(0 0 12px rgba(0, 229, 255, 0.85))
+    drop-shadow(0 0 28px rgba(0, 157, 255, 0.65));
+}
+
+/* =========================
+   TEXTOS
+========================= */
+.lp-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #eaf9ff;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.4px;
+}
+
+.lp-subtitle {
+  font-size: 0.95rem;
+  color: #9ccfe3;
+  line-height: 1.45;
+}
+
+/* =========================
+   BODY
+========================= */
+.lp-card__body {
+  margin-top: 1.6rem;
+}
+
+/* =========================
+   AJUSTE GLOBAL GOOGLE LOGIN
+   (CENTRALIZA DEFINITIVO)
+========================= */
+.lp-card .google-auth-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.lp-card .google-auth-wrapper > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+@media (max-width: 480px) {
+  .lp-card {
+    padding: 2.2rem 1.6rem;
+  }
+
+  .lp-logo-wrapper {
+    width: 82px;
+    height: 82px;
+  }
+
+  .lp-logo {
+    width: 52px;
+  }
+
+  .lp-title {
+    font-size: 1.4rem;
+  }
+
+  .lp-subtitle {
+    font-size: 0.9rem;
+  }
+}

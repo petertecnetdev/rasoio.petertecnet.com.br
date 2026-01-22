@@ -5,7 +5,7 @@ import "./ProcessingIndicatorComponent.css";
 const ProcessingIndicatorComponent = ({
   messages = ["Carregando..."],
   interval = 1000,
-  gifSrc = "/images/logo.gif",
+  gifSrc = "/images/logo.mp4",
 }) => {
   const msgRef = useRef(0);
   const [current, setCurrent] = useState(messages[0] || "");

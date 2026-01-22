@@ -1,0 +1,185 @@
+/* src/components/GlobalFooter.css
+   GlobalFooter — Premium / Rasoio style
+   (fixo, confortável, toque-friendly, com active pill e microinterações)
+*/
+
+:root {
+  --gf-bg: rgba(2, 6, 23, 0.88);
+  --gf-border: rgba(255, 255, 255, 0.10);
+  --gf-text: rgba(255, 255, 255, 0.72);
+  --gf-text-strong: rgba(255, 255, 255, 0.94);
+
+  --gf-accent: rgba(25, 211, 255, 0.95);
+  --gf-accent-soft: rgba(25, 211, 255, 0.14);
+  --gf-accent-border: rgba(25, 211, 255, 0.26);
+
+  --gf-radius: 18px;
+  --gf-item-radius: 16px;
+
+  --gf-maxw: 1180px;
+}
+
+/* Footer fixo */
+.gfooter {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--gf-bg);
+  border-top: 1px solid var(--gf-border);
+  backdrop-filter: blur(14px);
+
+  /* glow discreto */
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.55);
+}
+
+.gfooter::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(25, 211, 255, 0.22),
+    rgba(255, 255, 255, 0)
+  );
+  opacity: 0.9;
+}
+
+.gfooter__inner {
+  max-width: var(--gf-maxw);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 10px 10px;
+}
+
+/* Itens */
+.gfooter__item {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--gf-text);
+
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+
+  padding: 10px 8px;
+  border-radius: var(--gf-item-radius);
+  cursor: pointer;
+
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    filter 0.12s ease;
+
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gfooter__link {
+  text-decoration: none;
+}
+
+.gfooter__icon {
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.35));
+}
+
+.gfooter__label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.25px;
+  line-height: 1;
+}
+
+/* Hover */
+.gfooter__item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.86);
+  transform: translateY(-1px);
+}
+
+/* Active */
+.gfooter__item.active {
+  color: var(--gf-text-strong);
+  background: var(--gf-accent-soft);
+  border-color: var(--gf-accent-border);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.gfooter__item.active .gfooter__icon {
+  color: rgba(255, 255, 255, 0.98);
+}
+
+/* pressed */
+.gfooter__item.pressed {
+  transform: translateY(0) scale(0.98);
+  filter: brightness(1.02);
+}
+
+/* Focus */
+.gfooter__item:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(25, 211, 255, 0.20),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Compact mobile adjustments */
+@media (max-width: 420px) {
+  .gfooter__inner {
+    gap: 6px;
+    padding: 10px 8px 10px;
+  }
+
+  .gfooter__item {
+    padding: 10px 6px;
+    border-radius: 14px;
+  }
+
+  .gfooter__icon {
+    font-size: 17px;
+  }
+
+  .gfooter__label {
+    font-size: 10px;
+  }
+}
+
+/* Extra small: hide labels to avoid crowding */
+@media (max-width: 340px) {
+  .gfooter__label {
+    display: none;
+  }
+
+  .gfooter__item {
+    gap: 4px;
+    padding: 10px 6px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .gfooter__item {
+    transition: none;
+  }
+}

@@ -1,71 +1,51 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Navbar } from "react-bootstrap";
-import "./GlobalNavHeader.css";
+import { Link } from "react-router-dom";
+import "./GlobalNav.css";
 
-export default function GlobalNavHeader({ user, loadingMenu, handleToggleMobileMenu }) {
-  const location = useLocation();
-  const isActive = (path) => location.pathname.startsWith(path);
-
-  const MenuLink = ({ to, children }) => (
-    <Link
-      to={to}
-      className={`globalnav__desktop-link ${isActive(to) ? "active" : ""}`}
-    >
-      {children}
-    </Link>
-  );
+export default function GlobalNavHeader({ user, onOpenMenu }) {
+  const isAuthed = !!user?.email;
 
   return (
-    <Navbar
-      expand={false}
-      sticky="top"
-      bg="dark"
-      variant="dark"
-      className="navlog__navbar globalnav__header"
-    >
-      <div className="globalnav__left">
-        <Navbar.Brand as={Link} to="/" className="navlog__brand globalnav__brand">
-          <img
-            src="/images/logo.png"
-            alt="Logo Rasoio"
-            className="navlog__logo-image globalnav__logo"
-            draggable={false}
-          />
-        </Navbar.Brand>
+    <header className="gn-header">
+      {/* LOGO */}
+      <Link to="/" className="gn-logo">
+        <img src="/images/logo.png" alt="Rasoio" />
+      </Link>
 
-        {/* MENU DESKTOP */}
-        <div className="globalnav__desktop-menu d-none d-lg-flex">
-          <MenuLink to="/establishments">Estabelecimentos</MenuLink>
-          <MenuLink to="/employers">Profissionais</MenuLink>
-          <MenuLink to="/item/services">Serviços</MenuLink>
-          <MenuLink to="/item/products">Produtos</MenuLink>
+      {/* LINKS PÚBLICOS */}
+      <nav className="gn-public-links">
+        <Link to="/establishments">Estabelecimentos</Link>
+        <Link to="/employers">Profissionais</Link>
+        <Link to="/item/services">Serviços</Link>
+        <Link to="/item/products">Produtos</Link>
+      </nav>
 
-          {user && user.profile?.name !== "Administrador" && (
-            <MenuLink to="/appointments/my">Meus Agendamentos</MenuLink>
-          )}
+      {/* AÇÕES */}
+      <div className="gn-actions">
+        {!isAuthed && (
+          <>
+            <Link to="/login" className="gn-login">
+              Entrar
+            </Link>
+            <Link to="/register" className="gn-register">
+              Criar conta
+            </Link>
+          </>
+        )}
 
-          {user?.profile?.name === "Administrador" && (
-            <>
-              <MenuLink to="/user/list">Usuários</MenuLink>
-              <MenuLink to="/barber/list">Colaboradores</MenuLink>
-              <MenuLink to="/appointments/list">Agendamentos</MenuLink>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="globalnav__right">
-        {!loadingMenu && (
+        {isAuthed && (
           <button
-            onClick={handleToggleMobileMenu}
-            className="navlog__mobile-toggle-btn globalnav__mobile-btn"
-            aria-label="Abrir menu"
+            className="gn-avatar-btn"
+            onClick={onOpenMenu}
+            aria-label="Abrir menu do usuário"
           >
-            ☰
+            <img
+              src={user.avatar || "/images/user.png"}
+              alt="Avatar"
+            />
           </button>
         )}
       </div>
-    </Navbar>
+    </header>
   );
 }

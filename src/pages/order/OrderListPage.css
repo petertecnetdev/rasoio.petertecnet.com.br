@@ -1,15 +1,21 @@
 /* src/pages/order/OrderListPage.css */
 .olp-card {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 16px;
-  background: rgba(10, 10, 12, 0.85);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+  padding: 20px;
+  background: rgba(15, 15, 18, 0.9);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.olp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
 }
 
 .olp-left {
   border-right: 1px dashed rgba(255, 255, 255, 0.12);
-  padding-right: 12px;
+  padding-right: 16px;
 }
 
 @media (max-width: 767px) {
@@ -23,16 +29,16 @@
 }
 
 .olp-order-number {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 900;
   color: #fff;
   letter-spacing: 0.5px;
 }
 
 .olp-date {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.65);
-  margin-top: 2px;
+  margin-top: 4px;
 }
 
 .olp-badges {
@@ -40,13 +46,14 @@
 }
 
 .olp-line {
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255, 255, 255, 0.95);
   font-size: 14px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .olp-label {
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 500;
 }
 
 .olp-value {
@@ -56,18 +63,18 @@
 .olp-attendant {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .olp-attendant-box {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .olp-avatar {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -79,11 +86,16 @@
   border: none;
   padding: 0;
   margin: 0;
-  color: #7dd3fc;
+  color: #4dabf7; /* azul claro */
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.olp-attendant-link:hover {
+  color: #74c0fc;
 }
 
 .olp-attendant-link:disabled {
@@ -95,16 +107,22 @@
 .olp-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .olp-meta-item {
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 12px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
   min-width: 160px;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.olp-meta-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .olp-meta-k {
@@ -115,18 +133,31 @@
 
 .olp-meta-v {
   display: block;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.95);
   margin-top: 2px;
   font-weight: 700;
 }
 
 .olp-price {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 900;
   color: #fff;
 }
 
 .olp-btn {
   white-space: nowrap;
+}
+
+.olp-date-highlight {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #339af0; /* destaque azul */
+  margin-bottom: 4px;
+}
+
+.olp-order-created {
+  font-size: 0.95rem;
+  color: #868e96; /* cinza claro */
+  margin-top: 2px;
 }

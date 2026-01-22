@@ -1,83 +1,61 @@
-import React, { useState } from "react";
-import { Form, Button, Spinner } from "react-bootstrap";
-import axios from "axios";
-import Swal from "sweetalert2";
-import { apiBaseUrl } from "../../config";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function InviteCompleteFormComponent({ redirectTo }) {
-  const [loading, setLoading] = useState(false);
+import GlobalNav from "../../components/GlobalNav";
+import InviteCompleteFormComponent from "../../components/auth/InviteCompleteFormComponent";
 
-  const [form, setForm] = useState({
-    email: "",
-    verification_code: "",
-    password: ""
-  });
+import "./InviteCompletePage.css";
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      await axios.post(`${apiBaseUrl}/auth/invite-complete`, form);
-      Swal.fire("Sucesso!", "Senha criada. Agora você pode acessar.", "success");
-      window.location.href = redirectTo;
-    } catch (error) {
-      const msg =
-        error.response?.data?.message ||
-        "Erro ao finalizar convite.";
-      Swal.fire("Erro", msg, "error");
-    }
-
-    setLoading(false);
-  };
+export default function InviteCompletePage() {
+  const navigate = useNavigate();
 
   return (
-    <Form onSubmit={handleSubmit} className="text-start">
+    <>
+      <GlobalNav />
 
-      <Form.Group className="mb-3">
-        <Form.Label>E-mail</Form.Label>
-        <Form.Control
-          type="email"
-          name="email"
-          placeholder="Digite o e-mail"
-          value={form.email}
-          onChange={handleChange}
-        />
-      </Form.Group>
+      <div className="ic-wrapper">
+        <div className="ic-bg-effect" />
 
-      <Form.Group className="mb-3">
-        <Form.Label>Código de Verificação</Form.Label>
-        <Form.Control
-          type="text"
-          name="verification_code"
-          placeholder="Código recebido no e-mail"
-          value={form.verification_code}
-          onChange={handleChange}
-        />
-      </Form.Group>
+        <div className="ic-content">
+          <div className="ic-card">
+            {/* HEADER */}
+            <div className="ic-card__header">
+              <div className="ic-logo-wrapper">
+                <img
+                  src="/images/logo.png"
+                  alt="Rasoio"
+                  className="ic-logo"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/logo.gif";
+                  }}
+                />
+              </div>
 
-      <Form.Group className="mb-3">
-        <Form.Label>Nova Senha</Form.Label>
-        <Form.Control
-          type="password"
-          name="password"
-          placeholder="Crie sua senha"
-          value={form.password}
-          onChange={handleChange}
-        />
-      </Form.Group>
+              <h1 className="ic-title">Finalizar convite</h1>
+              <p className="ic-subtitle">
+                Defina sua senha para concluir o acesso
+              </p>
+            </div>
 
-      <Button
-        type="submit"
-        className="w-100 mt-2 login-btn"
-        disabled={loading}
-      >
-        {loading ? <Spinner size="sm" /> : "Finalizar convite"}
-      </Button>
-    </Form>
+            {/* BODY */}
+            <div className="ic-card__body">
+              <InviteCompleteFormComponent redirectTo="/login" />
+            </div>
+
+            {/* FOOTER */}
+            <div className="ic-footer">
+              <button
+                type="button"
+                className="ic-link"
+                onClick={() => navigate("/login")}
+              >
+                Voltar ao login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

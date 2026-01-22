@@ -1,274 +1,456 @@
 // src/pages/item/ItemViewPage.jsx
-import React, { useState, useEffect, useMemo } from "react";
-import { Container, Row, Col, Badge } from "react-bootstrap";
-import { useParams, useNavigate } from "react-router-dom";
-import { FaUsers, FaBox, FaChartLine } from "react-icons/fa";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
+import axios from "axios"; // ✅ FIX: axios import
 
-import GlobalNav from "../../components/GlobalNav";
-import GlobalHero from "../../components/GlobalHero";
-import GlobalCarousel from "../../components/GlobalCarousel";
-import GlobalMap from "../../components/GlobalMap";
-import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
-import GlobalCard from "../../components/GlobalCard";
-import WhatsappButton from "../../components/GlobalWhatsappButton.jsx";
-import ShareButton from "../../components/ShareButton";
-import useAppointment from "../../hooks/useAppointment";
+import { apiBaseUrl, appId } from "../../config";
 
 import useItemView from "../../hooks/useItemView";
-import useWhatsappLink from "../../hooks/useWhatsappLink";
+import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
-import useAuthPrompt from "../../hooks/useAuthPrompt";
+import useSchedulePopup from "../../hooks/useSchedulePopup";
+import useWhatsappLink from "../../hooks/useWhatsappLink";
 
-import { apiBaseUrl } from "../../config";
+import GlobalPageHeader from "../../components/GlobalPageHeader";
+import GlobalCarousel from "../../components/GlobalCarousel";
+import GlobalMap from "../../components/GlobalMap";
+import GlobalProfileHero from "../../components/GlobalProfileHero";
+import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
+import ShareButton from "../../components/ShareButton";
+
+import "./ItemView.css";
 
 const PLACEHOLDER = "/images/logo.png";
-const APP_ID = 3;
+
+const getEstImages = (e = {}) => ({
+  logo:
+    e?.images?.logo ||
+    e?.logo ||
+    e?.logoImage ||
+    e?.files?.find?.((f) => f?.type === "logo")?.public_url ||
+    null,
+  background:
+    e?.images?.background ||
+    e?.background ||
+    e?.files?.find?.((f) => f?.type === "background")?.public_url ||
+    null,
+});
 
 export default function ItemViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const token = useMemo(() => localStorage.getItem("token"), []);
-
-  const { item, employers, otherItems, establishment, loading } = useItemView(
-    apiBaseUrl,
-    slug,
-    token,
-    navigate
-  );
-  const { loadAvailableTimes } = useAppointment(apiBaseUrl, APP_ID, token, establishment);
-  const whatsappLink = useWhatsappLink(establishment);
-  const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
-
-  useAuthPrompt();
-
-  const [showWizard, setShowWizard] = useState(false);
-  const [wizardOptions, setWizardOptions] = useState({
-    services: [],
-    preselectedService: null,
-    preselectedEmployer: null,
-    lockEmployer: false,
-  });
-
-  const normalizeItem = (i) => ({
-    ...i,
-    type: i.type || "service",
-    image:
-      i.image ||
-      i.image_url ||
-      i.images?.cover ||
-      i.images?.main ||
-      i.images?.logo ||
-      PLACEHOLDER,
-  });
-
-  const allServices = useMemo(() => {
-    const list = [];
-    if (item) list.push(normalizeItem(item));
-    if (otherItems?.length) {
-      otherItems.forEach((i) => {
-        if (!item || i.id !== item.id) list.push(normalizeItem(i));
-      });
-    }
-    return list;
-  }, [item, otherItems]);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [slug]);
 
-  if (!item && !loading) return null;
-  if (!item) return null;
+  const { item, establishment, employers, otherItems, isLoading, error } =
+    useItemView(apiBaseUrl, slug, token, navigate);
 
-  const fmtBRL = (v) =>
-    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+  const { imageUrl } = useImageUtils(PLACEHOLDER);
 
-  const openFromHero = () => {
-    setWizardOptions({
-      services: allServices,
-      preselectedService: normalizeItem(item),
-      preselectedEmployer: null,
-      lockEmployer: false,
-    });
-    setTimeout(() => setShowWizard(true), 50);
-  };
+  const {
+    showWizard,
+    setShowWizard,
+    wizardEstablishment,
+    wizardEmployers,
+    wizardServices,
+    preselectedEmployer,
+    preselectedServiceId,
+    openSchedulePopup,
+  } = useSchedulePopup(apiBaseUrl, token, appId);
 
-  const mappedEmployers =
-    employers?.map((e) => ({
-      ...e,
-      type: "employer",
-      image:
-        e.image ||
-        e.avatar ||
-        e.user?.avatar ||
-        e.images?.avatar ||
-        PLACEHOLDER,
-      user: e.user || {
-        first_name: e.name || "",
-        avatar:
-          e.image ||
-          e.avatar ||
-          e.user?.avatar ||
-          e.images?.avatar ||
-          PLACEHOLDER,
-      },
-      onScheduleClick: () => {
-        setWizardOptions({
-          services: allServices,
-          preselectedService: normalizeItem(item),
-          preselectedEmployer: e,
-          lockEmployer: true,
+  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
+    apiBaseUrl,
+    appId,
+    token,
+    wizardEstablishment,
+  );
+
+  const whatsappLink = useWhatsappLink(establishment || item || null);
+
+  const safeNavigate = useMemo(
+    () => (path) => (window.location.href = path),
+    [],
+  );
+
+  const isProduct = useMemo(() => {
+    const t = item?.item_type || item?.type || null;
+    return (
+      t === "product" ||
+      item?.is_product === true ||
+      item?.isProduct === true ||
+      !!item?.product_id ||
+      !!item?.productId
+    );
+  }, [item]);
+
+  const headerMeta = useMemo(() => {
+    const kind = isProduct ? "Produto" : "Serviço";
+    const cityUf =
+      establishment?.city && establishment?.uf
+        ? `${establishment.city} - ${establishment.uf}`
+        : establishment?.city || establishment?.uf || "";
+    const estName = establishment?.name || "";
+    return [kind, cityUf, estName].filter(Boolean);
+  }, [establishment, isProduct]);
+
+  const heroLogo = useMemo(() => {
+    return (
+      item?.imageUrl ||
+      item?.image ||
+      item?.image_url ||
+      item?.files?.find((f) => f?.type === "image")?.public_url ||
+      item?.files?.find((f) => f?.type === "cover")?.public_url ||
+      null
+    );
+  }, [item]);
+
+  const heroBg = useMemo(() => {
+    return (
+      establishment?.images?.background ||
+      establishment?.background ||
+      establishment?.files?.find((f) => f?.type === "background")?.public_url ||
+      null
+    );
+  }, [establishment]);
+
+  const chips = useMemo(() => {
+    const price =
+      item?.price != null && item?.price !== ""
+        ? `R$ ${Number(item.price).toFixed(2).replace(".", ",")}`
+        : null;
+
+    const duration =
+      !isProduct && item?.duration != null && item?.duration !== ""
+        ? `${item.duration} min`
+        : null;
+
+    return [
+      isProduct ? { label: "Produto" } : { label: "Serviço" },
+      establishment?.name ? { label: establishment.name } : null,
+      price ? { label: price } : null,
+      duration ? { label: duration } : null,
+    ].filter(Boolean);
+  }, [item, establishment, isProduct]);
+
+  const heroStats = useMemo(() => {
+    const m = item?.metrics || null;
+    if (!m) return [];
+    const stats = [];
+    if (m?.total_views != null)
+      stats.push({ label: "Visualizações", value: m.total_views });
+    if (!isProduct && m?.completed_orders != null)
+      stats.push({ label: "Atendimentos", value: m.completed_orders });
+    return stats.slice(0, 6);
+  }, [item, isProduct]);
+
+  const handleOpenScheduleFromItem = useCallback(async () => {
+    try {
+      if (isProduct) {
+        Swal.fire({
+          icon: "info",
+          title: "Produto",
+          text: "Produtos não possuem agendamento.",
         });
-        setTimeout(() => setShowWizard(true), 50);
-      },
-    })) || [];
-
-  const mappedOtherItems =
-    otherItems?.map((i) => {
-      const normalized = normalizeItem(i);
-      return {
-        ...normalized,
-        onScheduleClick: () => {
-          setWizardOptions({
-            services: allServices,
-            preselectedService: normalized,
-            preselectedEmployer: null,
-            lockEmployer: false,
-          });
-          setTimeout(() => setShowWizard(true), 50);
-        },
-      };
-    }) || [];
-
-  const establishmentCardItem = establishment
-    ? {
-        ...establishment,
-        type: "establishment",
-        image:
-          establishment.image ||
-          establishment.logo ||
-          establishment.images?.logo ||
-          establishment.images?.background ||
-          PLACEHOLDER,
-        total_views: establishment.metrics?.total_views ?? 0,
+        return;
       }
-    : null;
 
-  const establishmentActions = establishment?.metrics ? (
-    <div className="d-flex flex-column gap-2">
-      <div className="d-flex flex-wrap gap-2">
-        <Badge bg="dark" className="d-flex align-items-center gap-1">
-          <FaUsers /> {establishment.metrics.total_employers} Profissionais
-        </Badge>
-        <Badge bg="dark" className="d-flex align-items-center gap-1">
-          <FaBox /> {establishment.metrics.total_items} Itens
-        </Badge>
-        <Badge bg="dark" className="d-flex align-items-center gap-1">
-          <FaChartLine /> {establishment.metrics.completed_orders} Pedidos
-        </Badge>
-        {establishment.description && (
-          <div className="w-100 text-light-50 small">
-            {establishment.description}
-          </div>
-        )}
+      await openSchedulePopup({
+        service: item,
+        establishment: establishment || null,
+        filteredEmployers: Array.isArray(employers) ? employers : [],
+      });
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        icon: "error",
+        title: "Erro",
+        text: "Não foi possível abrir o agendamento agora.",
+      });
+    }
+  }, [openSchedulePopup, item, establishment, employers, isProduct]);
+
+  const handleOpenFromEstablishment = useCallback(
+    async (est) => {
+      try {
+        await openSchedulePopup({
+          establishment: est,
+          filteredEmployers: [],
+        });
+      } catch (e) {
+        console.error(e);
+        Swal.fire({
+          icon: "error",
+          title: "Erro",
+          text: "Não foi possível abrir o agendamento agora.",
+        });
+      }
+    },
+    [openSchedulePopup],
+  );
+
+  const asideEstablishment = useMemo(() => {
+    if (!establishment) return null;
+
+    const title =
+      establishment?.name || establishment?.fantasy || "Estabelecimento";
+    const subtitle =
+      establishment?.city || establishment?.uf
+        ? `${establishment?.city || ""}${
+            establishment?.city && establishment?.uf ? " - " : ""
+          }${establishment?.uf || ""}`
+        : "";
+
+    const image = getEstImages(establishment).logo;
+
+
+    const canGoDetails = !!establishment?.slug;
+
+    return {
+      title,
+      subtitle,
+      image,
+      clickable: canGoDetails,
+      onClick: () => {
+        if (canGoDetails) navigate(`/establishment/view/${establishment.slug}`);
+      }
+    };
+  }, [establishment, navigate, isProduct]);
+
+  const [otherEstablishments, setOtherEstablishments] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      try {
+        if (!establishment) {
+          if (active) setOtherEstablishments([]);
+          return;
+        }
+
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const entityKey = establishment?.slug || establishment?.id || null;
+
+        if (!entityKey) {
+          if (active) setOtherEstablishments([]);
+          return;
+        }
+
+        const res = await axios.get(
+          `${apiBaseUrl}/establishment/list-others/${entityKey}`,
+          {
+            headers,
+          },
+        );
+
+        if (!active) return;
+
+        const list = Array.isArray(res?.data?.establishments)
+          ? res.data.establishments
+          : Array.isArray(res?.data)
+            ? res.data
+            : [];
+
+        setOtherEstablishments(
+          list.map((e) => ({
+            ...e,
+            type: "establishment",
+            images: getEstImages(e),
+          })),
+        );
+      } catch (e) {
+        if (active) setOtherEstablishments([]);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [apiBaseUrl, token, establishment]);
+
+  if (isLoading) {
+    return (
+      <div className="wrapper">
+        <GlobalPageHeader
+          title="Item"
+          variant="item"
+          description="Carregando item..."
+          meta={headerMeta}
+          compact
+        />
+        <div className="loading">Carregando…</div>
       </div>
-    </div>
-  ) : null;
+    );
+  }
+
+  if (!item || error) {
+    const msg =
+      error?.message ||
+      error?.error ||
+      (typeof error === "string" ? error : null) ||
+      "Não foi possível carregar este item.";
+
+    return (
+      <div className="wrapper">
+        <GlobalPageHeader
+          title="Item"
+          variant="item"
+          description="Não foi possível carregar este item."
+          meta={headerMeta}
+          compact
+        />
+        <div className="loading">{msg}</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="itemv-root">
-      <GlobalNav />
+    <>
+      <div className="wrapper">
+        <GlobalProfileHero
+          title={item?.name || item?.title || "Item"}
+          logoSrc={heroLogo}
+          bgSrc={heroBg}
+          imageUrl={imageUrl}
+          placeholder={PLACEHOLDER}
+          chips={chips}
+          stats={heroStats}
+          primaryAction={
+            isProduct
+              ? {
+                  label: "Produto",
+                  disabled: true,
+                  title: "Produto não possui agendamento",
+                  onClick: () => {},
+                }
+              : {
+                  label: "Agendar agora",
+                  onClick: handleOpenScheduleFromItem,
+                }
+          }
+          secondaryAction={{
+            label: "WhatsApp",
+            href: whatsappLink || undefined,
+            disabled: !whatsappLink,
+            title: !whatsappLink ? "Telefone não informado" : undefined,
+          }}
+          aside={asideEstablishment}
+        />
 
-      <GlobalHero
-  title={item.name}
-  description={item.description}
-  logo={normalizeItem(item).image}
-  imageUrl={imageUrl}
-  handleImgError={handleImgError}
-  metrics={{
-    views: item.metrics.total_views,
-    unique_users: item.metrics.unique_users,
-  }}
-  ordersSummary={{
-    total_orders: item.metrics.total_orders,
-  }}
-  establishment={establishment}
-  onScheduleClick={openFromHero}
-/>
+        <div className="sections">
+          {!isProduct && Array.isArray(employers) && employers.length > 0 && (
+            <GlobalCarousel
+              title="Profissionais"
+              subtitle="Escolha com quem você quer agendar"
+              items={employers}
+              fmtBRL={(v) => v}
+              navigate={navigate}
+              openSchedulePopup={(emp) => {
+                try {
+                  openSchedulePopup({
+                    employer: emp,
+                    establishment: establishment || null,
+                    service: item,
+                    filteredEmployers: [emp],
+                  });
+                } catch (e) {
+                  console.error(e);
+                  Swal.fire({
+                    icon: "error",
+                    title: "Erro",
+                    text: "Não foi possível abrir o agendamento agora.",
+                  });
+                }
+              }}
+              showSchedule
+              showDots
+            />
+          )}
 
+          {Array.isArray(otherItems) && otherItems.length > 0 && (
+            <GlobalCarousel
+              title={isProduct ? "Outros produtos" : "Outros serviços"}
+              subtitle={
+                isProduct
+                  ? "Veja outros produtos deste estabelecimento"
+                  : "Veja outros serviços deste estabelecimento"
+              }
+              items={otherItems.map((it) => ({
+                ...it,
+                type: "item",
+                item_type: it?.item_type || it?.type || null,
+                image: it?.imageUrl || it?.image || it?.image_url || null,
+              }))}
+              fmtBRL={(v) => v}
+              navigate={safeNavigate}
+              openSchedulePopup={(it) => {
+                const t = it?.item_type || it?.type;
+                if (t === "product") return;
+                try {
+                  openSchedulePopup({
+                    service: it,
+                    establishment: establishment || null,
+                    filteredEmployers: Array.isArray(employers)
+                      ? employers
+                      : [],
+                  });
+                } catch (e) {
+                  console.error(e);
+                  Swal.fire({
+                    icon: "error",
+                    title: "Erro",
+                    text: "Não foi possível abrir o agendamento agora.",
+                  });
+                }
+              }}
+              showSchedule={!isProduct}
+              showDots
+            />
+          )}
 
-      <Container fluid className="itemv-main">
-        <Row className="gx-3 gy-4 m-2">
-          <Col md={8}>
-            {mappedOtherItems.length > 0 && (
-  <GlobalCarousel
-    title="Outros itens deste estabelecimento"
-    items={mappedOtherItems}
-    carouselActive
-    fmtBRL={fmtBRL}
-    apiBaseUrl={apiBaseUrl}
-    navigate={navigate}
-    showSchedule
-    openSchedulePopup={(i) => i.onScheduleClick()}
-  />
-)}
+          {establishment && (
+            <GlobalMap
+              location={establishment?.location}
+              address={establishment?.address}
+              city={establishment?.city}
+              uf={establishment?.uf}
+            />
+          )}
 
-            {mappedEmployers.length > 0 && (
+          {Array.isArray(otherEstablishments) &&
+            otherEstablishments.length > 0 && (
               <GlobalCarousel
-                title="Profissionais que atendem este item"
-                items={mappedEmployers}
-                carouselActive
-                fmtBRL={fmtBRL}
-                apiBaseUrl={apiBaseUrl}
-                navigate={navigate}
+                title="Outros estabelecimentos"
+                subtitle="Descubra outras opções"
+                items={otherEstablishments}
+                fmtBRL={(v) => v}
+                navigate={safeNavigate}
+                openSchedulePopup={handleOpenFromEstablishment}
                 showSchedule
-                openSchedulePopup={(e) => e.onScheduleClick()}
+                showDots
               />
             )}
-
-            {establishment?.location && (
-              <GlobalMap
-                location={establishment.location}
-                address={establishment.address}
-                city={establishment.city}
-                uf={establishment.uf}
-              />
-            )}
-          </Col>
-
-          <Col md={4}>
-            {establishmentCardItem && (
-              <GlobalCard
-                item={establishmentCardItem}
-                navigate={navigate}
-                showSchedule={false}
-                actions={establishmentActions}
-              />
-            )}
-          </Col>
-        </Row>
-      </Container>
-
-       <AppointmentWizardModal
-        show={showWizard}
-        onHide={() => setShowWizard(false)}
-        employers={mappedEmployers}
-        services={wizardOptions.services}
-        loadAvailableTimes={loadAvailableTimes} // <-- Corrigido aqui
-        imageUrl={imageUrl}
-        preselectedService={wizardOptions.preselectedService}
-        preselectedEmployer={wizardOptions.preselectedEmployer}
-        lockEmployer={wizardOptions.lockEmployer}
-        establishment={establishment}
-        appId={APP_ID}
-      />
-
-    <WhatsappButton
-  link={whatsappLink}
-  message={`Olá! Gostaria de mais informações sobre o item "${item.name}", anunciado pelo estabelecimento "${establishment?.name ?? "—"}" no app Rasoio.`}
-/>
-
+        </div>
+      </div>
 
       <ShareButton />
-    </div>
+
+      <AppointmentWizardModal
+        show={showWizard}
+        onHide={() => setShowWizard(false)}
+        employers={wizardEmployers}
+        services={wizardServices}
+        loadAvailableTimes={loadAvailableTimes}
+        handleCreateAppointment={handleCreateAppointment}
+        imageUrl={imageUrl}
+        preselectedServiceId={preselectedServiceId}
+        preselectedEmployer={preselectedEmployer}
+        establishment={wizardEstablishment}
+      />
+    </>
   );
 }

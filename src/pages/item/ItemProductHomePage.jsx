@@ -1,88 +1,104 @@
-// src/pages/Item/ItemProductHomePage.jsx
-import React, { useState } from "react";
+// src/pages/product/ProductHomePage.jsx
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
 
 import useItemProductHome from "../../hooks/useItemProductHome";
-import useImageUtils from "../../hooks/useImageUtils";
 
-import { Row, Col } from "react-bootstrap";
+import "../HomePage.css";
 
-import GlobalNav from "../../components/GlobalNav";
-import CitySelectorModal from "../../components/CitySelectorModal";
-import HomeHeader from "../../components/home/HomeHeader";
-import GlobalCard from "../../components/GlobalCard";
+import GlobalPageHeader from "../../components/GlobalPageHeader";
+import GlobalCarousel from "../../components/GlobalCarousel";
 
-const PLACEHOLDER = "/images/logo.png";
-
-export default function ItemProductHomePage() {
+export default function ProductHomePage() {
   const { productItems, isLoading, error } = useItemProductHome(apiBaseUrl, appId);
+
   const navigate = useNavigate();
 
-  const [showCityModal, setShowCityModal] = useState(false);
-  const [currentCity, setCurrentCity] = useState(localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(localStorage.getItem("selectedUF"));
+  // ✅ cidade/uf vêm do localStorage (o GlobalNav altera isso)
+  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
+  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
 
-  const { imageUrl } = useImageUtils(PLACEHOLDER);
+  // ✅ mantém o header atualizado quando o GlobalNav mudar cidade
+  useEffect(() => {
+    const sync = () => {
+      setCurrentCity(localStorage.getItem("selectedCity"));
+      setCurrentUF(localStorage.getItem("selectedUF"));
+    };
 
-  const handleChangeCity = () => setShowCityModal(true);
-  const handleSelectCity = ({ city, uf }) => {
-    localStorage.setItem("selectedCity", city);
-    localStorage.setItem("selectedUF", uf);
-    setCurrentCity(city);
-    setCurrentUF(uf);
-    setShowCityModal(false);
-  };
+    window.addEventListener("cityChanged", sync);
+
+    // fallback leve pra mesma aba (caso não exista cityChanged)
+    const iv = setInterval(sync, 800);
+
+    return () => {
+      window.removeEventListener("cityChanged", sync);
+      clearInterval(iv);
+    };
+  }, []);
+
+  // mantém o padrão de navegação já usado no projeto
+  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+
+  const headerMeta = useMemo(() => {
+    const cityLabel =
+      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
+    return [cityLabel, "Produtos em destaque"].filter(Boolean);
+  }, [currentCity, currentUF]);
+
+  const headerDescription = useMemo(() => {
+    const cityLabel =
+      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
+    return `Confira produtos disponíveis para você comprar com rapidez.${
+      cityLabel ? ` (${cityLabel})` : ""
+    }`;
+  }, [currentCity, currentUF]);
 
   if (isLoading) {
     return (
-      <>
-        <GlobalNav />
-        <div className="hp-wrapper">
-          <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
-          <div className="hp-loading">Carregando…</div>
-        </div>
-      </>
+      <div className="hp-wrapper">
+        <GlobalPageHeader
+          title="Produtos"
+          variant="home"
+          description="Carregando produtos da sua região..."
+          meta={headerMeta}
+          compact
+        />
+        <div className="hp-loading">Carregando…</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
-        <GlobalNav />
-        <div className="hp-wrapper">
-          <div className="hp-loading">{error}</div>
-        </div>
-      </>
+      <div className="hp-wrapper">
+        <GlobalPageHeader
+          title="Produtos"
+          variant="home"
+          description="Não foi possível carregar as informações agora."
+          meta={headerMeta}
+          compact
+        />
+        <div className="hp-loading">{error}</div>
+      </div>
     );
   }
 
   return (
-    <>
-      <GlobalNav />
-
-      <div className="hp-wrapper">
-        <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
-
-        <Row className="g-3">
-          {productItems.map((item) => (
-            <Col key={item.id} xs={12} sm={6} md={6} lg={3}>
-              <GlobalCard
-                item={item}
-                navigate={navigate}
-                showSchedule={false}
-              />
-            </Col>
-          ))}
-        </Row>
-      </div>
-
-      <CitySelectorModal
-        user={JSON.parse(localStorage.getItem("user") || "{}")}
-        show={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        onSelectCity={handleSelectCity}
+    <div className="hp-wrapper">
+      <GlobalPageHeader
+        title="Produtos"
+        variant="home"
+        description={headerDescription}
+        meta={headerMeta}
       />
-    </>
+
+      <GlobalCarousel
+        title="Produtos"
+        items={productItems}
+        navigate={safeNavigate}
+        showSchedule={false}
+      />
+    </div>
   );
 }

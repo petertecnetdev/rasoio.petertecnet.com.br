@@ -1,168 +1,228 @@
-/* ============================================================
-   GLOBAL NAV HEADER — RASOIO (Neon Cyan)
-============================================================ */
+/* =========================================================
+   RASOIO — GLOBAL NAV HEADER
+   Fixed | Neon | Dark | Desktop + Mobile
+========================================================= */
 
-/* ---------- Layout Geral do Header ---------- */
-
+/* =========================
+   HEADER BASE
+========================= */
 .globalnav__header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1300;
+
+  height: 68px;
+  padding: 0 1.2rem;
+
+  background: linear-gradient(
+    180deg,
+    rgba(3, 34, 56, 0.92),
+    rgba(2, 18, 30, 0.98)
+  );
+
+  backdrop-filter: blur(14px);
+
+  border-bottom: 1px solid rgba(0, 229, 255, 0.25);
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.65),
+    inset 0 0 25px rgba(0, 229, 255, 0.05);
+}
+
+/* =========================
+   CONTAINER INTERNO
+========================= */
+.globalnav__header .navbar {
   width: 100%;
-  height: 72px;
-  background: rgba(11, 11, 12, 0.70); /* dash-bg */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* dash-border */
-  backdrop-filter: blur(16px) saturate(170%);
-  display: flex !important;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.4rem;
-  animation: globalNavHeaderFade 0.35s ease forwards;
-  z-index: 1000;
 }
 
-@keyframes globalNavHeaderFade {
-  from { opacity: 0; transform: translateY(-14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- Logo ---------- */
-
-.globalnav__brand,
-.globalnav__left {
+.globalnav__left,
+.globalnav__right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+}
+
+/* =========================
+   LOGO / BRAND
+========================= */
+.globalnav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0;
 }
 
 .globalnav__logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #0baff5; /* dash-accent */
-  box-shadow: 0 0 14px rgba(11, 175, 245, 0.65);
-  transition: 0.3s ease;
+  width: 38px;
+  height: auto;
+  user-select: none;
+
+  filter:
+    drop-shadow(0 0 10px rgba(0, 229, 255, 0.85))
+    drop-shadow(0 0 20px rgba(0, 157, 255, 0.55));
+
+  transition: transform 0.2s ease;
 }
 
-.globalnav__logo:hover {
+.globalnav__brand:hover .globalnav__logo {
   transform: scale(1.05);
-  box-shadow: 0 0 22px rgba(11, 175, 245, 0.85);
 }
 
-/* ============================================================
-   MENU DESKTOP
-============================================================ */
-
+/* =========================
+   DESKTOP MENU
+========================= */
 .globalnav__desktop-menu {
   display: flex;
   align-items: center;
-  gap: 1.3rem;
+  gap: 1.2rem;
+  margin-left: 1.8rem;
 }
 
 .globalnav__desktop-link {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #e9e9ea; /* dash-text */
-  text-decoration: none;
-  padding: 0.45rem 0.7rem;
-  border-radius: 10px;
-  transition: 0.25s ease;
   position: relative;
+  text-decoration: none;
+
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  color: #cfefff;
+  padding: 0.3rem 0;
+
+  transition: color 0.2s ease;
 }
 
-/* Hover elegante */
 .globalnav__desktop-link:hover {
-  color: #0baff5;
-  text-shadow: 0 0 8px rgba(11, 175, 245, 0.5);
+  color: #00e5ff;
 }
 
-/* Estado ativo */
+/* ACTIVE LINK */
 .globalnav__desktop-link.active {
-  color: #0baff5;
-  background: rgba(11, 175, 245, 0.15);
-  border: 1px solid rgba(11, 175, 245, 0.35);
-  box-shadow: 0 0 12px rgba(11, 175, 245, 0.35);
+  color: #00e5ff;
 }
 
-/* Linha neon animada */
 .globalnav__desktop-link.active::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
   bottom: -6px;
+
   height: 2px;
   border-radius: 2px;
-  background: #0baff5;
-  box-shadow: 0 0 8px #0baff5;
-  animation: neonBar 0.35s ease;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #00e5ff,
+    transparent
+  );
 }
 
-@keyframes neonBar {
-  from { width: 0; opacity: 0; transform: scaleX(0); }
-  to { width: 100%; opacity: 1; transform: scaleX(1); }
+/* =========================
+   AUTH ACTIONS (DESKTOP)
+========================= */
+.globalnav__auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
 }
 
-/* ============================================================
-   BOTÃO MOBILE (cores Rasoio)
-============================================================ */
-
-.globalnav__mobile-btn {
-  font-size: 2rem;
-  background: rgba(20, 20, 22, 0.55);
-  color: #e9e9ea;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.35rem 0.75rem;
-  cursor: pointer;
-  transition: 0.25s ease;
-  backdrop-filter: blur(12px) saturate(140%);
-}
-
-.globalnav__mobile-btn:hover {
-  color: #0baff5;
-  border-color: #0baff5;
-  box-shadow: 0 0 14px rgba(11, 175, 245, 0.35);
-}
-
-/* Botão Login */
 .globalnav__login-btn {
-  background: rgba(20, 20, 22, 0.55);
-  padding: 0.55rem 1rem;
-  border-radius: 12px;
-  color: #e9e9ea;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: 0.25s ease;
   text-decoration: none;
+  font-size: 0.9rem;
   font-weight: 500;
+
+  color: #cfefff;
+  padding: 0.45rem 0.9rem;
+
+  border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
 .globalnav__login-btn:hover {
-  color: #0baff5;
-  border-color: #0baff5;
-  background: rgba(11, 175, 245, 0.12);
-  box-shadow: 0 0 14px rgba(11, 175, 245, 0.4);
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.12);
 }
 
-/* ============================================================
-   RESPONSIVIDADE
-============================================================ */
+.globalnav__register-btn {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
 
-/* Antes você tinha escondido o menu desktop no mobile */
+  padding: 0.45rem 1.1rem;
+  border-radius: 12px;
+
+  color: #02141f;
+
+  background: linear-gradient(
+    135deg,
+    #00e5ff,
+    #009dff
+  );
+
+  box-shadow:
+    0 0 20px rgba(0, 229, 255, 0.75);
+
+  transition: all 0.25s ease;
+}
+
+.globalnav__register-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 30px rgba(0, 229, 255, 0.95),
+    0 0 45px rgba(0, 157, 255, 0.65);
+}
+
+/* =========================
+   MOBILE MENU BUTTON
+========================= */
+.globalnav__mobile-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+
+  width: 40px;
+  height: 40px;
+
+  margin-left: 1rem;
+
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 229, 255, 0.15);
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.globalnav__mobile-btn span {
+  width: 18px;
+  height: 2px;
+  background: #eaf9ff;
+  border-radius: 2px;
+}
+
+.globalnav__mobile-btn:hover {
+  background: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.75);
+}
+
+/* =========================
+   SPACING FOR FIXED HEADER
+========================= */
+body {
+  padding-top: 68px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 991px) {
-  .globalnav__desktop-menu {
+  .globalnav__desktop-menu,
+  .globalnav__auth-actions {
     display: none !important;
   }
-}
-
-/* Certifique-se de que navlog__mobile-menu pode aparecer em qualquer tela */
-.navlog__mobile-menu {
-  display: block; /* controlar via estado showMobileMenu */
-  position: fixed;
-  top: 72px;
-  left: 0;
-  width: 250px;
-  height: calc(100% - 72px);
-  background: rgba(11, 11, 12, 0.95);
-  z-index: 9999;
-  overflow-y: auto;
-  transition: transform 0.3s ease;
 }

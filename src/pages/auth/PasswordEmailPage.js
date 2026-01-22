@@ -1,13 +1,16 @@
-// src/pages/auth/PasswordEmailPage.jsx
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import Swal from "sweetalert2";
 import axios from "axios";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
 import { apiBaseUrl } from "../../config";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
-import "./Auth.css";
+
+import "./PasswordEmailPage.css";
 
 export default function PasswordEmailPage() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,15 +21,16 @@ export default function PasswordEmailPage() {
         `${apiBaseUrl}/auth/password-email`,
         { email: targetEmail }
       );
+
       Swal.fire({
         title: "Sucesso",
         text:
           data.message ||
-          "Código enviado para o e-mail com sucesso! Verifique seu email.",
+          "Código enviado para seu e-mail. Verifique sua caixa de entrada.",
         icon: "success",
         showCancelButton: true,
-        confirmButtonText: "Recebi o Código",
-        cancelButtonText: "Não recebi o Código",
+        confirmButtonText: "Recebi o código",
+        cancelButtonText: "Reenviar",
         customClass: {
           popup: "custom-swal",
           title: "custom-swal-title",
@@ -34,15 +38,15 @@ export default function PasswordEmailPage() {
         },
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.href = "/password-reset";
+          navigate("/password-reset");
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           Swal.fire({
-            title: "Reenviar Código",
+            title: "Reenviar código",
             input: "email",
-            inputPlaceholder: "Digite seu e-mail",
             inputValue: targetEmail,
+            inputPlaceholder: "Digite seu e-mail",
             showCancelButton: true,
-            confirmButtonText: "Reenviar Código",
+            confirmButtonText: "Reenviar",
             cancelButtonText: "Cancelar",
             customClass: {
               popup: "custom-swal",
@@ -63,7 +67,7 @@ export default function PasswordEmailPage() {
         text:
           err.response?.data?.error ||
           err.response?.data?.message ||
-          "Ocorreu um erro inesperado.",
+          "Erro ao enviar o código. Tente novamente.",
         icon: "error",
         confirmButtonText: "Ok",
         customClass: {
@@ -79,55 +83,77 @@ export default function PasswordEmailPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!email) return;
     sendCode(email);
   };
 
   return (
-    <div className="login-bg">
-      {loading ? (
+    <>
+
+      {loading && (
         <ProcessingIndicatorComponent
-          messages={["Enviando código...", "Por favor, aguarde...", "Código enviado...", "Verifique seu email!"]}
+          messages={[
+            "Enviando código...",
+            "Validando e-mail...",
+            "Quase lá...",
+            "Verifique seu e-mail",
+          ]}
         />
-      ) : (
-        <Container fluid className="login-container">
-          <Row className="justify-content-center">
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card className="login-card">
-                <Card.Body className="text-center">
+      )}
+
+      {!loading && (
+        <div className="pe-wrapper">
+          <div className="pe-bg-effect" />
+
+          <div className="pe-content">
+            <div className="pe-card">
+              <div className="pe-card__header">
+                <div className="pe-logo-wrapper">
                   <img
                     src="/images/logo.png"
-                    alt="Buddy’s Royale"
-                    className="logo"
+                    alt="Inkap"
+                    className="pe-logo"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/images/logo.gif";
+                    }}
                   />
-                  <p className="mt-3 mb-4 text-uppercase custom-swal-title">
-                    Recuperar Senha
-                  </p>
-                  <Form onSubmit={handleSubmit}>
-                    <Form.Control
-                      type="email"
-                      placeholder="Digite seu e-mail"
-                      className="neon-input mb-4"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                    <Button
-                      type="submit"
-                      className="neon-button w-100 mb-3"
-                      disabled={loading}
-                    >
-                      Enviar Código
-                    </Button>
-                  </Form>
-                  <div className="login-links">
-                    <a href="/login">Voltar ao Login</a>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
+                </div>
+
+                <h1 className="pe-title">Recuperar senha</h1>
+                <p className="pe-subtitle">
+                  Informe seu e-mail para receber o código de recuperação
+                </p>
+              </div>
+
+              <form className="pe-form" onSubmit={handleSubmit}>
+                <input
+                  type="email"
+                  placeholder="Digite seu e-mail"
+                  className="pe-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <button type="submit" className="pe-button">
+                  Enviar código
+                </button>
+              </form>
+
+              <div className="pe-footer">
+                <button
+                  type="button"
+                  className="pe-link"
+                  onClick={() => navigate("/login")}
+                >
+                  Voltar para o login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 }

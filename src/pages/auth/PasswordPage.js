@@ -8,7 +8,6 @@ import {
   Card,
   Alert,
 } from "react-bootstrap";
-import NavlogComponent from "../../components/NavlogComponent";
 import authService from "../../services/AuthService";
 import { Link } from "react-router-dom";
 
@@ -76,7 +75,6 @@ const PasswordPage = () => {
 
   return (
     <>
-      <NavlogComponent />
       <div className="background-2"> {/* Aplica a imagem de fundo */}
         <Container>
           <Row className="justify-content-center mt-5">

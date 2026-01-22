@@ -1,199 +1,223 @@
-/* ============================================================
-   GLOBAL NAV MENU (MOBILE) — Estilo Oficial Rasoio (Neon Cyan)
-============================================================ */
+/* =========================================================
+   RASOIO — GLOBAL NAV MENU (MOBILE)
+   Dark | Neon | Premium | UX-first
+========================================================= */
 
+/* =========================
+   OVERLAY
+========================= */
+.navlog__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 10, 18, 0.72);
+  backdrop-filter: blur(4px);
+  z-index: 1190;
+}
+
+/* =========================
+   CONTAINER MENU
+========================= */
 .navlog__mobile-menu {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(10, 10, 14, 0.78);
-  backdrop-filter: blur(18px) saturate(160%);
-  z-index: 9999;
-  padding: 1.4rem;
-  overflow-y: auto;
-  animation: slideIn 0.25s ease-out forwards;
-  border-right: 1px solid rgba(255,255,255,0.05);
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-30px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* ============================================================
-   BOTÃO DE FECHAR (SEM VERMELHO)
-============================================================ */
-
-.navlog__mobile-close {
+  inset: 0;
+  z-index: 1200;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 10px;
 }
 
+/* =========================
+   PAINEL LATERAL
+========================= */
+.navlog__mobile-content {
+  width: 100%;
+  max-width: 360px;
+  height: 100%;
+
+  background: linear-gradient(
+    180deg,
+    rgba(3, 34, 56, 0.96),
+    rgba(2, 18, 30, 0.98)
+  );
+
+  border-left: 1px solid rgba(0, 229, 255, 0.25);
+
+  box-shadow:
+    -25px 0 60px rgba(0, 0, 0, 0.75),
+    inset 0 0 40px rgba(0, 229, 255, 0.06);
+
+  padding: 1.4rem 1.25rem 1.6rem;
+  overflow-y: auto;
+
+  animation: navSlideIn 0.28s ease;
+}
+
+/* =========================
+   ANIMAÇÃO
+========================= */
+@keyframes navSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* =========================
+   BOTÃO FECHAR
+========================= */
 .navlog__close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e5e5e5;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
-  font-size: 1.7rem;
-  padding: 4px 10px;
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+
+  width: 36px;
+  height: 36px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(0, 229, 255, 0.12);
+  color: #eaf9ff;
+
+  font-size: 1.6rem;
+  line-height: 1;
+
   cursor: pointer;
-  transition: 0.25s ease;
-  backdrop-filter: blur(10px);
+
+  transition: all 0.2s ease;
 }
 
 .navlog__close-btn:hover {
-  color: #0baff5;
-  border-color: #0baff5;
-  box-shadow: 0 0 12px rgba(11,175,245,0.45);
+  background: rgba(0, 229, 255, 0.25);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.55);
 }
 
-/* ============================================================
-   CONTEÚDO
-============================================================ */
+/* =========================
+   BLOCO DO USUÁRIO
+========================= */
+.navlog__user-block {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
 
-.navlog__mobile-content {
-  text-align: center;
-  padding: 1rem 0;
+  margin-top: 1.2rem;
+  margin-bottom: 1.6rem;
+  padding-bottom: 1.2rem;
+
+  border-bottom: 1px dashed rgba(0, 229, 255, 0.25);
 }
-
-/* ============================================================
-   AVATAR
-============================================================ */
 
 .navlog__avatar {
-  width: 82px;
-  height: 82px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #0baff5;
-  box-shadow: 0 0 14px rgba(11, 175, 245, 0.45);
-  margin-bottom: 12px;
-  background: #000;
+
+  box-shadow:
+    0 0 18px rgba(0, 229, 255, 0.75),
+    inset 0 0 0 2px rgba(0, 229, 255, 0.35);
 }
 
-/* ============================================================
-   NOME
-============================================================ */
-
-.navlog__user-name {
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: #eaeaea;
-  margin-bottom: 1.6rem;
-  text-shadow: 0 0 6px rgba(11,175,245,0.45);
-}
-
-/* ============================================================
-   LINKS PRINCIPAIS
-============================================================ */
-
-.navlog__mobile-links {
+.navlog__user-info {
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 
+.navlog__user-info strong {
+  color: #eaf9ff;
+  font-size: 0.95rem;
+}
+
+.navlog__user-info span {
+  color: #9ccfe3;
+  font-size: 0.8rem;
+}
+
+/* =========================
+   SEÇÕES
+========================= */
+.navlog__section {
+  margin-bottom: 1.3rem;
+}
+
+.navlog__section-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: rgba(0, 229, 255, 0.75);
+  margin-bottom: 0.45rem;
+}
+
+/* =========================
+   LINKS
+========================= */
 .navlog__link {
-  display: block;
+  display: flex;
+  align-items: center;
+
   width: 100%;
-  padding: 13px 0;
-  background: rgba(18, 18, 22, 0.7);
-  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+
+  border-radius: 12px;
   text-decoration: none;
-  color: #d2d2d2;
-  font-weight: 500;
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: 0.25s ease;
-  backdrop-filter: blur(14px);
+  border: none;
+  background: none;
+
+  font-size: 0.95rem;
+  color: #eaf9ff;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
 }
 
 .navlog__link:hover {
-  color: #0baff5;
-  background: rgba(11,175,245,0.12);
-  border-color: #0baff5;
-  box-shadow: 0 0 14px rgba(11,175,245,0.35);
+  background: rgba(0, 229, 255, 0.14);
+  color: #00e5ff;
 }
 
-/* ============================================================
+/* =========================
+   LOGOUT
+========================= */
+.navlog__logout {
+  color: #ff7a7a;
+}
+
+.navlog__logout:hover {
+  background: rgba(255, 90, 90, 0.18);
+  color: #ff9a9a;
+}
+
+/* =========================
    LOADING
-============================================================ */
-
+========================= */
 .navlog__loading {
-  color: #aaaaaa;
-  font-size: 1rem;
-  margin-top: 40px;
-}
-
-/* ============================================================
-   SUBMENUS
-============================================================ */
-
-.navlog__submenu {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
-  animation: submenuFade 0.25s ease;
-}
-
-@keyframes submenuFade {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.navlog__submenu-link {
-  padding: 11px 12px;
-  background: rgba(12, 12, 16, 0.7);
-  border-radius: 8px;
-  color: #cccccc;
-  text-decoration: none;
+  text-align: center;
+  margin-top: 40%;
   font-size: 0.95rem;
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: 0.25s ease;
-  backdrop-filter: blur(14px);
+  color: #9ccfe3;
 }
 
-.navlog__submenu-link:hover {
-  background: rgba(11,175,245,0.13);
-  border-color: #0baff5;
-  color: #0baff5;
-  box-shadow: 0 0 12px rgba(11,175,245,0.4);
+/* =========================
+   SCROLLBAR (Webkit)
+========================= */
+.navlog__mobile-content::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* ============================================================
-   RESPONSIVIDADE REAL
-============================================================ */
-
-/* CELULARES PEQUENOS */
-@media (max-width: 390px) {
-  .navlog__avatar { width: 68px; height: 68px; }
-  .navlog__user-name { font-size: 1.1rem; }
-  .navlog__link { font-size: 0.9rem; padding: 11px 0; }
+.navlog__mobile-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.35);
+  border-radius: 6px;
 }
 
-/* TABLETS */
-@media (min-width: 600px) and (max-width: 1024px) {
-  .navlog__mobile-menu { padding: 2rem 3rem; }
-  .navlog__avatar { width: 92px; height: 92px; }
-  .navlog__user-name { font-size: 1.55rem; }
-  .navlog__link { font-size: 1.15rem; padding: 14px 0; }
-}
-
-/* DESKTOP E TV */
-@media (min-width: 1025px) {
+/* =========================
+   DESKTOP (SEGURANÇA)
+========================= */
+@media (min-width: 992px) {
   .navlog__mobile-menu {
-    width: 420px;
-    right: 0;
-    left: auto;
-    padding: 2.4rem;
-    border-left: 1px solid rgba(255,255,255,0.05);
+    display: none;
   }
-
-  .navlog__mobile-content { text-align: left; }
-  .navlog__avatar { width: 105px; height: 105px; }
-  .navlog__user-name { font-size: 1.85rem; }
-  .navlog__link { font-size: 1.1rem; padding: 16px; }
 }

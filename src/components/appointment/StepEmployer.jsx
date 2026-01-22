@@ -47,7 +47,7 @@ export default function StepEmployer({
           return (
             <div
               key={e.id}
-              className={`step-card ${
+              className={`step-card text-white ${
                 selected?.id === e.id ? "active" : ""
               } ${isSelf ? "disabled" : ""}`}
               onClick={() => handleSelect(e)}
@@ -61,7 +61,7 @@ export default function StepEmployer({
                 className="step-avatar"
               />
 
-              <div>{e.user?.first_name}</div>
+              <div className="text-white">{e.user?.first_name}</div>
 
               {isSelf && (
                 <small className="step-warning">

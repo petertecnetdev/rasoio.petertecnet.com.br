@@ -1,0 +1,138 @@
+/* src/pages/establishment/EstablishmentHomePage.css
+   ✅ Mais fino e diferente da Home:
+   - Painel com linhas finas “teal/purple” (não igual a Home)
+   - Grid dentro de um container/card
+*/
+
+.ehp-wrapper {
+  padding: 16px 12px 34px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Loading/erro */
+.ehp-loading {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.78);
+}
+
+/* ✅ Container/Card da lista (cards dentro de um card) */
+.ehp-panel {
+  position: relative;
+  margin-top: 14px;
+  border-radius: 20px;
+  overflow: hidden;
+
+  /* linhas finas com cores diferentes (teal + lilás) */
+  border: 1px solid rgba(255,255,255,0.07);
+  background:
+    radial-gradient(1000px 420px at 12% 0%, rgba(34, 211, 238, 0.10), transparent 62%),
+    radial-gradient(900px 420px at 92% 0%, rgba(167, 139, 250, 0.10), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.26));
+
+  box-shadow: 0 18px 44px rgba(0,0,0,0.52);
+}
+
+/* Moldura “double-line” bem sutil */
+.ehp-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(34,211,238,0.22), rgba(167,139,250,0.18)) 0 0 / 100% 1px no-repeat,
+    linear-gradient(90deg, rgba(34,211,238,0.14), rgba(167,139,250,0.12)) 0 100% / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(34,211,238,0.16), transparent 40%) 0 0 / 1px 100% no-repeat,
+    linear-gradient(180deg, rgba(167,139,250,0.14), transparent 40%) 100% 0 / 1px 100% no-repeat;
+  opacity: 0.9;
+}
+
+.ehp-panel__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.18));
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.ehp-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: rgba(255,255,255,0.90);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.ehp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #22d3ee; /* teal */
+  box-shadow: 0 0 14px rgba(34,211,238,0.55);
+}
+
+.ehp-panel__meta {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  background: rgba(0,0,0,0.26);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.74);
+
+  display: inline-flex;
+  align-items: center;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* ✅ Grid dentro do container */
+.ehp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+
+  padding: 14px 14px 16px;
+}
+
+/* centraliza o card */
+.ehp-item {
+  display: flex;
+  justify-content: center;
+}
+
+/* vazio */
+.ehp-empty {
+  padding: 18px;
+  margin: 14px;
+  border-radius: 16px;
+  border: 1px dashed rgba(167,139,250,0.22);
+  background: rgba(0,0,0,0.18);
+  color: rgba(255,255,255,0.72);
+}
+
+/* Responsivo */
+@media (max-width: 1100px) {
+  .ehp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .ehp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .ehp-grid { grid-template-columns: 1fr; }
+}

@@ -1,26 +1,74 @@
-// src/pages/auth/RegisterPage.jsx
 import React from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import RegisterFormComponent from "../../components/auth/RegisterFormComponent";
-import "./Auth.css";
+
+import "./RegisterPage.css";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+
+  const handleSuccess = () => {
+    navigate("/login", { replace: true });
+  };
+
   return (
-    <div className="login-bg">
-      <Container fluid className="login-container">
-        <Row className="justify-content-center">
-          <Col xs={12} sm={8} md={6} lg={4}>
-            <Card className="login-card">
-              <Card.Body className="text-center">
-                <a href="/">
-                  <img src="/images/logo.png" alt="Rasoio" className="logo" />
-                </a>
-                <RegisterFormComponent redirectTo="/login" />
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+    <>
+
+      <div className="rp-wrapper">
+        {/* Glow de fundo */}
+        <div className="rp-bg-effect" />
+
+        <div className="rp-content">
+          <div className="rp-card">
+            {/* HEADER */}
+            <div className="rp-card__header">
+              <div className="rp-logo-wrapper">
+                <img
+                  src="/images/logo.png"
+                  alt="Rasoio"
+                  className="rp-logo"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/logo.gif";
+                  }}
+                />
+              </div>
+
+              <h1 className="rp-title">Criar conta</h1>
+              <p className="rp-subtitle">
+                Cadastre-se para começar a usar a Inkap
+              </p>
+            </div>
+
+            {/* BODY */}
+            <div className="rp-card__body">
+              <RegisterFormComponent onSuccess={handleSuccess} />
+            </div>
+
+            {/* LINKS SECUNDÁRIOS */}
+            <div className="auth-links">
+              <a
+                href="/password-email"
+                className="auth-link-secondary"
+              >
+                Recuperar senha
+              </a>
+            </div>
+
+            {/* FOOTER */}
+            <div className="auth-footer">
+              Já possui uma conta?
+              <button
+                type="button"
+                className="auth-link-primary"
+                onClick={() => navigate("/login")}
+              >
+                Entrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

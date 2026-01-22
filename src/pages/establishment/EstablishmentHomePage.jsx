@@ -1,30 +1,48 @@
-// src/pages/Establishment/EstablishmentHome.jsx
-import React, { useState } from "react";
+// src/pages/establishment/EstablishmentHomePage.jsx
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
 
 import useEstablishmentHome from "../../hooks/useEstablishmentHome";
+import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
 
-import { Row, Col } from "react-bootstrap";
+import "../HomePage.css";
 
-import GlobalNav from "../../components/GlobalNav";
-import CitySelectorModal from "../../components/CitySelectorModal";
-import HomeHeader from "../../components/home/HomeHeader";
+import GlobalPageHeader from "../../components/GlobalPageHeader";
+import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
-import GlobalCard from "../../components/GlobalCard";
 
 const PLACEHOLDER = "/images/logo.png";
 
-export default function EstablishmentHome() {
+export default function EstablishmentHomePage() {
   const { establishments, isLoading, error } = useEstablishmentHome(apiBaseUrl, appId);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  const [showCityModal, setShowCityModal] = useState(false);
-  const [currentCity, setCurrentCity] = useState(localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(localStorage.getItem("selectedUF"));
+  // ✅ cidade/uf vêm do localStorage (o GlobalNav altera isso)
+  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
+  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
+
+  // ✅ mantém o header atualizado quando o GlobalNav mudar cidade
+  useEffect(() => {
+    const sync = () => {
+      setCurrentCity(localStorage.getItem("selectedCity"));
+      setCurrentUF(localStorage.getItem("selectedUF"));
+    };
+
+    window.addEventListener("cityChanged", sync);
+
+    // fallback leve pra mesma aba (caso não exista cityChanged)
+    const iv = setInterval(sync, 800);
+
+    return () => {
+      window.removeEventListener("cityChanged", sync);
+      clearInterval(iv);
+    };
+  }, []);
 
   const { imageUrl } = useImageUtils(PLACEHOLDER);
 
@@ -37,84 +55,83 @@ export default function EstablishmentHome() {
     preselectedEmployer,
     preselectedServiceId,
     openSchedulePopup,
-  } = useSchedulePopup(apiBaseUrl, token);
+  } = useSchedulePopup(apiBaseUrl, token, appId);
 
-  const handleChangeCity = () => setShowCityModal(true);
-  const handleSelectCity = ({ city, uf }) => {
-    localStorage.setItem("selectedCity", city);
-    localStorage.setItem("selectedUF", uf);
-    setCurrentCity(city);
-    setCurrentUF(uf);
-    setShowCityModal(false);
-  };
+  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
+    apiBaseUrl,
+    appId,
+    token,
+    wizardEstablishment
+  );
+
+  // mantém o padrão de navegação já usado no projeto
+  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+
+  const headerMeta = useMemo(() => {
+    const cityLabel =
+      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
+    return [cityLabel, "Agende em poucos cliques"].filter(Boolean);
+  }, [currentCity, currentUF]);
+
+  const headerDescription = useMemo(() => {
+    const cityLabel =
+      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
+    return `Encontre estabelecimentos disponíveis e agende em poucos cliques.${
+      cityLabel ? ` (${cityLabel})` : ""
+    }`;
+  }, [currentCity, currentUF]);
 
   if (isLoading) {
     return (
-      <>
-        <GlobalNav />
-        <div className="hp-wrapper">
-          <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
-          <div className="hp-loading">Carregando…</div>
-        </div>
-      </>
+      <div className="hp-wrapper">
+        <GlobalPageHeader
+          title="Estabelecimentos"
+          variant="home"
+          description="Carregando dados da sua região..."
+          meta={headerMeta}
+          compact
+        />
+        <div className="hp-loading">Carregando…</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
-        <GlobalNav />
-        <div className="hp-wrapper">
-          <div className="hp-loading">{error}</div>
-        </div>
-      </>
+      <div className="hp-wrapper">
+        <GlobalPageHeader
+          title="Estabelecimentos"
+          variant="home"
+          description="Não foi possível carregar as informações agora."
+          meta={headerMeta}
+          compact
+        />
+        <div className="hp-loading">{error}</div>
+      </div>
     );
   }
 
   return (
     <>
-      <GlobalNav />
-
       <div className="hp-wrapper">
-        <HomeHeader city={currentCity} uf={currentUF} onChangeCity={handleChangeCity} />
+        <GlobalPageHeader
+          title="Estabelecimentos"
+          variant="home"
+          description={headerDescription}
+          meta={headerMeta}
+        />
 
-        <Row className="g-3">
-          {establishments.map((est) => (
-            <Col key={est.id} xs={12} sm={6} md={3}>
-              <GlobalCard
-                item={{
-                  ...est,
-                  type: "establishment",
-                  city: est.city || "",
-                  uf: est.uf || "",
-                  phone: est.phone || "",
-                  email: est.email || "",
-                  description: est.description,
-                  address: est.address,
-                  cep: est.cep,
-                  location: est.location,
-                  website_url: est.website_url,
-                  instagram_url: est.instagram_url,
-                  facebook_url: est.facebook_url,
-                  twitter_url: est.twitter_url,
-                  youtube_url: est.youtube_url,
-                  logo: est.logo,
-                  background: est.background,
-                  metrics: est.metrics || { total_views: 0, completed_orders: 0 },
-                  total_views: est.total_views,
-                  completed_appointments: est.completed_appointments,
-                  segments: est.segments ? JSON.parse(est.segments) : [],
-                  files: est.files || [],
-                }}
-                navigate={navigate}
-                showSchedule
-                openSchedulePopup={async () => {
-                  await openSchedulePopup({ establishment: est });
-                }}
-              />
-            </Col>
-          ))}
-        </Row>
+        <GlobalCarousel
+          title="Estabelecimentos"
+          items={establishments}
+          navigate={safeNavigate}
+          openSchedulePopup={async (item) => {
+            // ✅ mesmo fluxo da HomePage: agendamento pré-selecionando o estabelecimento
+            await openSchedulePopup({ establishment: item });
+          }}
+          showSchedule
+          showDots
+        />
       </div>
 
       <AppointmentWizardModal
@@ -122,19 +139,12 @@ export default function EstablishmentHome() {
         onHide={() => setShowWizard(false)}
         employers={wizardEmployers}
         services={wizardServices}
-        loadAvailableTimes={() => {}}
-        handleCreateAppointment={() => {}}
+        loadAvailableTimes={loadAvailableTimes}
+        handleCreateAppointment={handleCreateAppointment}
         imageUrl={imageUrl}
         preselectedServiceId={preselectedServiceId}
         preselectedEmployer={preselectedEmployer}
         establishment={wizardEstablishment}
-      />
-
-      <CitySelectorModal
-        user={JSON.parse(localStorage.getItem("user") || "{}")}
-        show={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        onSelectCity={handleSelectCity}
       />
     </>
   );

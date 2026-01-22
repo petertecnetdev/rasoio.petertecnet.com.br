@@ -1,75 +1,76 @@
-import React, { useMemo } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { storageUrl } from "../../config";
-import GlobalNavAdminMenu from "./GlobalNavAdminMenu";
-import GlobalNavEstablishments from "./GlobalNavEstablishments";
-import "./GlobalNavMenu.css";
+import "./GlobalNav.css";
 
 export default function GlobalNavMenu({
   user,
-  loading,
-  showAdminSubmenu,
-  setShowAdminSubmenu,
-  showEstSubmenu,
-  setShowEstSubmenu,
-  handleToggleMobileMenu,
-  handleLogout,
+  isEmployer,
+  establishments,
+  onClose,
 }) {
-  const avatarSrc = useMemo(() => {
-    const paths = [user?.avatar, user?.images?.avatar, user?.images?.profile].filter(Boolean);
-    if (!paths.length) return "/images/user.png";
-    return paths[0].startsWith("http") ? paths[0] : `${storageUrl}/${paths[0]}`;
-  }, [user]);
-
-  const handleImageError = (e) => {
-    e.target.onerror = null;
-    e.target.src = "/images/user.png";
-  };
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const esc = (e) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", esc);
+    };
+  }, [onClose]);
 
   return (
-    <div className="navlog__mobile-menu">
-      <div className="navlog__mobile-close">
-        <button onClick={handleToggleMobileMenu} className="navlog__close-btn">×</button>
-      </div>
+    <div className="gn-overlay" onClick={onClose}>
+      <aside className="gn-menu" onClick={(e) => e.stopPropagation()}>
+        <button className="gn-close" onClick={onClose}>×</button>
 
-      <div className="navlog__mobile-content">
-        {loading ? (
-          <p className="navlog__loading">Carregando...</p>
-        ) : (
-          <>
-            <img src={avatarSrc} alt="Avatar" onError={handleImageError} className="navlog__avatar" />
-            <h5 className="navlog__user-name">{user?.first_name}</h5>
+        {/* USER */}
+        <div className="gn-user">
+          <img src={user.avatar || "/images/user.png"} alt="Avatar" />
+          <div>
+            <strong>{user.first_name}</strong>
+            <span>{user.email}</span>
+          </div>
+        </div>
 
-            <nav className="navlog__mobile-links">
-              <Link to="/establishments" onClick={handleToggleMobileMenu} className="navlog__link">Estabelecimentos</Link>
-              <Link to="/employers" onClick={handleToggleMobileMenu} className="navlog__link">Profissionais</Link>
-              <Link to="/item/services" onClick={handleToggleMobileMenu} className="navlog__link">Serviços</Link>
-              <Link to="/item/products" onClick={handleToggleMobileMenu} className="navlog__link">Produtos</Link>
+        <nav className="gn-links">
+          <div className="gn-group">Minha Conta</div>
+          <Link to="/user/update" onClick={onClose}>Configurações</Link>
 
-              {user && user.profile?.name !== "Administrador" && (
-                <Link to="/appointments/my" onClick={handleToggleMobileMenu} className="navlog__link">Meus Agendamentos</Link>
-              )}
+          <div className="gn-group">Cliente</div>
+          <Link to="/order/my" onClick={onClose}>Meus Agendamentos</Link>
 
-              <Link to="/user/update" onClick={handleToggleMobileMenu} className="navlog__link">Gerenciar Conta</Link>
-              <Link to="/invite" onClick={handleToggleMobileMenu} className="navlog__link">Convidar Usuário</Link>
+          {isEmployer && (
+            <>
+              <div className="gn-group">Colaborador</div>
+              <Link to="/employer/dashboard" onClick={onClose}>Painel</Link>
+              <Link to="/employer/schedules" onClick={onClose}>Horários</Link>
+              <Link to="/employer/orders" onClick={onClose}>Atendimentos</Link>
+            </>
+          )}
 
-              {user?.profile?.name === "Administrador" && (
-                <GlobalNavAdminMenu
-                  showAdminSubmenu={showAdminSubmenu}
-                  setShowAdminSubmenu={setShowAdminSubmenu}
-                  handleToggleMobileMenu={handleToggleMobileMenu}
-                />
-              )}
+          {establishments?.length > 0 && (
+            <>
+              <div className="gn-group">Estúdios</div>
+              <Link to="/establishment/my" onClick={onClose}>
+                Meus Estabelecimentos
+              </Link>
+              <Link to="/establishment/create" onClick={onClose}>
+                Novo Estabelecimento
+              </Link>
+            </>
+          )}
 
-              {user?.isEmployer && (
-                <Link to="/employer/dashboard" onClick={handleToggleMobileMenu} className="navlog__link">Área do Colaborador</Link>
-              )}
-
-              <Link to="/logout" onClick={() => { handleToggleMobileMenu(); handleLogout(); }} className="navlog__link">Sair</Link>
-            </nav>
-          </>
-        )}
-      </div>
+          <button
+            className="gn-logout"
+            onClick={() => {
+              localStorage.clear();
+              window.location.replace("/");
+            }}
+          >
+            Sair
+          </button>
+        </nav>
+      </aside>
     </div>
   );
 }

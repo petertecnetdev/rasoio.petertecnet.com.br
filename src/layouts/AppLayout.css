@@ -1,0 +1,73 @@
+/* src/layouts/AppLayout.css
+   AppLayout — Dark premium (Rasoio)
+   ✅ Fundo escuro consistente
+   ✅ Conteúdo nunca fica atrás do footer fixo
+*/
+
+:root {
+  /* fallback caso o JS ainda não tenha medido o footer */
+  --gfooter-height: 86px;
+
+  /* tokens */
+  --app-bg: #020617;
+  --app-bg-2: #050b16;
+  --app-surface: rgba(255, 255, 255, 0.04);
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-text: rgba(255, 255, 255, 0.92);
+  --app-text-dim: rgba(255, 255, 255, 0.70);
+}
+
+/* garante fundo escuro geral */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+/* shell */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  /* ✅ fundo “premium” no container principal */
+  background:
+    radial-gradient(1200px 700px at 12% 0%, rgba(25, 211, 255, 0.10), rgba(0, 0, 0, 0) 55%),
+    radial-gradient(900px 560px at 88% 10%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, var(--app-bg-2), var(--app-bg));
+}
+
+/* conteúdo principal */
+.app-main {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+
+  /* ✅ espaço global pro footer fixo + safe area */
+  padding-bottom: calc(var(--gfooter-height) + env(safe-area-inset-bottom) + 16px);
+
+  /* respiro lateral consistente com o app */
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* caso você use páginas muito estreitas, evita overflow horizontal */
+.app-shell,
+.app-main {
+  overflow-x: hidden;
+}
+
+/* opcional: melhora renderização em mobile */
+@supports (-webkit-touch-callout: none) {
+  .app-shell {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

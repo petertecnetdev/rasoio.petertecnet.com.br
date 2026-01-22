@@ -1,25 +1,74 @@
-import React from "react";
-import { Container, Row, Col, Card } from "react-bootstrap";
+// src/pages/auth/LoginPage.jsx
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { apiBaseUrl, appId } from "../../config";
+
+import "./LoginPage.css";
+
 import LoginFormComponent from "../../components/auth/LoginFormComponent";
-import "./Auth.css";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [processing, setProcessing] = useState(false);
+
+  const from = location?.state?.from?.pathname || "/";
+
+  const handleSuccess = () => {
+    navigate(from, { replace: true });
+  };
+
+  // 🔒 BLOQUEIO TOTAL DA UI
+  if (processing) {
+    return (
+      <ProcessingIndicatorComponent
+        gifSrc="/images/logo.gif"
+        minDuration={900}
+      />
+    );
+  }
+
   return (
-    <div className="login-bg">
-      <Container fluid className="login-container">
-        <Row className="justify-content-center">
-          <Col xs={12} sm={8} md={6} lg={4}>
-            <Card className="login-card">
-              <Card.Body className="text-center">
-                <a href="/">
-                  <img src="/images/logo.png" alt="Rasoio" className="logo" />
-                </a>
-                <LoginFormComponent redirectTo="/" />
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
+    <>
+      <div className="lp-wrapper">
+        <div className="lp-bg-effect" />
+
+        <div className="lp-content">
+          <div className="lp-card">
+            <div className="lp-card__header">
+              <div className="lp-logo-wrapper">
+                <img
+                  src="/images/logo.png"
+                  alt="Inkap"
+                  className="lp-logo"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/logo.gif";
+                  }}
+                />
+              </div>
+
+              <h1 className="lp-title">Bem-vindo à Rasoio</h1>
+              <p className="lp-subtitle">
+                Entre para gerenciar seus agendamentos, barbearias, produtos e serviços
+              </p>
+            </div>
+
+            <div className="lp-card__body">
+              <LoginFormComponent
+                onStart={() => setProcessing(true)}
+                onSuccess={handleSuccess}
+                onError={() => setProcessing(false)}
+                redirectTo={from}
+                apiBaseUrl={apiBaseUrl}
+                appId={appId}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

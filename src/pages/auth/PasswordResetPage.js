@@ -1,13 +1,16 @@
-// src/pages/auth/PasswordResetPage.jsx
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
-import Swal from "sweetalert2";
 import axios from "axios";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
 import { apiBaseUrl } from "../../config";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
-import "./Auth.css";
+
+import "./PasswordResetPage.css";
 
 export default function PasswordResetPage() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
   const [password, setPassword] = useState("");
@@ -42,8 +45,8 @@ export default function PasswordResetPage() {
       });
 
       Swal.fire({
-        title: "Sucesso",
-        text: data.message || "Senha alterada com sucesso!",
+        title: "Senha alterada",
+        text: data.message || "Sua senha foi redefinida com sucesso.",
         icon: "success",
         confirmButtonText: "Entrar",
         customClass: {
@@ -52,7 +55,7 @@ export default function PasswordResetPage() {
           content: "custom-swal-text",
         },
       }).then(() => {
-        window.location.replace("/login");
+        navigate("/login", { replace: true });
       });
     } catch (err) {
       Swal.fire({
@@ -60,7 +63,7 @@ export default function PasswordResetPage() {
         text:
           err.response?.data?.error ||
           err.response?.data?.message ||
-          "Ocorreu um erro.",
+          "Não foi possível redefinir a senha.",
         icon: "error",
         confirmButtonText: "Ok",
         customClass: {
@@ -75,80 +78,108 @@ export default function PasswordResetPage() {
   };
 
   return (
-    <div className="login-bg">
+    <>
+
       {loading && (
         <ProcessingIndicatorComponent
-          messages={["Redefinindo senha...", "Por favor, aguarde..."]}
+          messages={[
+            "Redefinindo senha...",
+            "Validando código...",
+            "Finalizando...",
+          ]}
         />
       )}
+
       {!loading && (
-        <Container fluid className="login-container">
-          <Row className="justify-content-center">
-            <Col xs={12} sm={8} md={6} lg={4}>
-              <Card className="login-card">
-                <Card.Body className="text-center">
+        <div className="pr-wrapper">
+          <div className="pr-bg-effect" />
+
+          <div className="pr-content">
+            <div className="pr-card">
+              <div className="pr-card__header">
+                <div className="pr-logo-wrapper">
                   <img
                     src="/images/logo.png"
-                    alt="Rasoio"
-                    className="logo"
+                    alt="Inkap"
+                    className="pr-logo"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/images/logo.gif";
+                    }}
                   />
-                  <p className="mt-3 mb-4 text-uppercase custom-swal-title">
-                    Redefinir Senha
-                  </p>
-                  <Form onSubmit={handleSubmit}>
-                    <Form.Control
-                      type="email"
-                      placeholder="E-mail"
-                      className="neon-input mb-3"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                    <Form.Control
-                      type="text"
-                      placeholder="Código de redefinição"
-                      className="neon-input mb-3"
-                      value={resetCode}
-                      onChange={(e) => setResetCode(e.target.value)}
-                      required
-                    />
-                    <Form.Control
-                      type="password"
-                      placeholder="Nova Senha"
-                      className="neon-input mb-3"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <Form.Control
-                      type="password"
-                      placeholder="Confirmar Senha"
-                      className="neon-input mb-4"
-                      value={passwordConfirmation}
-                      onChange={(e) =>
-                        setPasswordConfirmation(e.target.value)
-                      }
-                      required
-                    />
-                    <Button
-                      type="submit"
-                      className="neon-button w-100 mb-3"
-                      disabled={loading}
-                    >
-                      Alterar Senha
-                    </Button>
-                  </Form>
-                  <div className="login-links">
-                    <a href="/password-email">Pedir novo código</a>
-                    <span className="sep">|</span>
-                    <a href="/login">Voltar ao Login</a>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
+                </div>
+
+                <h1 className="pr-title">Redefinir senha</h1>
+                <p className="pr-subtitle">
+                  Informe o código recebido e defina sua nova senha
+                </p>
+              </div>
+
+              <form className="pr-form" onSubmit={handleSubmit}>
+                <input
+                  type="email"
+                  placeholder="Seu e-mail"
+                  className="pr-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <input
+                  type="text"
+                  placeholder="Código de redefinição"
+                  className="pr-input"
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value)}
+                  required
+                />
+
+                <input
+                  type="password"
+                  placeholder="Nova senha"
+                  className="pr-input"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+
+                <input
+                  type="password"
+                  placeholder="Confirmar nova senha"
+                  className="pr-input"
+                  value={passwordConfirmation}
+                  onChange={(e) =>
+                    setPasswordConfirmation(e.target.value)
+                  }
+                  required
+                />
+
+                <button type="submit" className="pr-button">
+                  Alterar senha
+                </button>
+              </form>
+
+              <div className="pr-footer">
+                <button
+                  type="button"
+                  className="pr-link"
+                  onClick={() => navigate("/password-email")}
+                >
+                  Pedir novo código
+                </button>
+                <span className="pr-sep">•</span>
+                <button
+                  type="button"
+                  className="pr-link"
+                  onClick={() => navigate("/login")}
+                >
+                  Voltar ao login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 }

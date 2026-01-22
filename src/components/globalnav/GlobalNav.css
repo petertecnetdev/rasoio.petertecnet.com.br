@@ -1,0 +1,154 @@
+/* HEADER */
+.gn-header {
+  position: fixed;
+  top: 0;
+  inset-inline: 0;
+  height: 64px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 1.2rem;
+  background: linear-gradient(180deg,#02141f,#020e16);
+}
+
+.gn-logo img {
+  height: 36px;
+}
+
+/* PUBLIC LINKS */
+.gn-public-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.gn-public-links a {
+  color: #cfefff;
+  text-decoration: none;
+  font-size: .9rem;
+}
+
+.gn-public-links a:hover {
+  color: #00e5ff;
+}
+
+/* ACTIONS */
+.gn-actions {
+  display: flex;
+  gap: .6rem;
+}
+
+.gn-login {
+  color: #cfefff;
+  text-decoration: none;
+}
+
+.gn-register {
+  background: #00e5ff;
+  color: #02141f;
+  padding: .4rem .9rem;
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.gn-avatar-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.gn-avatar-btn img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+/* OVERLAY */
+.gn-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* MENU */
+.gn-menu {
+  width: 320px;
+  height: 100%;
+  background: linear-gradient(180deg,#032238,#02121d);
+  padding: 1.2rem;
+  animation: slideIn .25s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.gn-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  float: right;
+}
+
+/* USER */
+.gn-user {
+  display: flex;
+  gap: .8rem;
+  margin: 1.5rem 0;
+}
+
+.gn-user img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.gn-user span {
+  font-size: .8rem;
+  color: #9ccfe3;
+}
+
+/* LINKS */
+.gn-links {
+  display: flex;
+  flex-direction: column;
+}
+
+.gn-links a,
+.gn-links button {
+  padding: .65rem;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  color: #eaf9ff;
+  text-align: left;
+}
+
+.gn-links a:hover,
+.gn-links button:hover {
+  background: rgba(0,229,255,.15);
+}
+
+.gn-group {
+  margin: .9rem 0 .3rem;
+  font-size: .75rem;
+  color: #00e5ff;
+  text-transform: uppercase;
+}
+
+.gn-logout {
+  margin-top: 1rem;
+  color: #ff8a8a;
+}
+
+/* OFFSET */
+body {
+  padding-top: 64px;
+}

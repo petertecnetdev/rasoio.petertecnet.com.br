@@ -1,17 +1,21 @@
 // src/App.jsx
-import React, { useEffect, useState, useContext, createContext } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  createContext,
+  useRef,
+  useCallback,
+} from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
 import { apiBaseUrl } from "./config";
+
+import AppLayout from "./layouts/AppLayout";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -30,6 +34,7 @@ import DashboardPage from "./pages/DashboardPage";
 import OrderCreatePage from "./pages/order/OrderCreatePage";
 import OrderListPage from "./pages/order/OrderListPage";
 import OrderEditPage from "./pages/order/OrderEditPage";
+import OrderListClientPage from "./pages/order/OrderListClientPage";
 
 import UserViewPage from "./pages/user/UserViewPage";
 import UserUpdatePage from "./pages/user/UserUpdatePage";
@@ -59,7 +64,6 @@ import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmplo
 import EstablishmentItemPage from "./pages/establishment/EstablishmentItemPage";
 import EstablishmentHome from "./pages/establishment/EstablishmentHomePage";
 
-import "./index.css";
 
 export const AuthContext = createContext(null);
 
@@ -72,35 +76,65 @@ function AppInner() {
   const [establishments, setEstablishments] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      const token = localStorage.getItem("token");
+  const tokenRef = useRef(localStorage.getItem("token") || "");
 
-      if (!token) {
-        setInitialLoading(false);
-        return;
-      }
-
-      try {
-        const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(data.user ?? null);
-        setEmployer(data.employer ?? null);
-        setIsEmployer(!!data.is_employer);
-        setEstablishments(data.establishments ?? []);
-      } catch {
-        localStorage.removeItem("token");
-        setUser(null);
-        setEmployer(null);
-        setIsEmployer(false);
-        setEstablishments([]);
-      } finally {
-        setInitialLoading(false);
-      }
-    })();
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setEmployer(null);
+    setIsEmployer(false);
+    setEstablishments([]);
   }, []);
+
+  const syncAuth = useCallback(async () => {
+    const token = localStorage.getItem("token") || "";
+    tokenRef.current = token;
+
+    if (!token) {
+      clearSession();
+      setInitialLoading(false);
+      return;
+    }
+
+    try {
+      const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setUser(data.user ?? null);
+      setEmployer(data.employer ?? null);
+      setIsEmployer(!!data.is_employer);
+      setEstablishments(data.establishments ?? []);
+    } catch (e) {
+      localStorage.removeItem("token");
+      clearSession();
+    } finally {
+      setInitialLoading(false);
+    }
+  }, [clearSession]);
+
+  useEffect(() => {
+    syncAuth();
+
+    const onAuthChanged = () => {
+      setInitialLoading(true);
+      syncAuth();
+    };
+
+    window.addEventListener("authChanged", onAuthChanged);
+
+    const iv = setInterval(() => {
+      const t = localStorage.getItem("token") || "";
+      if (t !== tokenRef.current) {
+        setInitialLoading(true);
+        syncAuth();
+      }
+    }, 600);
+
+    return () => {
+      window.removeEventListener("authChanged", onAuthChanged);
+      clearInterval(iv);
+    };
+  }, [syncAuth]);
 
   if (initialLoading) {
     return (
@@ -138,161 +172,76 @@ function AppInner() {
         user,
         setUser,
         employer,
+        setEmployer,
         isEmployer,
+        setIsEmployer,
         establishments,
+        setEstablishments,
       }}
     >
       <>
         {isLoading && (
-          <ProcessingIndicatorComponent
-            interval={800}
-            gifSrc="/images/logo.gif"
-          />
+          <ProcessingIndicatorComponent interval={800} gifSrc="/images/logo.gif" />
         )}
 
         <Router>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            {/* ✅ Nav + Footer em TODAS as rotas abaixo */}
+            <Route element={<AppLayout loadingMenu={false} />}>
+              <Route path="/" element={<HomePage />} />
 
-            <Route
-              path="/establishment/view/:slug"
-              element={<EstablishmentViewPage />}
-            />
-            <Route
-              path="/employer/view/:user_name"
-              element={<EmployerViewPage />}
-            />
+              <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
+              <Route path="/employer/view/:user_name" element={<EmployerViewPage />} />
 
-            <Route
-              path="/register"
-              element={restrictedRoute(<RegisterPage />)}
-            />
-            <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-            <Route
-              path="/password-email"
-              element={restrictedRoute(<PasswordEmailPage />)}
-            />
-            <Route
-              path="/password-reset"
-              element={restrictedRoute(<PasswordResetPage />)}
-            />
-            <Route
-              path="/email-verify"
-              element={emailVerifiedRoute(<EmailVerifyPage />)}
-            />
-            <Route
-              path="/password"
-              element={protectedRoute(<PasswordPage />)}
-            />
-            <Route path="/logout" element={<LogoutPage />} />
+              <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
+              <Route path="/login" element={restrictedRoute(<LoginPage />)} />
+              <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
+              <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
+              <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
+              <Route path="/password" element={protectedRoute(<PasswordPage />)} />
+              <Route path="/logout" element={<LogoutPage />} />
 
-            <Route path="/invite" element={<InvitePage />} />
-            <Route path="/invite-complete" element={<InviteCompletePage />} />
+              <Route path="/invite" element={<InvitePage />} />
+              <Route path="/invite-complete" element={<InviteCompletePage />} />
 
-            <Route
-              path="/dashboard"
-              element={protectedRoute(<DashboardPage />)}
-            />
+              <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
 
-            <Route
-              path="/order/list/:slug"
-              element={protectedRoute(<OrderListPage />)}
-            />
-            <Route
-              path="/order/create/:slug"
-              element={protectedRoute(<OrderCreatePage />)}
-            />
-            <Route
-              path="/order/edit/:entityId/:id"
-              element={protectedRoute(<OrderEditPage />)}
-            />
+              <Route path="/order/list/:slug" element={protectedRoute(<OrderListPage />)} />
+              <Route path="/order/create/:slug" element={protectedRoute(<OrderCreatePage />)} />
+              <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
+              <Route path="/order/my" element={protectedRoute(<OrderListClientPage />)} />
 
-            <Route
-              path="/user/update"
-              element={protectedRoute(<UserUpdatePage />)}
-            />
-            <Route
-              path="/user/:userName"
-              element={protectedRoute(<UserViewPage />)}
-            />
+              <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
+              <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
 
-            <Route
-              path="/item/list/:slug"
-              element={protectedRoute(<ItemListPage />)}
-            />
-            <Route
-              path="/item/create/:slug"
-              element={protectedRoute(<ItemCreatePage />)}
-            />
-            <Route path="/item/view/:slug" element={<ItemViewPage />} />
-            <Route
-              path="/item/update/:id"
-              element={protectedRoute(<ItemUpdatePage />)}
-            />
+              <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
+              <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
+              <Route path="/item/view/:slug" element={<ItemViewPage />} />
+              <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
 
-            
-            <Route path="/item/services" element={<ItemServiceHomePage />} />
-            <Route path="/item/products" element={<ItemProductHomePage />} />
+              <Route path="/item/services" element={<ItemServiceHomePage />} />
+              <Route path="/item/products" element={<ItemProductHomePage />} />
 
-            <Route
-              path="/employer/list/:slug"
-              element={protectedRoute(<EmployerListPage />)}
-            />
-            <Route
-              path="/employer/create/:slug"
-              element={protectedRoute(<EmployerCreatePage />)}
-            />
-            <Route
-              path="/employer/update/:id"
-              element={protectedRoute(<EmployerUpdatePage />)}
-            />
-            <Route
-              path="/employer/:id"
-              element={protectedRoute(<EmployerViewPage />)}
-            />
-            <Route
-              path="/employer/dashboard"
-              element={protectedRoute(<EmployerMePage />)}
-            />
-            <Route
-              path="/employer/schedules"
-              element={protectedRoute(<EmployerSchedulesPage />)}
-            />
-            <Route
-              path="/employer/orders"
-              element={protectedRoute(<EmployerOrdersPage />)}
-            />
+              <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
+              <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
+              <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
+              <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
+              <Route path="/employer/dashboard" element={protectedRoute(<EmployerMePage />)} />
+              <Route path="/employer/schedules" element={protectedRoute(<EmployerSchedulesPage />)} />
+              <Route path="/employer/orders" element={protectedRoute(<EmployerOrdersPage />)} />
 
-            
-            <Route path="/employers" element={<EmployerHome />} />
+              <Route path="/employers" element={<EmployerHome />} />
 
-            <Route
-              path="/establishment/create"
-              element={protectedRoute(<EstablishmentCreatePage />)}
-            />
-            <Route
-              path="/establishment/update/:id"
-              element={protectedRoute(<EstablishmentUpdatePage />)}
-            />
-            <Route
-              path="/establishment/my"
-              element={protectedRoute(<EstablishmentMyPage />)}
-            />
-            <Route
-              path="/establishment/orders/:slug"
-              element={<EstablishmentOrderPage />}
-            />
-            <Route
-              path="/establishment/item/:slug"
-              element={<EstablishmentItemPage />}
-            />
-            <Route
-              path="/establishment/employers/:slug"
-              element={<EstablishmentEmployersPage />}
-            />
-            <Route path="/establishments" element={<EstablishmentHome />} />
+              <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
+              <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
+              <Route path="/establishment/my" element={protectedRoute(<EstablishmentMyPage />)} />
+              <Route path="/establishment/orders/:slug" element={<EstablishmentOrderPage />} />
+              <Route path="/establishment/item/:slug" element={<EstablishmentItemPage />} />
+              <Route path="/establishment/employers/:slug" element={<EstablishmentEmployersPage />} />
+              <Route path="/establishments" element={<EstablishmentHome />} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
           </Routes>
         </Router>
       </>

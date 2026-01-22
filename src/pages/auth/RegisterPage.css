@@ -1,0 +1,208 @@
+/* ===============================
+   RASOIO — REGISTER PAGE
+   Padrão visual oficial (Login + Register)
+================================ */
+
+/* ===============================
+   WRAPPER
+=============================== */
+.rp-wrapper {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(0, 229, 255, 0.14), transparent 45%),
+    radial-gradient(circle at bottom, rgba(0, 157, 255, 0.12), transparent 50%),
+    linear-gradient(160deg, #020b13, #021a2a 45%, #020b13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===============================
+   BACKGROUND GLOW
+=============================== */
+.rp-bg-effect {
+  position: absolute;
+  width: 640px;
+  height: 640px;
+  background: radial-gradient(
+    circle,
+    rgba(0, 229, 255, 0.28),
+    rgba(0, 157, 255, 0.14),
+    transparent 72%
+  );
+  filter: blur(150px);
+  top: -240px;
+  right: -240px;
+  pointer-events: none;
+}
+
+/* ===============================
+   CONTENT
+=============================== */
+.rp-content {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem;
+  z-index: 1;
+}
+
+/* ===============================
+   CARD
+=============================== */
+.rp-card {
+  background: linear-gradient(
+    180deg,
+    rgba(3, 34, 56, 0.88),
+    rgba(2, 18, 30, 0.96)
+  );
+  border-radius: 24px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(0, 229, 255, 0.08),
+    inset 0 0 45px rgba(0, 229, 255, 0.05);
+  backdrop-filter: blur(18px);
+  padding: 2.6rem 2.3rem;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+.rp-card__header {
+  text-align: center;
+  margin-bottom: 2.2rem;
+}
+
+/* Logo wrapper */
+.rp-logo-wrapper {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 1.2rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 229, 255, 0.35),
+    rgba(0, 157, 255, 0.18)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 42px rgba(0, 229, 255, 0.75),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+/* Logo */
+.rp-logo {
+  width: 58px;
+  height: auto;
+  filter:
+    drop-shadow(0 0 12px rgba(0, 229, 255, 0.85))
+    drop-shadow(0 0 28px rgba(0, 157, 255, 0.65));
+}
+
+/* Title */
+.rp-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #eaf9ff;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.4px;
+}
+
+/* Subtitle */
+.rp-subtitle {
+  font-size: 0.95rem;
+  color: #9ccfe3;
+  line-height: 1.45;
+}
+
+/* ===============================
+   BODY
+=============================== */
+.rp-card__body {
+  margin-top: 1.6rem;
+}
+
+/* ===============================
+   LINKS SECUNDÁRIOS (RECUPERAR)
+=============================== */
+.auth-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;              /* ← espaçamento real */
+  margin-top: 1.4rem;
+  font-size: 0.9rem;
+}
+
+.auth-link-secondary {
+  color: #9ccfe3;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.auth-link-secondary:hover {
+  color: #00e5ff;
+  opacity: 0.85;
+}
+
+/* ===============================
+   FOOTER (JÁ POSSUI CONTA)
+=============================== */
+.auth-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem;              /* ← evita texto grudado */
+  margin-top: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(0, 229, 255, 0.15);
+  font-size: 0.9rem;
+  color: #9ccfe3;
+  text-align: center;
+}
+
+.auth-link-primary {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #00e5ff;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.auth-link-primary:hover {
+  opacity: 0.75;
+}
+
+/* ===============================
+   RESPONSIVO
+=============================== */
+@media (max-width: 480px) {
+  .rp-card {
+    padding: 2.2rem 1.6rem;
+  }
+
+  .rp-logo-wrapper {
+    width: 82px;
+    height: 82px;
+  }
+
+  .rp-logo {
+    width: 52px;
+  }
+
+  .rp-title {
+    font-size: 1.4rem;
+  }
+
+  .rp-subtitle {
+    font-size: 0.9rem;
+  }
+}

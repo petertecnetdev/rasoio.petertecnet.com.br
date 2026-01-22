@@ -1,149 +1,23 @@
-/* ===============================
-   HOME PAGE LAYOUT BASE
-================================ */
+/* src/pages/HomePage.css */
+
 .hp-wrapper {
-  width: 100%;
-  padding: 40px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
+  padding: 14px 12px 28px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
-/* ===============================
-   HEADER
-================================ */
-.hp-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.hp-header h1 {
-  margin: 0;
-  font-size: 2.2rem;
-  font-weight: 700;
-}
-
-.hp-location {
-  font-size: 1.1rem;
-  opacity: 0.7;
-}
-
-/* ===============================
-   STATS GRID
-================================ */
-.hp-stats-row {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 1200px) {
-  .hp-stats-row {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (max-width: 700px) {
-  .hp-stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ===============================
-   SECTION TITLES
-================================ */
-.hp-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.hp-section-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-
-/* ===============================
-   HIGHLIGHTS GRID
-================================ */
-.hp-highlights-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 1300px) {
-  .hp-highlights-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (max-width: 900px) {
-  .hp-highlights-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 600px) {
-  .hp-highlights-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ===============================
-   CAROUSEL SECTIONS
-================================ */
-.hp-section .global-carousel-wrapper {
-  width: 100%;
-}
-
-/* ===============================
-   BOTTOM GRID (3 COLUNAS)
-================================ */
-.hp-bottom-grid {
-  display: grid;
-  grid-template-columns: 2fr 2fr 1fr;
-  gap: 30px;
-}
-
-@media (max-width: 1200px) {
-  .hp-bottom-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 800px) {
-  .hp-bottom-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ===============================
-   ACTIVITY SECTION
-================================ */
-.hp-activity {
-  background: rgba(255,255,255,0.04);
-  border-radius: 16px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.hp-activity-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.95rem;
-  opacity: 0.8;
-}
-
-/* ===============================
-   LOADING
-================================ */
 .hp-loading {
-  width: 100%;
-  text-align: center;
-  padding: 60px 0;
-  font-size: 1.3rem;
-  opacity: 0.7;
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.78);
+}
+
+.hp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 14px;
 }

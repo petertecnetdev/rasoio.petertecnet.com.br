@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import GlobalNav from "../../components/GlobalNav";
 import InviteFormComponent from "../../components/auth/InviteFormComponent";
 import { Container, Row, Col, Card, Modal } from "react-bootstrap";
 import GlobalButton from "../../components/GlobalButton";
@@ -10,7 +9,6 @@ export default function InvitePage() {
 
   return (
     <>
-      <GlobalNav />
 
       <Container className="py-4">
         <Row className="justify-content-center">

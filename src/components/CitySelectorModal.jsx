@@ -1,24 +1,17 @@
-// src/components/CitySelectorModal.jsx// 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+// src/components/CitySelectorModal.jsx (ajuste: sem logo e título = cidade selecionada)
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { apiBaseUrl } from "../config";
+import GlobalModal from "./GlobalModal";
+import GlobalCard from "./GlobalCard";
 import "./CitySelectorModal.css";
 
-export default function CitySelectorModal({
-  user = {},
-  show,
-  onClose,
-  onSelectCity,
-}) {
+export default function CitySelectorModal({ user = {}, show, onClose, onSelectCity }) {
   const appId = 2;
 
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  const dropdownRef = useRef(null);
 
   const storedCity = localStorage.getItem("selectedCity") || user.city || "";
   const storedUF = localStorage.getItem("selectedUF") || user.uf || "";
@@ -28,156 +21,142 @@ export default function CitySelectorModal({
 
   useEffect(() => {
     if (!show) return;
-
-    async function fetchCities() {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          `${apiBaseUrl}/establishment/cities/${appId}`
-        );
-        setCities(res.data.cities || []);
-      } catch (e) {
-        console.error("Erro ao buscar cidades:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCities();
-  }, [show]);
+    const c = localStorage.getItem("selectedCity") || user.city || "";
+    const u = localStorage.getItem("selectedUF") || user.uf || "";
+    setCity(c);
+    setUf(u);
+  }, [show, user.city, user.uf]);
 
   useEffect(() => {
     if (!show) return;
 
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
+    let mounted = true;
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    async function fetchCities() {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${apiBaseUrl}/establishment/cities/${appId}`);
+        if (!mounted) return;
+        setCities(res.data?.cities || []);
+      } catch (e) {
+        console.error("Erro ao buscar cidades:", e);
+        if (!mounted) return;
+        setCities([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchCities();
+    return () => {
+      mounted = false;
+    };
   }, [show]);
 
-  const filteredCities = useMemo(() => {
-    if (!search.trim()) return cities;
-    const term = search.toLowerCase();
-    return cities.filter((c) =>
-      `${c.city} ${c.uf}`.toLowerCase().includes(term)
-    );
-  }, [cities, search]);
+  const modalTitle = useMemo(() => {
+    if (uf === "ALL") return "Todas as cidades";
+    if (city && uf) return `${city} / ${uf}`;
+    return "Escolha sua cidade";
+  }, [city, uf]);
 
-  const handleSelect = (c) => {
-    setCity(c.city);
-    setUf(c.uf);
-    setOpen(false);
-  };
+  const cityCards = useMemo(() => {
+    const list = Array.isArray(cities) ? cities : [];
 
-  const handleSelectAll = () => {
-    setCity("Todas");
-    setUf("ALL");
-    setOpen(false);
-  };
+    const all = [
+      {
+        key: "__ALL__",
+        raw: { city: "Todas", uf: "ALL" },
+        item: { type: "city", name: "Todas as cidades" },
+      },
+    ];
 
-  const handleSave = () => {
-    if (!city || !uf) return;
+    const mapped = list.map((c, idx) => ({
+      key: `${c.city}-${c.uf}-${idx}`,
+      raw: { city: c.city, uf: c.uf },
+      item: { type: "city", name: `${c.city} / ${c.uf}` },
+    }));
 
-    localStorage.setItem("selectedCity", city);
-    localStorage.setItem("selectedUF", uf);
-    localStorage.setItem("user", JSON.stringify({ ...user, city, uf }));
+    return [...all, ...mapped];
+  }, [cities]);
 
-    if (typeof onSelectCity === "function") {
-      onSelectCity({ city, uf });
-    }
-  };
+  const isSelected = useCallback(
+    (c, u) => String(city) === String(c) && String(uf) === String(u),
+    [city, uf]
+  );
 
-  if (!show) return null;
+  const applySelection = useCallback(
+    (nextCity, nextUf) => {
+      setCity(nextCity);
+      setUf(nextUf);
+
+      localStorage.setItem("selectedCity", nextCity);
+      localStorage.setItem("selectedUF", nextUf);
+      localStorage.setItem("user", JSON.stringify({ ...user, city: nextCity, uf: nextUf }));
+
+      if (typeof onSelectCity === "function") {
+        onSelectCity({ city: nextCity, uf: nextUf });
+      }
+
+      onClose?.();
+    },
+    [user, onSelectCity, onClose]
+  );
 
   return (
-    <div className="city-modal-overlay">
-      <div className="city-modal">
-        <div className="city-modal-header">
-          <div>
-            <h3>Escolha sua cidade</h3>
-            <p>Personalizamos a experiência com base na sua localização</p>
+    <GlobalModal
+      show={show}
+      onHide={onClose}
+      title={modalTitle}
+      subtitle={null}
+      size="lg"
+      centered
+      backdrop="static"
+      closeOnEsc
+      closeButton
+      className="city-gmodal"
+      logoSrc={null}   // ✅ sem imagem no título
+      logoAlt=""
+      footer={null}
+    >
+      <div className="city-modal-body">
+        {loading ? (
+          <div className="city-grid">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div className="city-grid-item" key={`sk-${i}`}>
+                <GlobalCard loading hideMedia />
+              </div>
+            ))}
           </div>
-          <button className="city-close-btn" onClick={onClose}>
-            ×
-          </button>
-        </div>
+        ) : (
+          <div className="city-grid" role="list">
+            {cityCards.map(({ key, raw, item }) => {
+              const active = isSelected(raw.city, raw.uf);
 
-        <div className="city-modal-body">
-          {loading ? (
-            <div className="city-loading">Carregando cidades…</div>
-          ) : (
-            <div className="city-dropdown-container" ref={dropdownRef}>
-              <label className="city-label">Buscar cidade</label>
-              <input
-                className="city-search-input"
-                placeholder="Digite o nome ou UF"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onFocus={() => setOpen(true)}
-              />
-              <div
-                className={`city-dropdown ${open ? "open" : ""}`}
-                onClick={() => setOpen((v) => !v)}
-              >
-                <span className="city-selected">
-                  {city && uf
-                    ? uf === "ALL"
-                      ? "Todas as cidades"
-                      : `${city} / ${uf}`
-                    : "Selecionar"}
-                </span>
-                <span className="city-arrow">▾</span>
-              </div>
-              <div className={`city-options ${open ? "show" : ""}`}>
-                <button
-                  type="button"
-                  className={`city-option ${uf === "ALL" ? "active" : ""}`}
-                  onClick={handleSelectAll}
+              return (
+                <div
+                  key={key}
+                  role="listitem"
+                  className={`city-grid-item ${active ? "is-selected" : ""}`}
+                  onClick={() => applySelection(raw.city, raw.uf)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      applySelection(raw.city, raw.uf);
+                    }
+                  }}
+                  tabIndex={0}
                 >
-                  <strong>Todas as cidades</strong>
-                  <span>Brasil</span>
-                </button>
-
-                {filteredCities.length === 0 ? (
-                  <div className="city-empty">Nenhuma cidade encontrada</div>
-                ) : (
-                  filteredCities.map((c) => (
-                    <button
-                      type="button"
-                      key={`${c.city}-${c.uf}`}
-                      className={`city-option ${
-                        c.city === city && c.uf === uf ? "active" : ""
-                      }`}
-                      onClick={() => handleSelect(c)}
-                    >
-                      <strong>{c.city}</strong>
-                      <span>{c.uf}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="city-modal-footer">
-          <button className="city-btn secondary" onClick={onClose}>
-            Cancelar
-          </button>
-          <button
-            className="city-btn primary"
-            onClick={handleSave}
-            disabled={!city || !uf}
-          >
-            Confirmar cidade
-          </button>
-        </div>
+                  <div className="city-card-wrap">
+                    <GlobalCard item={item} showSchedule={false} actions={null} hideMedia />
+                    {active && <div className="city-selected-badge">✓</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </GlobalModal>
   );
 }
 

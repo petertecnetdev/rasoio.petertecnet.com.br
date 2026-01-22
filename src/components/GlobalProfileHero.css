@@ -1,0 +1,390 @@
+/* src/components/GlobalProfileHero.css
+   Adicione/mescle estas regras (principalmente as do ASIDE)
+*/
+
+.gph-hero {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.gph-heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.gph-heroBgImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.02);
+  filter: saturate(1.05) contrast(1.05);
+}
+
+.gph-heroBgFallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(120% 120% at 10% 0%, rgba(25,211,255,0.10), rgba(2,6,23,1) 55%);
+}
+
+.gph-heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(2,6,23,0.35), rgba(2,6,23,0.85)),
+    radial-gradient(120% 120% at 20% 0%, rgba(25,211,255,0.12), rgba(0,0,0,0) 55%);
+}
+
+.gph-heroContent {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .gph-heroContent {
+    padding: 18px;
+  }
+}
+@media (min-width: 992px) {
+  .gph-heroContent {
+    padding: 20px;
+  }
+}
+
+/* grid */
+.gph-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  .gph-grid {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+    gap: 16px;
+  }
+}
+
+.gph-left,
+.gph-aside {
+  min-width: 0;
+}
+
+/* left */
+.gph-heroTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gph-heroIdentity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.gph-heroLogoWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  flex: 0 0 auto;
+}
+
+.gph-heroLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (min-width: 992px) {
+  .gph-heroLogoWrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+  }
+}
+
+.gph-heroTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.96);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .gph-heroTitle {
+    font-size: 1.45rem;
+  }
+}
+
+/* chips */
+.gph-sub {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gph-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(10px);
+}
+
+.gph-chip--rating {
+  background: rgba(25, 211, 255, 0.12);
+  border-color: rgba(25, 211, 255, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* actions */
+.gph-heroActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.gph-primaryBtn,
+.gph-secondaryBtn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.gph-primaryBtn {
+  color: rgba(10, 14, 20, 0.95);
+  background: linear-gradient(180deg, rgba(25, 211, 255, 0.95), rgba(25, 211, 255, 0.75));
+  border-color: rgba(25, 211, 255, 0.25);
+}
+
+.gph-secondaryBtn {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gph-primaryBtn:hover,
+.gph-secondaryBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+.gph-primaryBtn[aria-disabled="true"],
+.gph-secondaryBtn[aria-disabled="true"],
+.gph-primaryBtn:disabled,
+.gph-secondaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* stats */
+.gph-stats {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .gph-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.gph-statCard {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.gph-statLabel {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.gph-statValue {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.05rem;
+  font-weight: 950;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* =========================================
+   ✅ ASIDE MINI PROFILE (SEM GlobalCard)
+   ========================================= */
+.gph-aside {
+  display: grid;
+  align-content: start;
+}
+
+@media (min-width: 992px) {
+  .gph-aside {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+.gph-asideCard {
+  width: 100%;
+  max-width: 360px;     /* ✅ segura o tamanho */
+  justify-self: end;
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.gph-asideCard.is-clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.gph-asideCard.is-clickable:hover {
+  transform: translateY(-2px);
+  border-color: rgba(25, 211, 255, 0.22);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.gph-asideHeader {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.gph-asideMedia {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.gph-asideImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gph-asideImgFallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(120% 120% at 10% 0%, rgba(25,211,255,0.12), rgba(2,6,23,1) 55%);
+}
+
+.gph-asideTitle {
+  font-weight: 950;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.98rem;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gph-asideSub {
+  margin-top: 3px;
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.70);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gph-asideMeta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gph-asidePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.gph-asideActions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.gph-asideBtn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 9px 12px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.06);
+  text-align: center;
+}
+
+.gph-asideBtn--primary {
+  color: rgba(10, 14, 20, 0.95);
+  background: linear-gradient(180deg, rgba(25, 211, 255, 0.95), rgba(25, 211, 255, 0.75));
+  border-color: rgba(25, 211, 255, 0.25);
+}
+
+@media (max-width: 991px) {
+  .gph-asideCard {
+    max-width: 100%;
+    justify-self: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gph-primaryBtn,
+  .gph-secondaryBtn {
+    transition: none;
+  }
+}
