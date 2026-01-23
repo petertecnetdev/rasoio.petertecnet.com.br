@@ -1,10 +1,11 @@
-// src/components/CitySelectorModal.jsx (ajuste: sem logo e título = cidade selecionada)
+// src/components/CitySelectorModal.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+
 import { apiBaseUrl } from "../config";
 import GlobalModal from "./GlobalModal";
-import GlobalCard from "./GlobalCard";
+
 import "./CitySelectorModal.css";
 
 export default function CitySelectorModal({ user = {}, show, onClose, onSelectCity }) {
@@ -19,14 +20,21 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
   const [city, setCity] = useState(storedCity);
   const [uf, setUf] = useState(storedUF);
 
+  const [query, setQuery] = useState("");
+
+  // ✅ sempre sincroniza cidade/uf ao abrir
   useEffect(() => {
     if (!show) return;
+
     const c = localStorage.getItem("selectedCity") || user.city || "";
     const u = localStorage.getItem("selectedUF") || user.uf || "";
+
     setCity(c);
     setUf(u);
+    setQuery("");
   }, [show, user.city, user.uf]);
 
+  // ✅ fetch cidades ao abrir
   useEffect(() => {
     if (!show) return;
 
@@ -36,8 +44,9 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
       setLoading(true);
       try {
         const res = await axios.get(`${apiBaseUrl}/establishment/cities/${appId}`);
+
         if (!mounted) return;
-        setCities(res.data?.cities || []);
+        setCities(Array.isArray(res.data?.cities) ? res.data.cities : []);
       } catch (e) {
         console.error("Erro ao buscar cidades:", e);
         if (!mounted) return;
@@ -48,6 +57,7 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
     }
 
     fetchCities();
+
     return () => {
       mounted = false;
     };
@@ -59,25 +69,38 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
     return "Escolha sua cidade";
   }, [city, uf]);
 
-  const cityCards = useMemo(() => {
+  const normalizedQuery = useMemo(() => String(query || "").trim().toLowerCase(), [query]);
+
+  const cityItems = useMemo(() => {
     const list = Array.isArray(cities) ? cities : [];
 
-    const all = [
+    const base = [
       {
         key: "__ALL__",
-        raw: { city: "Todas", uf: "ALL" },
-        item: { type: "city", name: "Todas as cidades" },
+        city: "Todas",
+        uf: "ALL",
+        label: "Todas as cidades",
       },
     ];
 
     const mapped = list.map((c, idx) => ({
       key: `${c.city}-${c.uf}-${idx}`,
-      raw: { city: c.city, uf: c.uf },
-      item: { type: "city", name: `${c.city} / ${c.uf}` },
+      city: c.city,
+      uf: c.uf,
+      label: `${c.city} / ${c.uf}`,
     }));
 
-    return [...all, ...mapped];
-  }, [cities]);
+    const all = [...base, ...mapped];
+
+    if (!normalizedQuery) return all;
+
+    return all.filter((it) => {
+      const a = String(it.city || "").toLowerCase();
+      const b = String(it.uf || "").toLowerCase();
+      const c = String(it.label || "").toLowerCase();
+      return a.includes(normalizedQuery) || b.includes(normalizedQuery) || c.includes(normalizedQuery);
+    });
+  }, [cities, normalizedQuery]);
 
   const isSelected = useCallback(
     (c, u) => String(city) === String(c) && String(uf) === String(u),
@@ -113,48 +136,95 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
       backdrop="static"
       closeOnEsc
       closeButton
-      className="city-gmodal"
-      logoSrc={null}   // ✅ sem imagem no título
+      className="city-modal"
+      logoSrc={null}
       logoAlt=""
       footer={null}
     >
-      <div className="city-modal-body">
-        {loading ? (
-          <div className="city-grid">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div className="city-grid-item" key={`sk-${i}`}>
-                <GlobalCard loading hideMedia />
-              </div>
-            ))}
+      <div className="city-modal__body">
+        {/* Top bar */}
+        <div className="city-modal__top">
+          <div className="city-modal__search">
+            <input
+              className="city-modal__input"
+              placeholder="Pesquisar cidade ou UF..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            {!!query && (
+              <button
+                type="button"
+                className="city-modal__clear"
+                onClick={() => setQuery("")}
+                aria-label="Limpar pesquisa"
+                title="Limpar"
+              >
+                ×
+              </button>
+            )}
           </div>
-        ) : (
-          <div className="city-grid" role="list">
-            {cityCards.map(({ key, raw, item }) => {
-              const active = isSelected(raw.city, raw.uf);
 
-              return (
-                <div
-                  key={key}
-                  role="listitem"
-                  className={`city-grid-item ${active ? "is-selected" : ""}`}
-                  onClick={() => applySelection(raw.city, raw.uf)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      applySelection(raw.city, raw.uf);
-                    }
-                  }}
-                  tabIndex={0}
-                >
-                  <div className="city-card-wrap">
-                    <GlobalCard item={item} showSchedule={false} actions={null} hideMedia />
-                    {active && <div className="city-selected-badge">✓</div>}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="city-modal__hint">
+            {loading ? "Carregando..." : `${cityItems.length} opções`}
           </div>
-        )}
+        </div>
+
+        {/* Grid */}
+        <div className="city-modal__content">
+          {loading ? (
+            <div className="city-modal__grid" aria-busy="true">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div className="city-tile city-tile--skeleton" key={`sk-${i}`}>
+                  <div className="city-tile__skTitle" />
+                  <div className="city-tile__skSub" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="city-modal__grid" role="list">
+              {cityItems.map((it) => {
+                const active = isSelected(it.city, it.uf);
+
+                return (
+                  <div
+                    key={it.key}
+                    role="listitem"
+                    tabIndex={0}
+                    aria-selected={active}
+                    className={`city-tile ${active ? "is-active" : ""}`}
+                    onClick={() => applySelection(it.city, it.uf)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        applySelection(it.city, it.uf);
+                      }
+                    }}
+                  >
+                    <div className="city-tile__row">
+                      <div className="city-tile__title">{it.city}</div>
+                      {active && <div className="city-tile__badge">✓</div>}
+                    </div>
+
+                    <div className="city-tile__sub">
+                      {it.uf === "ALL" ? "Selecione para ver tudo" : it.uf}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!loading && cityItems.length === 0 && (
+            <div className="city-modal__empty">
+              <div className="city-modal__emptyTitle">Nenhuma cidade encontrada</div>
+              <div className="city-modal__emptySubtitle">
+                Tente pesquisar por nome da cidade ou UF.
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </GlobalModal>
   );

@@ -1,192 +1,471 @@
 /* =========================================================
-   RASOIO — LOGIN PAGE
-   Dark / Neon / Premium
-   Google Button Centralizado
+   RASOIO — LOGIN PAGE (UPGRADED)
+   Premium Dark / Neon / Modern Layout
 ========================================================= */
 
-/* =========================
-   WRAPPER GERAL
-========================= */
-.lp-wrapper {
+.lp {
   min-height: 100vh;
   width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background:
-    radial-gradient(circle at top, rgba(0, 229, 255, 0.14), transparent 45%),
-    radial-gradient(circle at bottom, rgba(0, 157, 255, 0.12), transparent 50%),
-    linear-gradient(160deg, #020b13, #021a2a 45%, #020b13);
-
   position: relative;
   overflow: hidden;
+  color: rgba(255, 255, 255, 0.92);
 }
 
 /* =========================
-   GLOW DE FUNDO
+   BACKGROUND
 ========================= */
-.lp-bg-effect {
+.lp__bg {
   position: absolute;
-  width: 620px;
-  height: 620px;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(124, 92, 255, 0.18), transparent 50%),
+    radial-gradient(circle at 85% 10%, rgba(0, 229, 255, 0.14), transparent 46%),
+    radial-gradient(circle at 70% 80%, rgba(0, 157, 255, 0.12), transparent 55%),
+    linear-gradient(160deg, #05060d, #030a14 40%, #05060d);
+  z-index: 0;
+}
 
-  background: radial-gradient(
-    circle,
-    rgba(0, 229, 255, 0.28),
-    rgba(0, 157, 255, 0.12),
-    transparent 70%
-  );
-
-  filter: blur(140px);
-  top: -220px;
-  right: -220px;
+.lp__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
   pointer-events: none;
 }
 
+.lp__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 90px 90px;
+  mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,0.6), transparent 70%);
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+/* orbs */
+.lp__orb {
+  position: absolute;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.65;
+  pointer-events: none;
+  transform: translate3d(0,0,0);
+}
+
+.lp__orb--a {
+  top: -240px;
+  left: -240px;
+  background: radial-gradient(circle, rgba(124, 92, 255, 0.55), transparent 70%);
+}
+
+.lp__orb--b {
+  bottom: -260px;
+  right: -260px;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.42), transparent 70%);
+}
+
 /* =========================
-   CONTEÚDO CENTRAL
+   CONTAINER
 ========================= */
-.lp-content {
-  width: 100%;
-  max-width: 460px;
-  padding: 1.6rem;
+.lp__container {
+  position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 18px;
+  min-height: 100vh;
 
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-/* =========================
-   CARD LOGIN
-========================= */
-.lp-card {
+.lp__layout {
   width: 100%;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* =========================
+   HERO
+========================= */
+.lp__hero {
+  display: flex;
+  min-height: 540px;
+}
+
+.lp__heroCard {
+  width: 100%;
+  border-radius: 26px;
+  padding: 26px;
 
   background: linear-gradient(
     180deg,
-    rgba(3, 34, 56, 0.88),
-    rgba(2, 18, 30, 0.96)
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.03)
   );
 
-  border-radius: 24px;
-  border: 1px solid rgba(0, 229, 255, 0.25);
-
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.75),
-    inset 0 0 45px rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 35px 90px rgba(0, 0, 0, 0.55);
 
   backdrop-filter: blur(18px);
+  overflow: hidden;
+  position: relative;
 
-  padding: 2.6rem 2.3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  animation: lpFadeUp 520ms ease both;
+}
+
+.lp__heroCard::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(124, 92, 255, 0.22), transparent 50%),
+    radial-gradient(circle at 80% 40%, rgba(0, 229, 255, 0.12), transparent 55%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.lp__heroTop {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.lp__heroLogoWrap {
+  width: 74px;
+  height: 74px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+
+  background: linear-gradient(
+    180deg,
+    rgba(124, 92, 255, 0.22),
+    rgba(0, 229, 255, 0.10)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.55),
+    0 0 55px rgba(124, 92, 255, 0.10);
+}
+
+.lp__heroLogo {
+  width: 44px;
+  height: auto;
+  filter: drop-shadow(0 0 14px rgba(124, 92, 255, 0.35));
+}
+
+.lp__heroTitle {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.lp__heroSubtitle {
+  margin: 6px 0 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 520px;
+}
+
+.lp__heroInfo {
+  position: relative;
+  z-index: 1;
+  margin-top: 22px;
+}
+
+.lp__heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.80);
+
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+
+  margin-bottom: 14px;
+}
+
+.lp__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 229, 255, 0.85);
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.85);
+}
+
+.lp__heroList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: grid;
+  gap: 10px;
+
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.98rem;
+}
+
+.lp__heroList li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.lp__check {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+
+  background: rgba(124, 92, 255, 0.16);
+  border: 1px solid rgba(124, 92, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 /* =========================
-   HEADER
+   MAIN CARD
 ========================= */
-.lp-card__header {
+.lp__main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lp__card {
+  width: 100%;
+  max-width: 500px;
+
+  border-radius: 26px;
+  padding: 26px 22px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.62)
+  );
+
+  border: 1px solid rgba(124, 92, 255, 0.26);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.70),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+
+  animation: lpFadeUp 560ms ease both;
+}
+
+.lp__cardHeader {
   text-align: center;
-  margin-bottom: 2.2rem;
+  margin-bottom: 18px;
 }
 
-/* =========================
-   LOGO
-========================= */
-.lp-logo-wrapper {
+.lp__logoWrap {
   width: 92px;
   height: 92px;
-  margin: 0 auto 1.2rem;
+  margin: 0 auto 12px;
 
-  border-radius: 50%;
+  border-radius: 22px;
 
-  background: radial-gradient(
-    circle,
-    rgba(0, 229, 255, 0.35),
-    rgba(0, 157, 255, 0.18)
-  );
+  background: radial-gradient(circle, rgba(124, 92, 255, 0.25), rgba(0, 229, 255, 0.10));
+  border: 1px solid rgba(255, 255, 255, 0.10);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   box-shadow:
-    0 0 42px rgba(0, 229, 255, 0.75),
-    inset 0 0 18px rgba(255, 255, 255, 0.08);
+    0 0 45px rgba(124, 92, 255, 0.10),
+    0 0 55px rgba(0, 229, 255, 0.08);
 }
 
-.lp-logo {
+.lp__logo {
   width: 58px;
   height: auto;
-
   filter:
-    drop-shadow(0 0 12px rgba(0, 229, 255, 0.85))
-    drop-shadow(0 0 28px rgba(0, 157, 255, 0.65));
+    drop-shadow(0 0 14px rgba(124, 92, 255, 0.50))
+    drop-shadow(0 0 24px rgba(0, 229, 255, 0.18));
+}
+
+.lp__title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.lp__subtitle {
+  margin: 10px auto 0;
+  max-width: 440px;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.lp__cardBody {
+  margin-top: 14px;
 }
 
 /* =========================
-   TEXTOS
+   FOOTER
 ========================= */
-.lp-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #eaf9ff;
-  margin-bottom: 0.35rem;
-  letter-spacing: 0.4px;
+.lp__cardFooter {
+  margin-top: 18px;
 }
 
-.lp-subtitle {
-  font-size: 0.95rem;
-  color: #9ccfe3;
-  line-height: 1.45;
+.lp__footerLine {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+  margin-bottom: 10px;
+}
+
+.lp__footerText {
+  display: block;
+  text-align: center;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.52);
+  line-height: 1.4;
 }
 
 /* =========================
-   BODY
+   GOOGLE AUTH (CENTRALIZA DEFINITIVO)
 ========================= */
-.lp-card__body {
-  margin-top: 1.6rem;
-}
-
-/* =========================
-   AJUSTE GLOBAL GOOGLE LOGIN
-   (CENTRALIZA DEFINITIVO)
-========================= */
-.lp-card .google-auth-wrapper {
+.lp__card .google-auth-wrapper {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 0.5rem;
+  margin-top: 10px;
 }
 
-.lp-card .google-auth-wrapper > div {
+.lp__card .google-auth-wrapper > div {
   width: 100% !important;
   display: flex !important;
   justify-content: center !important;
 }
 
 /* =========================
+   ANIMATIONS
+========================= */
+@keyframes lpFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
    RESPONSIVO
 ========================= */
+@media (max-width: 980px) {
+  .lp__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .lp__hero {
+    display: none;
+  }
+
+  .lp__card {
+    max-width: 520px;
+  }
+}
+
 @media (max-width: 480px) {
-  .lp-card {
-    padding: 2.2rem 1.6rem;
+  .lp__container {
+    padding: 18px 14px;
   }
 
-  .lp-logo-wrapper {
-    width: 82px;
-    height: 82px;
+  .lp__card {
+    padding: 22px 16px;
+    border-radius: 22px;
   }
 
-  .lp-logo {
-    width: 52px;
+  .lp__logoWrap {
+    width: 86px;
+    height: 86px;
+    border-radius: 20px;
   }
 
-  .lp-title {
-    font-size: 1.4rem;
+  .lp__logo {
+    width: 54px;
   }
 
-  .lp-subtitle {
-    font-size: 0.9rem;
+  .lp__title {
+    font-size: 1.38rem;
   }
+
+  .lp__subtitle {
+    font-size: 0.92rem;
+  }
+}
+/* =========================================================
+   FIX: remover “barra/branco” abaixo do botão Google
+========================================================= */
+
+/* wrapper do login google */
+.lp__card .google-auth-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
+  /* ✅ impede a caixa branca aparecer */
+  overflow: hidden;
+}
+
+/* o Google costuma renderizar 2 elementos dentro */
+.lp__card .google-auth-wrapper > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+
+  /* ✅ trava altura do botão e corta lixo extra */
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  overflow: hidden !important;
+}
+
+/* caso ele injete iframe extra com fundo branco */
+.lp__card .google-auth-wrapper iframe {
+  display: block !important;
+  max-height: 46px !important;
 }

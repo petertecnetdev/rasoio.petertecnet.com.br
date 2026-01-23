@@ -1,187 +1,294 @@
 /* =========================================================
-   RASOIO — LOGIN FORM COMPONENT
-   Premium / Neon / Dark / Google Alinhado
+   RASOIO — LOGIN FORM COMPONENT (UPGRADED)
+   Premium / Dark / Google Fix White Box
 ========================================================= */
 
-/* =========================
-   FORM BASE
-========================= */
 .login-form-component {
+  width: 100%;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.lfg {
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 14px;
 }
 
 /* =========================
-   INPUTS
+   FIELD / LABEL
 ========================= */
-.neon-input {
+.lfg__field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lfg__label {
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.76);
+  margin: 0;
+}
+
+/* =========================
+   INPUT WRAP
+========================= */
+.lfg__inputWrap {
+  width: 100%;
+  position: relative;
+}
+
+.lfg__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.86);
+
+  pointer-events: none;
+}
+
+.lfg__input {
   width: 100%;
 
-  background: linear-gradient(
-    145deg,
-    rgba(235, 245, 255, 0.98),
-    rgba(225, 240, 255, 0.98)
-  ) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
 
-  border: none !important;
   border-radius: 14px;
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1rem 0.95rem 3.35rem !important;
 
-  font-size: 0.95rem;
-  color: #02141f !important;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.92) !important;
 
   box-shadow:
-    inset 0 0 0 1px rgba(0, 157, 255, 0.35),
+    inset 0 0 0 1px rgba(0, 229, 255, 0.06),
     0 0 0 rgba(0, 229, 255, 0);
 
-  transition: all 0.25s ease;
+  transition: all 0.18s ease;
 }
 
-.neon-input::placeholder {
-  color: #5a7d95;
+.lfg__input::placeholder {
+  color: rgba(255, 255, 255, 0.50);
 }
 
-.neon-input:focus {
+.lfg__input:focus {
   outline: none;
   box-shadow:
-    inset 0 0 0 1px #00e5ff,
-    0 0 18px rgba(0, 229, 255, 0.55);
+    inset 0 0 0 1px rgba(0, 229, 255, 0.40),
+    0 0 0 4px rgba(0, 229, 255, 0.10),
+    0 0 22px rgba(0, 229, 255, 0.16);
+  border-color: rgba(0, 229, 255, 0.30) !important;
 }
 
 /* =========================
-   BOTÃO LOGIN
+   SUBMIT BUTTON
 ========================= */
-.neon-button {
+.lfg__submit {
   width: 100%;
   height: 48px;
 
-  border-radius: 14px;
-  border: none;
+  border-radius: 14px !important;
+  border: 0 !important;
 
-  background: linear-gradient(
-    135deg,
-    #00e5ff,
-    #009dff
-  );
-
+  background: linear-gradient(135deg, #00e5ff, #009dff) !important;
   color: #02141f !important;
-  font-weight: 600;
-  font-size: 0.95rem;
+
+  font-weight: 900 !important;
+  font-size: 0.96rem !important;
   letter-spacing: 0.4px;
 
-  box-shadow:
-    0 12px 30px rgba(0, 157, 255, 0.45);
-
-  transition: all 0.25s ease;
+  box-shadow: 0 14px 42px rgba(0, 157, 255, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
-.neon-button:hover {
+.lfg__submit:hover {
   transform: translateY(-1px);
+  filter: brightness(1.05);
   box-shadow:
-    0 0 28px rgba(0, 229, 255, 0.85),
-    0 18px 48px rgba(0, 157, 255, 0.65);
+    0 0 28px rgba(0, 229, 255, 0.55),
+    0 18px 55px rgba(0, 157, 255, 0.42);
 }
 
-.neon-button:active {
+.lfg__submit:active {
   transform: translateY(0);
-  box-shadow:
-    0 0 18px rgba(0, 229, 255, 0.6);
+}
+
+.lfg__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* loading */
+.lfg__loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lfg__spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(2, 20, 31, 0.25);
+  border-top-color: rgba(2, 20, 31, 0.95);
+  animation: lfgSpin 0.8s linear infinite;
+}
+
+@keyframes lfgSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* =========================
-   GOOGLE LOGIN (CENTRAL FIX)
+   DIVIDER
 ========================= */
-.login-form-component > .d-flex {
+.lfg__divider {
+  width: 100%;
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.lfg__divider::before,
+.lfg__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+}
+
+.lfg__divider span {
+  padding: 0 12px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* =========================
+   GOOGLE SLOT (FIX WHITE BOX)
+========================= */
+.lfg__googleSlot {
   width: 100%;
   display: flex;
   justify-content: center;
 }
 
-/* wrapper interno gerado pelo Google */
-.login-form-component iframe {
+.google-auth-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+
+  /* ✅ corta qualquer lixo branco que o google injeta abaixo */
+  overflow: hidden !important;
+
+  /* ✅ trava altura, some 100% */
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+
+  border-radius: 14px;
+}
+
+/* o google injeta div interna */
+.google-auth-wrapper > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+
+  overflow: hidden !important;
+}
+
+/* se ele usar iframe */
+.google-auth-wrapper iframe {
+  display: block !important;
   width: 100% !important;
   max-width: 100% !important;
-  min-height: 48px !important;
 
-  border-radius: 14px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+
   margin: 0 !important;
   padding: 0 !important;
-}
-
-/* fallback caso não use iframe */
-.login-form-component button[role="button"],
-.login-form-component div[role="button"] {
-  width: 100% !important;
-  height: 48px !important;
 
   border-radius: 14px !important;
-  border: 1px solid rgba(0, 229, 255, 0.35) !important;
-
-  background: linear-gradient(
-    145deg,
-    rgba(3, 34, 56, 0.96),
-    rgba(2, 22, 36, 0.96)
-  ) !important;
-
-  color: #eaf9ff !important;
-  font-size: 0.95rem !important;
-  font-weight: 500 !important;
-
-  box-shadow:
-    0 12px 30px rgba(0, 157, 255, 0.25) !important;
-
-  transition: all 0.25s ease !important;
-}
-
-.login-form-component button[role="button"]:hover,
-.login-form-component div[role="button"]:hover {
-  box-shadow:
-    0 0 30px rgba(0, 229, 255, 0.75),
-    0 18px 48px rgba(0, 157, 255, 0.45) !important;
 }
 
 /* =========================
    LINKS
 ========================= */
-.login-links {
+.lfg__links {
+  margin-top: 10px;
   display: flex;
-  justify-content: center;
+  gap: 10px;
   align-items: center;
-  gap: 0.75rem;
-
-  margin-top: 1.4rem;
-  font-size: 0.85rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
 }
 
-.login-links a {
-  color: #00e5ff;
+.lfg__link {
+  color: rgba(0, 229, 255, 0.92);
   text-decoration: none;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
+  font-weight: 800;
+  font-size: 0.86rem;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-.login-links a:hover {
-  opacity: 0.75;
+.lfg__link:hover {
+  opacity: 0.78;
+  transform: translateY(-1px);
 }
 
-.login-links .sep {
-  color: rgba(0, 229, 255, 0.45);
+.lfg__sep {
+  color: rgba(255, 255, 255, 0.30);
+  font-weight: 900;
 }
 
 /* =========================
    MOBILE
 ========================= */
 @media (max-width: 480px) {
-  .neon-input {
-    font-size: 0.9rem;
-  }
-
-  .neon-button {
+  .lfg__submit {
     height: 46px;
   }
 
-  .login-form-component iframe {
-    min-height: 46px !important;
+  .google-auth-wrapper,
+  .google-auth-wrapper > div,
+  .google-auth-wrapper iframe {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
   }
 }

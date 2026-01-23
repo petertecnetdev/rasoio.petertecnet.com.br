@@ -1,0 +1,501 @@
+/* =========================================================
+   OrderMyPage.css - Minha Agenda (Premium UI)
+   ========================================================= */
+
+.omp {
+  width: 100%;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 600px at 20% 0%, rgba(124, 92, 255, 0.10), transparent 55%),
+    radial-gradient(900px 500px at 80% 10%, rgba(155, 124, 255, 0.08), transparent 60%),
+    #07070b;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.omp-wrap {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 16px 14px 28px;
+}
+
+.omp-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0 18px;
+}
+
+/* Toolbar buttons */
+.omp-toolBtn {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 1000;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.30);
+}
+
+.omp-toolBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(124, 92, 255, 0.35);
+  background: rgba(124, 92, 255, 0.10);
+}
+
+.omp-toolBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.omp-toolBtn--primary {
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.95), rgba(155, 124, 255, 0.95));
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #0a0a10;
+}
+
+/* status blocks */
+.omp-loading,
+.omp-error,
+.omp-empty {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 22px;
+  padding: 22px 16px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+
+.omp-loadingTitle,
+.omp-emptyTitle {
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.omp-loadingSub,
+.omp-emptySub {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.70);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.omp-error {
+  border-color: rgba(255, 70, 70, 0.26);
+  background: rgba(255, 70, 70, 0.08);
+}
+
+.omp-errorText {
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+}
+
+/* timeline */
+.omp-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.omp-day {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.38);
+}
+
+.omp-dayHeader {
+  padding: 14px 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+}
+
+.omp-dayTitle {
+  font-weight: 1000;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+  font-size: 16px;
+}
+
+.omp-daySub {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 800;
+}
+
+/* card grid */
+.omp-gridWrap {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* card */
+.omp-card {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(10, 10, 14, 0.78);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.omp-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(124, 92, 255, 0.35);
+}
+
+.omp-cardBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.omp-cardBgImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  /* ✅ melhora legibilidade */
+  filter: blur(5px) saturate(1.05) contrast(1.08) brightness(0.75);
+  transform: scale(1.12);
+}
+
+
+.omp-cardBgFallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(900px 520px at 30% 0%, rgba(124, 92, 255, 0.14), transparent 60%),
+    rgba(0, 0, 0, 0.25);
+}
+
+.omp-cardBgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.78));
+}
+
+.omp-cardBody {
+  position: relative;
+  z-index: 1;
+  padding: 14px;
+}
+
+/* top */
+.omp-cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.omp-cardTopLeft {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.omp-logoWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  flex: 0 0 auto;
+}
+
+.omp-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.omp-logoFallback {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.omp-titleBlock {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.omp-estName {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.omp-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* status */
+.omp-status {
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-weight: 1000;
+  font-size: 12px;
+  letter-spacing: 0.25px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+.omp-status--success {
+  background: rgba(40, 200, 120, 0.12);
+  border-color: rgba(40, 200, 120, 0.30);
+  color: rgba(210, 255, 235, 0.95);
+}
+
+.omp-status--warning {
+  background: rgba(255, 204, 0, 0.12);
+  border-color: rgba(255, 204, 0, 0.30);
+  color: rgba(255, 246, 200, 0.95);
+}
+
+.omp-status--danger {
+  background: rgba(255, 70, 70, 0.14);
+  border-color: rgba(255, 70, 70, 0.32);
+  color: rgba(255, 225, 225, 0.95);
+}
+
+.omp-status--info {
+  background: rgba(70, 160, 255, 0.14);
+  border-color: rgba(70, 160, 255, 0.32);
+  color: rgba(220, 240, 255, 0.95);
+}
+
+.omp-status--neutral {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* date/time strip */
+.omp-datetime {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(10, 10, 14, 0.55);
+  justify-content: space-between;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.omp-date,
+.omp-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.2px;
+}
+
+.omp-time {
+  color: rgba(255, 255, 255, 0.80);
+}
+
+/* grid details */
+.omp-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.omp-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.omp-item--wide {
+  grid-column: 1 / -1;
+}
+
+.omp-label {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+}
+
+.omp-value {
+  font-weight: 1000;
+  font-size: 14px;
+}
+
+/* employer */
+.omp-emp {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.omp-avatarWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  flex: 0 0 auto;
+}
+
+.omp-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.omp-avatarFallback {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.omp-empText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.omp-empName {
+  font-weight: 1000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.omp-empUser {
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+/* notes */
+.omp-notes {
+  margin-top: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(124, 92, 255, 0.10);
+  padding: 12px;
+}
+
+.omp-notesTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 1000;
+  margin-bottom: 6px;
+}
+
+.omp-notesText {
+  color: rgba(255, 255, 255, 0.84);
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+/* buttons */
+.omp-actions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.omp-btn {
+  width: 100%;
+  border-radius: 16px;
+  padding: 11px 12px;
+  font-weight: 1000;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.omp-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(124, 92, 255, 0.35);
+  background: rgba(124, 92, 255, 0.10);
+}
+
+.omp-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.omp-btn--ghost {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* responsive */
+@media (max-width: 980px) {
+  .omp-gridWrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .omp-wrap {
+    padding: 12px 10px 26px;
+  }
+
+  .omp-toolbar {
+    gap: 10px;
+  }
+
+  .omp-toolBtn {
+    width: 100%;
+  }
+
+  .omp-actions {
+    grid-template-columns: 1fr;
+  }
+}

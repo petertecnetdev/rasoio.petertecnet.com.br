@@ -8,7 +8,12 @@ import React, {
 } from "react";
 import PropTypes from "prop-types";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaStore, FaUserFriends, FaConciergeBell, FaBoxOpen } from "react-icons/fa";
+import {
+  FaStore,
+  FaUserFriends,
+  FaConciergeBell,
+  FaBoxOpen,
+} from "react-icons/fa";
 
 import { AuthContext } from "../App";
 import useImageUtils from "../hooks/useImageUtils";
@@ -59,7 +64,9 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
   const currentUF = localStorage.getItem("selectedUF");
 
   const locationText =
-    currentCity && currentUF ? `${currentCity} / ${currentUF}` : "Selecionar cidade";
+    currentCity && currentUF
+      ? `${currentCity}`
+      : "Selecionar cidade";
 
   /* ================= SEARCH ================= */
   const handleSearch = (e) => {
@@ -98,8 +105,6 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        // No mobile o input fica escondido via CSS,
-        // mas no desktop continua funcionando normalmente.
         searchRef.current?.focus();
       }
     };
@@ -125,8 +130,11 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
               <img src="/images/logo.png" alt="Logo" className="nav__logo" />
             </Link>
 
-            {/* ✅ SEARCH (no mobile será oculto via CSS) */}
-            <form className="nav__search nav__search--left mt-4" onSubmit={handleSearch}>
+            {/* SEARCH */}
+            <form
+              className="nav__search nav__search--left "
+              onSubmit={handleSearch}
+            >
               <input
                 ref={searchRef}
                 type="search"
@@ -134,12 +142,15 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 aria-label="Buscar"
-                className="mt-4"
+                className=""
               />
             </form>
 
-            {/* ICON NAV */}
-            <nav className="nav__links nav__links--icons" aria-label="Navegação principal">
+            {/* ICON NAV (some no mobile via CSS) */}
+            <nav
+              className="nav__links nav__links--icons"
+              aria-label="Navegação principal"
+            >
               <Link
                 to="/establishments"
                 className={`nav__link nav__iconLink ${
@@ -190,10 +201,10 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
           <div className="nav__right">
             <div className="nav__locationWrap">
               <span
-                className="nav__locationText nav__changeCityBtn"
+                className="nav__locationText nav__changeCityBtn p-2"
                 onClick={() => setShowCityModal(true)}
               >
-                📍 {locationText}
+                {locationText}
               </span>
             </div>
 
@@ -201,9 +212,6 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
               <div className="nav__authActions">
                 <Link to="/login" className="nav__btn nav__btn--ghost">
                   Entrar
-                </Link>
-                <Link to="/register" className="nav__btn nav__btn--primary">
-                  Criar conta
                 </Link>
               </div>
             )}
@@ -224,91 +232,190 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                   <span className="nav__userName">{fullName}</span>
                 </button>
 
+                {/* ✅ MENU (agora está no lugar certo) */}
                 {userMenuOpen && (
-                  <div className="nav__userMenu">
-                    <div className="nav__menuGroup">
-                      <span className="nav__menuTitle">Configurações</span>
-                      <button
-                        className="nav__userMenuItem"
-                        onClick={() => navigate("/user/update")}
-                        type="button"
-                      >
-                        Conta
-                      </button>
-                      <button
-                        className="nav__userMenuItem"
-                        onClick={() => navigate("/order/my")}
-                        type="button"
-                      >
-                        Meus agendamentos
-                      </button>
-                    </div>
+                  <div className="nav__userMenu" role="dialog" aria-modal="true">
+                    {/* HEADER DO MENU */}
+                    <div className="nav__userMenuHeader">
+                      <div className="nav__userMenuHeaderLeft">
+                        <img
+                          src={avatarSrc}
+                          alt={fullName}
+                          className="nav__userMenuAvatar"
+                          onError={handleImgError}
+                        />
 
-                    {isEmployer && (
-                      <>
-                        <div className="nav__divider" />
-                        <div className="nav__menuGroup">
-                          <span className="nav__menuTitle">Área do Colaborador</span>
-                          <button
-                            className="nav__userMenuItem"
-                            onClick={() => navigate("/employer/dashboard")}
-                            type="button"
-                          >
-                            Painel
-                          </button>
-                          <button
-                            className="nav__userMenuItem"
-                            onClick={() => navigate("/employer/schedules")}
-                            type="button"
-                          >
-                            Horários
-                          </button>
-                          <button
-                            className="nav__userMenuItem"
-                            onClick={() => navigate("/employer/orders")}
-                            type="button"
-                          >
-                            Atendimentos
-                          </button>
+                        <div className="nav__userMenuHeaderInfo">
+                          <div className="nav__userMenuName">{fullName}</div>
+                          <div className="nav__userMenuEmail">
+                            {user?.email || ""}
+                          </div>
                         </div>
-                      </>
-                    )}
+                      </div>
 
-                    <div className="nav__divider" />
-                    <div className="nav__menuGroup">
-                      <span className="nav__menuTitle">Gestão de Estabelecimentos</span>
                       <button
-                        className="nav__userMenuItem"
-                        onClick={() => navigate("/establishment/my")}
                         type="button"
+                        className="nav__userMenuClose"
+                        onClick={() => setUserMenuOpen(false)}
+                        aria-label="Fechar menu"
+                        title="Fechar"
                       >
-                        Meus estabelecimentos
-                      </button>
-                      <button
-                        className="nav__userMenuItem"
-                        onClick={() => navigate("/establishment/create")}
-                        type="button"
-                      >
-                        Criar estabelecimento
-                      </button>
-                      <button
-                        className="nav__userMenuItem"
-                        onClick={() => navigate("/dashboard")}
-                        type="button"
-                      >
-                        Dashboard
+                        ✕
                       </button>
                     </div>
 
-                    <div className="nav__divider" />
-                    <div className="nav__menuGroup">
-                      <button
-                        className="nav__userMenuItem nav__logout"
-                        onClick={onLogout}
-                        type="button"
-                      >
-                        Sair
-                      </button>
+                    {/* CONTEÚDO */}
+                    <div className="nav__userMenuContent">
+                      {/* Configurações */}
+                      <div className="nav__menuGroup">
+                        <span className="nav__menuTitle">Configurações</span>
+
+                        <button
+                          className="nav__userMenuItem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            navigate("/user/update");
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">👤</span>
+                          <span className="nav__menuText">Conta</span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
+
+                        <button
+                          className="nav__userMenuItem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            navigate("/orders/my");
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">📅</span>
+                          <span className="nav__menuText">Meus agendamentos</span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
+                      </div>
+
+                      {/* Área do Colaborador */}
+                      {isEmployer && (
+                        <>
+                          <div className="nav__divider" />
+                          <div className="nav__menuGroup">
+                            <span className="nav__menuTitle">
+                              Área do Colaborador
+                            </span>
+
+                            <button
+                              className="nav__userMenuItem"
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                navigate("/employer/dashboard");
+                              }}
+                              type="button"
+                            >
+                              <span className="nav__menuIcon">📊</span>
+                              <span className="nav__menuText">Painel</span>
+                              <span className="nav__menuArrow">›</span>
+                            </button>
+
+                            <button
+                              className="nav__userMenuItem"
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                navigate("/employer/schedules");
+                              }}
+                              type="button"
+                            >
+                              <span className="nav__menuIcon">⏱️</span>
+                              <span className="nav__menuText">Horários</span>
+                              <span className="nav__menuArrow">›</span>
+                            </button>
+
+                            <button
+                              className="nav__userMenuItem"
+                              onClick={() => {
+                                setUserMenuOpen(false);
+                                navigate("/employer/orders");
+                              }}
+                              type="button"
+                            >
+                              <span className="nav__menuIcon">🧾</span>
+                              <span className="nav__menuText">Atendimentos</span>
+                              <span className="nav__menuArrow">›</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Gestão */}
+                      <div className="nav__divider" />
+                      <div className="nav__menuGroup">
+                        <span className="nav__menuTitle">Gestão</span>
+
+                        <button
+                          className="nav__userMenuItem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            navigate("/establishment/my");
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">🏪</span>
+                          <span className="nav__menuText">
+                            Meus estabelecimentos
+                          </span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
+
+                        <button
+                          className="nav__userMenuItem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            navigate("/establishment/create");
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">➕</span>
+                          <span className="nav__menuText">
+                            Criar estabelecimento
+                          </span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
+
+                        <button
+                          className="nav__userMenuItem"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            navigate("/dashboard");
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">📈</span>
+                          <span className="nav__menuText">Dashboard</span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
+                      </div>
+
+                      {/* Logout */}
+                      <div className="nav__divider" />
+                      <div className="nav__menuGroup">
+                        <button
+                          className="nav__userMenuItem nav__logout"
+                          onClick={() => {
+                            setUserMenuOpen(false);
+                            onLogout();
+                          }}
+                          type="button"
+                        >
+                          <span className="nav__menuIcon">🚪</span>
+                          <span className="nav__menuText">Sair</span>
+                          
+                        </button>
+                      </div>
+                      
+                      <div className="nav__divider" />
+                      
                     </div>
                   </div>
                 )}

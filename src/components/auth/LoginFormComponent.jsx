@@ -1,5 +1,5 @@
 // src/components/auth/LoginFormComponent.jsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { GoogleLogin } from "@react-oauth/google";
 import PropTypes from "prop-types";
@@ -14,6 +14,11 @@ export default function LoginFormComponent({
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit = useMemo(() => {
+    return String(username || "").trim().length > 0 && String(password || "").trim().length > 0;
+  }, [username, password]);
 
   const { login, loginGoogle } = useLogin(
     (token) => {
@@ -22,61 +27,140 @@ export default function LoginFormComponent({
     redirectTo
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!canSubmit || submitting) return;
+
+    setSubmitting(true);
     onStart?.();
-    login(username, password).catch(() => onError?.());
+
+    try {
+      await login(username, password);
+    } catch (err) {
+      onError?.(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleGoogleSuccess = (credentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (submitting) return;
+
+    setSubmitting(true);
     onStart?.();
-    loginGoogle(credentialResponse?.credential || null).catch(() =>
-      onError?.()
-    );
+
+    try {
+      await loginGoogle(credentialResponse?.credential || null);
+    } catch (err) {
+      onError?.(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="login-form-component mt-4">
-      <Form.Control
-        type="text"
-        placeholder="Usuário ou e-mail"
-        className="neon-input mb-3"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        required
-      />
+    <Form onSubmit={handleSubmit} className="login-form-component">
+      <div className="lfg">
+        {/* USERNAME */}
+        <div className="lfg__field">
+          <label className="lfg__label" htmlFor="login-username">
+            Usuário ou e-mail
+          </label>
 
-      <Form.Control
-        type="password"
-        placeholder="Senha"
-        className="neon-input mb-4"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
+          <div className="lfg__inputWrap">
+            <span className="lfg__icon" aria-hidden="true">
+              ✉
+            </span>
 
-      <Button type="submit" className="neon-button w-100 mb-3">
-        Entrar
-      </Button>
+            <Form.Control
+              id="login-username"
+              type="text"
+              autoComplete="username"
+              placeholder="Digite seu usuário ou e-mail"
+              className="lfg__input"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={submitting}
+              required
+            />
+          </div>
+        </div>
 
-      <div className="w-100 mb-3 d-flex justify-content-center">
-        <GoogleLogin
-          onSuccess={handleGoogleSuccess}
-          onError={onError}
-          width="100%"
-          theme="outline"
-          size="large"
-          text="continue_with"
-          shape="rectangular"
-        />
-      </div>
+        {/* PASSWORD */}
+        <div className="lfg__field">
+          <label className="lfg__label" htmlFor="login-password">
+            Senha
+          </label>
 
-      
+          <div className="lfg__inputWrap">
+            <span className="lfg__icon" aria-hidden="true">
+              🔒
+            </span>
 
-      <div className="login-links bg-dark">
-        <a href="/register">Registrar-se</a>
-        <span className="sep">|</span>
-        <a href="/password-email">Recuperar senha</a>
+            <Form.Control
+              id="login-password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
+              className="lfg__input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
+              required
+            />
+          </div>
+        </div>
+
+        {/* SUBMIT */}
+        <Button
+          type="submit"
+          className="lfg__submit"
+          disabled={!canSubmit || submitting}
+        >
+          {submitting ? (
+            <span className="lfg__loading">
+              <span className="lfg__spinner" aria-hidden="true" />
+              Entrando...
+            </span>
+          ) : (
+            "Entrar"
+          )}
+        </Button>
+
+        {/* DIVIDER */}
+        <div className="lfg__divider">
+          <span>ou</span>
+        </div>
+
+        {/* GOOGLE */}
+        <div className="lfg__googleSlot">
+          <div className="">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={onError}
+              width="320"
+              theme="outline"
+              size="large"
+              text="continue_with"
+              shape="rectangular"
+              locale="pt-BR"
+            />
+          </div>
+        </div>
+
+        {/* LINKS */}
+        <div className="lfg__links">
+          <a className="lfg__link" href="/register">
+            Criar conta
+          </a>
+
+          <span className="lfg__sep">•</span>
+
+          <a className="lfg__link" href="/password-email">
+            Esqueci minha senha
+          </a>
+        </div>
       </div>
     </Form>
   );

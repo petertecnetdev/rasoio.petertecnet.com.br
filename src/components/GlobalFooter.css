@@ -1,6 +1,6 @@
 /* src/components/GlobalFooter.css
    GlobalFooter — Premium / Rasoio style
-   (fixo, confortável, toque-friendly, com active pill e microinterações)
+   ✅ Footer fixo SEM sobrepor conteúdo
 */
 
 :root {
@@ -17,9 +17,43 @@
   --gf-item-radius: 16px;
 
   --gf-maxw: 1180px;
+
+  /* ✅ IMPORTANTE: altura fixa do footer */
+  --gf-h: 78px;
+
+  /* ✅ safe-area do iPhone etc */
+  --gf-safe: env(safe-area-inset-bottom, 0px);
+
+  /* ✅ espaço total reservado (altura footer + safe area) */
+  --gf-reserve: calc(var(--gf-h) + var(--gf-safe));
 }
 
-/* Footer fixo */
+/* =========================================================
+   ✅ ESSENCIAL: reserva espaço no final do app inteiro
+   Isso impede qualquer conteúdo ficar "ATRÁS" do footer
+   ========================================================= */
+
+/* aplica no app inteiro */
+html,
+body {
+  height: 100%;
+}
+
+/* ✅ evita scroll horizontal causado por fixed/footer */
+body {
+  overflow-x: hidden;
+}
+
+/* ✅ Reserva espaço em TODO o conteúdo */
+#root {
+  min-height: 100%;
+  padding-bottom: var(--gf-reserve);
+}
+
+/* =========================================================
+   Footer fixo
+   ========================================================= */
+
 .gfooter {
   position: fixed;
   left: 0;
@@ -27,13 +61,23 @@
   bottom: 0;
   z-index: 9999;
 
-  padding-bottom: env(safe-area-inset-bottom);
+  /* ✅ altura garantida */
+  height: var(--gf-h);
+
+  /* ✅ safe-area no iOS (ainda dentro do footer) */
+  padding-bottom: var(--gf-safe);
+
   background: var(--gf-bg);
   border-top: 1px solid var(--gf-border);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 
   /* glow discreto */
   box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.55);
+
+  /* ✅ impede o conteúdo interno estourar altura */
+  display: flex;
+  align-items: stretch;
 }
 
 .gfooter::before {
@@ -52,8 +96,13 @@
   opacity: 0.9;
 }
 
+/* =========================================================
+   Inner grid
+   ========================================================= */
+
 .gfooter__inner {
   max-width: var(--gf-maxw);
+  width: 100%;
   margin: 0 auto;
 
   display: grid;
@@ -61,10 +110,16 @@
   align-items: center;
   gap: 8px;
 
+  height: 100%;
+
+  /* ✅ padding vertical respeitando altura */
   padding: 10px 10px 10px;
 }
 
-/* Itens */
+/* =========================================================
+   Itens
+   ========================================================= */
+
 .gfooter__item {
   appearance: none;
   border: 1px solid transparent;
@@ -89,6 +144,9 @@
 
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+
+  /* ✅ impede o clique ficar estranho em mobile */
+  touch-action: manipulation;
 }
 
 .gfooter__link {
@@ -146,6 +204,10 @@
 
 /* Compact mobile adjustments */
 @media (max-width: 420px) {
+  :root {
+    --gf-h: 72px;
+  }
+
   .gfooter__inner {
     gap: 6px;
     padding: 10px 8px 10px;

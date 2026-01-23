@@ -7,6 +7,9 @@
   /* Height */
   --nav-h: 78px;
 
+  /* Footer height (AppLayout seta isso dinamicamente) */
+  --gfooter-height: 0px;
+
   /* Base colors (Rasoio) */
   --bg-0: #05070b;
   --bg-1: rgba(6, 10, 18, 0.82);
@@ -19,9 +22,9 @@
   --muted: rgba(255, 255, 255, 0.68);
 
   /* Rasoio neon palette */
-  --neon: #19d6ff;       /* cyan neon */
-  --neon-2: #00a8ff;     /* blue neon */
-  --neon-3: #6bf0ff;     /* bright highlight */
+  --neon: #19d6ff;
+  --neon-2: #00a8ff;
+  --neon-3: #6bf0ff;
   --danger: #ff4d6d;
 
   /* Surfaces */
@@ -32,7 +35,7 @@
   --shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
   --glow: 0 0 0 4px rgba(25, 214, 255, 0.18);
   --glow-strong: 0 0 0 5px rgba(25, 214, 255, 0.22),
-                 0 18px 45px rgba(0, 168, 255, 0.12);
+    0 18px 45px rgba(0, 168, 255, 0.12);
 
   /* Radius */
   --radius: 18px;
@@ -42,13 +45,21 @@
   box-sizing: border-box;
 }
 
+/* ✅ Compensa o header fixo para não cobrir o conteúdo */
+body {
+  padding-top: var(--nav-h);
+}
+
 /* ============================
    NAV WRAPPER
    ============================ */
 .nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1200;
+
   width: 100%;
   height: var(--nav-h);
 
@@ -73,7 +84,11 @@
 
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .nav {
-    background: linear-gradient(180deg, rgba(6, 10, 18, 0.95), rgba(9, 16, 30, 0.92));
+    background: linear-gradient(
+      180deg,
+      rgba(6, 10, 18, 0.95),
+      rgba(9, 16, 30, 0.92)
+    );
   }
 }
 
@@ -103,6 +118,10 @@
   flex: 1;
 }
 
+.nav__left--fb {
+  min-width: 0;
+}
+
 .nav__brand {
   display: inline-flex;
   align-items: center;
@@ -129,15 +148,13 @@
   object-fit: contain;
   border-radius: 14px;
 
-  /* neon glow around logo */
-  filter:
-    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55))
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55))
     drop-shadow(0 0 12px rgba(25, 214, 255, 0.28))
     drop-shadow(0 0 22px rgba(0, 168, 255, 0.14));
 }
 
 /* ============================
-   SEARCH (RASOIO STYLE)
+   SEARCH
    ============================ */
 .nav__search {
   display: flex;
@@ -151,8 +168,6 @@
   padding: 0;
 
   position: relative;
-
-  /* subtle glow container */
   border-radius: 999px;
 }
 
@@ -179,7 +194,6 @@
 
   border-radius: 999px;
 
-  /* glass + neon border */
   background: rgba(5, 9, 16, 0.60);
   border: 1px solid rgba(25, 214, 255, 0.14);
 
@@ -189,8 +203,7 @@
   font-size: 14px;
   letter-spacing: 0.2px;
 
-  box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.35),
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35),
     0 0 0 1px rgba(0, 168, 255, 0.06);
 
   transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
@@ -242,8 +255,11 @@
   border-radius: 999px;
   text-decoration: none;
 
-  background:
-    radial-gradient(140px 50px at 30% 20%, rgba(25, 214, 255, 0.16), transparent 60%),
+  background: radial-gradient(
+      140px 50px at 30% 20%,
+      rgba(25, 214, 255, 0.16),
+      transparent 60%
+    ),
     rgba(255, 255, 255, 0.06);
 
   border: 1px solid rgba(25, 214, 255, 0.10);
@@ -257,19 +273,20 @@
 .nav__iconLink:hover {
   transform: translateY(-2px);
   border-color: rgba(25, 214, 255, 0.28);
-  box-shadow:
-    0 12px 26px rgba(0, 0, 0, 0.34),
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34),
     0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
 .nav__iconLink.active {
   border-color: rgba(25, 214, 255, 0.65);
-  background:
-    radial-gradient(160px 60px at 30% 20%, rgba(25, 214, 255, 0.34), transparent 62%),
+  background: radial-gradient(
+      160px 60px at 30% 20%,
+      rgba(25, 214, 255, 0.34),
+      transparent 62%
+    ),
     rgba(0, 168, 255, 0.10);
 
-  box-shadow:
-    0 0 0 4px rgba(25, 214, 255, 0.16),
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.16),
     0 16px 34px rgba(0, 168, 255, 0.10);
 }
 
@@ -305,8 +322,11 @@
   padding: 10px 12px;
   border-radius: 999px;
 
-  background:
-    radial-gradient(140px 50px at 20% 20%, rgba(25, 214, 255, 0.16), transparent 55%),
+  background: radial-gradient(
+      140px 50px at 20% 20%,
+      rgba(25, 214, 255, 0.16),
+      transparent 55%
+    ),
     rgba(255, 255, 255, 0.06);
 
   border: 1px solid rgba(25, 214, 255, 0.12);
@@ -332,14 +352,10 @@
 .nav__locationText:hover {
   transform: translateY(-1px);
   border-color: rgba(25, 214, 255, 0.30);
-  box-shadow:
-    0 12px 22px rgba(0, 0, 0, 0.30),
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.30),
     0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
-.nav__changeCityBtn {}
-
-/* Auth buttons */
 .nav__authActions {
   display: flex;
   align-items: center;
@@ -383,22 +399,26 @@
 }
 
 .nav__btn--primary {
-  background: linear-gradient(135deg, rgba(25, 214, 255, 0.95), rgba(0, 168, 255, 0.95));
+  background: linear-gradient(
+    135deg,
+    rgba(25, 214, 255, 0.95),
+    rgba(0, 168, 255, 0.95)
+  );
   color: #001018;
   border-color: rgba(255, 255, 255, 0.10);
 
-  box-shadow:
-    0 16px 40px rgba(0, 168, 255, 0.16),
+  box-shadow: 0 16px 40px rgba(0, 168, 255, 0.16),
     0 0 0 2px rgba(25, 214, 255, 0.18);
 }
 
 .nav__btn--primary:hover {
-  box-shadow:
-    0 20px 46px rgba(0, 168, 255, 0.22),
+  box-shadow: 0 20px 46px rgba(0, 168, 255, 0.22),
     0 0 0 5px rgba(25, 214, 255, 0.16);
 }
 
-/* User area */
+/* ============================
+   USER (BUTTON)
+   ============================ */
 .nav__user {
   position: relative;
   display: flex;
@@ -437,8 +457,7 @@
   object-fit: cover;
 
   border: 1px solid rgba(25, 214, 255, 0.22);
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.35),
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35),
     0 0 0 3px rgba(25, 214, 255, 0.10);
 }
 
@@ -453,33 +472,154 @@
   font-weight: 900;
 }
 
-/* Dropdown menu */
+/* ============================
+   USER MENU (DESKTOP FIX)
+   ✅ Agora é FIXED, então nunca encosta no footer
+   ============================ */
 .nav__userMenu {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  position: fixed;
+  top: calc(var(--nav-h) + 10px);
+  right: 16px;
 
-  width: 290px;
+  width: 320px;
   max-width: calc(100vw - 20px);
 
-  background:
-    radial-gradient(600px 180px at 30% -50%, rgba(25, 214, 255, 0.18), transparent 60%),
-    rgba(8, 12, 22, 0.92);
+  /* ✅ SEM TRANSPARÊNCIA */
+  background: #070a12;
 
   border: 1px solid rgba(25, 214, 255, 0.18);
   border-radius: 18px;
 
-  box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.65),
-    0 0 0 5px rgba(25, 214, 255, 0.08);
-
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75);
 
   padding: 10px;
-  overflow: hidden;
+
+  /* ✅ trava altura de verdade (considera footer do layout) */
+  max-height: calc(100dvh - var(--nav-h) - var(--gfooter-height) - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  /* ✅ sempre dá espaço pro botão sair */
+  padding-bottom: 18px;
+
+  z-index: 2000;
 }
 
+/* scrollbar */
+.nav__userMenu::-webkit-scrollbar {
+  width: 10px;
+}
+.nav__userMenu::-webkit-scrollbar-thumb {
+  background: rgba(25, 214, 255, 0.22);
+  border-radius: 999px;
+}
+.nav__userMenu::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+
+/* Header menu */
+.nav__userMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 10px 12px 10px;
+
+  border-bottom: 1px solid rgba(25, 214, 255, 0.14);
+  margin-bottom: 12px;
+
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #070a12;
+}
+
+.nav__userMenuHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.nav__userMenuAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+
+  border: 1px solid rgba(25, 214, 255, 0.22);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35),
+    0 0 0 3px rgba(25, 214, 255, 0.10);
+}
+
+.nav__userMenuHeaderInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nav__userMenuName {
+  color: rgba(255, 255, 255, 0.96);
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.2;
+
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav__userMenuEmail {
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 700;
+  font-size: 12px;
+
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav__userMenuClose {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(25, 214, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 16px;
+
+  transition: transform 0.15s ease, background 0.2s ease, border 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav__userMenuClose:hover {
+  transform: translateY(-1px);
+  border-color: rgba(25, 214, 255, 0.32);
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.10);
+}
+
+.nav__userMenuContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* ✅ garante que o final do menu nunca fica cortado */
+  padding-bottom: 18px;
+}
+
+/* groups / titles */
 .nav__menuGroup {
   padding: 6px;
 }
@@ -494,17 +634,24 @@
   text-transform: uppercase;
 }
 
+.nav__divider {
+  height: 1px;
+  width: 100%;
+  background: rgba(25, 214, 255, 0.12);
+  margin: 8px 0;
+}
+
+/* items */
 .nav__userMenuItem {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
 
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(25, 214, 255, 0.10);
 
   border-radius: 14px;
-  padding: 10px 10px;
+  padding: 12px 12px;
 
   color: rgba(255, 255, 255, 0.92);
   font-weight: 900;
@@ -524,14 +671,36 @@
   box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.10);
 }
 
-.nav__divider {
-  height: 1px;
-  width: 100%;
-  background: rgba(25, 214, 255, 0.12);
-  margin: 8px 0;
+.nav__menuIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(25, 214, 255, 0.08);
+  border: 1px solid rgba(25, 214, 255, 0.14);
+
+  font-size: 16px;
+  flex: 0 0 auto;
+
+  margin-right: 10px;
 }
 
-/* Logout style */
+.nav__menuText {
+  flex: 1;
+  text-align: left;
+}
+
+.nav__menuArrow {
+  opacity: 0.7;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* logout */
 .nav__logout {
   background: rgba(255, 77, 109, 0.10);
   border-color: rgba(255, 77, 109, 0.22);
@@ -541,6 +710,11 @@
   background: rgba(255, 77, 109, 0.14);
   border-color: rgba(255, 77, 109, 0.28);
   box-shadow: 0 0 0 4px rgba(255, 77, 109, 0.12);
+}
+
+.nav__logout .nav__menuIcon {
+  background: rgba(255, 77, 109, 0.12);
+  border-color: rgba(255, 77, 109, 0.28);
 }
 
 /* ============================
@@ -576,119 +750,163 @@
   .nav__locationText {
     max-width: 240px;
   }
+
+  /* menu ainda fixo, apenas aproxima */
+  .nav__userMenu {
+    right: 12px;
+    width: 320px;
+  }
 }
 
-/* <= 760px (MOBILE) */
+/* ✅ MOBILE: 1 linha + sem ícones + menu fullscreen */
 @media (max-width: 760px) {
   :root {
-    --nav-h: 136px;
+    --nav-h: 78px;
   }
 
   .nav__bar {
     height: var(--nav-h);
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 10px 10px;
   }
 
   .nav__left {
     width: 100%;
-    flex: unset;
-    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-start;
     gap: 10px;
+  }
+
+  .nav__left--fb {
+    flex-wrap: nowrap;
   }
 
   .nav__brand {
     flex: 0 0 auto;
-    padding: 4px 6px;
+    padding: 0;
   }
 
-  .nav__links {
-    gap: 8px;
-    margin-left: 0;
+  .nav__logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
   }
 
-  .nav__iconLink {
-    width: 44px;
-    height: 44px;
-  }
-
-  /* Search line */
   .nav__search {
-    order: 10;
-    width: 100%;
+    order: 0;
+    flex: 1;
     min-width: 0;
     max-width: none;
-    margin-top: 4px;
+    width: 100%;
+    margin: 0;
   }
 
   .nav__search input {
-    height: 50px;
-    border-radius: 16px;
-    font-size: 14px;
+    height: 44px;
+    border-radius: 999px;
+    font-size: 13px;
+  }
+
+  /* some os ícones do header */
+  .nav__links--icons {
+    display: none !important;
   }
 
   .nav__right {
-    width: 100%;
-    justify-content: space-between;
-    gap: 10px;
+    flex: 0 0 auto;
+    width: auto;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
-  /* city always visible */
   .nav__locationText {
-    max-width: 52vw;
-    font-size: 12px;
-    padding: 10px 12px;
-  }
-
-  .nav__authActions .nav__btn {
-    height: 44px;
-    padding: 0 12px;
-    font-size: 12px;
+    max-width: 120px;
+    font-size: 11px;
+    padding: 8px 10px;
+    border-radius: 999px;
   }
 
   .nav__userBtn {
     height: 44px;
-    padding: 6px 10px 6px 8px;
+    padding: 6px 8px;
+    gap: 8px;
   }
 
   .nav__userName {
     display: none;
   }
 
+  .nav__avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* ✅ MENU FULLSCREEN */
   .nav__userMenu {
-    right: 0;
-    width: min(360px, calc(100vw - 20px));
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+
+    border-radius: 0 !important;
+    padding: 14px !important;
+
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+
+    z-index: 9999 !important;
+
+    background: #070a12 !important;
+
+    border: none !important;
+    box-shadow: none !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* ✅ nunca corta o sair embaixo */
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .nav__userMenuHeader {
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+  }
+
+  .nav__userMenuItem {
+    padding: 14px 12px;
+    font-size: 14px;
+    border-radius: 16px;
+  }
+
+  .nav__divider {
+    margin: 12px 0;
   }
 }
 
 /* <= 420px */
 @media (max-width: 420px) {
-  :root {
-    --nav-h: 144px;
-  }
-
   .nav__logo {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-  }
-
-  .nav__iconLink {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
   }
 
   .nav__search input {
-    height: 52px;
-    padding: 10px 12px;
-    padding-left: 44px;
+    height: 44px;
+    font-size: 12px;
   }
 
   .nav__locationText {
-    max-width: 60vw;
+    max-width: 108px;
+    padding: 8px 10px;
   }
 }
 

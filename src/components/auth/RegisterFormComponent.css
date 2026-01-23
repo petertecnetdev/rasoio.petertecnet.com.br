@@ -1,114 +1,230 @@
-/* =====================================================
-   REGISTER FORM COMPONENT — RASOIO
-   Neon Tech • Premium • UX Correta
-===================================================== */
+/* =========================================================
+   REGISTER FORM COMPONENT — RASOIO (UPGRADED)
+   Premium Dark • UX melhor • SweetAlert com campo+mensagem
+========================================================= */
+
+.register-form-component {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  animation: rfgFade 0.35s ease;
+}
+
+.rfg {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 /* =========================
-   FORM CONTAINER
+   FIELD / LABEL
 ========================= */
-.login-form-component {
+.rfg__field {
   width: 100%;
-  animation: formFade 0.4s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rfg__label {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.rfg__hint {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.48);
+  margin-top: -4px;
 }
 
 /* =========================
-   INPUTS
+   INPUT WRAP
 ========================= */
-.neon-input {
+.rfg__inputWrap {
   width: 100%;
-  background: linear-gradient(
-    145deg,
-    rgba(3, 34, 56, 0.96),
-    rgba(2, 22, 36, 0.96)
-  ) !important;
-  border: 1px solid rgba(0, 229, 255, 0.35) !important;
-  border-radius: 16px;
-  padding: 0.85rem 1rem;
-  color: #eaf9ff !important;
-  font-size: 0.95rem;
-  transition: all 0.25s ease;
+  position: relative;
 }
 
-.neon-input::placeholder {
-  color: #8dc7de;
+.rfg__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.86);
+
+  pointer-events: none;
 }
 
-.neon-input:focus {
-  background: rgba(3, 40, 65, 0.98) !important;
-  border-color: #00e5ff !important;
+.rfg__input {
+  width: 100%;
+
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+
+  border-radius: 14px;
+  padding: 0.95rem 1rem 0.95rem 3.35rem !important;
+
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.92) !important;
+
   box-shadow:
-    0 0 0 2px rgba(0, 229, 255, 0.22),
-    0 0 28px rgba(0, 229, 255, 0.45);
+    inset 0 0 0 1px rgba(0, 229, 255, 0.06),
+    0 0 0 rgba(0, 229, 255, 0);
+
+  transition: all 0.18s ease;
+}
+
+.rfg__input::placeholder {
+  color: rgba(255, 255, 255, 0.50);
+}
+
+.rfg__input:focus {
   outline: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 229, 255, 0.40),
+    0 0 0 4px rgba(0, 229, 255, 0.10),
+    0 0 22px rgba(0, 229, 255, 0.16);
+  border-color: rgba(0, 229, 255, 0.30) !important;
 }
 
 /* =========================
-   BOTÃO PRINCIPAL
+   PASSWORD TOGGLE
 ========================= */
-.neon-button {
-  border-radius: 16px;
-  padding: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  background: linear-gradient(
-    135deg,
-    #00e5ff,
-    #009dff
-  );
-  border: none;
+.rfg__inputWrap--password .rfg__input {
+  padding-right: 96px !important;
+}
+
+.rfg__toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.80);
+
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+
+  cursor: pointer;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.rfg__toggle:hover {
+  opacity: 0.85;
+  transform: translateY(-50%) translateY(-1px);
+}
+
+/* =========================
+   MATCH STATUS
+========================= */
+.rfg__match {
+  margin-top: -4px;
+  font-size: 0.82rem;
+}
+
+.rfg__ok {
+  color: rgba(0, 229, 255, 0.92);
+  font-weight: 900;
+}
+
+.rfg__bad {
+  color: rgba(255, 120, 120, 0.95);
+  font-weight: 900;
+}
+
+.rfg__muted {
+  color: rgba(255, 255, 255, 0.48);
+  font-weight: 700;
+}
+
+/* =========================
+   SUBMIT
+========================= */
+.rfg__submit {
+  width: 100%;
+  height: 48px;
+
+  border-radius: 14px !important;
+  border: 0 !important;
+
+  background: linear-gradient(135deg, #00e5ff, #009dff) !important;
   color: #02141f !important;
-  box-shadow:
-    0 0 0 rgba(0, 229, 255, 0),
-    0 14px 34px rgba(0, 157, 255, 0.45);
-  transition: all 0.3s ease;
+
+  font-weight: 900 !important;
+  font-size: 0.96rem !important;
+  letter-spacing: 0.4px;
+
+  box-shadow: 0 14px 42px rgba(0, 157, 255, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
-.neon-button:hover:not(:disabled) {
-  transform: translateY(-2px);
+.rfg__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
   box-shadow:
-    0 0 38px rgba(0, 229, 255, 0.95),
-    0 22px 60px rgba(0, 157, 255, 0.75);
+    0 0 28px rgba(0, 229, 255, 0.55),
+    0 18px 55px rgba(0, 157, 255, 0.42);
 }
 
-.neon-button:disabled {
+.rfg__submit:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
 }
 
 /* =========================
-   LINKS (NÃO GRUDADOS)
+   LINKS
 ========================= */
-.login-links {
+.rfg__links {
+  margin-top: 6px;
   display: flex;
-  justify-content: center;
+  gap: 10px;
   align-items: center;
-  gap: 1.2rem;              /* 👈 espaçamento real */
-  margin-top: 1.4rem;
-  font-size: 0.9rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
 }
 
-/* Link padrão */
-.login-links a {
-  color: #9ccfe3;
+.rfg__link {
+  color: rgba(0, 229, 255, 0.88);
   text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.2s ease, opacity 0.2s ease;
+  font-weight: 900;
+  font-size: 0.88rem;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-.login-links a:hover {
-  color: #00e5ff;
-  opacity: 0.85;
+.rfg__link:hover {
+  opacity: 0.78;
+  transform: translateY(-1px);
 }
 
-/* Separador */
-.login-links .sep {
-  color: rgba(255, 255, 255, 0.35);
+.rfg__sep {
+  color: rgba(255, 255, 255, 0.30);
+  font-weight: 900;
 }
 
-/* =========================
-   ANIMAÇÃO
-========================= */
-@keyframes formFade {
+@keyframes rfgFade {
   from {
     opacity: 0;
     transform: translateY(6px);
@@ -119,16 +235,9 @@
   }
 }
 
-/* =========================
-   RESPONSIVO
-========================= */
+/* MOBILE */
 @media (max-width: 480px) {
-  .neon-input {
-    font-size: 0.9rem;
-  }
-
-  .login-links {
-    gap: 1rem;
-    font-size: 0.85rem;
+  .rfg__submit {
+    height: 46px;
   }
 }
