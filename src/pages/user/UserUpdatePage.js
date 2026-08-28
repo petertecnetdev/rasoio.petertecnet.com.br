@@ -19,15 +19,17 @@ export default function UserUpdatePage() {
     userName,
     setUserName,
     email,
+    setEmail,
+    originalEmail,
     submitUpdate,
   } = useUserUpdate(reset);
 
   const meta = useMemo(() => {
     const parts = [];
-    if (email) parts.push(email);
+    if (originalEmail) parts.push(originalEmail);
     if (userName) parts.push(`@${userName}`);
     return parts;
-  }, [email, userName]);
+  }, [originalEmail, userName]);
 
   return (
     <div className="uup-page">
@@ -35,7 +37,7 @@ export default function UserUpdatePage() {
         <GlobalPageHeader
           title="Meus dados"
           variant="default"
-          description="Atualize seus dados pessoais e sua foto de perfil."
+          description="Atualize seus dados pessoais, sua foto de perfil e, quando necessário, confirme um novo e-mail por código."
           meta={meta}
           compact
         />
@@ -54,6 +56,8 @@ export default function UserUpdatePage() {
               userName={userName}
               setUserName={setUserName}
               email={email}
+              setEmail={setEmail}
+              originalEmail={originalEmail}
             />
           )}
         </div>
