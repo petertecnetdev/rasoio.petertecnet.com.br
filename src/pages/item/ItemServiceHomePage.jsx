@@ -10,7 +10,7 @@ import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
 
-import "../HomePage.css";
+import "../homepage.css";
 
 import GlobalPageHeader from "../../components/GlobalPageHeader";
 import GlobalCarousel from "../../components/GlobalCarousel";
@@ -25,7 +25,6 @@ export default function ServiceHomePage() {
     error: errorSrv,
   } = useItemServiceHome(apiBaseUrl, appId);
 
-  // ✅ necessário para filtrar profissionais do serviço (mesmo padrão da HomePage)
   const {
     employers,
     isLoading: isLoadingEmp,
@@ -35,11 +34,9 @@ export default function ServiceHomePage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // ✅ cidade/uf vêm do localStorage (o GlobalNav altera isso)
   const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
   const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
 
-  // ✅ mantém o header atualizado quando o GlobalNav mudar cidade
   useEffect(() => {
     const sync = () => {
       setCurrentCity(localStorage.getItem("selectedCity"));
@@ -47,8 +44,6 @@ export default function ServiceHomePage() {
     };
 
     window.addEventListener("cityChanged", sync);
-
-    // fallback leve pra mesma aba (caso não exista cityChanged)
     const iv = setInterval(sync, 800);
 
     return () => {
@@ -77,7 +72,6 @@ export default function ServiceHomePage() {
     wizardEstablishment
   );
 
-  // mantém o padrão de navegação já usado no projeto
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
 
   const headerMeta = useMemo(() => {
@@ -139,7 +133,6 @@ export default function ServiceHomePage() {
           items={serviceItems}
           navigate={safeNavigate}
           openSchedulePopup={async (item) => {
-            // ✅ mesmo comportamento da HomePage: filtra profissionais do estabelecimento do serviço
             if (isLoadingEmp) {
               Swal.fire({
                 icon: "info",

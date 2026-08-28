@@ -5,7 +5,7 @@ import { apiBaseUrl, appId } from "../../config";
 
 import useItemProductHome from "../../hooks/useItemProductHome";
 
-import "../HomePage.css";
+import "../homepage.css";
 
 import GlobalPageHeader from "../../components/GlobalPageHeader";
 import GlobalCarousel from "../../components/GlobalCarousel";
