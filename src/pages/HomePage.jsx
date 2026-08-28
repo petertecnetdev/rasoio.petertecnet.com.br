@@ -10,7 +10,7 @@ import useAppointment from "../hooks/useAppointment";
 import useImageUtils from "../hooks/useImageUtils";
 import useSchedulePopup from "../hooks/useSchedulePopup";
 
-import "./HomePage.css";
+import "./homepage.css";
 
 import GlobalPageHeader from "../components/GlobalPageHeader";
 import GlobalCarousel from "../components/GlobalCarousel";
