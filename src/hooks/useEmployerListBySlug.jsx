@@ -1,108 +1,88 @@
-  // src/hooks/useEmployerListBySlug.js
-  import { useEffect, useState, useCallback } from "react";
-  import axios from "axios";
-  import Swal from "sweetalert2";
-  import { apiBaseUrl } from "../config";
+// src/hooks/useEmployerListBySlug.jsx
+import { useCallback, useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import api from "../services/api";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
-  export default function useEmployerListBySlug(slug) {
-    const [establishment, setEstablishment] = useState(null);
-    const [employers, setEmployers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [apiError, setApiError] = useState(null);
+export default function useEmployerListBySlug(slug) {
+  const [establishment, setEstablishment] = useState(null);
+  const [employers, setEmployers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
 
-    useEffect(() => {
-      if (!slug) {
-        setApiError("Slug inválido.");
-        setLoading(false);
-        return;
+  useEffect(() => {
+    if (!slug) {
+      setApiError("Barbearia não identificada.");
+      setLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setApiError(null);
+        const { data } = await api.get(
+          `/employer/list-by-entity/${encodeURIComponent(slug)}`,
+          { signal: controller.signal }
+        );
+        setEstablishment(data?.establishment ?? null);
+        setEmployers(Array.isArray(data?.employers) ? data.employers : []);
+      } catch (error) {
+        if (isRequestCanceled(error)) return;
+        setApiError(getApiErrorMessage(error, "Erro ao carregar os profissionais."));
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
+    };
 
-      let mounted = true;
+    load();
+    return () => controller.abort();
+  }, [slug]);
 
-      (async () => {
-        try {
-          setLoading(true);
-          setApiError(null);
+  const removeEmployer = useCallback(
+    async (employerId) => {
+      if (!establishment?.id || !employerId) return false;
 
-          const { data } = await axios.get(
-            `${apiBaseUrl}/employer/list-by-entity/${slug}`
-          );
-
-          if (!mounted) return;
-
-          setEstablishment(data.establishment ?? null);
-          setEmployers(Array.isArray(data.employers) ? data.employers : []);
-        } catch (error) {
-          if (!mounted) return;
-
-          setApiError(
-            error?.response?.data?.error ||
-              error?.response?.data?.message ||
-              "Erro ao carregar colaboradores."
-          );
-        } finally {
-          if (mounted) setLoading(false);
-        }
-      })();
-
-      return () => {
-        mounted = false;
-      };
-    }, [slug]);
-    const removeEmployer = async (employerId) => {
-      if (!establishment) return;
-
-      const token = localStorage.getItem("token");
-
-      const confirm = await Swal.fire({
-        title: "Remover colaborador",
-        text: "Tem certeza que deseja remover este colaborador do estabelecimento?",
+      const confirmation = await Swal.fire({
+        title: "Remover profissional",
+        text: "Tem certeza que deseja remover este profissional da barbearia?",
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Sim, remover",
         cancelButtonText: "Cancelar",
         reverseButtons: true,
       });
-
-      if (!confirm.isConfirmed) return;
+      if (!confirmation.isConfirmed) return false;
 
       try {
-        await axios.post(
-          `${apiBaseUrl}/employer/detach`,
-          {
-            employer_id: employerId,
-            establishment_id: establishment.id,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        await api.post("/employer/detach", {
+          employer_id: employerId,
+          establishment_id: establishment.id,
+        });
+
+        setApiError(null);
+        setEmployers((current) =>
+          current.filter((employer) => Number(employer?.id) !== Number(employerId))
         );
-
-        setApiError(null); // 🔥 ESSENCIAL
-        setEmployers((prev) => prev.filter((e) => e.id !== employerId));
-
         await Swal.fire({
           icon: "success",
-          title: "Removido",
-          text: "Colaborador removido com sucesso.",
+          title: "Profissional removido",
+          text: "A associação com a barbearia foi removida com sucesso.",
         });
+        return true;
       } catch (error) {
         await Swal.fire({
           icon: "error",
           title: "Erro",
-          text:
-            error?.response?.data?.error ||
-            error?.response?.data?.message ||
-            "Erro ao remover colaborador.",
+          text: getApiErrorMessage(error, "Erro ao remover o profissional."),
         });
+        return false;
       }
-    };
+    },
+    [establishment]
+  );
 
-    return {
-      establishment,
-      employers,
-      loading,
-      apiError,
-      removeEmployer,
-    };
-  }
+  return { establishment, employers, loading, apiError, removeEmployer };
+}

@@ -9,6 +9,8 @@ import useOrderCreate from "../../hooks/useOrderCreate";
 import GlobalModal from "../../components/GlobalModal";
 import api from "../../services/api";
 import { appId } from "../../config";
+import { getApiErrorMessage } from "../../utils/apiError";
+import { escapeHtml } from "../../utils/html";
 
 const formatDateTime = (value) => {
   if (!value) return "-";
@@ -57,7 +59,8 @@ export default function OrderCreatePage() {
         payment_method: "cash",
       });
 
-      const order = res.data.order;
+      const order = res.data?.order;
+      if (!order?.id) throw new Error("A API não retornou o pedido criado.");
 
       GlobalModal.close();
 
@@ -66,36 +69,30 @@ export default function OrderCreatePage() {
         icon: "success",
         html: `
           <div style="text-align:left">
-            <p><strong>${res.data.message}</strong></p>
+            <p><strong>${escapeHtml(res.data?.message || "Pedido criado com sucesso.")}</strong></p>
             <hr/>
-            <p><strong>Nº do pedido:</strong> ${order.order_number}</p>
-            <p><strong>Status:</strong> ${order.status}</p>
-            <p><strong>Início:</strong> ${formatDateTime(
-              order.scheduled_start || order.order_datetime
+            <p><strong>Nº do pedido:</strong> ${escapeHtml(order.order_number || order.id)}</p>
+            <p><strong>Status:</strong> ${escapeHtml(order.status || "pendente")}</p>
+            <p><strong>Início:</strong> ${escapeHtml(
+              formatDateTime(order.scheduled_start || order.order_datetime)
             )}</p>
-            <p><strong>Término:</strong> ${formatDateTime(
-              order.scheduled_end
-            )}</p>
+            <p><strong>Término:</strong> ${escapeHtml(formatDateTime(order.scheduled_end))}</p>
           </div>
         `,
         confirmText: "Ver pedido",
         showCancel: false,
         onConfirm: () => {
-          navigate(`/order/${order.id}`);
+          navigate(`/order/view/${order.id}`);
         },
       });
     } catch (err) {
       GlobalModal.close();
-
-      const message =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        "Erro ao criar pedido.";
+      const message = getApiErrorMessage(err, err?.message || "Erro ao criar pedido.");
 
       GlobalModal.open({
         title: "Erro",
         icon: "error",
-        html: `<p>${message}</p>`,
+        html: `<p>${escapeHtml(message)}</p>`,
         confirmText: "Fechar",
         showCancel: false,
       });

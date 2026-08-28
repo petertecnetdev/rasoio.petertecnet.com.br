@@ -1,87 +1,75 @@
 // src/hooks/useHome.js
-import { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
+import api from "../services/api";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 const getFileUrlByType = (files, type) =>
-  Array.isArray(files) ? files.find((f) => f?.type === type)?.public_url ?? null : null;
+  Array.isArray(files) ? files.find((file) => file?.type === type)?.public_url ?? null : null;
 
 const getFirstFileUrl = (files, types = []) => {
   if (!Array.isArray(files)) return null;
-  for (const t of types) {
-    const url = getFileUrlByType(files, t);
+  for (const type of types) {
+    const url = getFileUrlByType(files, type);
     if (url) return url;
   }
   return null;
 };
 
 const normalizeItemType = (rawType, item) => {
-  // tenta inferir por campos comuns
-  const t = rawType ?? item?.item_type ?? item?.kind ?? item?.category?.type ?? item?.category_type;
+  const type =
+    rawType ?? item?.item_type ?? item?.kind ?? item?.category?.type ?? item?.category_type;
 
-  // booleans / flags
   if (item?.is_product === true || item?.isProduct === true) return "product";
   if (item?.is_service === true || item?.isService === true) return "service";
-
-  // ids que podem existir em payloads diferentes
   if (item?.product_id || item?.productId) return "product";
   if (item?.service_id || item?.serviceId) return "service";
+  if (type === 1 || type === "1") return "service";
+  if (type === 2 || type === "2") return "product";
 
-  // números (muito comum em APIs)
-  if (t === 1 || t === "1") return "service";
-  if (t === 2 || t === "2") return "product";
-
-  // string
-  const s = String(t ?? "").trim().toLowerCase();
-
-  if (!s) return "";
-
-  // variações comuns
-  if (s === "product" || s === "products" || s.includes("prod")) return "product";
-  if (s === "service" || s === "services" || s.includes("serv")) return "service";
-
-  // PT/ES comuns
-  if (s === "produto" || s === "produtos") return "product";
-  if (s === "servico" || s === "serviços" || s === "servicos") return "service";
-
-  return s; // fallback
+  const value = String(type ?? "").trim().toLowerCase();
+  if (!value) return "";
+  if (value === "product" || value === "products" || value.includes("prod")) return "product";
+  if (value === "service" || value === "services" || value.includes("serv")) return "service";
+  if (value === "produto" || value === "produtos") return "product";
+  if (value === "servico" || value === "serviços" || value === "servicos") return "service";
+  return value;
 };
 
 const distributeItems = (items) => {
-  const groups = items.reduce((acc, item) => {
-    const estId =
+  const groups = items.reduce((accumulator, item) => {
+    const establishmentId =
       item?.establishment_id ??
       item?.entity_id ??
       item?.entityId ??
       item?.establishment?.id ??
       "unknown";
 
-    if (!acc[estId]) acc[estId] = [];
-    acc[estId].push(item);
-    return acc;
+    if (!accumulator[establishmentId]) accumulator[establishmentId] = [];
+    accumulator[establishmentId].push(item);
+    return accumulator;
   }, {});
 
   const result = [];
-  let lastEstId = null;
+  let lastEstablishmentId = null;
 
   while (Object.keys(groups).length) {
-    const candidates = Object.keys(groups).filter((id) => id !== lastEstId && groups[id]?.length);
-
+    const candidates = Object.keys(groups).filter(
+      (id) => id !== lastEstablishmentId && groups[id]?.length
+    );
     const selectedId = candidates.length
       ? candidates[Math.floor(Math.random() * candidates.length)]
       : Object.keys(groups)[0];
 
-    const item = groups[selectedId].shift();
-    result.push(item);
-    lastEstId = selectedId;
-
+    result.push(groups[selectedId].shift());
+    lastEstablishmentId = selectedId;
     if (!groups[selectedId].length) delete groups[selectedId];
   }
 
   return result;
 };
 
-export default function useHome(apiBaseUrl, appId) {
+export default function useHome(_apiBaseUrl, appId) {
   const [establishments, setEstablishments] = useState([]);
   const [employers, setEmployers] = useState([]);
   const [serviceItems, setServiceItems] = useState([]);
@@ -101,151 +89,122 @@ export default function useHome(apiBaseUrl, appId) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // lê sempre do localStorage, mas memoiza a string do query para evitar refetch “sem mudança real”
   const city = localStorage.getItem("selectedCity") || "";
   const uf = localStorage.getItem("selectedUF") || "";
-
-  const query = useMemo(() => {
-    return city && uf ? `?city=${encodeURIComponent(city)}&uf=${encodeURIComponent(uf)}` : "";
-  }, [city, uf]);
+  const params = useMemo(() => (city && uf ? { city, uf } : undefined), [city, uf]);
 
   useEffect(() => {
-    let active = true;
+    if (!appId) {
+      setError("Aplicação não identificada.");
+      setIsLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
 
     async function loadHome() {
       setIsLoading(true);
       setError(null);
 
+      const requestConfig = { params, signal: controller.signal };
+
       try {
-        const [homeRes, estRes, empRes, itemRes] = await Promise.all([
-          axios.get(`${apiBaseUrl}/home/${appId}${query}`),
-          axios.get(`${apiBaseUrl}/establishment/home/${appId}${query}`),
-          axios.get(`${apiBaseUrl}/employer/home/${appId}${query}`),
-          axios.get(`${apiBaseUrl}/item/home/${appId}${query}`),
+        const [homeRes, establishmentRes, employerRes, itemRes] = await Promise.all([
+          api.get(`/home/${appId}`, requestConfig),
+          api.get(`/establishment/home/${appId}`, requestConfig),
+          api.get(`/employer/home/${appId}`, requestConfig),
+          api.get(`/item/home/${appId}`, requestConfig),
         ]);
 
-        if (!active) return;
+        const mappedEstablishments = (establishmentRes.data?.establishments || []).map(
+          (establishment) => {
+            const logo = getFileUrlByType(establishment?.files, "logo");
+            const background = getFileUrlByType(establishment?.files, "background");
+            return {
+              ...establishment,
+              type: "establishment",
+              name: establishment?.name,
+              image: logo || background || null,
+              images: { logo, background },
+            };
+          }
+        );
 
-        // Mapeia establishments
-        const mappedEstablishments = (estRes.data?.establishments || []).map((est) => {
-          const logo = getFileUrlByType(est?.files, "logo");
-          const bg = getFileUrlByType(est?.files, "background");
-          return {
-            ...est,
-            type: "establishment",
-            name: est?.name,
-            image: logo || bg || null,
-            images: {
-              logo,
-              background: bg,
-            },
-          };
-        });
-
-        // Mapeia employers
-        const mappedEmployers = (empRes.data?.employers || []).map((emp) => {
-          const firstName = emp?.user?.first_name || "";
-          const lastName = emp?.user?.last_name || "";
+        const mappedEmployers = (employerRes.data?.employers || []).map((employer) => {
+          const firstName = employer?.user?.first_name || "";
+          const lastName = employer?.user?.last_name || "";
           const fullName = `${firstName} ${lastName}`.trim();
-
-          const avatar = getFileUrlByType(emp?.user?.files, "avatar");
+          const avatar = getFileUrlByType(employer?.user?.files, "avatar");
 
           return {
-            ...emp,
+            ...employer,
             type: "employer",
-            name: fullName || firstName || "Colaborador",
+            name: fullName || firstName || "Profissional",
             first_name: firstName,
             last_name: lastName,
             avatar,
             image: avatar,
-            user: emp?.user,
+            user: employer?.user,
           };
         });
 
-        // Mapeia items (serviços + produtos)
         const mappedItems = (itemRes.data?.items || []).map((item) => {
-          const normalizedType = normalizeItemType(item?.type, item);
-
-          const estId =
+          const establishmentId =
             item?.establishment_id ??
             item?.entity_id ??
             item?.entityId ??
             item?.establishment?.id ??
             null;
 
-          const image = getFirstFileUrl(item?.files, [
-            "image",
-            "photo",
-            "cover",
-            "avatar",
-            "logo",
-            "background",
-          ]);
-
           return {
             ...item,
-            // garante ids consistentes p/ filtros e wizard
-            establishment_id: estId,
-            entity_id: item?.entity_id ?? item?.entityId ?? estId ?? null,
-            type: normalizedType,
-            image,
+            establishment_id: establishmentId,
+            entity_id: item?.entity_id ?? item?.entityId ?? establishmentId,
+            type: normalizeItemType(item?.type, item),
+            image: getFirstFileUrl(item?.files, [
+              "image",
+              "photo",
+              "cover",
+              "avatar",
+              "logo",
+              "background",
+            ]),
           };
         });
 
         const orderedItems = distributeItems(mappedItems);
-
-        const services = orderedItems.filter((i) => i?.type === "service");
-        const products = orderedItems.filter((i) => i?.type === "product");
-
         setEstablishments(mappedEstablishments);
         setEmployers(mappedEmployers);
-        setServiceItems(services);
-        setProductItems(products);
-
+        setServiceItems(orderedItems.filter((item) => item?.type === "service"));
+        setProductItems(orderedItems.filter((item) => item?.type === "product"));
         setStats({
-          top_establishments_views: estRes.data?.stats?.top_establishments_views || [],
+          top_establishments_views: establishmentRes.data?.stats?.top_establishments_views || [],
           top_items_views: itemRes.data?.stats?.top_items_views || [],
           total_views:
-            (estRes.data?.stats?.total_views || 0) + (itemRes.data?.stats?.total_views || 0),
-          dau: estRes.data?.stats?.dau || 0,
-          mau: estRes.data?.stats?.mau || 0,
-          dau_mau_ratio: estRes.data?.stats?.dau_mau_ratio || 0,
+            (establishmentRes.data?.stats?.total_views || 0) +
+            (itemRes.data?.stats?.total_views || 0),
+          dau: establishmentRes.data?.stats?.dau || 0,
+          mau: establishmentRes.data?.stats?.mau || 0,
+          dau_mau_ratio: establishmentRes.data?.stats?.dau_mau_ratio || 0,
         });
-
         setHighlights(homeRes.data?.highlights || {});
         setHomePayload(homeRes.data?.payload || {});
         setRecentOrders(homeRes.data?.recent_orders || []);
         setRecentInteractions(homeRes.data?.recent_interactions || []);
-      } catch (err) {
-        if (!active) return;
+      } catch (requestError) {
+        if (isRequestCanceled(requestError)) return;
 
-        const msg =
-          typeof err?.response?.data?.message === "string"
-            ? err.response.data.message
-            : "Erro ao carregar a home.";
-
-        setError(msg);
-
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: msg,
-        });
+        const message = getApiErrorMessage(requestError, "Erro ao carregar a página inicial.");
+        setError(message);
+        await Swal.fire({ icon: "error", title: "Erro", text: message });
       } finally {
-        if (active) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
-    if (appId) loadHome();
-    else {
-      setError("app_id não informado.");
-      setIsLoading(false);
-    }
-
-    return () => {
-      active = false;
-    };
-  }, [apiBaseUrl, appId, query]);
+    loadHome();
+    return () => controller.abort();
+  }, [appId, params]);
 
   return {
     establishments,

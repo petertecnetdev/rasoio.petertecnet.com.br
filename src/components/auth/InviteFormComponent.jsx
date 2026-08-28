@@ -1,9 +1,10 @@
 // src/components/auth/InviteFormComponent.jsx
 import React, { useState } from "react";
 import { Form, Button, Spinner } from "react-bootstrap";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl, appId } from "../../config";
+import { appId } from "../../config";
+import api from "../../services/api";
+import { getApiErrorMessage } from "../../utils/apiError";
 import "./InviteFormComponent.css";
 
 export default function InviteFormComponent({ redirectTo }) {
@@ -11,37 +12,41 @@ export default function InviteFormComponent({ redirectTo }) {
   const [form, setForm] = useState({
     first_name: "",
     email: "",
-    app_id: appId,
   });
 
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
+  const handleChange = (event) => {
+    setForm((previous) => ({
+      ...previous,
+      [event.target.name]: event.target.value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (loading) return;
 
+    setLoading(true);
     try {
-      await axios.post(`${apiBaseUrl}/invite`, form);
+      await api.post("/invite", {
+        first_name: form.first_name.trim(),
+        email: form.email.trim().toLowerCase(),
+        app_id: appId,
+      });
 
       await Swal.fire({
         title: "Convite enviado!",
-        text: "O usuário recebeu o código por email.",
+        text: "O usuário recebeu o código por e-mail.",
         icon: "success",
         confirmButtonText: "OK",
       });
 
-      if (redirectTo) {
-        window.location.href = redirectTo;
-      }
+      if (redirectTo) window.location.assign(redirectTo);
     } catch (error) {
-      const msg =
-        error?.response?.data?.message || "Erro ao enviar convite.";
-      await Swal.fire("Erro", msg, "error");
+      await Swal.fire(
+        "Erro",
+        getApiErrorMessage(error, "Erro ao enviar convite."),
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -57,6 +62,7 @@ export default function InviteFormComponent({ redirectTo }) {
           value={form.first_name}
           onChange={handleChange}
           placeholder="Nome do usuário"
+          autoComplete="given-name"
           required
         />
       </Form.Group>
@@ -69,6 +75,7 @@ export default function InviteFormComponent({ redirectTo }) {
           value={form.email}
           onChange={handleChange}
           placeholder="email@exemplo.com"
+          autoComplete="email"
           required
         />
       </Form.Group>

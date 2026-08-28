@@ -12,7 +12,9 @@ export default class AppErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error("Rasoio render error", error, info);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Rasoio render error", error, info);
+    }
   }
 
   handleReload = () => {
@@ -32,7 +34,7 @@ export default class AppErrorBoundary extends React.Component {
           />
           <h1 className="h3 mt-4">Não foi possível exibir esta tela</h1>
           <p className="text-secondary">
-            O Rasoio encontrou um erro inesperado. Recarregue a aplicação para tentar novamente.
+            A Rasoio encontrou um erro inesperado. Recarregue a aplicação para tentar novamente.
           </p>
           <button type="button" className="btn btn-primary" onClick={this.handleReload}>
             Recarregar

@@ -14,16 +14,19 @@ import {
   Navigate,
   Route,
   Routes,
+  useLocation,
 } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
+import { appId } from "./config";
 import api from "./services/api";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const EmailVerifyPage = lazy(() => import("./pages/auth/EmailVerifyPage"));
@@ -53,7 +56,6 @@ const ItemProductHomePage = lazy(() => import("./pages/item/ItemProductHomePage"
 
 const EmployerListPage = lazy(() => import("./pages/employer/EmployerListPage"));
 const EmployerCreatePage = lazy(() => import("./pages/employer/EmployerCreatePage"));
-const EmployerUpdatePage = lazy(() => import("./pages/employer/EmployerUpdatePage"));
 const EmployerViewPage = lazy(() => import("./pages/employer/EmployerViewPage"));
 const EmployerMePage = lazy(() => import("./pages/employer/EmployerMePage"));
 const EmployerSchedulesPage = lazy(() => import("./pages/employer/EmployerSchedulesPage"));
@@ -78,6 +80,43 @@ const RouteFallback = () => (
     gifSrc="/images/logo.gif"
   />
 );
+
+const getResourceAppId = (resource) =>
+  resource?.app_id ?? resource?.application_id ?? resource?.app?.id ?? null;
+
+const filterResourcesForCurrentApp = (resources) => {
+  if (!Array.isArray(resources)) return [];
+
+  return resources.filter((resource) => {
+    const resourceAppId = getResourceAppId(resource);
+    // A API nem sempre devolve app_id em recursos já escopados. Quando devolve,
+    // reforçamos o isolamento no cliente sem substituir a autorização do backend.
+    return resourceAppId == null || Number(resourceAppId) === Number(appId);
+  });
+};
+
+function ProtectedRoute({ user, children }) {
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!user.email_verified_at) {
+    return <Navigate to="/email-verify" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
+
+function EmailVerificationRoute({ user, children }) {
+  if (!user) return <Navigate to="/login" replace />;
+  return user.email_verified_at ? <Navigate to="/" replace /> : children;
+}
+
+function GuestRoute({ user, children }) {
+  return user ? <Navigate to="/" replace /> : children;
+}
 
 function AppInner() {
   const { isLoading } = useContext(LoadingContext);
@@ -109,6 +148,7 @@ function AppInner() {
       const { data } = await api.get("/auth/me");
       const nextUser = data?.user ?? null;
       const nextEmployer = data?.employer ?? null;
+      const nextEstablishments = filterResourcesForCurrentApp(data?.establishments);
 
       if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
       else localStorage.removeItem("user");
@@ -119,7 +159,7 @@ function AppInner() {
       setUser(nextUser);
       setEmployer(nextEmployer);
       setIsEmployer(Boolean(data?.is_employer));
-      setEstablishments(Array.isArray(data?.establishments) ? data.establishments : []);
+      setEstablishments(nextEstablishments);
     } catch {
       localStorage.removeItem("token");
       clearSession();
@@ -166,19 +206,10 @@ function AppInner() {
 
   if (initialLoading) return <RouteFallback />;
 
-  const protectedRoute = (element) => {
-    if (!user) return <Navigate to="/login" replace />;
-    if (!user.email_verified_at) return <Navigate to="/email-verify" replace />;
-    return element;
-  };
-
-  const emailVerifiedRoute = (element) => {
-    if (!user) return <Navigate to="/login" replace />;
-    return user.email_verified_at ? <Navigate to="/" replace /> : element;
-  };
-
-  const restrictedRoute = (element) =>
-    user ? <Navigate to="/" replace /> : element;
+  const protect = (element) => (
+    <ProtectedRoute user={user}>{element}</ProtectedRoute>
+  );
+  const guestOnly = (element) => <GuestRoute user={user}>{element}</GuestRoute>;
 
   return (
     <AuthContext.Provider value={authValue}>
@@ -200,46 +231,48 @@ function AppInner() {
               <Route path="/item/products" element={<ItemProductHomePage />} />
               <Route path="/item/view/:slug" element={<ItemViewPage />} />
 
-              <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
-              <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-              <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
-              <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
-              <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
-              <Route path="/password" element={protectedRoute(<PasswordPage />)} />
+              <Route path="/register" element={guestOnly(<RegisterPage />)} />
+              <Route path="/login" element={guestOnly(<LoginPage />)} />
+              <Route path="/password-email" element={guestOnly(<PasswordEmailPage />)} />
+              <Route path="/password-reset" element={guestOnly(<PasswordResetPage />)} />
+              <Route
+                path="/email-verify"
+                element={<EmailVerificationRoute user={user}><EmailVerifyPage /></EmailVerificationRoute>}
+              />
+              <Route path="/password" element={protect(<PasswordPage />)} />
               <Route path="/logout" element={<LogoutPage />} />
               <Route path="/invite" element={<InvitePage />} />
               <Route path="/invite-complete" element={<InviteCompletePage />} />
 
-              <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
-              <Route path="/orders/my" element={protectedRoute(<OrderMyPage />)} />
-              <Route path="/order/view/:id" element={protectedRoute(<OrderViewPage />)} />
-              <Route path="/order/list/:slug" element={protectedRoute(<OrderListPage />)} />
-              <Route path="/order/create/:slug" element={protectedRoute(<OrderCreatePage />)} />
-              <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
+              <Route path="/dashboard" element={protect(<DashboardPage />)} />
+              <Route path="/orders/my" element={protect(<OrderMyPage />)} />
+              <Route path="/order/view/:id" element={protect(<OrderViewPage />)} />
+              <Route path="/order/list/:slug" element={protect(<OrderListPage />)} />
+              <Route path="/order/create/:slug" element={protect(<OrderCreatePage />)} />
+              <Route path="/order/edit/:entityId/:id" element={protect(<OrderEditPage />)} />
 
-              <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
-              <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
+              <Route path="/user/update" element={protect(<UserUpdatePage />)} />
+              <Route path="/user/:userName" element={protect(<UserViewPage />)} />
 
-              <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
-              <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
-              <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
+              <Route path="/item/list/:slug" element={protect(<ItemListPage />)} />
+              <Route path="/item/create/:slug" element={protect(<ItemCreatePage />)} />
+              <Route path="/item/update/:id" element={protect(<ItemUpdatePage />)} />
 
-              <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
-              <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
-              <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
-              <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
-              <Route path="/employer/dashboard" element={protectedRoute(<EmployerMePage />)} />
-              <Route path="/employer/schedules" element={protectedRoute(<EmployerSchedulesPage />)} />
-              <Route path="/employer/orders" element={protectedRoute(<EmployerOrdersPage />)} />
+              <Route path="/employer/list/:slug" element={protect(<EmployerListPage />)} />
+              <Route path="/employer/create/:slug" element={protect(<EmployerCreatePage />)} />
+              <Route path="/employer/:id" element={protect(<EmployerViewPage />)} />
+              <Route path="/employer/dashboard" element={protect(<EmployerMePage />)} />
+              <Route path="/employer/schedules" element={protect(<EmployerSchedulesPage />)} />
+              <Route path="/employer/orders" element={protect(<EmployerOrdersPage />)} />
 
-              <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
-              <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
-              <Route path="/establishment/my" element={protectedRoute(<EstablishmentMyPage />)} />
-              <Route path="/establishment/orders/:slug" element={protectedRoute(<EstablishmentOrderPage />)} />
-              <Route path="/establishment/item/:slug" element={protectedRoute(<EstablishmentItemPage />)} />
-              <Route path="/establishment/employers/:slug" element={protectedRoute(<EstablishmentEmployersPage />)} />
+              <Route path="/establishment/create" element={protect(<EstablishmentCreatePage />)} />
+              <Route path="/establishment/update/:id" element={protect(<EstablishmentUpdatePage />)} />
+              <Route path="/establishment/my" element={protect(<EstablishmentMyPage />)} />
+              <Route path="/establishment/orders/:slug" element={protect(<EstablishmentOrderPage />)} />
+              <Route path="/establishment/item/:slug" element={protect(<EstablishmentItemPage />)} />
+              <Route path="/establishment/employers/:slug" element={protect(<EstablishmentEmployersPage />)} />
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </Suspense>
