@@ -1,56 +1,63 @@
 // src/hooks/useEmployerCreate.js
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl } from "../config";
+import api from "../services/api";
+import { appId } from "../config";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
   const [users, setUsers] = useState([]);
-  const [role, setRole] = useState("colaborador");
+  const [role, setRole] = useState("barbeiro");
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
-    if (!slug) return;
+    if (!slug) return undefined;
 
-    let mounted = true;
+    const controller = new AbortController();
 
     (async () => {
       try {
-        const { data } = await axios.get(
-          `${apiBaseUrl}/establishment/view/${slug}`
+        const { data } = await api.get(
+          `/establishment/view/${encodeURIComponent(slug)}`,
+          {
+            params: { app_id: appId },
+            signal: controller.signal,
+          }
         );
 
-        if (!mounted) return;
-        setEstablishment(data.establishment);
+        const resolved = data?.establishment || null;
+        if (!resolved || Number(resolved.app_id) !== Number(appId)) {
+          throw new Error("Esta empresa não pertence à Rasoio.");
+        }
+
+        setEstablishment(resolved);
       } catch (error) {
+        if (isRequestCanceled(error)) return;
+        setEstablishment(null);
         await Swal.fire({
           icon: "error",
-          title: "Erro",
+          title: "Não foi possível abrir a equipe",
           text:
-            error?.response?.data?.error ||
-            error?.response?.data?.message ||
-            "Estabelecimento não encontrado.",
+            error?.message === "Esta empresa não pertence à Rasoio."
+              ? error.message
+              : getApiErrorMessage(error, "Barbearia não encontrada."),
         });
       }
     })();
 
-    return () => {
-      mounted = false;
-    };
+    return () => controller.abort();
   }, [slug]);
 
   const searchUsers = async (payload) => {
     if (!payload || Object.keys(payload).length === 0) {
       await Swal.fire({
         icon: "warning",
-        title: "Atenção",
-        text: "Informe um valor para buscar o usuário.",
+        title: "Informe os dados do usuário",
+        text: "Pesquise por e-mail, nome de usuário ou outro dado disponível.",
       });
       return;
     }
@@ -58,24 +65,20 @@ export default function useEmployerCreate(slug) {
     try {
       setSearching(true);
       setUsers([]);
+      setErrors({});
 
-      const { data } = await axios.post(
-        `${apiBaseUrl}/user/find-for-employer`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await api.post("/user/find-for-employer", {
+        ...payload,
+        app_id: appId,
+        establishment_id: establishment?.id,
+      });
 
-      setUsers(data.users || []);
+      setUsers(Array.isArray(data?.users) ? data.users : []);
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Erro",
-        text:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          "Erro ao buscar usuários.",
+        title: "Erro ao buscar usuário",
+        text: getApiErrorMessage(error, "Erro ao buscar usuários."),
       });
     } finally {
       setSearching(false);
@@ -83,86 +86,71 @@ export default function useEmployerCreate(slug) {
   };
 
   const createEmployer = async (user) => {
-    if (!establishment || !user?.id) return;
+    if (!establishment || !user?.id) return null;
 
     try {
       setLoading(true);
       setErrors({});
 
-      const { data } = await axios.post(
-        `${apiBaseUrl}/employer/store`,
-        {
-          user_id: user.id,
-          establishment_id: establishment.id,
-          role,
-          permissions,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await api.post("/employer/store", {
+        user_id: user.id,
+        establishment_id: establishment.id,
+        app_id: appId,
+        role,
+        permissions,
+      });
 
       await Swal.fire({
         icon: "success",
-        title: "Sucesso",
-        text: data?.message,
+        title: "Colaborador adicionado",
+        text: data?.message || "O profissional agora faz parte da equipe.",
       });
 
       setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id
-            ? { ...u, is_employer: true, employer: data.employer }
-            : u
+        prev.map((candidate) =>
+          candidate.id === user.id
+            ? { ...candidate, is_employer: true, employer: data?.employer }
+            : candidate
         )
       );
 
       return data;
     } catch (error) {
       setErrors(error?.response?.data?.errors || {});
-
       await Swal.fire({
         icon: "error",
-        title: "Erro",
-        text:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          "Erro ao associar colaborador.",
+        title: "Não foi possível adicionar",
+        text: getApiErrorMessage(error, "Erro ao associar colaborador."),
       });
-
-      throw error;
+      return null;
     } finally {
       setLoading(false);
     }
   };
 
   const detachEmployer = async (employerId) => {
-    if (!establishment) return;
+    if (!establishment || !employerId) return null;
 
     try {
       setLoading(true);
 
-      const { data } = await axios.post(
-        `${apiBaseUrl}/employer/detach`,
-        {
-          employer_id: employerId,
-          establishment_id: establishment.id,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await api.post("/employer/detach", {
+        employer_id: employerId,
+        establishment_id: establishment.id,
+        app_id: appId,
+      });
 
       await Swal.fire({
         icon: "success",
-        title: "Sucesso",
-        text: data?.message,
+        title: "Colaborador removido",
+        text: data?.message || "O vínculo foi removido.",
       });
 
       setUsers((prev) =>
-        prev.map((u) =>
-          u.employer?.id === employerId
-            ? { ...u, is_employer: false, employer: null }
-            : u
+        prev.map((candidate) =>
+          candidate.employer?.id === employerId
+            ? { ...candidate, is_employer: false, employer: null }
+            : candidate
         )
       );
 
@@ -170,14 +158,10 @@ export default function useEmployerCreate(slug) {
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Erro",
-        text:
-          error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          "Erro ao remover associação.",
+        title: "Não foi possível remover",
+        text: getApiErrorMessage(error, "Erro ao remover associação."),
       });
-
-      throw error;
+      return null;
     } finally {
       setLoading(false);
     }
