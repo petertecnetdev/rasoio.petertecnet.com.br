@@ -32,7 +32,23 @@
   font-weight: 500;
 }
 
-/* O modal de erro deve permanecer acima do indicador em qualquer fluxo. */
+/*
+ * O SweetAlert precisa ser sempre a camada interativa mais alta da aplicação.
+ * Durante o processamento, o overlay continua bloqueando a interface normalmente.
+ * Quando um SweetAlert é aberto, o próprio SweetAlert adiciona `swal2-shown` ao body;
+ * nesse momento desabilitamos somente a captura de cliques do processing overlay.
+ */
 .swal2-container {
-  z-index: 10000 !important;
+  z-index: 2147483647 !important;
+}
+
+body.swal2-shown .processing-overlay {
+  pointer-events: none !important;
+  z-index: 2000 !important;
+}
+
+body.swal2-shown .processing-inner,
+body.swal2-shown .processing-gif,
+body.swal2-shown .processing-text {
+  pointer-events: none !important;
 }
