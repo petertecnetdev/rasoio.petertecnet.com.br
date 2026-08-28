@@ -21,6 +21,7 @@ import ProcessingIndicatorComponent from "./components/ProcessingIndicatorCompon
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
 import api from "./services/api";
+import { appId } from "./config";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
@@ -109,6 +110,11 @@ function AppInner() {
       const { data } = await api.get("/auth/me");
       const nextUser = data?.user ?? null;
       const nextEmployer = data?.employer ?? null;
+      const appEstablishments = Array.isArray(data?.establishments)
+        ? data.establishments.filter(
+            (establishment) => Number(establishment?.app_id) === Number(appId)
+          )
+        : [];
 
       if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
       else localStorage.removeItem("user");
@@ -119,10 +125,12 @@ function AppInner() {
       setUser(nextUser);
       setEmployer(nextEmployer);
       setIsEmployer(Boolean(data?.is_employer));
-      setEstablishments(Array.isArray(data?.establishments) ? data.establishments : []);
-    } catch {
-      localStorage.removeItem("token");
-      clearSession();
+      setEstablishments(appEstablishments);
+    } catch (error) {
+      if ([401, 403].includes(error?.response?.status)) {
+        localStorage.removeItem("token");
+        clearSession();
+      }
     } finally {
       setInitialLoading(false);
     }
