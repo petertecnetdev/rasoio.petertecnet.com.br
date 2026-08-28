@@ -20,18 +20,15 @@ export default function LoginPage() {
     navigate(from, { replace: true });
   };
 
-  // 🔒 BLOQUEIO TOTAL DA UI
-  if (processing) {
-    return (
-      <ProcessingIndicatorComponent
-        gifSrc="/images/logo.gif"
-        minDuration={900}
-      />
-    );
-  }
-
   return (
-    <div className="lp">
+    <>
+      {processing && (
+        <ProcessingIndicatorComponent
+          gifSrc="/images/logo.gif"
+          minDuration={900}
+        />
+      )}
+      <div className="lp">
       {/* efeitos de fundo */}
       <div className="lp__bg">
         <div className="lp__noise" />
@@ -189,6 +186,7 @@ export default function LoginPage() {
           </main>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

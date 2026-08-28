@@ -31,3 +31,8 @@
   font-size: 1.1rem;
   font-weight: 500;
 }
+
+/* O modal de erro deve permanecer acima do indicador em qualquer fluxo. */
+.swal2-container {
+  z-index: 10000 !important;
+}
