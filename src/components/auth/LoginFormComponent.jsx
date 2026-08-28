@@ -4,12 +4,14 @@ import { Form, Button } from "react-bootstrap";
 import { GoogleLogin } from "@react-oauth/google";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import Swal from "sweetalert2";
 import useLogin from "../../hooks/useLogin";
 import "./LoginFormComponent.css";
 
 export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const googleClientId = String(process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
 
   const canSubmit = useMemo(
     () => username.trim().length > 0 && password.trim().length > 0,
@@ -39,8 +41,21 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
     try {
       await loginGoogle(credentialResponse?.credential || null);
     } catch {
-      // O hook já exibe a mensagem da API.
+      // O hook já exibe a mensagem detalhada devolvida pela API.
     }
+  };
+
+  const handleGoogleError = async () => {
+    const message = googleClientId
+      ? "O Google não conseguiu iniciar ou concluir o login. Verifique se o domínio do Rasoio está autorizado no Client ID do Google e tente novamente."
+      : "O login com Google não está configurado neste build: REACT_APP_GOOGLE_CLIENT_ID não foi definido.";
+
+    await Swal.fire({
+      icon: "error",
+      title: "Falha no login com Google",
+      text: message,
+      confirmButtonText: "Ok",
+    });
   };
 
   return (
@@ -100,7 +115,7 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
         <div className="lfg__googleSlot">
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
-            onError={() => {}}
+            onError={handleGoogleError}
             width="320"
             theme="outline"
             size="large"
