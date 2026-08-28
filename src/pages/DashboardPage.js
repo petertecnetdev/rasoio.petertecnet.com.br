@@ -1,393 +1,106 @@
-import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import React, { useContext } from "react";
+import { Button, Card, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import Swal from "sweetalert2";
-import NavlogComponent from "../components/NavlogComponent";
-import { apiBaseUrl, storageUrl } from "../config";
+import { AuthContext } from "../App";
 import "./dashboard.css";
 
 export default function DashboardPage() {
-  const [establishments, setEstablishments] = useState([]);
-  const [metrics, setMetrics] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const { data } = await axios.get(
-          `${apiBaseUrl}/establishment/my/category/barbershop`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        let ests = [];
-        if (Array.isArray(data)) {
-          ests = data;
-        } else if (Array.isArray(data.establishments)) {
-          ests = data.establishments;
-        } else if (
-          data.establishments &&
-          Array.isArray(data.establishments.data)
-        ) {
-          ests = data.establishments.data;
-        } else if (Array.isArray(data.data)) {
-          ests = data.data;
-        }
-
-        setEstablishments(ests);
-
-        const today = new Date().toLocaleDateString("en-CA", {
-          timeZone: "America/Sao_Paulo",
-        });
-
-        const results = await Promise.all(
-          ests.map(async (est) => {
-            let rawOrders = [];
-            try {
-              const res = await axios.get(`${apiBaseUrl}/order/listbyentity`, {
-                params: {
-                  app_id: 2,
-                  entity_name: "establishment",
-                  entity_id: est.id,
-                },
-                headers: { Authorization: `Bearer ${token}` },
-              });
-
-              rawOrders = Array.isArray(res.data.orders) ? res.data.orders : [];
-            } catch (err) {
-              if (err.response?.status === 404) {
-                rawOrders = [];
-              } else {
-                throw err;
-              }
-            }
-
-            const orders = rawOrders.filter((o) => {
-              const date = new Date(o.order_datetime).toLocaleDateString(
-                "en-CA",
-                {
-                  timeZone: "America/Sao_Paulo",
-                }
-              );
-              return date === today;
-            });
-
-            const totalOrders = orders.length;
-            const totalValue = orders.reduce((sum, o) => {
-              const orderSum = (o.items || []).reduce((s, it) => {
-                let sub = Number(it.subtotal || 0);
-                (it.modifiers || [])
-                  .filter((m) => m.type === "addition")
-                  .forEach((m) => {
-                    const prod = (it.modifiers || []).find(
-                      (p) => p.id === m.modifier_id
-                    );
-                    sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
-                  });
-                return s + sub;
-              }, 0);
-              return sum + orderSum;
-            }, 0);
-
-            const itemCounts = {};
-            orders.forEach((o) =>
-              (o.items || []).forEach((it) => {
-                const name = it.item?.name || "-";
-                itemCounts[name] = (itemCounts[name] || 0) + (it.quantity || 0);
-              })
-            );
-            const mostOrderedItem =
-              Object.entries(itemCounts).reduce(
-                (max, [name, qty]) => (qty > max[1] ? [name, qty] : max),
-                ["-", 0]
-              )[0] || "-";
-
-            const customerSums = {};
-            orders.forEach((o) => {
-              const sum = (o.items || []).reduce((s, it) => {
-                let sub = Number(it.subtotal || 0);
-                (it.modifiers || [])
-                  .filter((m) => m.type === "addition")
-                  .forEach((m) => {
-                    const prod = (it.modifiers || []).find(
-                      (p) => p.id === m.modifier_id
-                    );
-                    sub += (prod ? Number(prod.price) : 0) * (m.quantity || 1);
-                  });
-                return s + sub;
-              }, 0);
-              const cname = o.customer_name || "-";
-              customerSums[cname] = (customerSums[cname] || 0) + sum;
-            });
-            const topCustomer =
-              Object.entries(customerSums).reduce(
-                (max, [name, sum]) => (sum > max[1] ? [name, sum] : max),
-                ["-", 0]
-              )[0] || "-";
-
-            const start = new Date();
-            start.setHours(0, 0, 0, 0);
-            const now = new Date();
-            const hoursElapsed = Math.max((now - start) / 36e5, 1);
-            const avgOrdersPerHour = (totalOrders / hoursElapsed).toFixed(2);
-            const avgTicket = totalOrders
-              ? (totalValue / totalOrders).toFixed(2)
-              : "0.00";
-
-            return [
-              est.id,
-              {
-                totalOrders,
-                totalValue: totalValue.toFixed(2),
-                mostOrderedItem,
-                topCustomer,
-                avgOrdersPerHour,
-                avgTicket,
-              },
-            ];
-          })
-        );
-
-        setMetrics(Object.fromEntries(results));
-      } catch (err) {
-        const status = err.response?.status;
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text:
-            status === 401
-              ? "Sessão expirada. Faça login novamente."
-              : "Não foi possível carregar dados.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
-
-  const handleLogoError = (e) => {
-    e.target.onerror = null;
-    e.target.src = "/images/logo.png";
-  };
-
-  if (isLoading) {
-    return <Container className="text-center mt-5"></Container>;
-  }
+  const { user, isEmployer, establishments } = useContext(AuthContext);
+  const name =
+    `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
+    user?.name ||
+    "usuário";
+  const owned = Array.isArray(establishments) ? establishments : [];
 
   return (
-    <div className="dashboard-root">
-      <NavlogComponent />
-      <Container fluid className="dashboard-main">
-        <div className="dashboard-section">
-          <h3 className="dashboard-section-title">Meus Estabelecimentos</h3>
-          <Row className="dashboard-establishments-list gx-3 gy-4">
-            {establishments.length === 0 && (
-              <Col md={12}>
-                <Card className="dashboard-empty-card">
-                  <Card.Body className="text-center">
-                    <div className="dashboard-empty mb-3">
-                      Nenhum estabelecimento encontrado.
+    <Container className="py-4 py-lg-5">
+      <div className="mb-4">
+        <div className="text-secondary small">Visão geral</div>
+        <h1 className="h2 mb-2">Olá, {name}</h1>
+        <p className="text-secondary mb-0">
+          Acesse rapidamente seus agendamentos e as áreas de trabalho disponíveis para sua conta.
+        </p>
+      </div>
+
+      <Row className="g-4">
+        <Col md={6} lg={4}>
+          <Card className="h-100 bg-dark text-light border-secondary">
+            <Card.Body className="d-flex flex-column">
+              <div className="fs-2 mb-3" aria-hidden="true">📅</div>
+              <Card.Title>Meus agendamentos</Card.Title>
+              <Card.Text className="text-secondary flex-grow-1">
+                Consulte horários marcados, status e detalhes dos seus atendimentos como cliente.
+              </Card.Text>
+              <Button as={Link} to="/orders/my">Abrir agendamentos</Button>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {isEmployer && (
+          <Col md={6} lg={4}>
+            <Card className="h-100 bg-dark text-light border-secondary">
+              <Card.Body className="d-flex flex-column">
+                <div className="fs-2 mb-3" aria-hidden="true">💈</div>
+                <Card.Title>Área do barbeiro</Card.Title>
+                <Card.Text className="text-secondary flex-grow-1">
+                  Organize sua disponibilidade e acompanhe os atendimentos vinculados ao seu perfil.
+                </Card.Text>
+                <Button as={Link} to="/employer/dashboard">Abrir área do barbeiro</Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
+
+        <Col md={6} lg={4}>
+          <Card className="h-100 bg-dark text-light border-secondary">
+            <Card.Body className="d-flex flex-column">
+              <div className="fs-2 mb-3" aria-hidden="true">🏪</div>
+              <Card.Title>Gestão de barbearias</Card.Title>
+              <Card.Text className="text-secondary flex-grow-1">
+                {owned.length > 0
+                  ? `Você possui ${owned.length} barbearia${owned.length === 1 ? "" : "s"} vinculada${owned.length === 1 ? "" : "s"} à sua conta.`
+                  : "Cadastre uma barbearia para gerenciar equipe, catálogo e atendimentos."}
+              </Card.Text>
+              <Button
+                as={Link}
+                to={owned.length > 0 ? "/establishment/my" : "/establishment/create"}
+              >
+                {owned.length > 0 ? "Gerenciar barbearias" : "Cadastrar barbearia"}
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {owned.length > 0 && (
+        <section className="mt-5" aria-labelledby="dashboard-barbershops-title">
+          <h2 id="dashboard-barbershops-title" className="h4 mb-3">Minhas barbearias</h2>
+          <Row className="g-3">
+            {owned.map((establishment) => (
+              <Col key={establishment.id} md={6} lg={4}>
+                <Card className="h-100 bg-dark text-light border-secondary">
+                  <Card.Body>
+                    <Card.Title>{establishment.fantasy || establishment.name}</Card.Title>
+                    <Card.Text className="text-secondary">
+                      {[establishment.city, establishment.uf].filter(Boolean).join(" / ") || "Localização não informada"}
+                    </Card.Text>
+                    <div className="d-flex gap-2 flex-wrap">
+                      {establishment.slug && (
+                        <Button as={Link} to={`/establishment/view/${establishment.slug}`} size="sm" variant="outline-light">
+                          Página pública
+                        </Button>
+                      )}
+                      <Button as={Link} to={`/establishment/update/${establishment.id}`} size="sm">
+                        Gerenciar
+                      </Button>
                     </div>
-                    <Button
-                      as={Link}
-                      to="/establishment/create"
-                      size="sm"
-                      className="dashboard-establishment-btn bg-black"
-                    >
-                      Criar meu estabelecimento
-                    </Button>
                   </Card.Body>
                 </Card>
               </Col>
-            )}
-            {establishments.map((est) => {
-              const m = metrics[est.id] || {};
-              return (
-                <Col key={est.id} md={12}>
-                  <Card className="dashboard-establishment-card h-100">
-                    <Card.Body>
-                      <div className="dashboard-establishment-header mb-3">
-                        <img
-                          src={`${storageUrl}/${est.logo || "logo.png"}`}
-                          alt={est.name}
-                          className="dashboard-establishment-logo"
-                          onError={handleLogoError}
-                        />
-                        <div>
-                          <div className="dashboard-establishment-name">
-                            {est.name}
-                          </div>
-                          <div className="dashboard-establishment-slug">
-                            @{est.slug}
-                          </div>
-                          <Button
-                            as={Link}
-                            to={`/establishment/view/${est.slug}`}
-                            size="sm"
-                            className="dashboard-establishment-btn mx-1 bg-black"
-                          >
-                            Página
-                          </Button>
-                        </div>
-                      </div>
-                      <Card bg="dark" text="light" className="m-2">
-                        <Card.Body className="p-2">
-                          <Row className="gx-2 gy-2 text-center">
-                            <Col md={3}>
-                              <Button
-                                as={Link}
-                                to={`/order/create/${est.id}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                Novo atendimento
-                              </Button>
-                            </Col>
-                            <Col md={3}>
-                              <Button
-                                as={Link}
-                                to={`/order/list/${est.id}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                📑 Atendimentos
-                              </Button>
-                            </Col>
-                            <Col md={3}>
-                              <Button
-                                as={Link}
-                                to={`/employer/list/${est.id}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                👥 Colaboradores
-                              </Button>
-                            </Col>
-                            <Col md={3}>
-                              <Button
-                                as={Link}
-                                to={`/report/order/${est.id}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                📊 Relatório
-                              </Button>
-                            </Col>
-                            <Col md={3}>
-                              <Button
-                                as={Link}
-                                to={`/item/list/${est.slug}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                Itens
-                              </Button>
-                            </Col>
-                            <Col md={2}>
-                              <Button
-                                as={Link}
-                                to={`/establishment/update/${est.id}`}
-                                size="sm"
-                                className="dashboard-establishment-btn bg-black w-100"
-                              >
-                                ✏️ Editar
-                              </Button>
-                            </Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
-                      <Card bg="dark" text="light" className="mb-2">
-                        <Card.Header className="bg-dark text-light">
-                          <strong>Retrato de hoje</strong>
-                        </Card.Header>
-                        <Card.Body className="p-2">
-                          <Row className="mb-3 text-center">
-                            <Col md={2}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Atendimentos
-                                  </Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    {m.totalOrders || 0}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col md={2}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Faturamento
-                                  </Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    R{String.fromCharCode(36)}
-                                    {(m.totalValue || "0.00").replace(".", ",")}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col md={3}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Mais pedido
-                                  </Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">
-                                    {m.mostOrderedItem}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col md={3}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Cliente top
-                                  </Card.Title>
-                                  <Card.Text className="fs-6 fw-bold">
-                                    {m.topCustomer}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col md={2}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Média/hora
-                                  </Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    {m.avgOrdersPerHour}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col md={2}>
-                              <Card bg="black" text="light" className="mb-2">
-                                <Card.Body className="p-2">
-                                  <Card.Title className="fs-6">
-                                    Ticket médio
-                                  </Card.Title>
-                                  <Card.Text className="fs-5 fw-bold">
-                                    R{String.fromCharCode(36)}
-                                    {(m.avgTicket || "0.00").replace(".", ",")}
-                                  </Card.Text>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                          </Row>
-                        </Card.Body>
-                      </Card>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              );
-            })}
+            ))}
           </Row>
-        </div>
-      </Container>
-    </div>
+        </section>
+      )}
+    </Container>
   );
 }
