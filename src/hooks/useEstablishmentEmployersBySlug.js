@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
+import { appId } from "../config";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useEstablishmentEmployersBySlug(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -20,17 +22,44 @@ export default function useEstablishmentEmployersBySlug(slug) {
       setApiError(null);
 
       try {
-        const { data } = await api.get(`/employer/list-by-entity/${slug}`, {
-          signal,
+        const [establishmentResponse, employersResponse] = await Promise.all([
+          api.get(`/establishment/view/${encodeURIComponent(slug)}`, {
+            params: { app_id: appId },
+            signal,
+          }),
+          api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`, {
+            params: { app_id: appId },
+            signal,
+          }),
+        ]);
+
+        const resolvedEstablishment = establishmentResponse?.data?.establishment || null;
+
+        if (
+          !resolvedEstablishment ||
+          Number(resolvedEstablishment.app_id) !== Number(appId)
+        ) {
+          throw new Error("Esta barbearia não pertence ao aplicativo Rasoio.");
+        }
+
+        const rawEmployers = Array.isArray(employersResponse?.data?.employers)
+          ? employersResponse.data.employers
+          : [];
+
+        const scopedEmployers = rawEmployers.filter((employer) => {
+          const employerAppId = employer?.establishment?.app_id;
+          return employerAppId == null || Number(employerAppId) === Number(appId);
         });
-        setEstablishment(data?.establishment || null);
-        setEmployers(Array.isArray(data?.employers) ? data.employers : []);
+
+        setEstablishment(resolvedEstablishment);
+        setEmployers(scopedEmployers);
       } catch (error) {
-        if (error?.code === "ERR_CANCELED") return;
+        if (isRequestCanceled(error) || signal?.aborted) return;
+
         setApiError(
-          error?.response?.data?.message ||
-            error?.response?.data?.error ||
-            "Erro ao carregar barbeiros da equipe."
+          error?.message === "Esta barbearia não pertence ao aplicativo Rasoio."
+            ? error.message
+            : getApiErrorMessage(error, "Erro ao carregar colaboradores da equipe.")
         );
         setEstablishment(null);
         setEmployers([]);
