@@ -39,6 +39,7 @@ const OrderCreatePage = lazy(() => import("./pages/order/OrderCreatePage"));
 const OrderListPage = lazy(() => import("./pages/order/OrderListPage"));
 const OrderEditPage = lazy(() => import("./pages/order/OrderEditPage"));
 const OrderMyPage = lazy(() => import("./pages/order/OrderMyPage"));
+const OrderViewPage = lazy(() => import("./pages/order/OrderViewPage"));
 
 const UserViewPage = lazy(() => import("./pages/user/UserViewPage"));
 const UserUpdatePage = lazy(() => import("./pages/user/UserUpdatePage"));
@@ -200,6 +201,7 @@ function AppInner() {
 
               <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
               <Route path="/orders/my" element={protectedRoute(<OrderMyPage />)} />
+              <Route path="/order/view/:id" element={protectedRoute(<OrderViewPage />)} />
               <Route path="/order/list/:slug" element={protectedRoute(<OrderListPage />)} />
               <Route path="/order/create/:slug" element={protectedRoute(<OrderCreatePage />)} />
               <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
