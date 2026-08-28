@@ -1,8 +1,8 @@
 {
-  "name": "razoio",
+  "name": "rasoio",
   "version": "1.0.0",
-  "description": "We are using Laravel 9 for jwt authentication based login and \r signup API. We use react.js on the frontend.",
-  "main": "index.js",
+  "private": true,
+  "description": "Rasoio - gestão e agendamento para barbearias, barbeiros e clientes.",
   "homepage": "/",
   "scripts": {
     "start": "react-scripts start",
@@ -11,8 +11,8 @@
     "deploy": "gh-pages -d build",
     "lint": "eslint 'src/**/*.{js,jsx}'"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["barbearia", "barbeiro", "agendamento", "gestao"],
+  "author": "Peter Tecnet",
   "license": "ISC",
   "dependencies": {
     "@capacitor/android": "^7.3.0",
