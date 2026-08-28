@@ -1,139 +1,227 @@
-/* src/pages/establishment/EstablishmentEmployersPage.css */
-
-/* ===== TEMA DARK GLOBAL ===== */
-:root {
-  --bg-main: #020617;
-  --bg-card: #0b1220;
-  --bg-card-soft: #111827;
-
-  --border-soft: rgba(148, 163, 184, 0.14);
-
-  --text-main: #e5e7eb;
-  --text-soft: #94a3b8;
-  --text-muted: #64748b;
-
-  --primary: #38bdf8;
-  --primary-hover: #0ea5e9;
-
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-}
-
-/* ===== CONTAINER ===== */
-.establishment-employers-page {
+.team-management-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #020617 0%, #020617 100%);
+  background:
+    radial-gradient(circle at 10% 20%, rgba(0, 181, 255, .08), transparent 30%),
+    #080b10;
 }
 
-/* ===== HERO AJUSTE ===== */
-.establishment-employers-page .esh-card {
-  background: var(--bg-card);
+.team-management-shell {
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid rgba(112, 214, 255, .12);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(17, 24, 34, .96), rgba(8, 12, 18, .98));
+  box-shadow: 0 28px 70px rgba(0,0,0,.34);
 }
 
-/* ===== HEADER DE AÇÕES ===== */
-.est-employers-actions {
+.team-management-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.team-management-kicker {
+  color: #77e3ff;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.team-management-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.team-management-title-row h2 {
+  margin: 0;
+  color: #f5fbff;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.team-management-header p {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: rgba(217, 231, 242, .56);
+  font-size: .86rem;
+}
+
+.team-empty-state {
+  display: flex;
+  min-height: 320px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  border: 1px dashed rgba(107, 214, 255, .18);
+  border-radius: 22px;
+  background: rgba(255,255,255,.015);
+  text-align: center;
+}
+
+.team-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
   margin-bottom: 16px;
-  color: var(--text-main);
+  border-radius: 20px;
+  background: rgba(61, 194, 255, .09);
+  font-size: 1.6rem;
 }
 
-.est-employers-actions .btn {
-  background: linear-gradient(
-    135deg,
-    var(--primary),
-    var(--primary-hover)
-  );
-  border: none;
-  font-weight: 600;
+.team-empty-state h3 {
+  margin-bottom: 8px;
+  color: #f4faff;
 }
 
-.est-employers-actions .btn:hover {
-  filter: brightness(1.05);
+.team-empty-state p {
+  max-width: 480px;
+  margin-bottom: 18px;
+  color: rgba(216, 231, 242, .54);
 }
 
-/* ===== CARD PRINCIPAL ===== */
-.est-employers-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-soft);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+.team-member-card {
+  height: 100%;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(51, 191, 255, .08), transparent 34%),
+    linear-gradient(155deg, rgba(18, 25, 35, .96), rgba(9, 13, 19, .98));
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-.est-employers-card .card-header {
-  background: transparent;
-  border-bottom: 1px solid var(--border-soft);
-  color: var(--text-main);
-  font-weight: 600;
+.team-member-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(88, 210, 255, .2);
+  box-shadow: 0 18px 40px rgba(0,0,0,.24);
 }
 
-.est-employers-card .card-body {
-  background: transparent;
+.team-member-top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
 }
 
-/* ===== ALERTAS ===== */
-.est-employers-card .alert {
-  background: var(--bg-card-soft);
-  border: 1px dashed var(--border-soft);
-  color: var(--text-soft);
-}
-
-/* ===== BOTÃO REMOVER ===== */
-.est-employer-remove-btn {
-  background: transparent;
-  border: 1px solid var(--danger);
-  color: var(--danger);
-  font-weight: 600;
-}
-
-.est-employer-remove-btn:hover {
-  background: var(--danger);
-  color: #fff;
-}
-
-/* ===== GLOBALCARD AJUSTES ===== */
-.carousel-card.type-employer {
-  background: var(--bg-card-soft);
-  border: 1px solid var(--border-soft);
-}
-
-.carousel-card.type-employer:hover {
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35),
-    0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* Avatar sempre redondo */
-.carousel-image-wrap.img-round {
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(
-    circle at top,
-    #1e293b,
-    #020617
-  );
-}
-
-.carousel-image-wrap.img-round img {
+.team-member-avatar {
+  flex: 0 0 auto;
+  width: 62px;
+  height: 62px;
+  border: 2px solid rgba(94, 214, 255, .18);
+  border-radius: 18px;
   object-fit: cover;
+  background: #0a0e14;
 }
 
-/* Placeholder de iniciais */
-.carousel-placeholder.img-round {
-  background: linear-gradient(135deg, #1e293b, #020617);
-  color: var(--text-main);
-  font-weight: 700;
+.team-member-copy {
+  min-width: 0;
 }
 
-/* ===== RESPONSIVO ===== */
-@media (max-width: 768px) {
-  .est-employers-actions {
-    flex-direction: column;
-    gap: 12px;
+.team-member-role {
+  display: inline-block;
+  margin-bottom: 4px;
+  color: #7de4ff;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.team-member-copy h3 {
+  overflow: hidden;
+  margin: 0;
+  color: #f7fbff;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-member-copy p {
+  margin: 4px 0 0;
+  color: rgba(214, 228, 240, .48);
+  font-size: .74rem;
+}
+
+.team-member-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.team-member-metrics > div {
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 14px;
+  background: rgba(255,255,255,.018);
+}
+
+.team-member-metrics strong {
+  display: block;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.team-member-metrics span {
+  color: rgba(215, 230, 241, .48);
+  font-size: .68rem;
+}
+
+.team-member-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.team-member-actions button {
+  min-height: 40px;
+  border-radius: 12px;
+  font-size: .74rem;
+  font-weight: 800;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.team-member-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.team-member-secondary {
+  border: 1px solid rgba(94, 213, 255, .16);
+  background: rgba(51, 188, 255, .06);
+  color: #c9f4ff;
+}
+
+.team-member-danger {
+  border: 1px solid rgba(255, 93, 113, .18);
+  background: rgba(255, 63, 91, .05);
+  color: #ffabb7;
+}
+
+.team-member-danger:hover {
+  border-color: rgba(255, 93, 113, .34);
+  background: rgba(255, 63, 91, .09);
+}
+
+@media (max-width: 720px) {
+  .team-management-header {
     align-items: stretch;
+    flex-direction: column;
   }
 
-  .est-employers-actions .btn {
-    width: 100%;
+  .team-member-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-member-card,
+  .team-member-actions button {
+    transition: none;
   }
 }
