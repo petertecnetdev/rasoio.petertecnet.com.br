@@ -1,97 +1,69 @@
-# We are using Laravel 9 for jwt authentication based login and signup API. (React.js)
+# Rasoio
 
-We are using Laravel 9 for jwt authentication based login and 
-signup API. We use react.js on the frontend.
+Rasoio é a aplicação da Peter Tecnet voltada para barbearias, barbeiros e clientes. O frontend é uma SPA React que consome a API central da Peter Tecnet e usa o identificador da aplicação Rasoio para manter estabelecimentos, profissionais, itens e demais recursos isolados dos outros produtos da plataforma.
 
-For detailed information, please read Document.pdf.
+## Requisitos
 
-## Follow the steps below to run the API.
+- Node.js 20
+- npm
+- acesso à API Peter Tecnet
 
-First, update the .env file with your own database information.
+## Configuração
 
-then run the following commands in order.
+Copie `.env.example` para `.env` e configure as variáveis locais necessárias:
 
-php artisan migrate
+```env
+REACT_APP_API_URL=https://api.petertecnet.com.br/api
+REACT_APP_GOOGLE_CLIENT_ID=
+```
 
-php artisan jwt:secret
+Nunca versione credenciais, tokens ou segredos. O Client ID do Google usado em produção deve ser fornecido pelo ambiente de deploy/CI.
 
-## Run the commands below to run the React application.
+## Desenvolvimento
 
+```bash
 npm install
+npm start
+```
 
-npm run serve
+## Validação
 
-![image](https://user-images.githubusercontent.com/26199757/177057917-2bd7e9c2-0b15-464b-9a0c-57f1d2f6b08c.png)
-![image](https://user-images.githubusercontent.com/26199757/177057920-516f6cc7-3a4d-4dac-bbe8-50d5b9b5c007.png)
-![image](https://user-images.githubusercontent.com/26199757/177057926-1ab15688-9779-4f6e-947b-1a21dc74a89d.png)
+Antes de publicar uma alteração, execute:
 
-# Getting Started with Create React App
+```bash
+npm run lint
+npm test -- --runInBand
+npm run build
+```
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+O pull request para `main` executa essas verificações automaticamente no GitHub Actions.
 
-## Available Scripts
+## Produção
 
-In the project directory, you can run:
+No servidor, instale as dependências e gere o build a partir do código-fonte:
 
-### `npm start`
+```bash
+git pull origin main
+npm install --no-audit --no-fund
+npm run build
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+A pasta `build/` é artefato gerado e não deve ser versionada.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Regras arquiteturais importantes
 
-### `npm test`
+- A API é a fonte de verdade para autorização, validação e regras de negócio.
+- Requisições HTTP novas devem usar `src/services/api.js`, que centraliza URL base, token, timeout, `FormData` e tratamento de sessão expirada.
+- Recursos de negócio devem respeitar o `appId` da Rasoio. Um estabelecimento cadastrado em outro aplicativo da Peter Tecnet não deve aparecer na Rasoio apenas por pertencer ao mesmo usuário.
+- Fluxos assíncronos devem encerrar loading também em erro, timeout e cancelamento.
+- Não renderize texto vindo da API como HTML sem escape ou sanitização.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Estrutura principal
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- `src/pages`: telas e rotas da aplicação.
+- `src/components`: componentes reutilizáveis de interface.
+- `src/hooks`: integração de estado e fluxos das páginas.
+- `src/services`: cliente HTTP e serviços compartilhados.
+- `src/contexts`: estados globais mínimos, como loading.
+- `src/utils`: utilitários puros e testáveis.
+- `android`: projeto Capacitor/Android da aplicação móvel.
