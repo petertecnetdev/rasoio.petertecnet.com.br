@@ -1,5 +1,5 @@
-// src/pages/service/ServiceHomePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+// src/pages/item/ItemServiceHomePage.jsx
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { apiBaseUrl, appId } from "../../config";
@@ -9,49 +9,24 @@ import useEmployerHome from "../../hooks/useEmployerHome";
 import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
+import useSelectedCity from "../../hooks/useSelectedCity";
 
 import "../homepage.css";
-
 import GlobalPageHeader from "../../components/GlobalPageHeader";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 
 const PLACEHOLDER = "/images/logo.png";
 
-export default function ServiceHomePage() {
-  const {
-    serviceItems,
-    isLoading: isLoadingSrv,
-    error: errorSrv,
-  } = useItemServiceHome(apiBaseUrl, appId);
-
-  const {
-    employers,
-    isLoading: isLoadingEmp,
-    error: errorEmp,
-  } = useEmployerHome(apiBaseUrl, appId);
+export default function ItemServiceHomePage() {
+  const { serviceItems, isLoading: isLoadingServices, error: serviceError } =
+    useItemServiceHome(apiBaseUrl, appId);
+  const { employers, isLoading: isLoadingEmployers, error: employerError } =
+    useEmployerHome(apiBaseUrl, appId);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
-  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
-
-  useEffect(() => {
-    const sync = () => {
-      setCurrentCity(localStorage.getItem("selectedCity"));
-      setCurrentUF(localStorage.getItem("selectedUF"));
-    };
-
-    window.addEventListener("cityChanged", sync);
-    const iv = setInterval(sync, 800);
-
-    return () => {
-      window.removeEventListener("cityChanged", sync);
-      clearInterval(iv);
-    };
-  }, []);
-
+  const { cityLabel } = useSelectedCity();
   const { imageUrl } = useImageUtils(PLACEHOLDER);
 
   const {
@@ -63,7 +38,7 @@ export default function ServiceHomePage() {
     preselectedEmployer,
     preselectedServiceId,
     openSchedulePopup,
-  } = useSchedulePopup(apiBaseUrl, token);
+  } = useSchedulePopup(apiBaseUrl, token, appId);
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
@@ -72,23 +47,20 @@ export default function ServiceHomePage() {
     wizardEstablishment
   );
 
-  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+  const headerMeta = useMemo(
+    () => [cityLabel, "Serviços de barbearia"].filter(Boolean),
+    [cityLabel]
+  );
 
-  const headerMeta = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return [cityLabel, "Agende em poucos cliques"].filter(Boolean);
-  }, [currentCity, currentUF]);
+  const headerDescription = useMemo(
+    () =>
+      `Escolha o serviço, veja os barbeiros disponíveis e agende seu horário.${
+        cityLabel ? ` (${cityLabel})` : ""
+      }`,
+    [cityLabel]
+  );
 
-  const headerDescription = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return `Escolha um serviço e agende com rapidez.${
-      cityLabel ? ` (${cityLabel})` : ""
-    }`;
-  }, [currentCity, currentUF]);
-
-  if (isLoadingSrv) {
+  if (isLoadingServices) {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
@@ -103,17 +75,17 @@ export default function ServiceHomePage() {
     );
   }
 
-  if (errorSrv) {
+  if (serviceError) {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
           title="Serviços"
           variant="home"
-          description="Não foi possível carregar as informações agora."
+          description="Não foi possível carregar os serviços agora."
           meta={headerMeta}
           compact
         />
-        <div className="hp-loading">{errorSrv}</div>
+        <div className="hp-loading">{serviceError}</div>
       </div>
     );
   }
@@ -130,39 +102,35 @@ export default function ServiceHomePage() {
 
         <GlobalCarousel
           title="Serviços"
+          subtitle="Cortes, barba e outros serviços disponíveis nas barbearias"
           items={serviceItems}
-          navigate={safeNavigate}
+          fmtBRL={(value) => value}
+          navigate={navigate}
           openSchedulePopup={async (item) => {
-            if (isLoadingEmp) {
-              Swal.fire({
+            if (isLoadingEmployers) {
+              await Swal.fire({
                 icon: "info",
-                title: "Aguarde",
-                text: "Carregando profissionais para agendamento…",
+                title: "Carregando barbeiros",
+                text: "Aguarde um instante para abrir os horários disponíveis.",
               });
               return;
             }
 
-            if (errorEmp) {
-              Swal.fire({
-                icon: "error",
-                title: "Erro",
-                text: errorEmp,
-              });
+            if (employerError) {
+              await Swal.fire({ icon: "error", title: "Erro", text: employerError });
               return;
             }
 
-            const entityId = item.establishment_id || item.entity_id || item.entityId;
-
-            const filteredEmployers = (employers || []).filter(
-              (emp) => Number(emp.establishment_id) === Number(entityId)
+            const establishmentId =
+              item.establishment_id ?? item.entity_id ?? item.entityId ?? null;
+            const filteredEmployers = employers.filter(
+              (employer) => Number(employer.establishment_id) === Number(establishmentId)
             );
 
-            await openSchedulePopup({
-              service: item,
-              filteredEmployers,
-            });
+            await openSchedulePopup({ service: item, filteredEmployers });
           }}
           showSchedule
+          showDots
         />
       </div>
 
