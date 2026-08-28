@@ -234,28 +234,21 @@ export default function useAppointment(_apiBaseUrl, appId, _token, establishment
           return false;
         }
 
-        const timeButtons = availableTimes
-          .map((time) => {
-            const safeTime = escapeHtml(time);
-            return `<button type="button" class="swal2-confirm swal2-styled" data-time="${safeTime}">${safeTime}</button>`;
-          })
-          .join("");
-
+        const timeOptions = availableTimes.reduce((options, time) => {
+          options[String(time)] = String(time);
+          return options;
+        }, {});
         const { value: selectedTime } = await Swal.fire({
           title: "Escolha o horário",
           background: "#0a0a0c",
           color: "#fff",
-          html: `<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">${timeButtons}</div>`,
+          input: "radio",
+          inputOptions: timeOptions,
           showCancelButton: true,
-          showConfirmButton: false,
+          confirmButtonText: "Confirmar horário",
           cancelButtonText: "Voltar",
-          didOpen: () => {
-            Swal.getPopup()
-              .querySelectorAll("[data-time]")
-              .forEach((button) =>
-                button.addEventListener("click", () => Swal.close({ isConfirmed: true, value: button.dataset.time }))
-              );
-          },
+          confirmButtonColor: "#00ffcc",
+          inputValidator: (value) => (value ? undefined : "Selecione um horário."),
         });
 
         if (!selectedTime) return false;
