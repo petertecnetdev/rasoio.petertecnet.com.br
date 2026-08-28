@@ -2,78 +2,56 @@
 import React, { useMemo, useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { GoogleLogin } from "@react-oauth/google";
+import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import useLogin from "../../hooks/useLogin";
 import "./LoginFormComponent.css";
 
-export default function LoginFormComponent({
-  onStart,
-  onSuccess,
-  onError,
-  redirectTo,
-}) {
+export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = useMemo(() => {
-    return String(username || "").trim().length > 0 && String(password || "").trim().length > 0;
-  }, [username, password]);
-
-  const { login, loginGoogle } = useLogin(
-    (token) => {
-      onSuccess?.(token);
-    },
-    redirectTo,
-    onError
+  const canSubmit = useMemo(
+    () => username.trim().length > 0 && password.trim().length > 0,
+    [username, password]
   );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const { loading, login, loginGoogle } = useLogin(onSuccess);
 
-    if (!canSubmit || submitting) return;
+  React.useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading, onLoadingChange]);
 
-    setSubmitting(true);
-    onStart?.();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!canSubmit || loading) return;
 
     try {
-      await login(username, password);
-    } catch (err) {
-      onError?.(err);
-    } finally {
-      setSubmitting(false);
+      await login(username.trim(), password);
+    } catch {
+      // O hook já exibe a mensagem da API.
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    if (submitting) return;
-
-    setSubmitting(true);
-    onStart?.();
+    if (loading) return;
 
     try {
       await loginGoogle(credentialResponse?.credential || null);
-    } catch (err) {
-      onError?.(err);
-    } finally {
-      setSubmitting(false);
+    } catch {
+      // O hook já exibe a mensagem da API.
     }
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="login-form-component">
+    <Form onSubmit={handleSubmit} className="login-form-component" noValidate>
       <div className="lfg">
-        {/* USERNAME */}
         <div className="lfg__field">
           <label className="lfg__label" htmlFor="login-username">
             Usuário ou e-mail
           </label>
-
           <div className="lfg__inputWrap">
-            <span className="lfg__icon" aria-hidden="true">
-              ✉
-            </span>
-
+            <span className="lfg__icon" aria-hidden="true">✉</span>
             <Form.Control
               id="login-username"
               type="text"
@@ -81,24 +59,17 @@ export default function LoginFormComponent({
               placeholder="Digite seu usuário ou e-mail"
               className="lfg__input"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={submitting}
+              onChange={(event) => setUsername(event.target.value)}
+              disabled={loading}
               required
             />
           </div>
         </div>
 
-        {/* PASSWORD */}
         <div className="lfg__field">
-          <label className="lfg__label" htmlFor="login-password">
-            Senha
-          </label>
-
+          <label className="lfg__label" htmlFor="login-password">Senha</label>
           <div className="lfg__inputWrap">
-            <span className="lfg__icon" aria-hidden="true">
-              🔒
-            </span>
-
+            <span className="lfg__icon" aria-hidden="true">🔒</span>
             <Form.Control
               id="login-password"
               type="password"
@@ -106,20 +77,15 @@ export default function LoginFormComponent({
               placeholder="Digite sua senha"
               className="lfg__input"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={submitting}
+              onChange={(event) => setPassword(event.target.value)}
+              disabled={loading}
               required
             />
           </div>
         </div>
 
-        {/* SUBMIT */}
-        <Button
-          type="submit"
-          className="lfg__submit"
-          disabled={!canSubmit || submitting}
-        >
-          {submitting ? (
+        <Button type="submit" className="lfg__submit" disabled={!canSubmit || loading}>
+          {loading ? (
             <span className="lfg__loading">
               <span className="lfg__spinner" aria-hidden="true" />
               Entrando...
@@ -129,38 +95,25 @@ export default function LoginFormComponent({
           )}
         </Button>
 
-        {/* DIVIDER */}
-        <div className="lfg__divider">
-          <span>ou</span>
-        </div>
+        <div className="lfg__divider"><span>ou</span></div>
 
-        {/* GOOGLE */}
         <div className="lfg__googleSlot">
-          <div className="">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={onError}
-              width="320"
-              theme="outline"
-              size="large"
-              text="continue_with"
-              shape="rectangular"
-              locale="pt-BR"
-            />
-          </div>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => {}}
+            width="320"
+            theme="outline"
+            size="large"
+            text="continue_with"
+            shape="rectangular"
+            locale="pt-BR"
+          />
         </div>
 
-        {/* LINKS */}
         <div className="lfg__links">
-          <a className="lfg__link" href="/register">
-            Criar conta
-          </a>
-
+          <Link className="lfg__link" to="/register">Criar conta</Link>
           <span className="lfg__sep">•</span>
-
-          <a className="lfg__link" href="/password-email">
-            Esqueci minha senha
-          </a>
+          <Link className="lfg__link" to="/password-email">Esqueci minha senha</Link>
         </div>
       </div>
     </Form>
@@ -168,8 +121,6 @@ export default function LoginFormComponent({
 }
 
 LoginFormComponent.propTypes = {
-  onStart: PropTypes.func,
   onSuccess: PropTypes.func,
-  onError: PropTypes.func,
-  redirectTo: PropTypes.string,
+  onLoadingChange: PropTypes.func,
 };
