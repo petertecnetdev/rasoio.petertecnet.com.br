@@ -1,8 +1,9 @@
 import React, { useContext } from "react";
+import PropTypes from "prop-types";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../App";
-import "./dashboard.css";
+import "./dashboard-v2.css";
 
 const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
   <article className={`rasoio-overview-card${accent ? " rasoio-overview-card-accent" : ""}`}>
@@ -15,6 +16,16 @@ const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) =
     </Link>
   </article>
 );
+
+OverviewCard.propTypes = {
+  icon: PropTypes.string.isRequired,
+  eyebrow: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  text: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+  cta: PropTypes.string.isRequired,
+  accent: PropTypes.bool,
+};
 
 export default function DashboardPage() {
   const { user, isEmployer, establishments } = useContext(AuthContext);
