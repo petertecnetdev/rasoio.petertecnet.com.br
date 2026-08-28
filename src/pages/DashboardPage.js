@@ -1,8 +1,20 @@
 import React, { useContext } from "react";
-import { Button, Card, Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../App";
 import "./dashboard.css";
+
+const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
+  <article className={`rasoio-overview-card${accent ? " rasoio-overview-card-accent" : ""}`}>
+    <div className="rasoio-overview-icon" aria-hidden="true">{icon}</div>
+    <div className="rasoio-overview-eyebrow">{eyebrow}</div>
+    <h2>{title}</h2>
+    <p>{text}</p>
+    <Link className="rasoio-overview-link" to={to}>
+      {cta}<span aria-hidden="true">→</span>
+    </Link>
+  </article>
+);
 
 export default function DashboardPage() {
   const { user, isEmployer, establishments } = useContext(AuthContext);
@@ -13,94 +25,97 @@ export default function DashboardPage() {
   const owned = Array.isArray(establishments) ? establishments : [];
 
   return (
-    <Container className="py-4 py-lg-5">
-      <div className="mb-4">
-        <div className="text-secondary small">Visão geral</div>
-        <h1 className="h2 mb-2">Olá, {name}</h1>
-        <p className="text-secondary mb-0">
-          Acesse rapidamente seus agendamentos e as áreas de trabalho disponíveis para sua conta.
-        </p>
-      </div>
+    <main className="rasoio-dashboard">
+      <Container className="py-4 py-lg-5">
+        <header className="rasoio-dashboard-hero">
+          <div>
+            <span className="rasoio-dashboard-kicker">Central Rasoio</span>
+            <h1>Olá, {name}</h1>
+            <p>
+              Agendamentos pessoais, operação das suas barbearias e sua agenda como profissional ficam separados para evitar ambiguidades.
+            </p>
+          </div>
+          <div className="rasoio-dashboard-status">
+            <strong>{owned.length}</strong>
+            <span>{owned.length === 1 ? "barbearia na Rasoio" : "barbearias na Rasoio"}</span>
+          </div>
+        </header>
 
-      <Row className="g-4">
-        <Col md={6} lg={4}>
-          <Card className="h-100 bg-dark text-light border-secondary">
-            <Card.Body className="d-flex flex-column">
-              <div className="fs-2 mb-3" aria-hidden="true">📅</div>
-              <Card.Title>Meus agendamentos</Card.Title>
-              <Card.Text className="text-secondary flex-grow-1">
-                Consulte horários marcados, status e detalhes dos seus atendimentos como cliente.
-              </Card.Text>
-              <Button as={Link} to="/orders/my">Abrir agendamentos</Button>
-            </Card.Body>
-          </Card>
-        </Col>
+        <section className="rasoio-overview-grid" aria-label="Visão geral dos agendamentos">
+          <OverviewCard
+            icon="◷"
+            eyebrow="Como cliente"
+            title="Meus agendamentos"
+            text="Somente os horários que você marcou para receber um atendimento em uma barbearia."
+            to="/orders/my"
+            cta="Ver minhas reservas"
+            accent
+          />
 
-        {isEmployer && (
-          <Col md={6} lg={4}>
-            <Card className="h-100 bg-dark text-light border-secondary">
-              <Card.Body className="d-flex flex-column">
-                <div className="fs-2 mb-3" aria-hidden="true">💈</div>
-                <Card.Title>Área do barbeiro</Card.Title>
-                <Card.Text className="text-secondary flex-grow-1">
-                  Organize sua disponibilidade e acompanhe os atendimentos vinculados ao seu perfil.
-                </Card.Text>
-                <Button as={Link} to="/employer/dashboard">Abrir área do barbeiro</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        )}
+          <OverviewCard
+            icon="▦"
+            eyebrow="Como proprietário"
+            title="Agenda das barbearias"
+            text="Acompanhe os pedidos de agendamento recebidos por cada barbearia que pertence à sua conta."
+            to={owned.length ? "/establishment/my" : "/establishment/create"}
+            cta={owned.length ? "Abrir gestão" : "Cadastrar barbearia"}
+          />
 
-        <Col md={6} lg={4}>
-          <Card className="h-100 bg-dark text-light border-secondary">
-            <Card.Body className="d-flex flex-column">
-              <div className="fs-2 mb-3" aria-hidden="true">🏪</div>
-              <Card.Title>Gestão de barbearias</Card.Title>
-              <Card.Text className="text-secondary flex-grow-1">
-                {owned.length > 0
-                  ? `Você possui ${owned.length} barbearia${owned.length === 1 ? "" : "s"} vinculada${owned.length === 1 ? "" : "s"} à sua conta.`
-                  : "Cadastre uma barbearia para gerenciar equipe, catálogo e atendimentos."}
-              </Card.Text>
-              <Button
-                as={Link}
-                to={owned.length > 0 ? "/establishment/my" : "/establishment/create"}
-              >
-                {owned.length > 0 ? "Gerenciar barbearias" : "Cadastrar barbearia"}
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+          <OverviewCard
+            icon="✂"
+            eyebrow="Como profissional"
+            title="Minha agenda de trabalho"
+            text={isEmployer
+              ? "Veja os atendimentos atribuídos diretamente ao seu perfil de colaborador."
+              : "Quando você estiver vinculado como colaborador, sua agenda profissional aparecerá aqui."}
+            to={isEmployer ? "/employer/orders" : "/employers"}
+            cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"}
+          />
 
-      {owned.length > 0 && (
-        <section className="mt-5" aria-labelledby="dashboard-barbershops-title">
-          <h2 id="dashboard-barbershops-title" className="h4 mb-3">Minhas barbearias</h2>
-          <Row className="g-3">
-            {owned.map((establishment) => (
-              <Col key={establishment.id} md={6} lg={4}>
-                <Card className="h-100 bg-dark text-light border-secondary">
-                  <Card.Body>
-                    <Card.Title>{establishment.fantasy || establishment.name}</Card.Title>
-                    <Card.Text className="text-secondary">
-                      {[establishment.city, establishment.uf].filter(Boolean).join(" / ") || "Localização não informada"}
-                    </Card.Text>
-                    <div className="d-flex gap-2 flex-wrap">
-                      {establishment.slug && (
-                        <Button as={Link} to={`/establishment/view/${establishment.slug}`} size="sm" variant="outline-light">
-                          Página pública
-                        </Button>
-                      )}
-                      <Button as={Link} to={`/establishment/update/${establishment.id}`} size="sm">
-                        Gerenciar
-                      </Button>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+          <OverviewCard
+            icon="◎"
+            eyebrow="Operação"
+            title="Resumo geral"
+            text="Entre na gestão das suas barbearias para revisar equipe, serviços, agenda e situação operacional em um único fluxo."
+            to={owned.length ? "/establishment/my" : "/establishment/create"}
+            cta="Abrir operação"
+          />
         </section>
-      )}
-    </Container>
+
+        {owned.length > 0 && (
+          <section className="rasoio-owned-section" aria-labelledby="dashboard-barbershops-title">
+            <div className="rasoio-section-heading">
+              <div>
+                <span>Gestão</span>
+                <h2 id="dashboard-barbershops-title">Minhas barbearias</h2>
+              </div>
+              <Link to="/establishment/my">Ver painel completo →</Link>
+            </div>
+
+            <Row className="g-3">
+              {owned.map((establishment) => (
+                <Col key={establishment.id} md={6} xl={4}>
+                  <article className="rasoio-owned-card">
+                    <div className="rasoio-owned-card-topline">
+                      <span className="rasoio-owned-dot" />
+                      <span>Rasoio</span>
+                    </div>
+                    <h3>{establishment.fantasy || establishment.name}</h3>
+                    <p>
+                      {[establishment.city, establishment.uf].filter(Boolean).join(" • ") || "Localização não informada"}
+                    </p>
+                    <div className="rasoio-owned-actions">
+                      <Link to={`/establishment/orders/${establishment.slug}`}>Agenda</Link>
+                      <Link to={`/establishment/employers/${establishment.slug}`}>Equipe</Link>
+                      <Link to={`/establishment/item/${establishment.slug}`}>Serviços</Link>
+                    </div>
+                  </article>
+                </Col>
+              ))}
+            </Row>
+          </section>
+        )}
+      </Container>
+    </main>
   );
 }
