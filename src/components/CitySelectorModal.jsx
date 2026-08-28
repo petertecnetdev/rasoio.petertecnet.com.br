@@ -35,10 +35,7 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
         });
         setCities(Array.isArray(data?.cities) ? data.cities : []);
       } catch (error) {
-        if (error?.code !== "ERR_CANCELED") {
-          console.error("Erro ao buscar cidades:", error);
-          setCities([]);
-        }
+        if (error?.code !== "ERR_CANCELED") setCities([]);
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -158,13 +155,13 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
               ))}
             </div>
           ) : (
-            <div className="city-modal__grid" role="list">
+            <div className="city-modal__grid" role="listbox" aria-label="Cidades disponíveis">
               {cityItems.map((item) => {
                 const active = isSelected(item.city, item.uf);
                 return (
                   <div
                     key={item.key}
-                    role="listitem"
+                    role="option"
                     tabIndex={0}
                     aria-selected={active}
                     className={`city-tile ${active ? "is-active" : ""}`}
