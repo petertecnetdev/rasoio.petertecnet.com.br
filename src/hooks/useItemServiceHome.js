@@ -36,13 +36,15 @@ const distributeItems = (items) => {
   return result;
 };
 
+const normalizeLocationFilter = (value) => String(value ?? "").trim();
+
 export default function useItemServiceHome(apiBaseUrl, appId) {
   const [serviceItems, setServiceItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const city = localStorage.getItem("selectedCity");
-  const uf = localStorage.getItem("selectedUF");
+  const city = normalizeLocationFilter(localStorage.getItem("selectedCity"));
+  const uf = normalizeLocationFilter(localStorage.getItem("selectedUF"));
 
   useEffect(() => {
     let active = true;
@@ -52,11 +54,17 @@ export default function useItemServiceHome(apiBaseUrl, appId) {
       setError(null);
 
       try {
-        const query =
-          city && uf
-            ? `?city=${encodeURIComponent(city)}&uf=${encodeURIComponent(uf)}`
-            : "";
+        const params = new URLSearchParams();
 
+        if (city && city.toLowerCase() !== "todas") {
+          params.set("city", city);
+        }
+
+        if (uf && uf.toUpperCase() !== "ALL") {
+          params.set("uf", uf.toUpperCase());
+        }
+
+        const query = params.toString() ? `?${params.toString()}` : "";
         const res = await axios.get(`${apiBaseUrl}/item/home/${appId}${query}`);
 
         if (!active) return;
