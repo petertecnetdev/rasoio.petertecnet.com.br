@@ -1,17 +1,16 @@
 // src/pages/HomePage.jsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import { apiBaseUrl, appId } from "../config";
-
 import useHome from "../hooks/useHome";
 import useAppointment from "../hooks/useAppointment";
 import useImageUtils from "../hooks/useImageUtils";
 import useSchedulePopup from "../hooks/useSchedulePopup";
+import useSelectedCity from "../hooks/useSelectedCity";
 
 import "./homepage.css";
-
 import GlobalPageHeader from "../components/GlobalPageHeader";
 import GlobalCarousel from "../components/GlobalCarousel";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
@@ -19,37 +18,11 @@ import AppointmentWizardModal from "../components/appointment/AppointmentWizardM
 const PLACEHOLDER = "/images/logo.png";
 
 export default function HomePage() {
-  const {
-    establishments,
-    employers,
-    serviceItems,
-    productItems,
-    isLoading,
-    error,
-  } = useHome(apiBaseUrl, appId);
-
+  const { establishments, employers, serviceItems, productItems, isLoading, error } =
+    useHome(apiBaseUrl, appId);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
-  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
-
-  useEffect(() => {
-    const sync = () => {
-      setCurrentCity(localStorage.getItem("selectedCity"));
-      setCurrentUF(localStorage.getItem("selectedUF"));
-    };
-
-    window.addEventListener("cityChanged", sync);
-
-    const iv = setInterval(sync, 900);
-
-    return () => {
-      window.removeEventListener("cityChanged", sync);
-      clearInterval(iv);
-    };
-  }, []);
-
+  const { cityLabel } = useSelectedCity();
   const { imageUrl } = useImageUtils(PLACEHOLDER);
 
   const {
@@ -70,106 +43,93 @@ export default function HomePage() {
     wizardEstablishment
   );
 
-  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+  const headerMeta = useMemo(
+    () => [cityLabel, "Agende em poucos cliques"].filter(Boolean),
+    [cityLabel]
+  );
 
-  const headerMeta = useMemo(() => {
-    const cityLabel = currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return [cityLabel, "Agende em poucos cliques"].filter(Boolean);
-  }, [currentCity, currentUF]);
+  const headerDescription = useMemo(
+    () =>
+      `Encontre barbearias, barbeiros, serviços e produtos para agendar com rapidez.${
+        cityLabel ? ` (${cityLabel})` : ""
+      }`,
+    [cityLabel]
+  );
 
-  const headerDescription = useMemo(() => {
-    const cityLabel = currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return `Aqui você encontra estabelecimentos, profissionais, serviços e produtos para agendar com rapidez.${
-      cityLabel ? ` (${cityLabel})` : ""
-    }`;
-  }, [currentCity, currentUF]);
+  const showScheduleError = useCallback(() => {
+    Swal.fire({
+      icon: "error",
+      title: "Não foi possível abrir a agenda",
+      text: "Tente novamente em alguns instantes.",
+    });
+  }, []);
 
   const handleOpenFromEstablishment = useCallback(
-    async (est) => {
+    async (establishment) => {
       try {
-        const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
-          (emp) => Number(emp.establishment_id) === Number(est?.id)
+        const filteredEmployers = employers.filter(
+          (item) => Number(item.establishment_id) === Number(establishment?.id)
         );
-
-        await openSchedulePopup({
-          establishment: est,
-          filteredEmployers,
-        });
-      } catch (e) {
-        console.error(e);
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Não foi possível abrir o agendamento agora.",
-        });
+        await openSchedulePopup({ establishment, filteredEmployers });
+      } catch (error) {
+        console.error(error);
+        showScheduleError();
       }
     },
-    [employers, openSchedulePopup]
+    [employers, openSchedulePopup, showScheduleError]
   );
 
   const handleOpenFromEmployer = useCallback(
-    (emp) => {
+    async (employer) => {
       try {
-        const estId =
-          emp?.establishment_id ??
-          emp?.establishmentId ??
-          emp?.entity_id ??
-          emp?.entityId ??
-          emp?.establishment?.id ??
+        const establishmentId =
+          employer?.establishment_id ??
+          employer?.establishmentId ??
+          employer?.entity_id ??
+          employer?.entityId ??
+          employer?.establishment?.id ??
           null;
 
-        const resolvedEstablishment = (Array.isArray(establishments) ? establishments : []).find(
-          (e) => Number(e?.id) === Number(estId)
+        const establishment = establishments.find(
+          (item) => Number(item?.id) === Number(establishmentId)
         );
 
-        openSchedulePopup({
-          employer: emp,
-          establishment: resolvedEstablishment || emp?.establishment || null,
+        await openSchedulePopup({
+          employer,
+          establishment: establishment || employer?.establishment || null,
         });
-      } catch (e) {
-        console.error(e);
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Não foi possível abrir o agendamento agora.",
-        });
+      } catch (error) {
+        console.error(error);
+        showScheduleError();
       }
     },
-    [openSchedulePopup, establishments]
+    [establishments, openSchedulePopup, showScheduleError]
   );
 
   const handleOpenFromItem = useCallback(
-    (item) => {
+    async (item) => {
       try {
-        const entityId = item?.establishment_id || item?.entity_id || item?.entityId;
-
-        const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
-          (emp) => Number(emp.establishment_id) === Number(entityId)
+        const establishmentId =
+          item?.establishment_id ?? item?.entity_id ?? item?.entityId ?? null;
+        const filteredEmployers = employers.filter(
+          (employer) => Number(employer.establishment_id) === Number(establishmentId)
         );
-
-        openSchedulePopup({
-          service: item,
-          filteredEmployers,
-        });
-      } catch (e) {
-        console.error(e);
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: "Não foi possível abrir o agendamento agora.",
-        });
+        await openSchedulePopup({ service: item, filteredEmployers });
+      } catch (error) {
+        console.error(error);
+        showScheduleError();
       }
     },
-    [employers, openSchedulePopup]
+    [employers, openSchedulePopup, showScheduleError]
   );
 
   if (isLoading) {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
-          title="Home"
+          title="Rasoio"
           variant="home"
-          description="Carregando dados da sua região..."
+          description="Carregando barbearias e profissionais da sua região..."
           meta={headerMeta}
           compact
         />
@@ -182,7 +142,7 @@ export default function HomePage() {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
-          title="Home"
+          title="Rasoio"
           variant="home"
           description="Não foi possível carregar as informações agora."
           meta={headerMeta}
@@ -196,25 +156,30 @@ export default function HomePage() {
   return (
     <>
       <div className="hp-wrapper">
-        <GlobalPageHeader title="Home" variant="home" description={headerDescription} meta={headerMeta} />
+        <GlobalPageHeader
+          title="Rasoio"
+          variant="home"
+          description={headerDescription}
+          meta={headerMeta}
+        />
 
         <div className="hp-sections">
           <GlobalCarousel
-            title="Estabelecimentos"
-            subtitle="Escolha um local e agende rápido"
+            title="Barbearias"
+            subtitle="Escolha uma barbearia e agende seu horário"
             items={establishments}
-            fmtBRL={(v) => v}
-            navigate={safeNavigate}
+            fmtBRL={(value) => value}
+            navigate={navigate}
             openSchedulePopup={handleOpenFromEstablishment}
             showSchedule
             showDots
           />
 
           <GlobalCarousel
-            title="Profissionais"
-            subtitle="Encontre o profissional ideal"
+            title="Barbeiros"
+            subtitle="Encontre o profissional ideal para você"
             items={employers}
-            fmtBRL={(v) => v}
+            fmtBRL={(value) => value}
             navigate={navigate}
             openSchedulePopup={handleOpenFromEmployer}
             showSchedule
@@ -223,23 +188,21 @@ export default function HomePage() {
 
           <GlobalCarousel
             title="Serviços"
-            subtitle="Escolha um serviço e finalize em poucos cliques"
+            subtitle="Escolha o serviço e agende em poucos cliques"
             items={serviceItems}
-            fmtBRL={(v) => v}
-            navigate={safeNavigate}
+            fmtBRL={(value) => value}
+            navigate={navigate}
             openSchedulePopup={handleOpenFromItem}
             showSchedule
             showDots
           />
 
-          {/* ✅ Produtos: só detalhes (sem agendar) */}
           <GlobalCarousel
             title="Produtos"
-            subtitle="Produtos disponíveis"
+            subtitle="Conheça os produtos das barbearias"
             items={productItems}
-            fmtBRL={(v) => v}
-            navigate={safeNavigate}
-            openSchedulePopup={handleOpenFromItem}
+            fmtBRL={(value) => value}
+            navigate={navigate}
             showDots
           />
         </div>

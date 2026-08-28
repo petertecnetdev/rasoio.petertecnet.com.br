@@ -1,50 +1,40 @@
 // src/components/GlobalNav.jsx
-import React, {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  FaStore,
-  FaUserFriends,
-  FaConciergeBell,
-  FaBoxOpen,
-} from "react-icons/fa";
+import { FaBoxOpen, FaConciergeBell, FaStore, FaUserFriends } from "react-icons/fa";
 
 import { AuthContext } from "../App";
 import useImageUtils from "../hooks/useImageUtils";
+import useSelectedCity from "../hooks/useSelectedCity";
+import api from "../services/api";
 import CitySelectorModal from "./CitySelectorModal";
-import ProcessingIndicatorComponent from "./ProcessingIndicatorComponent";
-
 import "./GlobalNav.css";
 
 export default function GlobalNav({ loadingMenu, handleLogout }) {
-  const { user, isEmployer } = useContext(AuthContext);
+  const { user, isEmployer, establishments } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
+  const { city } = useSelectedCity();
 
-  const [processing, setProcessing] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showCityModal, setShowCityModal] = useState(false);
   const [search, setSearch] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const userMenuRef = useRef(null);
   const searchRef = useRef(null);
+  const isAuthed = Boolean(user);
 
-  const isAuthed = !!user;
-
-  /* ================= USER ================= */
   const fullName = useMemo(() => {
     if (!user) return "";
     return (
       `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
       user.name ||
+      user.user_name ||
       user.username ||
-      user.email
+      user.email ||
+      "Minha conta"
     );
   }, [user]);
 
@@ -54,141 +44,122 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
   });
 
   const avatarSrc = useMemo(() => {
-    const raw =
-      user?.images?.avatar || user?.images?.profile || user?.avatar || null;
+    const raw = user?.images?.avatar || user?.images?.profile || user?.avatar || null;
     return imageUrl(raw) || placeholderSvg || "/images/user.png";
   }, [user, imageUrl, placeholderSvg]);
 
-  /* ================= LOCATION ================= */
-  const currentCity = localStorage.getItem("selectedCity");
-  const currentUF = localStorage.getItem("selectedUF");
+  const ownsEstablishment = Array.isArray(establishments) && establishments.length > 0;
 
-  const locationText =
-    currentCity && currentUF
-      ? `${currentCity}`
-      : "Selecionar cidade";
-
-  /* ================= SEARCH ================= */
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!search.trim()) return;
-
-    navigate(`/search?q=${encodeURIComponent(search.trim())}`);
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const query = search.trim();
+    if (!query) return;
+    navigate(`/search?q=${encodeURIComponent(query)}`);
     setSearch("");
   };
 
-  /* ================= LOGOUT ================= */
   const onLogout = async () => {
-    setProcessing(true);
+    if (loggingOut) return;
+    setLoggingOut(true);
+
     try {
       if (handleLogout) await handleLogout();
+      else {
+        try {
+          await api.post("/auth/logout");
+        } catch {
+          // A sessão local ainda deve ser encerrada se a API estiver indisponível.
+        }
+      }
     } finally {
-      localStorage.clear();
+      // Mantém cidade/UF e demais preferências locais. Remove somente autenticação.
+      localStorage.removeItem("token");
+      localStorage.removeItem("employer");
       window.dispatchEvent(new Event("authChanged"));
-      window.location.replace("/login");
+      setUserMenuOpen(false);
+      setLoggingOut(false);
+      navigate("/login", { replace: true });
     }
   };
 
-  /* ================= OUTSIDE CLICK ================= */
   useEffect(() => {
-    const onClickOutside = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+    const onClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setUserMenuOpen(false);
       }
     };
+
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  /* ================= COMMAND SHORTCUT ================= */
   useEffect(() => {
-    const onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
+    const onKey = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
         searchRef.current?.focus();
       }
+      if (event.key === "Escape") setUserMenuOpen(false);
     };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  if (processing) {
-    return (
-      <ProcessingIndicatorComponent gifSrc="/images/logo.gif" minDuration={0} />
-    );
-  }
-
-  const isActive = (pathPrefix) => location.pathname.startsWith(pathPrefix);
+  const isActive = (prefix) => location.pathname.startsWith(prefix);
+  const go = (path) => {
+    setUserMenuOpen(false);
+    navigate(path);
+  };
 
   return (
     <>
       <header className="nav">
         <div className="nav__bar">
-          {/* ================= LEFT (LOGO + SEARCH + ICON LINKS) ================= */}
           <div className="nav__left nav__left--fb">
-            <Link to="/" className="nav__brand" aria-label="Ir para Home">
-              <img src="/images/logo.png" alt="Logo" className="nav__logo" />
+            <Link to="/" className="nav__brand" aria-label="Ir para o Rasoio">
+              <img src="/images/logo.png" alt="Rasoio" className="nav__logo" />
             </Link>
 
-            {/* SEARCH */}
-            <form
-              className="nav__search nav__search--left "
-              onSubmit={handleSearch}
-            >
+            <form className="nav__search nav__search--left" onSubmit={handleSearch} role="search">
               <input
                 ref={searchRef}
                 type="search"
-                placeholder="Buscar "
+                placeholder="Buscar barbearias, barbeiros e serviços"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                aria-label="Buscar"
-                className=""
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label="Buscar no Rasoio"
               />
             </form>
 
-            {/* ICON NAV (some no mobile via CSS) */}
-            <nav
-              className="nav__links nav__links--icons"
-              aria-label="Navegação principal"
-            >
+            <nav className="nav__links nav__links--icons" aria-label="Navegação principal">
               <Link
                 to="/establishments"
-                className={`nav__link nav__iconLink ${
-                  isActive("/establishments") ? "active" : ""
-                }`}
-                title="Estabelecimentos"
-                aria-label="Estabelecimentos"
+                className={`nav__link nav__iconLink ${isActive("/establishments") ? "active" : ""}`}
+                title="Barbearias"
+                aria-label="Barbearias"
               >
                 <FaStore className="nav__icon" />
               </Link>
-
               <Link
                 to="/employers"
-                className={`nav__link nav__iconLink ${
-                  isActive("/employers") ? "active" : ""
-                }`}
-                title="Profissionais"
-                aria-label="Profissionais"
+                className={`nav__link nav__iconLink ${isActive("/employers") ? "active" : ""}`}
+                title="Barbeiros"
+                aria-label="Barbeiros"
               >
                 <FaUserFriends className="nav__icon" />
               </Link>
-
               <Link
                 to="/item/services"
-                className={`nav__link nav__iconLink ${
-                  isActive("/item/services") ? "active" : ""
-                }`}
+                className={`nav__link nav__iconLink ${isActive("/item/services") ? "active" : ""}`}
                 title="Serviços"
                 aria-label="Serviços"
               >
                 <FaConciergeBell className="nav__icon" />
               </Link>
-
               <Link
                 to="/item/products"
-                className={`nav__link nav__iconLink ${
-                  isActive("/item/products") ? "active" : ""
-                }`}
+                className={`nav__link nav__iconLink ${isActive("/item/products") ? "active" : ""}`}
                 title="Produtos"
                 aria-label="Produtos"
               >
@@ -197,22 +168,19 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
             </nav>
           </div>
 
-          {/* ================= RIGHT ================= */}
           <div className="nav__right">
-            <div className="nav__locationWrap">
-              <span
-                className="nav__locationText nav__changeCityBtn p-2"
-                onClick={() => setShowCityModal(true)}
-              >
-                {locationText}
-              </span>
-            </div>
+            <button
+              type="button"
+              className="nav__locationText nav__changeCityBtn p-2"
+              onClick={() => setShowCityModal(true)}
+              aria-label="Alterar cidade"
+            >
+              {city || "Selecionar cidade"}
+            </button>
 
             {!loadingMenu && !isAuthed && (
               <div className="nav__authActions">
-                <Link to="/login" className="nav__btn nav__btn--ghost">
-                  Entrar
-                </Link>
+                <Link to="/login" className="nav__btn nav__btn--ghost">Entrar</Link>
               </div>
             )}
 
@@ -220,126 +188,66 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
               <div className="nav__user" ref={userMenuRef}>
                 <button
                   className="nav__userBtn"
-                  onClick={() => setUserMenuOpen((v) => !v)}
+                  onClick={() => setUserMenuOpen((open) => !open)}
                   type="button"
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="menu"
                 >
-                  <img
-                    src={avatarSrc}
-                    alt={fullName}
-                    className="nav__avatar"
-                    onError={handleImgError}
-                  />
+                  <img src={avatarSrc} alt="" className="nav__avatar" onError={handleImgError} />
                   <span className="nav__userName">{fullName}</span>
                 </button>
 
-                {/* ✅ MENU (agora está no lugar certo) */}
                 {userMenuOpen && (
-                  <div className="nav__userMenu" role="dialog" aria-modal="true">
-                    {/* HEADER DO MENU */}
+                  <div className="nav__userMenu" role="menu">
                     <div className="nav__userMenuHeader">
                       <div className="nav__userMenuHeaderLeft">
-                        <img
-                          src={avatarSrc}
-                          alt={fullName}
-                          className="nav__userMenuAvatar"
-                          onError={handleImgError}
-                        />
-
+                        <img src={avatarSrc} alt="" className="nav__userMenuAvatar" onError={handleImgError} />
                         <div className="nav__userMenuHeaderInfo">
                           <div className="nav__userMenuName">{fullName}</div>
-                          <div className="nav__userMenuEmail">
-                            {user?.email || ""}
-                          </div>
+                          <div className="nav__userMenuEmail">{user?.email || ""}</div>
                         </div>
                       </div>
-
                       <button
                         type="button"
                         className="nav__userMenuClose"
                         onClick={() => setUserMenuOpen(false)}
                         aria-label="Fechar menu"
-                        title="Fechar"
                       >
                         ✕
                       </button>
                     </div>
 
-                    {/* CONTEÚDO */}
                     <div className="nav__userMenuContent">
-                      {/* Configurações */}
                       <div className="nav__menuGroup">
-                        <span className="nav__menuTitle">Configurações</span>
-
-                        <button
-                          className="nav__userMenuItem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            navigate("/user/update");
-                          }}
-                          type="button"
-                        >
-                          <span className="nav__menuIcon">👤</span>
-                          <span className="nav__menuText">Conta</span>
-                          <span className="nav__menuArrow">›</span>
-                        </button>
-
-                        <button
-                          className="nav__userMenuItem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            navigate("/orders/my");
-                          }}
-                          type="button"
-                        >
+                        <span className="nav__menuTitle">Minha conta</span>
+                        <button className="nav__userMenuItem" onClick={() => go("/orders/my")} type="button">
                           <span className="nav__menuIcon">📅</span>
                           <span className="nav__menuText">Meus agendamentos</span>
                           <span className="nav__menuArrow">›</span>
                         </button>
+                        <button className="nav__userMenuItem" onClick={() => go("/user/update")} type="button">
+                          <span className="nav__menuIcon">👤</span>
+                          <span className="nav__menuText">Dados da conta</span>
+                          <span className="nav__menuArrow">›</span>
+                        </button>
                       </div>
 
-                      {/* Área do Colaborador */}
                       {isEmployer && (
                         <>
                           <div className="nav__divider" />
                           <div className="nav__menuGroup">
-                            <span className="nav__menuTitle">
-                              Área do Colaborador
-                            </span>
-
-                            <button
-                              className="nav__userMenuItem"
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                navigate("/employer/dashboard");
-                              }}
-                              type="button"
-                            >
-                              <span className="nav__menuIcon">📊</span>
-                              <span className="nav__menuText">Painel</span>
+                            <span className="nav__menuTitle">Área do barbeiro</span>
+                            <button className="nav__userMenuItem" onClick={() => go("/employer/dashboard")} type="button">
+                              <span className="nav__menuIcon">💈</span>
+                              <span className="nav__menuText">Painel do barbeiro</span>
                               <span className="nav__menuArrow">›</span>
                             </button>
-
-                            <button
-                              className="nav__userMenuItem"
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                navigate("/employer/schedules");
-                              }}
-                              type="button"
-                            >
+                            <button className="nav__userMenuItem" onClick={() => go("/employer/schedules")} type="button">
                               <span className="nav__menuIcon">⏱️</span>
-                              <span className="nav__menuText">Horários</span>
+                              <span className="nav__menuText">Disponibilidade</span>
                               <span className="nav__menuArrow">›</span>
                             </button>
-
-                            <button
-                              className="nav__userMenuItem"
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                navigate("/employer/orders");
-                              }}
-                              type="button"
-                            >
+                            <button className="nav__userMenuItem" onClick={() => go("/employer/orders")} type="button">
                               <span className="nav__menuIcon">🧾</span>
                               <span className="nav__menuText">Atendimentos</span>
                               <span className="nav__menuArrow">›</span>
@@ -348,74 +256,40 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                         </>
                       )}
 
-                      {/* Gestão */}
                       <div className="nav__divider" />
                       <div className="nav__menuGroup">
-                        <span className="nav__menuTitle">Gestão</span>
-
-                        <button
-                          className="nav__userMenuItem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            navigate("/establishment/my");
-                          }}
-                          type="button"
-                        >
+                        <span className="nav__menuTitle">Gestão da barbearia</span>
+                        <button className="nav__userMenuItem" onClick={() => go("/establishment/my")} type="button">
                           <span className="nav__menuIcon">🏪</span>
-                          <span className="nav__menuText">
-                            Meus estabelecimentos
-                          </span>
+                          <span className="nav__menuText">Minhas barbearias</span>
                           <span className="nav__menuArrow">›</span>
                         </button>
-
-                        <button
-                          className="nav__userMenuItem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            navigate("/establishment/create");
-                          }}
-                          type="button"
-                        >
-                          <span className="nav__menuIcon">➕</span>
-                          <span className="nav__menuText">
-                            Criar estabelecimento
-                          </span>
-                          <span className="nav__menuArrow">›</span>
-                        </button>
-
-                        <button
-                          className="nav__userMenuItem"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            navigate("/dashboard");
-                          }}
-                          type="button"
-                        >
+                        {!ownsEstablishment && (
+                          <button className="nav__userMenuItem" onClick={() => go("/establishment/create")} type="button">
+                            <span className="nav__menuIcon">➕</span>
+                            <span className="nav__menuText">Cadastrar barbearia</span>
+                            <span className="nav__menuArrow">›</span>
+                          </button>
+                        )}
+                        <button className="nav__userMenuItem" onClick={() => go("/dashboard")} type="button">
                           <span className="nav__menuIcon">📈</span>
-                          <span className="nav__menuText">Dashboard</span>
+                          <span className="nav__menuText">Visão geral</span>
                           <span className="nav__menuArrow">›</span>
                         </button>
                       </div>
 
-                      {/* Logout */}
                       <div className="nav__divider" />
                       <div className="nav__menuGroup">
                         <button
                           className="nav__userMenuItem nav__logout"
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            onLogout();
-                          }}
+                          onClick={onLogout}
                           type="button"
+                          disabled={loggingOut}
                         >
                           <span className="nav__menuIcon">🚪</span>
-                          <span className="nav__menuText">Sair</span>
-                          
+                          <span className="nav__menuText">{loggingOut ? "Saindo..." : "Sair"}</span>
                         </button>
                       </div>
-                      
-                      <div className="nav__divider" />
-                      
                     </div>
                   </div>
                 )}
@@ -429,11 +303,7 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
         user={user || {}}
         show={showCityModal}
         onClose={() => setShowCityModal(false)}
-        onSelectCity={({ city, uf }) => {
-          localStorage.setItem("selectedCity", city);
-          localStorage.setItem("selectedUF", uf);
-          setShowCityModal(false);
-        }}
+        onSelectCity={() => setShowCityModal(false)}
       />
     </>
   );

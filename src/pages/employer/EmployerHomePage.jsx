@@ -1,5 +1,5 @@
 // src/pages/employer/EmployerHomePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
 
@@ -7,6 +7,7 @@ import useEmployerHome from "../../hooks/useEmployerHome";
 import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
+import useSelectedCity from "../../hooks/useSelectedCity";
 
 import "../homepage.css";
 
@@ -18,28 +19,9 @@ const PLACEHOLDER = "/images/logo.png";
 
 export default function EmployerHomePage() {
   const { employers, isLoading, error } = useEmployerHome(apiBaseUrl, appId);
-
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
-  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
-
-  useEffect(() => {
-    const sync = () => {
-      setCurrentCity(localStorage.getItem("selectedCity"));
-      setCurrentUF(localStorage.getItem("selectedUF"));
-    };
-
-    window.addEventListener("cityChanged", sync);
-    const iv = setInterval(sync, 800);
-
-    return () => {
-      window.removeEventListener("cityChanged", sync);
-      clearInterval(iv);
-    };
-  }, []);
-
+  const { cityLabel } = useSelectedCity();
   const { imageUrl } = useImageUtils(PLACEHOLDER);
 
   const {
@@ -51,7 +33,7 @@ export default function EmployerHomePage() {
     preselectedEmployer,
     preselectedServiceId,
     openSchedulePopup,
-  } = useSchedulePopup(apiBaseUrl, token);
+  } = useSchedulePopup(apiBaseUrl, token, appId);
 
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
     apiBaseUrl,
@@ -60,29 +42,26 @@ export default function EmployerHomePage() {
     wizardEstablishment
   );
 
-  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+  const headerMeta = useMemo(
+    () => [cityLabel, "Agende em poucos cliques"].filter(Boolean),
+    [cityLabel]
+  );
 
-  const headerMeta = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return [cityLabel, "Agende em poucos cliques"].filter(Boolean);
-  }, [currentCity, currentUF]);
-
-  const headerDescription = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return `Encontre profissionais disponíveis e agende em poucos cliques.${
-      cityLabel ? ` (${cityLabel})` : ""
-    }`;
-  }, [currentCity, currentUF]);
+  const headerDescription = useMemo(
+    () =>
+      `Encontre barbeiros disponíveis e escolha o profissional ideal.${
+        cityLabel ? ` (${cityLabel})` : ""
+      }`,
+    [cityLabel]
+  );
 
   if (isLoading) {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
-          title="Profissionais"
+          title="Barbeiros"
           variant="home"
-          description="Carregando dados da sua região..."
+          description="Carregando barbeiros da sua região..."
           meta={headerMeta}
           compact
         />
@@ -95,9 +74,9 @@ export default function EmployerHomePage() {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
-          title="Profissionais"
+          title="Barbeiros"
           variant="home"
-          description="Não foi possível carregar as informações agora."
+          description="Não foi possível carregar os barbeiros agora."
           meta={headerMeta}
           compact
         />
@@ -110,20 +89,21 @@ export default function EmployerHomePage() {
     <>
       <div className="hp-wrapper">
         <GlobalPageHeader
-          title="Profissionais"
+          title="Barbeiros"
           variant="home"
           description={headerDescription}
           meta={headerMeta}
         />
 
         <GlobalCarousel
-          title="Profissionais"
+          title="Barbeiros"
+          subtitle="Veja perfis, barbearias e horários disponíveis"
           items={employers}
+          fmtBRL={(value) => value}
           navigate={navigate}
-          openSchedulePopup={async (item) => {
-            await openSchedulePopup({ employer: item });
-          }}
+          openSchedulePopup={(item) => openSchedulePopup({ employer: item })}
           showSchedule
+          showDots
         />
       </div>
 

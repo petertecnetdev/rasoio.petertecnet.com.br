@@ -1,8 +1,7 @@
-// src/pages/establishment/EstablishmentMyPage.jsx
+// src/pages/establishment/EstablishmentMyPage.js
 import React from "react";
-import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
+import { Alert, Button, Col, Container, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import EstablishmentDashboard from "../../components/establishment/EstablishmentDashboard";
 import useEstablishmentMy from "../../hooks/useEstablishmentMy";
@@ -15,58 +14,59 @@ export default function EstablishmentMyPage() {
 
   if (isLoading) {
     return (
-      <>
-        <GlobalNav />
-        <Container className="text-center mt-5">
-          <Spinner animation="border" />
-        </Container>
-      </>
+      <Container className="text-center py-5" aria-live="polite">
+        <Spinner animation="border" />
+      </Container>
     );
   }
 
   if (apiError) {
     return (
-      <>
-        <GlobalNav />
-        <Container className="mt-4">
-          <Alert variant="danger">{apiError}</Alert>
-        </Container>
-      </>
+      <Container className="mt-4">
+        <Alert variant="danger">{apiError}</Alert>
+      </Container>
     );
   }
 
   return (
     <>
-      <GlobalNav />
-{heroEstablishment && (
-  <EstablishmentHero
-    title={heroEstablishment.fantasy || heroEstablishment.name}
-    subtitle="Gestão central dos seus negócios"
-    description="Acompanhe métricas, acesse rapidamente cada estabelecimento e gerencie serviços, itens, colaboradores e pedidos em um só lugar."
-    city={heroEstablishment.city}
-    uf={heroEstablishment.uf}
-    logo={heroEstablishment?.images?.logo}
-    background={heroEstablishment?.images?.background}
-    showBack
-  />
-)}
+      {heroEstablishment ? (
+        <EstablishmentHero
+          title={heroEstablishment.fantasy || heroEstablishment.name}
+          subtitle="Gestão das suas barbearias"
+          description="Gerencie equipe, serviços, produtos, agenda e atendimentos em um só lugar."
+          city={heroEstablishment.city}
+          uf={heroEstablishment.uf}
+          logo={heroEstablishment?.images?.logo}
+          background={heroEstablishment?.images?.background}
+          showBack
+        />
+      ) : (
+        <Container className="py-5 text-center">
+          <h2>Cadastre sua primeira barbearia</h2>
+          <p className="text-muted">
+            Depois do cadastro você poderá adicionar barbeiros, serviços e acompanhar os atendimentos.
+          </p>
+          <Button onClick={() => navigate("/establishment/create")}>Criar barbearia</Button>
+        </Container>
+      )}
 
       <Container fluid className="establishment-my-wrapper mt-4">
-        {establishments.length === 0 && (
+        {establishments.length === 0 ? (
           <Row>
             <Col xs={12} className="text-center text-muted">
-              Nenhum estabelecimento encontrado.
+              Nenhuma barbearia cadastrada ainda.
             </Col>
           </Row>
+        ) : (
+          establishments.map((establishment) => (
+            <EstablishmentDashboard
+              key={establishment.id}
+              establishment={establishment}
+              navigate={navigate}
+            />
+          ))
         )}
-
-        {establishments.map((est) => (
-          <EstablishmentDashboard
-            key={est.id}
-            establishment={est}
-            navigate={navigate}
-          />
-        ))}
       </Container>
     </>
   );

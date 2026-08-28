@@ -1,24 +1,34 @@
-# See https://help.github.com/ignore-files/ for more about ignoring files.
+# Dependencies
+/node_modules/
 
-# dependencies
-/node_modules
+# Production builds
+/build/
+/dist/
 
-# testing
-/coverage
+# Test output
+/coverage/
 
+# Local environment / secrets
+.env
+.env.*
+!.env.example
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
 
-package-lock.json
-yarn.lock
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*.log
 
+# Local scripts / temporary files
 commit.sh
+*.tmp
+*.temp
+
+# Keep dependency lockfiles versioned for reproducible builds.

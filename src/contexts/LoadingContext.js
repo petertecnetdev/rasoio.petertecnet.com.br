@@ -1,55 +1,47 @@
-// src/contexts/LoadingContext.jsx
-import React, { createContext, useState, useCallback, useEffect } from "react";
-import axios from "axios";
+// src/contexts/LoadingContext.js
+import React, { createContext, useCallback, useMemo, useState } from "react";
 
 export const LoadingContext = createContext({
   isLoading: false,
+  beginLoading: () => {},
+  endLoading: () => {},
+  withLoading: async (task) => task(),
 });
 
 export function LoadingProvider({ children }) {
   const [count, setCount] = useState(0);
-  const isLoading = count > 0;
 
-  const push = useCallback(() => {
-    setCount((c) => c + 1);
+  const beginLoading = useCallback(() => {
+    setCount((current) => current + 1);
   }, []);
 
-  const pop = useCallback(() => {
-    setCount((c) => Math.max(c - 1, 0));
+  const endLoading = useCallback(() => {
+    setCount((current) => Math.max(0, current - 1));
   }, []);
 
-  useEffect(() => {
-    const reqId = axios.interceptors.request.use(
-      (config) => {
-        push();
-        return config;
-      },
-      (error) => {
-        pop();
-        return Promise.reject(error);
+  const withLoading = useCallback(
+    async (task) => {
+      beginLoading();
+      try {
+        return await task();
+      } finally {
+        endLoading();
       }
-    );
+    },
+    [beginLoading, endLoading]
+  );
 
-    const resId = axios.interceptors.response.use(
-      (response) => {
-        pop();
-        return response;
-      },
-      (error) => {
-        pop();
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      axios.interceptors.request.eject(reqId);
-      axios.interceptors.response.eject(resId);
-    };
-  }, [push, pop]);
+  const value = useMemo(
+    () => ({
+      isLoading: count > 0,
+      beginLoading,
+      endLoading,
+      withLoading,
+    }),
+    [count, beginLoading, endLoading, withLoading]
+  );
 
   return (
-    <LoadingContext.Provider value={{ isLoading }}>
-      {children}
-    </LoadingContext.Provider>
+    <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>
   );
 }

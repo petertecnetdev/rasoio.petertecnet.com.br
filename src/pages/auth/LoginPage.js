@@ -1,19 +1,12 @@
-// src/pages/auth/LoginPage.jsx
-import React, { useState } from "react";
+// src/pages/auth/LoginPage.js
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiBaseUrl, appId } from "../../config";
-
-import "./LoginPage.css";
-
 import LoginFormComponent from "../../components/auth/LoginFormComponent";
-import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
+import "./LoginPage.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [processing, setProcessing] = useState(false);
-
   const from = location?.state?.from?.pathname || "/";
 
   const handleSuccess = () => {
@@ -21,16 +14,8 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      {processing && (
-        <ProcessingIndicatorComponent
-          gifSrc="/images/logo.gif"
-          minDuration={900}
-        />
-      )}
-      <div className="lp">
-      {/* efeitos de fundo */}
-      <div className="lp__bg">
+    <div className="lp">
+      <div className="lp__bg" aria-hidden="true">
         <div className="lp__noise" />
         <div className="lp__orb lp__orb--a" />
         <div className="lp__orb lp__orb--b" />
@@ -39,10 +24,8 @@ export default function LoginPage() {
 
       <div className="lp__container">
         <div className="lp__layout">
-          {/* BRAND / HERO */}
           <aside className="lp__hero">
             <div className="lp__heroCard">
-              {/* TOP */}
               <div className="lp__heroTop">
                 <div className="lp__heroLogoWrap" aria-hidden="true">
                   <img
@@ -50,97 +33,67 @@ export default function LoginPage() {
                     alt=""
                     className="lp__heroLogo"
                     draggable={false}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = "/images/logo.gif";
                     }}
                   />
                 </div>
 
                 <div className="lp__heroText">
                   <h1 className="lp__heroTitle">Rasoio</h1>
-
                   <p className="lp__heroSubtitle">
-                    A plataforma premium para barbearias que querem organização,
-                    velocidade e crescimento. Tudo em um único painel: agenda,
-                    equipe, serviços, produtos e performance.
+                    Gestão e agendamento para barbearias, barbeiros e clientes em
+                    um só lugar.
                   </p>
                 </div>
               </div>
 
-              {/* INFO */}
               <div className="lp__heroInfo">
                 <div className="lp__heroBadge">
                   <span className="lp__dot" />
-                  Plataforma segura • Login criptografado • Acesso rápido
+                  Agenda • equipe • serviços • clientes
                 </div>
 
-                {/* lista rica */}
                 <ul className="lp__heroList">
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Agendamento inteligente</b> por profissional, com horários
-                      organizados e controle de disponibilidade.
+                      <b>Agenda organizada</b> por profissional, com horários e
+                      disponibilidade em um só fluxo.
                     </div>
                   </li>
-
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Controle comercial</b> com serviços e produtos, vitrine
-                      digital e gestão de preços.
+                      <b>Gestão da barbearia</b> com equipe, serviços, produtos e
+                      atendimentos.
                     </div>
                   </li>
-
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Experiência premium</b> rápida, responsiva e moderna —
-                      feita para funcionar liso no mobile e no desktop.
+                      <b>Área do barbeiro</b> para acompanhar agenda e rotina de
+                      atendimento.
                     </div>
                   </li>
-
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Relatórios e métricas</b> para acompanhar crescimento e
-                      otimizar resultados do negócio.
+                      <b>Experiência do cliente</b> para encontrar barbearias,
+                      profissionais e agendar rapidamente.
                     </div>
                   </li>
                 </ul>
 
-                {/* stats */}
-                <div className="lp__heroStats">
-                  <div className="lp__stat">
-                    <div className="lp__statValue">+3x</div>
-                    <div className="lp__statLabel">mais produtividade</div>
-                  </div>
-
-                  <div className="lp__stat">
-                    <div className="lp__statValue">0%</div>
-                    <div className="lp__statLabel">burocracia</div>
-                  </div>
-
-                  <div className="lp__stat">
-                    <div className="lp__statValue">100%</div>
-                    <div className="lp__statLabel">focado no cliente</div>
-                  </div>
-                </div>
-
-                {/* rodapé hero */}
                 <div className="lp__heroFootnote">
-                  <span className="lp__shield" aria-hidden="true">
-                    🔐
-                  </span>
-                  Seu acesso é protegido e os dados do sistema são tratados com
-                  segurança.
+                  <span className="lp__shield" aria-hidden="true">🔐</span>
+                  Seu acesso é protegido e os dados são enviados com conexão segura.
                 </div>
               </div>
             </div>
           </aside>
 
-          {/* LOGIN CARD */}
           <main className="lp__main">
             <div className="lp__card">
               <header className="lp__cardHeader">
@@ -150,29 +103,20 @@ export default function LoginPage() {
                     alt="Rasoio"
                     className="lp__logo"
                     draggable={false}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = "/images/logo.gif";
                     }}
                   />
                 </div>
-
                 <h2 className="lp__title">Bem-vindo de volta</h2>
                 <p className="lp__subtitle">
-                  Entre para gerenciar seus agendamentos, barbearias, produtos e
-                  serviços.
+                  Entre para acessar seus agendamentos e recursos de gestão.
                 </p>
               </header>
 
               <section className="lp__cardBody">
-                <LoginFormComponent
-                  onStart={() => setProcessing(true)}
-                  onSuccess={handleSuccess}
-                  onError={() => setProcessing(false)}
-                  redirectTo={from}
-                  apiBaseUrl={apiBaseUrl}
-                  appId={appId}
-                />
+                <LoginFormComponent onSuccess={handleSuccess} />
               </section>
 
               <footer className="lp__cardFooter">
@@ -186,7 +130,6 @@ export default function LoginPage() {
           </main>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

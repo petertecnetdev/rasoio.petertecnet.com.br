@@ -1,106 +1,69 @@
 // src/hooks/useOrderMy.js
 import { useCallback, useEffect, useState } from "react";
-import axios from "axios";
+import { appId } from "../config";
+import api from "../services/api";
 
-import { apiBaseUrl, appId } from "../config";
-
-function safeArray(v) {
-  return Array.isArray(v) ? v : [];
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
-function toMs(iso) {
-  const t = new Date(iso || "").getTime();
-  return Number.isFinite(t) ? t : 0;
+function toMs(value) {
+  const timestamp = new Date(value || "").getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
-/**
- * ✅ pega o arquivo mais recente (created_at + id)
- */
 function getLatestFileByType(files, type) {
-  const list = safeArray(files).filter((f) => f && f.type === type);
-
+  const list = safeArray(files).filter((file) => file && file.type === type);
   if (!list.length) return null;
 
-  return list
-    .slice()
-    .sort((a, b) => {
-      const ta = toMs(a.created_at);
-      const tb = toMs(b.created_at);
-      if (tb !== ta) return tb - ta;
-
-      const ida = Number(a.id || 0);
-      const idb = Number(b.id || 0);
-      return idb - ida;
-    })[0];
+  return list.slice().sort((a, b) => {
+    const byDate = toMs(b.created_at) - toMs(a.created_at);
+    if (byDate !== 0) return byDate;
+    return Number(b.id || 0) - Number(a.id || 0);
+  })[0];
 }
 
-/**
- * ✅ Normaliza para o formato esperado pela OrderMyPage.jsx:
- * establishment.files.logo/background (obj)
- * employer.user.files.avatar (obj)
- */
+function normalizeFile(file, fallbackType) {
+  if (!file) return null;
+  return {
+    id: file.id ?? null,
+    type: file.type ?? fallbackType,
+    path: file.path ?? null,
+    url: file.public_url ?? file.url ?? null,
+    public_url: file.public_url ?? file.url ?? null,
+    created_at: file.created_at ?? null,
+  };
+}
+
 function normalizeOrder(order) {
-  const o = order || {};
+  const source = order || {};
+  const establishment = source.establishment || null;
+  const employer = source.employer || source.attendant || null;
+  const employerUser = employer?.user || null;
 
-  const est = o?.establishment || null;
-  const emp = o?.employer || null;
-  const user = emp?.user || null;
-
-  const estFilesArray = safeArray(est?.files);
-  const userFilesArray = safeArray(user?.files);
-
-  const estLogo = getLatestFileByType(estFilesArray, "logo");
-  const estBg = getLatestFileByType(estFilesArray, "background");
-  const userAvatar = getLatestFileByType(userFilesArray, "avatar");
+  const establishmentLogo = getLatestFileByType(establishment?.files, "logo");
+  const establishmentBackground = getLatestFileByType(establishment?.files, "background");
+  const employerAvatar = getLatestFileByType(employerUser?.files, "avatar");
 
   return {
-    ...o,
-
-    establishment: est
+    ...source,
+    establishment: establishment
       ? {
-          ...est,
+          ...establishment,
           files: {
-            logo: estLogo
-              ? {
-                  id: estLogo?.id ?? null,
-                  type: estLogo?.type ?? "logo",
-                  path: estLogo?.path ?? null,
-                  url: estLogo?.public_url ?? null,
-                  public_url: estLogo?.public_url ?? null,
-                  created_at: estLogo?.created_at ?? null,
-                }
-              : null,
-            background: estBg
-              ? {
-                  id: estBg?.id ?? null,
-                  type: estBg?.type ?? "background",
-                  path: estBg?.path ?? null,
-                  url: estBg?.public_url ?? null,
-                  public_url: estBg?.public_url ?? null,
-                  created_at: estBg?.created_at ?? null,
-                }
-              : null,
+            logo: normalizeFile(establishmentLogo, "logo"),
+            background: normalizeFile(establishmentBackground, "background"),
           },
         }
       : null,
-
-    employer: emp
+    employer: employer
       ? {
-          ...emp,
-          user: user
+          ...employer,
+          user: employerUser
             ? {
-                ...user,
+                ...employerUser,
                 files: {
-                  avatar: userAvatar
-                    ? {
-                        id: userAvatar?.id ?? null,
-                        type: userAvatar?.type ?? "avatar",
-                        path: userAvatar?.path ?? null,
-                        url: userAvatar?.public_url ?? null,
-                        public_url: userAvatar?.public_url ?? null,
-                        created_at: userAvatar?.created_at ?? null,
-                      }
-                    : null,
+                  avatar: normalizeFile(employerAvatar, "avatar"),
                 },
               }
             : null,
@@ -119,27 +82,15 @@ export default function useOrdersMy() {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(`${apiBaseUrl}/order/listmy/${appId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      const rawOrders = safeArray(res?.data?.orders);
-
-      // ✅ normaliza pra page
-      const normalized = rawOrders.map(normalizeOrder);
-
-      setOrders(normalized);
-    } catch (err) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        "Erro ao carregar seus agendamentos.";
-
+      const { data } = await api.get(`/order/listmy/${appId}`);
+      setOrders(safeArray(data?.orders).map(normalizeOrder));
+    } catch (requestError) {
       setOrders([]);
-      setError(message);
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.response?.data?.error ||
+          "Erro ao carregar seus agendamentos."
+      );
     } finally {
       setLoading(false);
     }
@@ -149,10 +100,5 @@ export default function useOrdersMy() {
     refresh();
   }, [refresh]);
 
-  return {
-    orders,
-    loading,
-    error,
-    refresh,
-  };
+  return { orders, loading, error, refresh };
 }
