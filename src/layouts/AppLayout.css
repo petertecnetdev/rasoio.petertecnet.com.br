@@ -1,73 +1,318 @@
 /* src/layouts/AppLayout.css
-   AppLayout — Dark premium (Rasoio)
-   ✅ Fundo escuro consistente
-   ✅ Conteúdo nunca fica atrás do footer fixo
+   Shared Rasoio application shell and visual system.
 */
 
 :root {
-  /* fallback caso o JS ainda não tenha medido o footer */
   --gfooter-height: 86px;
-
-  /* tokens */
-  --app-bg: #020617;
-  --app-bg-2: #050b16;
-  --app-surface: rgba(255, 255, 255, 0.04);
-  --app-border: rgba(255, 255, 255, 0.08);
-  --app-text: rgba(255, 255, 255, 0.92);
-  --app-text-dim: rgba(255, 255, 255, 0.70);
+  --app-bg: #05060d;
+  --app-bg-2: #07101b;
+  --app-surface: rgba(255, 255, 255, 0.055);
+  --app-surface-strong: rgba(7, 15, 27, 0.88);
+  --app-border: rgba(25, 214, 255, 0.14);
+  --app-border-soft: rgba(255, 255, 255, 0.09);
+  --app-text: rgba(255, 255, 255, 0.94);
+  --app-text-dim: rgba(255, 255, 255, 0.67);
+  --app-cyan: #19d6ff;
+  --app-blue: #00a8ff;
+  --app-purple: #7c5cff;
 }
 
-/* garante fundo escuro geral */
 html,
-body {
-  height: 100%;
+body,
+#root {
+  min-height: 100%;
   margin: 0;
   background: var(--app-bg);
   color: var(--app-text);
 }
 
-/* shell */
 .app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-
-  /* ✅ fundo “premium” no container principal */
   background:
-    radial-gradient(1200px 700px at 12% 0%, rgba(25, 211, 255, 0.10), rgba(0, 0, 0, 0) 55%),
-    radial-gradient(900px 560px at 88% 10%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0) 60%),
-    linear-gradient(180deg, var(--app-bg-2), var(--app-bg));
+    radial-gradient(900px 520px at 10% 0%, rgba(124, 92, 255, 0.12), transparent 60%),
+    radial-gradient(1000px 620px at 88% 5%, rgba(25, 214, 255, 0.10), transparent 60%),
+    linear-gradient(160deg, #05060d, #030a14 42%, #05060d);
 }
 
-/* conteúdo principal */
 .app-main {
   flex: 1 1 auto;
   box-sizing: border-box;
-
-  /* ✅ espaço global pro footer fixo + safe area */
-  padding-bottom: calc(var(--gfooter-height) + env(safe-area-inset-bottom) + 16px);
-
-  /* respiro lateral consistente com o app */
-  padding-left: 0;
-  padding-right: 0;
-}
-
-/* caso você use páginas muito estreitas, evita overflow horizontal */
-.app-shell,
-.app-main {
+  min-height: calc(100vh - var(--nav-h, 78px));
+  padding-bottom: calc(var(--gfooter-height) + env(safe-area-inset-bottom) + 28px);
   overflow-x: hidden;
+  color: var(--app-text);
 }
 
-/* opcional: melhora renderização em mobile */
+/* Some legacy routed pages still render GlobalNav themselves. AppLayout owns it now. */
+.app-main header.nav {
+  display: none !important;
+}
+
+/* Base visual treatment for all routed pages except the login page,
+   which intentionally keeps its dedicated premium layout. */
+.app-main > :not(.lp) {
+  color: var(--app-text);
+}
+
+.app-main > :not(.lp) :where(h1, h2, h3, h4, h5, h6),
+.app-main > :not(.lp) :where(.title, .page-title) {
+  color: var(--app-text) !important;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.32);
+}
+
+.app-main > :not(.lp) :where(p, label, small, .form-label, .text-muted) {
+  color: var(--app-text-dim);
+}
+
+.app-main > :not(.lp) :where(.container, .container-fluid) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Forms across establishment, employer, items, orders and account screens. */
+.app-main > :not(.lp) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  select,
+  .form-control,
+  .form-select
+) {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  border-radius: 13px !important;
+  background: rgba(2, 8, 17, 0.72) !important;
+  color: var(--app-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.app-main > :not(.lp) textarea,
+.app-main > :not(.lp) textarea.form-control {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.app-main > :not(.lp) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  textarea,
+  select,
+  .form-control,
+  .form-select
+):focus {
+  outline: none !important;
+  border-color: rgba(25, 214, 255, 0.62) !important;
+  background: rgba(3, 11, 23, 0.9) !important;
+  box-shadow: 0 0 0 4px rgba(25, 214, 255, 0.11) !important;
+}
+
+.app-main > :not(.lp) input::placeholder,
+.app-main > :not(.lp) textarea::placeholder {
+  color: rgba(255, 255, 255, 0.34) !important;
+}
+
+.app-main > :not(.lp) :where(.form-check-input) {
+  border-color: rgba(25, 214, 255, 0.32);
+  background-color: rgba(2, 8, 17, 0.86);
+}
+
+.app-main > :not(.lp) .form-check-input:checked {
+  border-color: var(--app-cyan);
+  background-color: var(--app-cyan);
+}
+
+/* Bootstrap cards, tables and list groups inherit the same glass language. */
+.app-main > :not(.lp) :where(.card, .list-group-item, .modal-content, .dropdown-menu) {
+  color: var(--app-text);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.028));
+  border-color: var(--app-border-soft);
+}
+
+.app-main > :not(.lp) .card {
+  border-radius: 20px;
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.30);
+}
+
+.app-main > :not(.lp) :where(.table, table) {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--app-text);
+  --bs-table-border-color: rgba(255, 255, 255, 0.08);
+  color: var(--app-text);
+}
+
+.app-main > :not(.lp) :where(.table th, table th) {
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 700;
+}
+
+/* Consistent actions. Existing semantic Bootstrap colors still work. */
+.app-main > :not(.lp) :where(.btn, button:not(.nav__userBtn):not(.nav__iconLink):not(.nav__changeCityBtn)) {
+  border-radius: 12px;
+}
+
+.app-main > :not(.lp) :where(.btn-primary, .submit-btn) {
+  border: 1px solid rgba(25, 214, 255, 0.36) !important;
+  background: linear-gradient(135deg, var(--app-cyan), var(--app-blue)) !important;
+  color: #03101a !important;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(0, 168, 255, 0.17);
+}
+
+.app-main > :not(.lp) :where(.btn-secondary, .action-button) {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--app-text) !important;
+}
+
+/* ----- Establishment create/update legacy screen ----- */
+.establishment-root {
+  min-height: 100%;
+  color: var(--app-text);
+  background:
+    radial-gradient(720px 440px at 14% 0%, rgba(124, 92, 255, 0.10), transparent 65%),
+    radial-gradient(820px 480px at 88% 18%, rgba(25, 214, 255, 0.08), transparent 62%);
+}
+
+.establishment-create-page {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 34px 0 56px;
+}
+
+.establishment-create-page > .title {
+  margin: 0 0 22px !important;
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #fff 20%, #b8ecff 72%, #8d7aff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+.establishment-create-page .estab-hero {
+  min-height: 300px;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background-color: rgba(7, 13, 23, 0.95);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.38);
+}
+
+.establishment-create-page .estab-hero-inner {
+  width: min(100%, 1080px);
+  padding: clamp(28px, 5vw, 52px);
+}
+
+.establishment-create-page .estab-logo-bubble {
+  border-color: rgba(25, 214, 255, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(25, 214, 255, 0.045));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42), 0 0 40px rgba(25, 214, 255, 0.07);
+}
+
+.establishment-create-page .estab-title {
+  color: #fff !important;
+  font-weight: 900;
+}
+
+.establishment-create-page .estab-description {
+  color: rgba(255, 255, 255, 0.66) !important;
+}
+
+.establishment-create-page > .d-flex {
+  margin: 18px 0 22px !important;
+}
+
+.establishment-create-page > form {
+  padding: clamp(20px, 3.5vw, 32px);
+  border: 1px solid var(--app-border-soft);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.025));
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.30);
+  backdrop-filter: blur(18px);
+}
+
+.establishment-create-page .form-group {
+  height: 100%;
+}
+
+.establishment-create-page .form-group > label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.establishment-create-page .segments-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.establishment-create-page .segment-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.establishment-create-page .segment-check label {
+  color: rgba(255, 255, 255, 0.74) !important;
+}
+
+.establishment-create-page .submit-btn {
+  min-height: 48px;
+  padding: 0 22px;
+}
+
+@media (max-width: 767px) {
+  .establishment-create-page {
+    width: min(100% - 24px, 1180px);
+    padding-top: 22px;
+  }
+
+  .establishment-create-page .estab-hero {
+    min-height: 260px;
+  }
+
+  .establishment-create-page .estab-hero-inner {
+    grid-template-columns: 88px 1fr;
+    gap: 16px;
+  }
+
+  .establishment-create-page > .d-flex {
+    flex-direction: column;
+  }
+
+  .establishment-create-page > .d-flex .btn {
+    width: 100%;
+  }
+}
+
 @supports (-webkit-touch-callout: none) {
   .app-shell {
     min-height: -webkit-fill-available;
   }
 }
 
-/* acessibilidade */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
