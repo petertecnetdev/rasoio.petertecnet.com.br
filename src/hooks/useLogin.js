@@ -74,6 +74,10 @@ export default function useLogin(onSuccess, onError) {
       } catch (error) {
         localStorage.removeItem("token");
         onError?.(error);
+
+        // Libera a UI antes de abrir o modal de erro. Isso impede que o
+        // ProcessingIndicator capture o clique do botão "Ok".
+        setLoading(false);
         await showError(getErrorMessage(error, fallbackMessage));
         throw error;
       } finally {
@@ -99,6 +103,7 @@ export default function useLogin(onSuccess, onError) {
       if (!credential) {
         const error = new Error("Credencial do Google não recebida.");
         onError?.(error);
+        setLoading(false);
         await showError(error.message);
         throw error;
       }
