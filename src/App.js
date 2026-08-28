@@ -1,86 +1,89 @@
-// src/App.jsx
+// src/App.js
 import React, {
-  useEffect,
-  useState,
-  useContext,
+  Suspense,
   createContext,
-  useRef,
+  lazy,
   useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from "react";
 import {
   BrowserRouter as Router,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
 } from "react-router-dom";
-import axios from "axios";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
-import { LoadingProvider, LoadingContext } from "./contexts/LoadingContext";
-import { apiBaseUrl } from "./config";
-
+import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
+import api from "./services/api";
 
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/auth/LoginPage";
-import RegisterPage from "./pages/auth/RegisterPage";
-import EmailVerifyPage from "./pages/auth/EmailVerifyPage";
-import LogoutPage from "./pages/auth/LogoutPage";
-import PasswordEmailPage from "./pages/auth/PasswordEmailPage";
-import PasswordResetPage from "./pages/auth/PasswordResetPage";
-import PasswordPage from "./pages/auth/PasswordPage";
+const HomePage = lazy(() => import("./pages/HomePage"));
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
+const EmailVerifyPage = lazy(() => import("./pages/auth/EmailVerifyPage"));
+const LogoutPage = lazy(() => import("./pages/auth/LogoutPage"));
+const PasswordEmailPage = lazy(() => import("./pages/auth/PasswordEmailPage"));
+const PasswordResetPage = lazy(() => import("./pages/auth/PasswordResetPage"));
+const PasswordPage = lazy(() => import("./pages/auth/PasswordPage"));
+const InvitePage = lazy(() => import("./pages/auth/InvitePage"));
+const InviteCompletePage = lazy(() => import("./pages/auth/InviteCompletePage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 
-import InvitePage from "./pages/auth/InvitePage";
-import InviteCompletePage from "./pages/auth/InviteCompletePage";
+const OrderCreatePage = lazy(() => import("./pages/order/OrderCreatePage"));
+const OrderListPage = lazy(() => import("./pages/order/OrderListPage"));
+const OrderEditPage = lazy(() => import("./pages/order/OrderEditPage"));
+const OrderMyPage = lazy(() => import("./pages/order/OrderMyPage"));
 
-import DashboardPage from "./pages/DashboardPage";
+const UserViewPage = lazy(() => import("./pages/user/UserViewPage"));
+const UserUpdatePage = lazy(() => import("./pages/user/UserUpdatePage"));
 
-import OrderCreatePage from "./pages/order/OrderCreatePage";
-import OrderListPage from "./pages/order/OrderListPage";
-import OrderEditPage from "./pages/order/OrderEditPage";
-import OrderMyPage from "./pages/order/OrderMyPage";
+const ItemListPage = lazy(() => import("./pages/item/ItemListPage"));
+const ItemCreatePage = lazy(() => import("./pages/item/ItemCreatePage"));
+const ItemViewPage = lazy(() => import("./pages/item/ItemViewPage"));
+const ItemUpdatePage = lazy(() => import("./pages/item/ItemUpdatePage"));
+const ItemServiceHomePage = lazy(() => import("./pages/item/ItemServiceHomePage"));
+const ItemProductHomePage = lazy(() => import("./pages/item/ItemProductHomePage"));
 
-import UserViewPage from "./pages/user/UserViewPage";
-import UserUpdatePage from "./pages/user/UserUpdatePage";
+const EmployerListPage = lazy(() => import("./pages/employer/EmployerListPage"));
+const EmployerCreatePage = lazy(() => import("./pages/employer/EmployerCreatePage"));
+const EmployerUpdatePage = lazy(() => import("./pages/employer/EmployerUpdatePage"));
+const EmployerViewPage = lazy(() => import("./pages/employer/EmployerViewPage"));
+const EmployerMePage = lazy(() => import("./pages/employer/EmployerMePage"));
+const EmployerSchedulesPage = lazy(() => import("./pages/employer/EmployerSchedulesPage"));
+const EmployerOrdersPage = lazy(() => import("./pages/employer/EmployerOrdersPage"));
+const EmployerHomePage = lazy(() => import("./pages/employer/EmployerHomePage"));
 
-import ItemListPage from "./pages/item/ItemListPage";
-import ItemCreatePage from "./pages/item/ItemCreatePage";
-import ItemViewPage from "./pages/item/ItemViewPage";
-import ItemUpdatePage from "./pages/item/ItemUpdatePage";
-import ItemServiceHomePage from "./pages/item/ItemServiceHomePage";
-import ItemProductHomePage from "./pages/item/ItemProductHomePage";
-
-import EmployerListPage from "./pages/employer/EmployerListPage";
-import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
-import EmployerUpdatePage from "./pages/employer/EmployerUpdatePage";
-import EmployerViewPage from "./pages/employer/EmployerViewPage";
-import EmployerMePage from "./pages/employer/EmployerMePage";
-import EmployerSchedulesPage from "./pages/employer/EmployerSchedulesPage";
-import EmployerOrdersPage from "./pages/employer/EmployerOrdersPage";
-import EmployerHome from "./pages/employer/EmployerHomePage";
-
-import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
-import EstablishmentViewPage from "./pages/establishment/EstablishmentViewPage";
-import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
-import EstablishmentOrderPage from "./pages/establishment/EstablishmentOrderPage";
-import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
-import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
-import EstablishmentItemPage from "./pages/establishment/EstablishmentItemPage";
-import EstablishmentHome from "./pages/establishment/EstablishmentHomePage";
+const EstablishmentCreatePage = lazy(() => import("./pages/establishment/EstablishmentCreatePage"));
+const EstablishmentViewPage = lazy(() => import("./pages/establishment/EstablishmentViewPage"));
+const EstablishmentUpdatePage = lazy(() => import("./pages/establishment/EstablishmentUpdatePage"));
+const EstablishmentOrderPage = lazy(() => import("./pages/establishment/EstablishmentOrderPage"));
+const EstablishmentMyPage = lazy(() => import("./pages/establishment/EstablishmentMyPage"));
+const EstablishmentEmployersPage = lazy(() => import("./pages/establishment/EstablishmentEmployersPage"));
+const EstablishmentItemPage = lazy(() => import("./pages/establishment/EstablishmentItemPage"));
+const EstablishmentHomePage = lazy(() => import("./pages/establishment/EstablishmentHomePage"));
 
 export const AuthContext = createContext(null);
 
+const RouteFallback = () => (
+  <ProcessingIndicatorComponent
+    interval={1200}
+    messages={["Carregando..."]}
+    gifSrc="/images/logo.gif"
+  />
+);
+
 function AppInner() {
   const { isLoading } = useContext(LoadingContext);
-
   const [user, setUser] = useState(null);
   const [employer, setEmployer] = useState(null);
   const [isEmployer, setIsEmployer] = useState(false);
   const [establishments, setEstablishments] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
-
-  const tokenRef = useRef(localStorage.getItem("token") || "");
 
   const clearSession = useCallback(() => {
     setUser(null);
@@ -90,8 +93,7 @@ function AppInner() {
   }, []);
 
   const syncAuth = useCallback(async () => {
-    const token = localStorage.getItem("token") || "";
-    tokenRef.current = token;
+    const token = localStorage.getItem("token");
 
     if (!token) {
       clearSession();
@@ -100,15 +102,12 @@ function AppInner() {
     }
 
     try {
-      const { data } = await axios.get(`${apiBaseUrl}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setUser(data.user ?? null);
-      setEmployer(data.employer ?? null);
-      setIsEmployer(!!data.is_employer);
-      setEstablishments(data.establishments ?? []);
-    } catch (e) {
+      const { data } = await api.get("/auth/me");
+      setUser(data?.user ?? null);
+      setEmployer(data?.employer ?? null);
+      setIsEmployer(Boolean(data?.is_employer));
+      setEstablishments(Array.isArray(data?.establishments) ? data.establishments : []);
+    } catch {
       localStorage.removeItem("token");
       clearSession();
     } finally {
@@ -119,230 +118,117 @@ function AppInner() {
   useEffect(() => {
     syncAuth();
 
-    const onAuthChanged = () => {
+    const handleAuthChanged = () => {
       setInitialLoading(true);
       syncAuth();
     };
 
-    window.addEventListener("authChanged", onAuthChanged);
+    const handleStorage = (event) => {
+      if (event.key === "token") handleAuthChanged();
+    };
 
-    const iv = setInterval(() => {
-      const t = localStorage.getItem("token") || "";
-      if (t !== tokenRef.current) {
-        setInitialLoading(true);
-        syncAuth();
-      }
-    }, 600);
+    window.addEventListener("authChanged", handleAuthChanged);
+    window.addEventListener("storage", handleStorage);
 
     return () => {
-      window.removeEventListener("authChanged", onAuthChanged);
-      clearInterval(iv);
+      window.removeEventListener("authChanged", handleAuthChanged);
+      window.removeEventListener("storage", handleStorage);
     };
   }, [syncAuth]);
 
-  if (initialLoading) {
-    return (
-      <ProcessingIndicatorComponent interval={100} gifSrc="/images/logo.gif" />
-    );
-  }
+  const authValue = useMemo(
+    () => ({
+      user,
+      setUser,
+      employer,
+      setEmployer,
+      isEmployer,
+      setIsEmployer,
+      establishments,
+      setEstablishments,
+      refreshAuth: syncAuth,
+    }),
+    [user, employer, isEmployer, establishments, syncAuth]
+  );
 
-  const protectedRoute = (el) =>
-    user ? (
-      user.email_verified_at ? (
-        el
-      ) : (
-        <Navigate to="/email-verify" replace />
-      )
-    ) : (
-      <Navigate to="/login" replace />
-    );
+  if (initialLoading) return <RouteFallback />;
 
-  const emailVerifiedRoute = (el) =>
-    user ? (
-      !user.email_verified_at ? (
-        el
-      ) : (
-        <Navigate to="/" replace />
-      )
-    ) : (
-      <Navigate to="/login" replace />
-    );
+  const protectedRoute = (element) => {
+    if (!user) return <Navigate to="/login" replace />;
+    if (!user.email_verified_at) return <Navigate to="/email-verify" replace />;
+    return element;
+  };
 
-  const restrictedRoute = (el) => (user ? <Navigate to="/" replace /> : el);
+  const emailVerifiedRoute = (element) => {
+    if (!user) return <Navigate to="/login" replace />;
+    return user.email_verified_at ? <Navigate to="/" replace /> : element;
+  };
+
+  const restrictedRoute = (element) =>
+    user ? <Navigate to="/" replace /> : element;
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        setUser,
-        employer,
-        setEmployer,
-        isEmployer,
-        setIsEmployer,
-        establishments,
-        setEstablishments,
-      }}
-    >
-      <>
-        {isLoading && (
-          <ProcessingIndicatorComponent
-            interval={800}
-            gifSrc="/images/logo.gif"
-          />
-        )}
+    <AuthContext.Provider value={authValue}>
+      {isLoading && <RouteFallback />}
 
-        <Router>
+      <Router>
+        <Suspense fallback={<RouteFallback />}>
           <Routes>
-            {/* ✅ Nav + Footer em TODAS as rotas abaixo */}
             <Route element={<AppLayout loadingMenu={false} />}>
               <Route path="/" element={<HomePage />} />
 
-              <Route
-                path="/establishment/view/:slug"
-                element={<EstablishmentViewPage />}
-              />
-              <Route
-                path="/employer/view/:user_name"
-                element={<EmployerViewPage />}
-              />
-
-              <Route
-                path="/register"
-                element={restrictedRoute(<RegisterPage />)}
-              />
-              <Route path="/login" element={restrictedRoute(<LoginPage />)} />
-              <Route
-                path="/password-email"
-                element={restrictedRoute(<PasswordEmailPage />)}
-              />
-              <Route
-                path="/password-reset"
-                element={restrictedRoute(<PasswordResetPage />)}
-              />
-              <Route
-                path="/email-verify"
-                element={emailVerifiedRoute(<EmailVerifyPage />)}
-              />
-              <Route
-                path="/password"
-                element={protectedRoute(<PasswordPage />)}
-              />
-              <Route path="/logout" element={<LogoutPage />} />
-
-              <Route path="/invite" element={<InvitePage />} />
-              <Route path="/invite-complete" element={<InviteCompletePage />} />
-
-              <Route
-                path="/dashboard"
-                element={protectedRoute(<DashboardPage />)}
-              />
-
-              <Route
-                path="/order/list/:slug"
-                element={protectedRoute(<OrderListPage />)}
-              />
-              <Route
-                path="/order/create/:slug"
-                element={protectedRoute(<OrderCreatePage />)}
-              />
-              <Route
-                path="/order/edit/:entityId/:id"
-                element={protectedRoute(<OrderEditPage />)}
-              />
-
-              <Route
-                path="/orders/my"
-                element={protectedRoute(<OrderMyPage />)}
-              />
-
-              <Route
-                path="/user/update"
-                element={protectedRoute(<UserUpdatePage />)}
-              />
-              <Route
-                path="/user/:userName"
-                element={protectedRoute(<UserViewPage />)}
-              />
-
-              <Route
-                path="/item/list/:slug"
-                element={protectedRoute(<ItemListPage />)}
-              />
-              <Route
-                path="/item/create/:slug"
-                element={protectedRoute(<ItemCreatePage />)}
-              />
-              <Route path="/item/view/:slug" element={<ItemViewPage />} />
-              <Route
-                path="/item/update/:id"
-                element={protectedRoute(<ItemUpdatePage />)}
-              />
+              <Route path="/establishments" element={<EstablishmentHomePage />} />
+              <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
+              <Route path="/employers" element={<EmployerHomePage />} />
+              <Route path="/employer/view/:user_name" element={<EmployerViewPage />} />
 
               <Route path="/item/services" element={<ItemServiceHomePage />} />
               <Route path="/item/products" element={<ItemProductHomePage />} />
+              <Route path="/item/view/:slug" element={<ItemViewPage />} />
 
-              <Route
-                path="/employer/list/:slug"
-                element={protectedRoute(<EmployerListPage />)}
-              />
-              <Route
-                path="/employer/create/:slug"
-                element={protectedRoute(<EmployerCreatePage />)}
-              />
-              <Route
-                path="/employer/update/:id"
-                element={protectedRoute(<EmployerUpdatePage />)}
-              />
-              <Route
-                path="/employer/:id"
-                element={protectedRoute(<EmployerViewPage />)}
-              />
-              <Route
-                path="/employer/dashboard"
-                element={protectedRoute(<EmployerMePage />)}
-              />
-              <Route
-                path="/employer/schedules"
-                element={protectedRoute(<EmployerSchedulesPage />)}
-              />
-              <Route
-                path="/employer/orders"
-                element={protectedRoute(<EmployerOrdersPage />)}
-              />
+              <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
+              <Route path="/login" element={restrictedRoute(<LoginPage />)} />
+              <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
+              <Route path="/password-reset" element={restrictedRoute(<PasswordResetPage />)} />
+              <Route path="/email-verify" element={emailVerifiedRoute(<EmailVerifyPage />)} />
+              <Route path="/password" element={protectedRoute(<PasswordPage />)} />
+              <Route path="/logout" element={<LogoutPage />} />
+              <Route path="/invite" element={<InvitePage />} />
+              <Route path="/invite-complete" element={<InviteCompletePage />} />
 
-              <Route path="/employers" element={<EmployerHome />} />
+              <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
+              <Route path="/orders/my" element={protectedRoute(<OrderMyPage />)} />
+              <Route path="/order/list/:slug" element={protectedRoute(<OrderListPage />)} />
+              <Route path="/order/create/:slug" element={protectedRoute(<OrderCreatePage />)} />
+              <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
 
-              <Route
-                path="/establishment/create"
-                element={protectedRoute(<EstablishmentCreatePage />)}
-              />
-              <Route
-                path="/establishment/update/:id"
-                element={protectedRoute(<EstablishmentUpdatePage />)}
-              />
-              <Route
-                path="/establishment/my"
-                element={protectedRoute(<EstablishmentMyPage />)}
-              />
-              <Route
-                path="/establishment/orders/:slug"
-                element={<EstablishmentOrderPage />}
-              />
-              <Route
-                path="/establishment/item/:slug"
-                element={<EstablishmentItemPage />}
-              />
-              <Route
-                path="/establishment/employers/:slug"
-                element={<EstablishmentEmployersPage />}
-              />
-              <Route path="/establishments" element={<EstablishmentHome />} />
+              <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
+              <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
+
+              <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
+              <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
+              <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
+
+              <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
+              <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
+              <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
+              <Route path="/employer/:id" element={protectedRoute(<EmployerViewPage />)} />
+              <Route path="/employer/dashboard" element={protectedRoute(<EmployerMePage />)} />
+              <Route path="/employer/schedules" element={protectedRoute(<EmployerSchedulesPage />)} />
+              <Route path="/employer/orders" element={protectedRoute(<EmployerOrdersPage />)} />
+
+              <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
+              <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
+              <Route path="/establishment/my" element={protectedRoute(<EstablishmentMyPage />)} />
+              <Route path="/establishment/orders/:slug" element={protectedRoute(<EstablishmentOrderPage />)} />
+              <Route path="/establishment/item/:slug" element={protectedRoute(<EstablishmentItemPage />)} />
+              <Route path="/establishment/employers/:slug" element={protectedRoute(<EstablishmentEmployersPage />)} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
-        </Router>
-      </>
+        </Suspense>
+      </Router>
     </AuthContext.Provider>
   );
 }
@@ -351,7 +237,7 @@ export default function App() {
   return (
     <LoadingProvider>
       <GoogleOAuthProvider
-        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}
         locale="pt-BR"
       >
         <AppInner />
