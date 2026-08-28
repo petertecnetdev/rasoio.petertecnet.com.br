@@ -88,6 +88,8 @@ function AppInner() {
   const [initialLoading, setInitialLoading] = useState(true);
 
   const clearSession = useCallback(() => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("employer");
     setUser(null);
     setEmployer(null);
     setIsEmployer(false);
@@ -105,8 +107,17 @@ function AppInner() {
 
     try {
       const { data } = await api.get("/auth/me");
-      setUser(data?.user ?? null);
-      setEmployer(data?.employer ?? null);
+      const nextUser = data?.user ?? null;
+      const nextEmployer = data?.employer ?? null;
+
+      if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
+      else localStorage.removeItem("user");
+
+      if (nextEmployer) localStorage.setItem("employer", JSON.stringify(nextEmployer));
+      else localStorage.removeItem("employer");
+
+      setUser(nextUser);
+      setEmployer(nextEmployer);
       setIsEmployer(Boolean(data?.is_employer));
       setEstablishments(Array.isArray(data?.establishments) ? data.establishments : []);
     } catch {
