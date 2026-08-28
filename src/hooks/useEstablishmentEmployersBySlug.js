@@ -1,69 +1,60 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { apiBaseUrl } from "../config";
+import { useCallback, useEffect, useState } from "react";
+import api from "../services/api";
 
 export default function useEstablishmentEmployersBySlug(slug) {
   const [establishment, setEstablishment] = useState(null);
   const [employers, setEmployers] = useState([]);
-  const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  useEffect(() => {
-    if (!slug) {
-      setLoading(false);
-      setApiError(null);
-      return;
-    }
+  const load = useCallback(
+    async (signal) => {
+      if (!slug) {
+        setEstablishment(null);
+        setEmployers([]);
+        setLoading(false);
+        return;
+      }
 
-    const controller = new AbortController();
-
-    const load = async () => {
       setLoading(true);
       setApiError(null);
 
       try {
-        const res = await axios.get(
-          `${apiBaseUrl}/employer/list-by-entity/${slug}`,
-          {
-            headers: { Accept: "application/json" },
-            signal: controller.signal,
-            timeout: 15000,
-          }
-        );
-
-        const data = res?.data || {};
-
-        setEstablishment(data.establishment || null);
-        setEmployers(Array.isArray(data.employers) ? data.employers : []);
-        setCount(Number(data.total || 0));
-      } catch (err) {
-        if (axios.isCancel(err)) return;
-
+        const { data } = await api.get(`/employer/list-by-entity/${slug}`, {
+          signal,
+        });
+        setEstablishment(data?.establishment || null);
+        setEmployers(Array.isArray(data?.employers) ? data.employers : []);
+      } catch (error) {
+        if (error?.code === "ERR_CANCELED") return;
         setApiError(
-          err?.response?.data?.error ||
-            err?.response?.data?.message ||
-            "Erro ao carregar colaboradores."
+          error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            "Erro ao carregar barbeiros da equipe."
         );
-
         setEstablishment(null);
         setEmployers([]);
-        setCount(0);
       } finally {
-        setLoading(false);
+        if (!signal?.aborted) setLoading(false);
       }
-    };
+    },
+    [slug]
+  );
 
-    load();
-
+  useEffect(() => {
+    const controller = new AbortController();
+    load(controller.signal);
     return () => controller.abort();
-  }, [slug]);
+  }, [load]);
+
+  const refetch = useCallback(() => load(), [load]);
 
   return {
     establishment,
     employers,
-    count,
+    count: employers.length,
     loading,
     apiError,
+    refetch,
   };
 }
