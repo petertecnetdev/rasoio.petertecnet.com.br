@@ -13,7 +13,10 @@ const authService = {
 
   login: async (email, password) => {
     try {
-      const { data } = await api.post("/auth/login", { email, password });
+      const { data } = await api.post("/auth/login", {
+        username: email,
+        password,
+      });
       const token = extractToken(data);
       if (!token) throw new Error("Token de autenticação não recebido pela API.");
 
@@ -69,7 +72,7 @@ const authService = {
       const { data } = await api.post("/auth/change-password", {
         current_password,
         new_password,
-        confirm_password,
+        password_confirmation: confirm_password,
       });
       return data ?? true;
     } catch (error) {
