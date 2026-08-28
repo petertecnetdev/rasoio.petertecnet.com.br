@@ -1,66 +1,51 @@
 // src/components/CitySelectorModal.jsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 
-import { apiBaseUrl } from "../config";
+import { appId } from "../config";
+import api from "../services/api";
 import GlobalModal from "./GlobalModal";
-
 import "./CitySelectorModal.css";
 
 export default function CitySelectorModal({ user = {}, show, onClose, onSelectCity }) {
-  const appId = 2;
-
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const storedCity = localStorage.getItem("selectedCity") || user.city || "";
-  const storedUF = localStorage.getItem("selectedUF") || user.uf || "";
-
-  const [city, setCity] = useState(storedCity);
-  const [uf, setUf] = useState(storedUF);
-
+  const [city, setCity] = useState("");
+  const [uf, setUf] = useState("");
   const [query, setQuery] = useState("");
 
-  // ✅ sempre sincroniza cidade/uf ao abrir
   useEffect(() => {
     if (!show) return;
 
-    const c = localStorage.getItem("selectedCity") || user.city || "";
-    const u = localStorage.getItem("selectedUF") || user.uf || "";
-
-    setCity(c);
-    setUf(u);
+    setCity(localStorage.getItem("selectedCity") || user.city || "");
+    setUf(localStorage.getItem("selectedUF") || user.uf || "");
     setQuery("");
   }, [show, user.city, user.uf]);
 
-  // ✅ fetch cidades ao abrir
   useEffect(() => {
-    if (!show) return;
+    if (!show) return undefined;
 
-    let mounted = true;
+    const controller = new AbortController();
 
-    async function fetchCities() {
+    const fetchCities = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${apiBaseUrl}/establishment/cities/${appId}`);
-
-        if (!mounted) return;
-        setCities(Array.isArray(res.data?.cities) ? res.data.cities : []);
-      } catch (e) {
-        console.error("Erro ao buscar cidades:", e);
-        if (!mounted) return;
-        setCities([]);
+        const { data } = await api.get(`/establishment/cities/${appId}`, {
+          signal: controller.signal,
+        });
+        setCities(Array.isArray(data?.cities) ? data.cities : []);
+      } catch (error) {
+        if (error?.code !== "ERR_CANCELED") {
+          console.error("Erro ao buscar cidades:", error);
+          setCities([]);
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
-    }
+    };
 
     fetchCities();
-
-    return () => {
-      mounted = false;
-    };
+    return () => controller.abort();
   }, [show]);
 
   const modalTitle = useMemo(() => {
@@ -69,60 +54,53 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
     return "Escolha sua cidade";
   }, [city, uf]);
 
-  const normalizedQuery = useMemo(() => String(query || "").trim().toLowerCase(), [query]);
+  const normalizedQuery = useMemo(
+    () => String(query || "").trim().toLocaleLowerCase("pt-BR"),
+    [query]
+  );
 
   const cityItems = useMemo(() => {
-    const list = Array.isArray(cities) ? cities : [];
-
-    const base = [
-      {
-        key: "__ALL__",
-        city: "Todas",
-        uf: "ALL",
-        label: "Todas as cidades",
-      },
-    ];
-
-    const mapped = list.map((c, idx) => ({
-      key: `${c.city}-${c.uf}-${idx}`,
-      city: c.city,
-      uf: c.uf,
-      label: `${c.city} / ${c.uf}`,
+    const mapped = (Array.isArray(cities) ? cities : []).map((item, index) => ({
+      key: `${item.city}-${item.uf}-${index}`,
+      city: item.city,
+      uf: item.uf,
+      label: `${item.city} / ${item.uf}`,
     }));
 
-    const all = [...base, ...mapped];
+    const all = [
+      { key: "__ALL__", city: "Todas", uf: "ALL", label: "Todas as cidades" },
+      ...mapped,
+    ];
 
     if (!normalizedQuery) return all;
 
-    return all.filter((it) => {
-      const a = String(it.city || "").toLowerCase();
-      const b = String(it.uf || "").toLowerCase();
-      const c = String(it.label || "").toLowerCase();
-      return a.includes(normalizedQuery) || b.includes(normalizedQuery) || c.includes(normalizedQuery);
-    });
+    return all.filter((item) =>
+      [item.city, item.uf, item.label].some((value) =>
+        String(value || "").toLocaleLowerCase("pt-BR").includes(normalizedQuery)
+      )
+    );
   }, [cities, normalizedQuery]);
 
   const isSelected = useCallback(
-    (c, u) => String(city) === String(c) && String(uf) === String(u),
+    (nextCity, nextUf) => String(city) === String(nextCity) && String(uf) === String(nextUf),
     [city, uf]
   );
 
   const applySelection = useCallback(
     (nextCity, nextUf) => {
+      localStorage.setItem("selectedCity", nextCity);
+      localStorage.setItem("selectedUF", nextUf);
       setCity(nextCity);
       setUf(nextUf);
 
-      localStorage.setItem("selectedCity", nextCity);
-      localStorage.setItem("selectedUF", nextUf);
-      localStorage.setItem("user", JSON.stringify({ ...user, city: nextCity, uf: nextUf }));
+      window.dispatchEvent(
+        new CustomEvent("cityChanged", { detail: { city: nextCity, uf: nextUf } })
+      );
 
-      if (typeof onSelectCity === "function") {
-        onSelectCity({ city: nextCity, uf: nextUf });
-      }
-
+      onSelectCity?.({ city: nextCity, uf: nextUf });
       onClose?.();
     },
-    [user, onSelectCity, onClose]
+    [onSelectCity, onClose]
   );
 
   return (
@@ -142,14 +120,13 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
       footer={null}
     >
       <div className="city-modal__body">
-        {/* Top bar */}
         <div className="city-modal__top">
           <div className="city-modal__search">
             <input
               className="city-modal__input"
               placeholder="Pesquisar cidade ou UF..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(event) => setQuery(event.target.value)}
               autoComplete="off"
               spellCheck={false}
             />
@@ -165,18 +142,16 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
               </button>
             )}
           </div>
-
           <div className="city-modal__hint">
             {loading ? "Carregando..." : `${cityItems.length} opções`}
           </div>
         </div>
 
-        {/* Grid */}
         <div className="city-modal__content">
           {loading ? (
             <div className="city-modal__grid" aria-busy="true">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div className="city-tile city-tile--skeleton" key={`sk-${i}`}>
+              {Array.from({ length: 9 }).map((_, index) => (
+                <div className="city-tile city-tile--skeleton" key={`sk-${index}`}>
                   <div className="city-tile__skTitle" />
                   <div className="city-tile__skSub" />
                 </div>
@@ -184,31 +159,29 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
             </div>
           ) : (
             <div className="city-modal__grid" role="list">
-              {cityItems.map((it) => {
-                const active = isSelected(it.city, it.uf);
-
+              {cityItems.map((item) => {
+                const active = isSelected(item.city, item.uf);
                 return (
                   <div
-                    key={it.key}
+                    key={item.key}
                     role="listitem"
                     tabIndex={0}
                     aria-selected={active}
                     className={`city-tile ${active ? "is-active" : ""}`}
-                    onClick={() => applySelection(it.city, it.uf)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        applySelection(it.city, it.uf);
+                    onClick={() => applySelection(item.city, item.uf)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        applySelection(item.city, item.uf);
                       }
                     }}
                   >
                     <div className="city-tile__row">
-                      <div className="city-tile__title">{it.city}</div>
+                      <div className="city-tile__title">{item.city}</div>
                       {active && <div className="city-tile__badge">✓</div>}
                     </div>
-
                     <div className="city-tile__sub">
-                      {it.uf === "ALL" ? "Selecione para ver tudo" : it.uf}
+                      {item.uf === "ALL" ? "Selecione para ver tudo" : item.uf}
                     </div>
                   </div>
                 );
