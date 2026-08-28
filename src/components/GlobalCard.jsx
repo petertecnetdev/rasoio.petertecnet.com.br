@@ -21,17 +21,19 @@ export default function GlobalCard({
   const [mainImageBroken, setMainImageBroken] = useState(false);
   const [establishmentLogoBroken, setEstablishmentLogoBroken] = useState(false);
 
-  const safeItem = item || {};
-  const establishment = safeItem.establishment || {};
+  const safeItem = useMemo(() => item || {}, [item]);
+  const establishment = useMemo(
+    () => safeItem.establishment || {},
+    [safeItem.establishment]
+  );
 
-  // ✅ Produtos NÃO podem agendar
   const isProduct =
     safeItem.type === "product" ||
     safeItem.is_product === true ||
     safeItem.isProduct === true ||
     !!safeItem.product_id ||
     !!safeItem.productId ||
-    safeItem.item_type === "product"; // ✅ compat (itens normalizados)
+    safeItem.item_type === "product";
 
   const canSchedule =
     !!showSchedule && typeof openSchedulePopup === "function" && !isProduct;
@@ -92,7 +94,6 @@ export default function GlobalCard({
     return "img-square";
   }, [safeItem]);
 
-  // ✅ resolve destino do "Detalhes" SEM depender de slug (employer não tem slug)
   const detailsPath = useMemo(() => {
     if (!safeItem || typeof navigate !== "function") return null;
 
@@ -110,14 +111,12 @@ export default function GlobalCard({
 
       if (userName) return `/employer/view/${userName}`;
 
-      // fallback (rota protegida) se tiver id
       const id = safeItem.id || safeItem.user_id || safeItem.user?.id || null;
       if (id) return `/employer/${id}`;
 
       return null;
     }
 
-    // item
     return safeItem.slug ? `/item/view/${safeItem.slug}` : null;
   }, [safeItem, navigate]);
 
@@ -255,8 +254,6 @@ export default function GlobalCard({
         </div>
 
         <div className="carousel-item-actions">
-         
-
           {canSchedule && (
             <GlobalButton
               size="sm"
