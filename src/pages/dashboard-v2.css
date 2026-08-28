@@ -1,0 +1,266 @@
+.rasoio-dashboard {
+  min-height: 100vh;
+  color: #eef8ff;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(0, 184, 255, .10), transparent 28%),
+    radial-gradient(circle at 100% 20%, rgba(78, 96, 255, .08), transparent 30%),
+    #070a0f;
+}
+
+.rasoio-dashboard-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(22px, 4vw, 40px);
+  border: 1px solid rgba(104, 211, 255, .12);
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(27, 42, 58, .88), rgba(10, 15, 24, .94));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .34);
+}
+
+.rasoio-dashboard-kicker,
+.rasoio-section-heading span,
+.rasoio-overview-eyebrow {
+  color: #76ddff;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.rasoio-dashboard-hero h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -.04em;
+}
+
+.rasoio-dashboard-hero p {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(223, 237, 247, .67);
+  font-size: clamp(.95rem, 1.7vw, 1.08rem);
+}
+
+.rasoio-dashboard-status {
+  flex: 0 0 auto;
+  min-width: 160px;
+  padding: 18px;
+  border: 1px solid rgba(104, 218, 255, .13);
+  border-radius: 22px;
+  background: rgba(2, 10, 17, .34);
+  text-align: center;
+}
+
+.rasoio-dashboard-status strong {
+  display: block;
+  color: #fff;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.rasoio-dashboard-status span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(217, 234, 246, .56);
+  font-size: .76rem;
+}
+
+.rasoio-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.rasoio-overview-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 270px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 24px;
+  background: linear-gradient(155deg, rgba(20, 26, 36, .96), rgba(9, 13, 20, .98));
+  box-shadow: 0 18px 50px rgba(0,0,0,.22);
+  transition: transform .2s ease, border-color .2s ease;
+}
+
+.rasoio-overview-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(91, 210, 255, .22);
+}
+
+.rasoio-overview-card-accent {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(52, 196, 255, .15), transparent 35%),
+    linear-gradient(155deg, rgba(21, 38, 52, .98), rgba(8, 16, 25, .98));
+}
+
+.rasoio-overview-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(102, 218, 255, .13);
+  border-radius: 15px;
+  background: rgba(41, 189, 255, .08);
+  color: #92ebff;
+  font-size: 1.25rem;
+}
+
+.rasoio-overview-card h2 {
+  margin: 8px 0 10px;
+  color: #f6fbff;
+  font-size: 1.1rem;
+}
+
+.rasoio-overview-card p {
+  min-height: 72px;
+  margin: 0 0 20px;
+  color: rgba(220, 233, 244, .58);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.rasoio-overview-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #8ce9ff;
+  font-size: .8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.rasoio-overview-link:hover {
+  color: #d7f8ff;
+}
+
+.rasoio-owned-section {
+  margin-top: 38px;
+}
+
+.rasoio-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rasoio-section-heading h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.rasoio-section-heading > a {
+  color: rgba(148, 227, 255, .72);
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rasoio-owned-card {
+  height: 100%;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background: rgba(14, 19, 27, .88);
+}
+
+.rasoio-owned-card-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(159, 226, 255, .62);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.rasoio-owned-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #55dbff;
+  box-shadow: 0 0 14px rgba(65, 213, 255, .7);
+}
+
+.rasoio-owned-card h3 {
+  margin: 16px 0 6px;
+  font-size: 1.1rem;
+}
+
+.rasoio-owned-card p {
+  margin-bottom: 18px;
+  color: rgba(220, 233, 244, .52);
+  font-size: .8rem;
+}
+
+.rasoio-owned-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rasoio-owned-actions a {
+  padding: 7px 10px;
+  border: 1px solid rgba(106, 219, 255, .12);
+  border-radius: 10px;
+  background: rgba(58, 187, 255, .05);
+  color: rgba(217, 244, 255, .82);
+  font-size: .72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rasoio-owned-actions a:hover {
+  border-color: rgba(106, 219, 255, .28);
+  color: #fff;
+}
+
+@media (max-width: 1199px) {
+  .rasoio-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .rasoio-dashboard-hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .rasoio-dashboard-status {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .rasoio-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rasoio-overview-card {
+    min-height: 0;
+  }
+
+  .rasoio-overview-card p {
+    min-height: 0;
+  }
+
+  .rasoio-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rasoio-overview-card {
+    transition: none;
+  }
+}
