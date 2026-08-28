@@ -8,17 +8,16 @@ import UserUpdateForm from "../../components/user/UserUpdateForm";
 
 import "./UserUpdate.css";
 
-export default function UserUpdatePage({ loadingMenu = false, handleLogout = () => {} }) {
+export default function UserUpdatePage() {
   const { register, handleSubmit, reset, formState } = useForm();
 
   const {
     loading,
+    saving,
     avatarPreview,
     handleAvatarChange,
     userName,
     setUserName,
-    isBarber,
-    setIsBarber,
     email,
     submitUpdate,
   } = useUserUpdate(reset);
@@ -27,18 +26,16 @@ export default function UserUpdatePage({ loadingMenu = false, handleLogout = () 
     const parts = [];
     if (email) parts.push(email);
     if (userName) parts.push(`@${userName}`);
-    if (isBarber) parts.push("Perfil: Barbeiro");
     return parts;
-  }, [email, userName, isBarber]);
+  }, [email, userName]);
 
   return (
     <div className="uup-page">
-
       <div className="uup-container">
         <GlobalPageHeader
-          title="Meu perfil"
+          title="Meus dados"
           variant="default"
-          description="Atualize seus dados e sua foto de perfil."
+          description="Atualize seus dados pessoais e sua foto de perfil."
           meta={meta}
           compact
         />
@@ -49,15 +46,13 @@ export default function UserUpdatePage({ loadingMenu = false, handleLogout = () 
           ) : (
             <UserUpdateForm
               register={register}
-              errors={formState?.errors}
-              handleSubmit={handleSubmit} // ✅ FIX: passa handleSubmit pro form
-              submitUpdate={submitUpdate} // ✅ FIX: form chama handleSubmit(submitUpdate)
+              handleSubmit={handleSubmit}
+              onSubmit={submitUpdate}
+              isSubmitting={saving || formState.isSubmitting}
               avatarPreview={avatarPreview}
               handleAvatarChange={handleAvatarChange}
               userName={userName}
               setUserName={setUserName}
-              isBarber={isBarber}
-              setIsBarber={setIsBarber}
               email={email}
             />
           )}
