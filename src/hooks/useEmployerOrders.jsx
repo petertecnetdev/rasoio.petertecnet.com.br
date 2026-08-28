@@ -1,4 +1,3 @@
-// src/hooks/useEmployerOrders.js
 import { useEffect, useState, useCallback } from "react";
 import api from "../services/api";
 
@@ -12,16 +11,12 @@ export default function useEmployerOrders() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setApiError(null);
-
     try {
-      const { data } = await api.get("/order/listbyemployer");
-      setEmployer(data.employer || null);
-      setOrders(Array.isArray(data.orders) ? data.orders : []);
+      const { data } = await api.get("/rasoio/orders/employer");
+      setEmployer(data?.employer || null);
+      setOrders(Array.isArray(data?.orders) ? data.orders : []);
     } catch (err) {
-      setApiError(
-        err?.response?.data?.error ||
-          "Erro ao listar pedidos do colaborador."
-      );
+      setApiError(err?.response?.data?.message || err?.response?.data?.error || "Erro ao listar os agendamentos do colaborador.");
       setOrders([]);
       setEmployer(null);
     } finally {
@@ -29,20 +24,13 @@ export default function useEmployerOrders() {
     }
   }, []);
 
-  const updateOrderStatus = useCallback(async (orderId, status) => {
+  const updateOrderStatus = useCallback(async (orderId, action, reason = null) => {
     setActionLoading(orderId);
-
     try {
-      await api.put(`/order/${orderId}/update-status`, {
-        status,
-      });
-
+      await api.patch(`/rasoio/orders/${orderId}/transition`, { action, reason });
       await fetchOrders();
     } catch (err) {
-      throw new Error(
-        err?.response?.data?.error ||
-          "Erro ao atualizar status do pedido."
-      );
+      throw new Error(err?.response?.data?.message || err?.response?.data?.error || "Erro ao atualizar o agendamento.");
     } finally {
       setActionLoading(null);
     }
@@ -52,13 +40,5 @@ export default function useEmployerOrders() {
     fetchOrders();
   }, [fetchOrders]);
 
-  return {
-    orders,
-    employer,
-    loading,
-    apiError,
-    actionLoading,
-    updateOrderStatus,
-    refetch: fetchOrders,
-  };
+  return { orders, employer, loading, apiError, actionLoading, updateOrderStatus, refetch: fetchOrders };
 }
