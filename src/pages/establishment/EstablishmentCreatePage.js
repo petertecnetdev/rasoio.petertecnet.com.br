@@ -35,13 +35,21 @@ const formatCnpj = (value = "") => {
     .replace(/(\d{4})(\d)/, "$1-$2");
 };
 
+const formatPhone = (value = "") => {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 10) {
+    return digits
+      .replace(/^(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return digits
+    .replace(/^(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
+};
+
 const buildAddress = ({ street, number, complement, neighborhood }) =>
-  [
-    street,
-    number,
-    complement,
-    neighborhood,
-  ]
+  [street, number, complement, neighborhood]
     .map((part) => String(part || "").trim())
     .filter(Boolean)
     .join(", ");
@@ -77,6 +85,7 @@ export default function EstablishmentCreatePage() {
     register,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     setError,
     clearErrors,
@@ -188,20 +197,33 @@ export default function EstablishmentCreatePage() {
     }
   };
 
-  const applyAddress = ({ cep, street, number, complement, neighborhood, city, uf }) => {
+  const applyAddress = ({ cep, street, number, complement, neighborhood, city, uf }, { preserveExisting = false } = {}) => {
+    const current = getValues();
     const address = buildAddress({ street, number, complement, neighborhood });
     const formattedCep = formatCep(cep);
 
-    if (formattedCep) setValue("cep", formattedCep, { shouldDirty: true });
-    if (address) setValue("address", address, { shouldDirty: true });
-    if (city) setValue("city", city, { shouldDirty: true });
-    if (uf) setValue("uf", String(uf).toUpperCase().slice(0, 2), { shouldDirty: true });
+    if (formattedCep && (!preserveExisting || !current.cep)) {
+      setValue("cep", formattedCep, { shouldDirty: true });
+    }
+    if (address && (!preserveExisting || !current.address)) {
+      setValue("address", address, { shouldDirty: true });
+    }
+    if (city && (!preserveExisting || !current.city)) {
+      setValue("city", city, { shouldDirty: true });
+    }
+    if (uf && (!preserveExisting || !current.uf)) {
+      setValue("uf", String(uf).toUpperCase().slice(0, 2), { shouldDirty: true });
+    }
 
-    const mapsUrl = buildMapsUrl({ address, city, uf, cep: formattedCep });
+    const finalAddress = preserveExisting && current.address ? current.address : address;
+    const finalCity = preserveExisting && current.city ? current.city : city;
+    const finalUf = preserveExisting && current.uf ? current.uf : uf;
+    const finalCep = preserveExisting && current.cep ? current.cep : formattedCep;
+    const mapsUrl = buildMapsUrl({ address: finalAddress, city: finalCity, uf: finalUf, cep: finalCep });
     if (mapsUrl) setValue("location", mapsUrl, { shouldDirty: true });
   };
 
-  const lookupCep = async (rawCep, { silent = false } = {}) => {
+  const lookupCep = async (rawCep, { silent = false, preserveExisting = false } = {}) => {
     const cep = onlyDigits(rawCep);
     if (cep.length !== 8) {
       if (!silent) setError("cep", { type: "manual", message: "Informe um CEP com 8 dígitos." });
@@ -217,13 +239,16 @@ export default function EstablishmentCreatePage() {
 
       if (!response.ok) throw new Error(data?.message || "CEP não encontrado.");
 
-      applyAddress({
-        cep: data.cep || cep,
-        street: data.street,
-        neighborhood: data.neighborhood,
-        city: data.city,
-        uf: data.state,
-      });
+      applyAddress(
+        {
+          cep: data.cep || cep,
+          street: data.street,
+          neighborhood: data.neighborhood,
+          city: data.city,
+          uf: data.state,
+        },
+        { preserveExisting }
+      );
 
       return data;
     } catch (error) {
@@ -252,11 +277,16 @@ export default function EstablishmentCreatePage() {
 
       if (!response.ok) throw new Error(data?.message || "CNPJ não encontrado.");
 
+      const fantasy = String(data.nome_fantasia || "").trim();
+      const corporateName = String(data.razao_social || "").trim();
+      const phone = data.ddd_telefone_1 || data.telefone1 || data.telefone || data.ddd_telefone_2 || "";
+      const email = String(data.email || "").trim().toLowerCase();
+
       setValue("cnpj", formatCnpj(data.cnpj || cnpj), { shouldDirty: true });
-      setValue("name", data.nome_fantasia || data.razao_social || "", { shouldDirty: true });
-      setValue("fantasy", data.nome_fantasia || "", { shouldDirty: true });
-      if (data.telefone1) setValue("phone", data.telefone1, { shouldDirty: true });
-      if (data.email) setValue("email", String(data.email).toLowerCase(), { shouldDirty: true });
+      setValue("name", fantasy || corporateName, { shouldDirty: true, shouldValidate: true });
+      setValue("fantasy", fantasy || corporateName, { shouldDirty: true });
+      if (phone) setValue("phone", formatPhone(phone), { shouldDirty: true });
+      if (email) setValue("email", email, { shouldDirty: true, shouldValidate: true });
 
       applyAddress({
         cep: data.cep,
@@ -268,10 +298,32 @@ export default function EstablishmentCreatePage() {
         uf: data.uf,
       });
 
-      // Complementa endereço/geo pelo CEP quando a base do CNPJ vier incompleta.
-      if (data.cep) await lookupCep(data.cep, { silent: true });
+      // Usa o CEP apenas como complemento quando a base do CNPJ não trouxer algum dado,
+      // sem apagar número/complemento já retornados pela Receita.
+      if (data.cep) await lookupCep(data.cep, { silent: true, preserveExisting: true });
 
-      if (!silent && data.descricao_situacao_cadastral && data.descricao_situacao_cadastral !== "ATIVA") {
+      if (!silent) {
+        const filled = [
+          fantasy || corporateName ? "nome" : null,
+          fantasy || corporateName ? "nome fantasia" : null,
+          phone ? "telefone" : null,
+          email ? "e-mail" : null,
+          data.cep ? "CEP" : null,
+          data.logradouro ? "endereço" : null,
+          data.municipio ? "cidade/UF" : null,
+        ].filter(Boolean);
+
+        await Swal.fire({
+          icon: "success",
+          title: "Dados encontrados",
+          text: filled.length
+            ? `Preenchemos automaticamente: ${filled.join(", ")}. Confira os dados antes de salvar.`
+            : "CNPJ localizado. Confira os dados cadastrais antes de salvar.",
+          confirmButtonText: "Continuar",
+        });
+      }
+
+      if (data.descricao_situacao_cadastral && data.descricao_situacao_cadastral !== "ATIVA") {
         await Swal.fire(
           "Atenção",
           `A situação cadastral retornada para este CNPJ é: ${data.descricao_situacao_cadastral}.`,
@@ -407,68 +459,97 @@ export default function EstablishmentCreatePage() {
         </div>
 
         <div className="establishment-create-grid">
-          <Field label="CNPJ" className="span-12" error={errors.cnpj?.message} hint={cnpjLoading ? "Consultando dados da empresa..." : "Ao completar 14 dígitos, a consulta é feita automaticamente."}>
-            <div className="establishment-create-inline-field">
+          <Field label="CNPJ" className="span-12" error={errors.cnpj?.message}>
+            <div className="establishment-create-inline-control">
               <input
                 type="text"
                 inputMode="numeric"
-                autoComplete="off"
+                placeholder="00.000.000/0000-00"
                 {...register("cnpj")}
                 onChange={handleCnpjChange}
-                onBlur={(event) => lookupCnpj(event.target.value, { silent: true })}
-                placeholder="00.000.000/0000-00"
+                onBlur={(event) => onlyDigits(event.target.value).length === 14 && lookupCnpj(event.target.value)}
               />
-              <button type="button" onClick={() => lookupCnpj(watch("cnpj"))} disabled={cnpjLoading}>
-                {cnpjLoading ? "Consultando..." : "Buscar CNPJ"}
+              <button
+                type="button"
+                className="establishment-create-lookup"
+                disabled={cnpjLoading}
+                onClick={() => lookupCnpj(getValues("cnpj"))}
+              >
+                {cnpjLoading ? "Buscando..." : "Buscar CNPJ"}
               </button>
             </div>
           </Field>
 
-          <Field label="Nome da barbearia *" className="span-4" error={errors.name?.message}>
-            <input type="text" {...register("name", { required: "Informe o nome da barbearia." })} />
+          <Field label="Nome da barbearia *" className="span-6" error={errors.name?.message}>
+            <input
+              type="text"
+              placeholder="Nome exibido para os clientes"
+              {...register("name", { required: "Informe o nome da barbearia." })}
+            />
           </Field>
-          <Field label="Razão / nome fantasia" className="span-4">
-            <input type="text" {...register("fantasy")} />
-          </Field>
-          <Field label="Telefone" className="span-4">
-            <input type="text" {...register("phone")} />
+          <Field label="Nome fantasia" className="span-6">
+            <input type="text" placeholder="Nome fantasia cadastrado no CNPJ" {...register("fantasy")} />
           </Field>
 
-          <Field label="E-mail" className="span-6" error={errors.email?.message}>
-            <input type="email" {...register("email", { pattern: { value: /^\S+@\S+\.\S+$/, message: "Informe um e-mail válido." } })} />
+          <Field label="Telefone da barbearia" className="span-6">
+            <input type="tel" placeholder="(00) 00000-0000" {...register("phone")} />
           </Field>
-          <Field label="CEP" className="span-6" error={errors.cep?.message} hint={cepLoading ? "Buscando endereço..." : "O endereço será preenchido automaticamente."}>
-            <div className="establishment-create-inline-field">
+          <Field label="E-mail da barbearia" className="span-6" error={errors.email?.message}>
+            <input
+              type="email"
+              placeholder="contato@barbearia.com.br"
+              {...register("email", {
+                pattern: { value: /^\S+@\S+\.\S+$/, message: "Informe um e-mail válido." },
+              })}
+            />
+          </Field>
+
+          <Field label="Descrição" className="span-12">
+            <textarea rows="4" placeholder="Conte um pouco sobre a barbearia..." {...register("description")} />
+          </Field>
+        </div>
+
+        <div className="establishment-create-divider" />
+
+        <div className="establishment-create-section-heading">
+          <h2>Endereço</h2>
+          <p>O CEP e o endereço também são preenchidos pelo CNPJ quando disponíveis.</p>
+        </div>
+
+        <div className="establishment-create-grid">
+          <Field label="CEP" className="span-4" error={errors.cep?.message}>
+            <div className="establishment-create-inline-control">
               <input
                 type="text"
                 inputMode="numeric"
+                placeholder="00000-000"
                 {...register("cep")}
                 onChange={handleCepChange}
-                onBlur={(event) => lookupCep(event.target.value, { silent: true })}
-                placeholder="00000-000"
+                onBlur={(event) => onlyDigits(event.target.value).length === 8 && lookupCep(event.target.value)}
               />
-              <button type="button" onClick={() => lookupCep(watch("cep"))} disabled={cepLoading}>
+              <button
+                type="button"
+                className="establishment-create-lookup"
+                disabled={cepLoading}
+                onClick={() => lookupCep(getValues("cep"))}
+              >
                 {cepLoading ? "Buscando..." : "Buscar CEP"}
               </button>
             </div>
           </Field>
-
-          <Field label="Endereço" className="span-8">
-            <input type="text" {...register("address")} />
-          </Field>
-          <Field label="Cidade" className="span-2">
+          <Field label="Cidade" className="span-4">
             <input type="text" {...register("city")} />
           </Field>
-          <Field label="UF" className="span-2">
-            <input type="text" maxLength="2" {...register("uf")} />
+          <Field label="UF" className="span-4">
+            <input type="text" maxLength="2" placeholder="GO" {...register("uf")} />
           </Field>
 
-          <Field label="Google Maps" className="span-12" hint="Gerado automaticamente a partir do endereço. Você pode alterar se necessário.">
-            <input type="url" {...register("location")} />
+          <Field label="Endereço completo" className="span-12">
+            <input type="text" placeholder="Rua, número, complemento e bairro" {...register("address")} />
           </Field>
 
-          <Field label="Descrição" className="span-12">
-            <textarea rows="4" {...register("description", { maxLength: { value: 2500, message: "A descrição pode ter no máximo 2500 caracteres." } })} />
+          <Field label="Localização (Google Maps)" className="span-12">
+            <input type="url" placeholder="Gerado automaticamente pelo endereço" {...register("location")} />
           </Field>
         </div>
 
@@ -476,7 +557,7 @@ export default function EstablishmentCreatePage() {
 
         <div className="establishment-create-section-heading">
           <h2>Redes e presença digital</h2>
-          <p>Opcional. Informe apenas os canais que a barbearia utiliza.</p>
+          <p>Opcional. Informe apenas os canais que você utiliza.</p>
         </div>
 
         <div className="establishment-create-grid">
@@ -496,14 +577,22 @@ export default function EstablishmentCreatePage() {
 
         <div className="establishment-create-segments">
           {segmentOptions.map((option) => (
-            <label key={option.value} className={`establishment-create-segment ${segments.includes(option.value) ? "is-selected" : ""}`}>
-              <input type="checkbox" value={option.value} checked={segments.includes(option.value)} onChange={handleSegmentsChange} />
+            <label
+              key={option.value}
+              className={`establishment-create-segment ${segments.includes(option.value) ? "is-selected" : ""}`}
+            >
+              <input
+                type="checkbox"
+                value={option.value}
+                checked={segments.includes(option.value)}
+                onChange={handleSegmentsChange}
+              />
               <span className="establishment-create-check" aria-hidden="true" />
               <span>{option.label}</span>
             </label>
           ))}
         </div>
-        <input type="hidden" {...register("segments")} />
+        <input type="hidden" {...register("segments")} value={segments.join(",")} />
 
         <div className="establishment-create-actions">
           <button type="button" className="establishment-create-cancel" onClick={() => navigate(-1)}>Cancelar</button>
@@ -516,13 +605,12 @@ export default function EstablishmentCreatePage() {
   );
 }
 
-function Field({ label, className = "", children, error, hint }) {
+function Field({ label, className = "", error, children }) {
   return (
     <label className={`establishment-create-field ${className} ${error ? "has-error" : ""}`}>
       <span>{label}</span>
       {children}
-      {hint && <small className="establishment-create-field-hint">{hint}</small>}
-      {error && <small className="establishment-create-field-error">{error}</small>}
+      {error && <small className="establishment-create-error">{error}</small>}
     </label>
   );
 }
