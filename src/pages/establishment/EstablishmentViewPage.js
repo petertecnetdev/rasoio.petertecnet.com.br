@@ -15,6 +15,7 @@
   import GlobalCarousel from "../../components/GlobalCarousel";
   import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
   import ShareButton from "../../components/ShareButton";
+  import GlobalWhatsappButton from "../../components/GlobalWhatsappButton";
   import GlobalMap from "../../components/GlobalMap";
   import GlobalProfileHero from "../../components/GlobalProfileHero";
 
@@ -60,6 +61,13 @@
     );
 
     const whatsappLink = useWhatsappLink(establishment);
+    const whatsappMessage = useMemo(
+      () =>
+        `Olá! Encontrei ${
+          establishment?.name || "a barbearia"
+        } pelo Rasoio e gostaria de mais informações.`,
+      [establishment]
+    );
 
     const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
 
@@ -348,7 +356,6 @@
               items={products}
               fmtBRL={(v) => v}
               navigate={safeNavigate}
-              // ✅ produto não abre agendamento
               showSchedule={false}
               showDots
             />
@@ -402,6 +409,7 @@
         </div>
 
         <ShareButton />
+        <GlobalWhatsappButton link={whatsappLink} message={whatsappMessage} />
 
         <AppointmentWizardModal
           show={showWizard}
