@@ -1,58 +1,32 @@
-// src/pages/product/ProductHomePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
+// src/pages/item/ItemProductHomePage.jsx
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
 
 import useItemProductHome from "../../hooks/useItemProductHome";
+import useSelectedCity from "../../hooks/useSelectedCity";
 
 import "../homepage.css";
-
 import GlobalPageHeader from "../../components/GlobalPageHeader";
 import GlobalCarousel from "../../components/GlobalCarousel";
 
-export default function ProductHomePage() {
+export default function ItemProductHomePage() {
   const { productItems, isLoading, error } = useItemProductHome(apiBaseUrl, appId);
-
   const navigate = useNavigate();
+  const { cityLabel } = useSelectedCity();
 
-  // ✅ cidade/uf vêm do localStorage (o GlobalNav altera isso)
-  const [currentCity, setCurrentCity] = useState(() => localStorage.getItem("selectedCity"));
-  const [currentUF, setCurrentUF] = useState(() => localStorage.getItem("selectedUF"));
+  const headerMeta = useMemo(
+    () => [cityLabel, "Produtos das barbearias"].filter(Boolean),
+    [cityLabel]
+  );
 
-  // ✅ mantém o header atualizado quando o GlobalNav mudar cidade
-  useEffect(() => {
-    const sync = () => {
-      setCurrentCity(localStorage.getItem("selectedCity"));
-      setCurrentUF(localStorage.getItem("selectedUF"));
-    };
-
-    window.addEventListener("cityChanged", sync);
-
-    // fallback leve pra mesma aba (caso não exista cityChanged)
-    const iv = setInterval(sync, 800);
-
-    return () => {
-      window.removeEventListener("cityChanged", sync);
-      clearInterval(iv);
-    };
-  }, []);
-
-  // mantém o padrão de navegação já usado no projeto
-  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
-
-  const headerMeta = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return [cityLabel, "Produtos em destaque"].filter(Boolean);
-  }, [currentCity, currentUF]);
-
-  const headerDescription = useMemo(() => {
-    const cityLabel =
-      currentCity && currentUF ? `${currentCity} - ${currentUF}` : currentCity || "";
-    return `Confira produtos disponíveis para você comprar com rapidez.${
-      cityLabel ? ` (${cityLabel})` : ""
-    }`;
-  }, [currentCity, currentUF]);
+  const headerDescription = useMemo(
+    () =>
+      `Confira produtos disponíveis nas barbearias.${
+        cityLabel ? ` (${cityLabel})` : ""
+      }`,
+    [cityLabel]
+  );
 
   if (isLoading) {
     return (
@@ -75,7 +49,7 @@ export default function ProductHomePage() {
         <GlobalPageHeader
           title="Produtos"
           variant="home"
-          description="Não foi possível carregar as informações agora."
+          description="Não foi possível carregar os produtos agora."
           meta={headerMeta}
           compact
         />
@@ -95,9 +69,12 @@ export default function ProductHomePage() {
 
       <GlobalCarousel
         title="Produtos"
+        subtitle="Conheça produtos oferecidos pelas barbearias"
         items={productItems}
-        navigate={safeNavigate}
+        fmtBRL={(value) => value}
+        navigate={navigate}
         showSchedule={false}
+        showDots
       />
     </div>
   );
