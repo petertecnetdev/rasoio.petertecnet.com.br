@@ -24,7 +24,8 @@ export default function LoginFormComponent({
     (token) => {
       onSuccess?.(token);
     },
-    redirectTo
+    redirectTo,
+    onError
   );
 
   const handleSubmit = async (e) => {

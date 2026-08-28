@@ -2,7 +2,7 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import api from "../services/api";
 
-export default function useLogin(onSuccess, redirectTo) {
+export default function useLogin(onSuccess, redirectTo, onError) {
   const [loading, setLoading] = useState(false);
 
   const setToken = (token) => localStorage.setItem("token", token);
@@ -25,6 +25,22 @@ export default function useLogin(onSuccess, redirectTo) {
         content: "custom-swal-text",
       },
     });
+
+  const handleError = async (err, fallbackMessage) => {
+    const msg =
+      err.response?.data?.error ||
+      err.response?.data?.message ||
+      fallbackMessage;
+
+    onError?.(err);
+
+    // Aguarda o React remover o ProcessingIndicator antes de abrir o modal.
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    );
+
+    await showError(msg);
+  };
 
   const getLocation = () =>
     new Promise((resolve) => {
@@ -64,11 +80,7 @@ export default function useLogin(onSuccess, redirectTo) {
       if (onSuccess) onSuccess(token);
       else window.location.href = redirectTo;
     } catch (err) {
-      const msg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Falha no login.";
-      showError(msg);
+      await handleError(err, "Falha no login.");
     } finally {
       setLoading(false);
     }
@@ -94,11 +106,7 @@ export default function useLogin(onSuccess, redirectTo) {
       if (onSuccess) onSuccess(token);
       else window.location.href = redirectTo;
     } catch (err) {
-      const msg =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Falha no login com Google.";
-      showError(msg);
+      await handleError(err, "Falha no login com Google.");
     } finally {
       setLoading(false);
     }
