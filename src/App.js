@@ -23,6 +23,7 @@ import AppLayout from "./layouts/AppLayout";
 import api from "./services/api";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const EmailVerifyPage = lazy(() => import("./pages/auth/EmailVerifyPage"));
@@ -176,6 +177,7 @@ function AppInner() {
           <Routes>
             <Route element={<AppLayout loadingMenu={false} />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} />
 
               <Route path="/establishments" element={<EstablishmentHomePage />} />
               <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
