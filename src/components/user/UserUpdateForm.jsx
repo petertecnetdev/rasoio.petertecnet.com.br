@@ -11,11 +11,16 @@ export default function UserUpdateForm({
   userName,
   setUserName,
   email,
+  setEmail,
+  originalEmail,
   onSubmit,
 }) {
+  const emailChanged =
+    String(email || "").trim().toLowerCase() !==
+    String(originalEmail || "").trim().toLowerCase();
+
   return (
     <>
-      {/* HERO */}
       <div className="user-hero">
         <div className="user-hero-inner">
           <div className="user-avatar-bubble">
@@ -28,34 +33,33 @@ export default function UserUpdateForm({
 
           <div className="user-info-block">
             <h1 className="user-title">@{userName}</h1>
-            <div className="user-description">{email}</div>
+            <div className="user-description">{originalEmail}</div>
           </div>
         </div>
       </div>
 
-      {/* BOTÃO ALTERAR FOTO */}
       <div className="d-flex justify-content-center my-3">
         <Button
+          type="button"
           variant="secondary"
           className="action-button"
-          onClick={() => document.getElementById("avatarInput").click()}
+          disabled={isSubmitting}
+          onClick={() => document.getElementById("avatarInput")?.click()}
         >
-          Alterar Foto de Perfil
+          Alterar foto de perfil
         </Button>
       </div>
 
       <Form.Control
         id="avatarInput"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleAvatarChange}
         style={{ display: "none" }}
       />
 
-      {/* FORMULÁRIO */}
       <Form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
         <Row className="gy-3 mt-2">
-
           <Col xs={12} md={6} lg={4}>
             <div className="form-group">
               <label>Primeiro Nome</label>
@@ -84,8 +88,19 @@ export default function UserUpdateForm({
 
           <Col xs={12} md={6} lg={4}>
             <div className="form-group">
-              <label>Email</label>
-              <input type="email" value={email} disabled />
+              <label>E-mail</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+              <small style={{ marginTop: 8, opacity: 0.72 }}>
+                {emailChanged
+                  ? "Ao salvar, enviaremos um código para este novo e-mail. O e-mail atual só será alterado depois da confirmação."
+                  : "Para alterar o e-mail, digite o novo endereço e salve as alterações."}
+              </small>
             </div>
           </Col>
 
@@ -166,7 +181,7 @@ export default function UserUpdateForm({
           </Col>
 
           <Col xs={12} className="text-end">
-            <button disabled={isSubmitting} className="submit-btn">
+            <button type="submit" disabled={isSubmitting} className="submit-btn">
               {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </button>
           </Col>
