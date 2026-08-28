@@ -1,5 +1,6 @@
 // src/hooks/useSchedulePopup.js
 import { useCallback, useState } from "react";
+import { appId as rasoioAppId } from "../config";
 import api from "../services/api";
 
 const getFileUrlByType = (files, type) =>
@@ -27,7 +28,7 @@ const mapEmployer = (employer) => {
   };
 };
 
-const mapEstablishment = (establishment, fallbackAppId = 2) => {
+const mapEstablishment = (establishment) => {
   if (!establishment) return null;
 
   const logo =
@@ -53,7 +54,7 @@ const mapEstablishment = (establishment, fallbackAppId = 2) => {
       establishment?.entityId ??
       null,
     name: establishment?.name || establishment?.title || "Barbearia",
-    app_id: establishment?.app_id || fallbackAppId || 2,
+    app_id: rasoioAppId,
     image: logo || background || establishment?.image || null,
     images: {
       ...(establishment?.images || {}),
@@ -63,7 +64,15 @@ const mapEstablishment = (establishment, fallbackAppId = 2) => {
   };
 };
 
-export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
+const getEntityAppId = (...entities) => {
+  for (const entity of entities) {
+    const value = entity?.app_id ?? entity?.application_id ?? entity?.app?.id ?? null;
+    if (value != null) return Number(value);
+  }
+  return null;
+};
+
+export default function useSchedulePopup(_apiBaseUrl, _token, _appId = rasoioAppId) {
   const [showWizard, setShowWizard] = useState(false);
   const [wizardEstablishment, setWizardEstablishment] = useState(null);
   const [wizardEmployers, setWizardEmployers] = useState([]);
@@ -78,6 +87,24 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
       service = null,
       filteredEmployers = null,
     }) => {
+      const declaredAppId = getEntityAppId(
+        establishment,
+        employer,
+        employer?.establishment,
+        service,
+        service?.establishment
+      );
+
+      if (declaredAppId != null && declaredAppId !== Number(rasoioAppId)) {
+        setPreselectedEmployer(null);
+        setPreselectedServiceId(null);
+        setWizardEstablishment(null);
+        setWizardEmployers([]);
+        setWizardServices([]);
+        setShowWizard(true);
+        return;
+      }
+
       const mappedPreEmployer = employer ? mapEmployer(employer) : null;
       setPreselectedEmployer(mappedPreEmployer);
       setPreselectedServiceId(
@@ -97,9 +124,6 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
         service?.establishment?.id ||
         null;
 
-      const resolvedAppId =
-        establishment?.app_id || employer?.app_id || service?.app_id || appId || 2;
-
       if (!entityId) {
         setWizardEstablishment(null);
         setWizardEmployers([]);
@@ -109,23 +133,19 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
       }
 
       const normalizedEstablishment =
-        mapEstablishment(establishment, resolvedAppId) ||
-        mapEstablishment(employer?.establishment, resolvedAppId) ||
-        mapEstablishment(service?.establishment, resolvedAppId) ||
-        mapEstablishment(
-          {
-            id: entityId,
-            name:
-              establishment?.name ||
-              employer?.establishment_name ||
-              employer?.establishmentName ||
-              employer?.establishment?.name ||
-              service?.establishment?.name ||
-              "Barbearia",
-            app_id: resolvedAppId,
-          },
-          resolvedAppId
-        );
+        mapEstablishment(establishment) ||
+        mapEstablishment(employer?.establishment) ||
+        mapEstablishment(service?.establishment) ||
+        mapEstablishment({
+          id: entityId,
+          name:
+            establishment?.name ||
+            employer?.establishment_name ||
+            employer?.establishmentName ||
+            employer?.establishment?.name ||
+            service?.establishment?.name ||
+            "Barbearia",
+        });
 
       setWizardEstablishment(normalizedEstablishment);
       setWizardEmployers([]);
@@ -136,7 +156,7 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
         const itemRequest = api.get(`/item/list-by-entity/${entityId}`);
         const employerRequest = Array.isArray(filteredEmployers)
           ? Promise.resolve(null)
-          : api.get(`/employer/home/${resolvedAppId}`, {
+          : api.get(`/employer/home/${rasoioAppId}`, {
               params: { establishment_id: entityId },
             });
 
@@ -150,7 +170,13 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
           : [];
         setWizardServices(
           items
-            .filter((item) => item?.type !== "product")
+            .filter((item) => {
+              const itemAppId = item?.app_id ?? item?.establishment?.app_id ?? null;
+              return (
+                item?.type !== "product" &&
+                (itemAppId == null || Number(itemAppId) === Number(rasoioAppId))
+              );
+            })
             .map((item) => ({
               ...item,
               type: "service",
@@ -170,17 +196,22 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
 
         setWizardEmployers(
           employerSource
-            .filter((item) => Number(item.establishment_id) === Number(entityId))
+            .filter((item) => {
+              const employerAppId = item?.app_id ?? item?.establishment?.app_id ?? null;
+              return (
+                Number(item?.establishment_id ?? item?.establishment?.id) === Number(entityId) &&
+                (employerAppId == null || Number(employerAppId) === Number(rasoioAppId))
+              );
+            })
             .map(mapEmployer)
         );
-      } catch (error) {
-        console.error("Erro ao preparar agendamento:", error);
+      } catch {
         setWizardEstablishment(normalizedEstablishment);
         setWizardEmployers([]);
         setWizardServices([]);
       }
     },
-    [appId]
+    []
   );
 
   return {
