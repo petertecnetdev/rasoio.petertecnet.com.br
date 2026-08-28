@@ -2,12 +2,13 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl,appId  } from "../../config";
-import NavlogComponent from "../../components/NavlogComponent";
-import { Button, Col, Row, Form, Badge } from "react-bootstrap";
+import { Badge } from "react-bootstrap";
+
+import api from "../../services/api";
+import { appId } from "../../config";
 import "./Establishment.css";
+import "./EstablishmentCreatePage.css";
 
 const segmentOptions = [
   { value: "corte_masculino", label: "Corte Masculino" },
@@ -20,20 +21,26 @@ const segmentOptions = [
 
 export default function EstablishmentCreatePage() {
   const navigate = useNavigate();
-  const { register, handleSubmit, setValue, formState: { isSubmitting } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm();
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [backgroundPreview, setBackgroundPreview] = useState(null);
   const [segments, setSegments] = useState([]);
   const [files, setFiles] = useState({});
 
-  const handleResizeImage = (file, setPreview, width, height, key) => {
-    return new Promise((resolve, reject) => {
+  const handleResizeImage = (file, setPreview, width, height, key) =>
+    new Promise((resolve, reject) => {
       if (!file || !file.type.startsWith("image/")) {
         Swal.fire("Formato inválido", "Selecione uma imagem válida.", "error");
-        reject();
+        reject(new Error("Invalid image"));
         return;
       }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const img = new Image();
@@ -46,298 +53,241 @@ export default function EstablishmentCreatePage() {
           ctx.drawImage(img, 0, 0, width, height);
           const previewDataURL = canvas.toDataURL("image/png");
           setPreview(previewDataURL);
-          canvas.toBlob(blob => {
-            const filename = file.name.replace(/\.[^/.]+$/, "") + ".png";
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              reject(new Error("Could not process image"));
+              return;
+            }
+            const filename = `${file.name.replace(/\.[^/.]+$/, "")}.png`;
             const resizedFile = new File([blob], filename, { type: "image/png" });
-            setFiles(prev => ({ ...prev, [key]: resizedFile }));
+            setFiles((prev) => ({ ...prev, [key]: resizedFile }));
             resolve(resizedFile);
           }, "image/png", 0.95);
         };
-        img.onerror = () => reject();
+        img.onerror = () => reject(new Error("Could not load image"));
       };
       reader.readAsDataURL(file);
     });
-  };
 
-  const handleLogoChange = async e => {
-    const file = e.target.files[0];
+  const handleLogoChange = async (event) => {
+    const file = event.target.files?.[0];
     if (file) await handleResizeImage(file, setLogoPreview, 150, 150, "logo");
   };
 
-  const handleBackgroundChange = async e => {
-    const file = e.target.files[0];
+  const handleBackgroundChange = async (event) => {
+    const file = event.target.files?.[0];
     if (file) await handleResizeImage(file, setBackgroundPreview, 1920, 600, "background");
   };
 
-  const handleSegmentsChange = e => {
-    const { value, checked } = e.target;
+  const handleSegmentsChange = (event) => {
+    const { value, checked } = event.target;
     const updated = checked
       ? [...segments, value]
-      : segments.filter(s => s !== value);
+      : segments.filter((segment) => segment !== value);
+
     setSegments(updated);
     setValue("segments", updated);
   };
 
-  const onSubmit = async dataInput => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      Swal.fire("Erro", "Você precisa estar autenticado.", "error");
-      return;
-    }
+  const onSubmit = async (dataInput) => {
+    const formData = new FormData();
+    formData.append("app_id", appId);
+    formData.append("category", "barbershop");
+    formData.append("type", "");
 
-   const formData = new FormData();
-formData.append("app_id", appId); // ✅ adiciona automaticamente o ID do app
-formData.append("category", "barbershop");
-formData.append("type", "");
-
-    Object.keys(dataInput).forEach(key => {
-      if (key === "segments") {
-        segments.forEach(seg => formData.append("segments[]", seg));
-      } else {
-        formData.append(key, dataInput[key] || "");
-      }
+    Object.entries(dataInput).forEach(([key, value]) => {
+      if (key === "segments") return;
+      formData.append(key, value || "");
     });
 
+    segments.forEach((segment) => formData.append("segments[]", segment));
     if (files.logo) formData.append("logo", files.logo);
     if (files.background) formData.append("background", files.background);
 
     try {
-  const res = await axios.post(
-    `${apiBaseUrl}/establishment`,
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data"
-      }
+      const { data } = await api.post("/establishment", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      await Swal.fire("Sucesso", data?.message || "Barbearia criada com sucesso.", "success");
+      navigate(`/establishment/view/${data.establishment.slug}`);
+    } catch (err) {
+      const payload = err?.response?.data;
+      const message = payload?.errors
+        ? Object.values(payload.errors).flat().join("\n")
+        : payload?.error || payload?.message || "Ocorreu um erro ao criar a barbearia.";
+
+      Swal.fire("Erro", message, "error");
     }
-  );
-Swal.fire("Sucesso", res.data.message, "success").then((result) => {
-  if (result.isConfirmed || result.isDismissed) {
-    Swal.close(); // garante que não vai reaparecer
-    navigate(`/establishment/view/${res.data.establishment.slug}`);
-  }
-});
-
-
-} catch (err) {
-  console.error("Erro ao criar estabelecimento:", err);
-
-  let msg = "Ocorreu um erro ao criar o estabelecimento.";
-
-  if (err.response) {
-    const data = err.response.data;
-
-    if (data.errors) {
-      msg = Object.values(data.errors).flat().join("\n");
-    } else if (data.error) {
-      msg = data.error;
-    } else if (data.message) {
-      msg = data.message;
-    }
-  }
-
-  Swal.fire("Erro", msg, "error");
-}
-
   };
 
   return (
-    <div className="establishment-root">
-      <NavlogComponent />
-      <div className="establishment-create-page">
-        <h2 className="title mb-3">Criar Estabelecimento</h2>
+    <div className="establishment-create-shell">
+      <section className="establishment-create-header">
+        <span className="establishment-create-eyebrow">Gestão da barbearia</span>
+        <h1>Cadastrar barbearia</h1>
+        <p>Preencha os dados principais. Você poderá editar as informações depois.</p>
+      </section>
 
-        {/* Preview estilo ViewPage */}
+      <section className="establishment-create-card establishment-create-preview-card">
         <div
-          className="estab-hero"
-          style={{
-            background: backgroundPreview
-              ? `linear-gradient(90deg, rgba(18,18,18,0.87) 55%, rgba(36,36,36,0.70)), url('${backgroundPreview}') center/cover no-repeat`
-              : "linear-gradient(90deg, rgba(18,18,18,0.87) 55%, rgba(36,36,36,0.70)), #333",
-          }}
+          className="establishment-create-preview"
+          style={
+            backgroundPreview
+              ? {
+                  backgroundImage: `linear-gradient(90deg, rgba(3,8,17,.92), rgba(3,8,17,.58)), url('${backgroundPreview}')`,
+                }
+              : undefined
+          }
         >
-          <div className="estab-hero-inner">
-            <div className="estab-logo-bubble">
-              {logoPreview && (
-                <img src={logoPreview} alt="Logo Preview" className="estab-logo" />
-              )}
-            </div>
-            <div className="estab-info-block">
-              <h1 className="estab-title">Nome do Estabelecimento</h1>
-              <div className="estab-description">A descrição aparecerá aqui...</div>
-              <div>
-                {segments.map((seg) => (
-                  <Badge key={seg} bg="warning" text="dark" className="me-1">
-                    {seg.replace(/_/g, " ")}
+          <div className="establishment-create-logo">
+            {logoPreview ? <img src={logoPreview} alt="Prévia do logo" /> : <span>R</span>}
+          </div>
+          <div className="establishment-create-preview-copy">
+            <span className="establishment-create-preview-label">Prévia pública</span>
+            <h2>Nome da barbearia</h2>
+            <p>A descrição da sua barbearia aparecerá aqui.</p>
+            {segments.length > 0 && (
+              <div className="establishment-create-badges">
+                {segments.map((segment) => (
+                  <Badge key={segment} className="establishment-create-badge">
+                    {segmentOptions.find((item) => item.value === segment)?.label || segment}
                   </Badge>
                 ))}
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Upload dos arquivos */}
-        <div className="d-flex justify-content-center gap-3 my-3">
-          <Button
-            variant="secondary"
-            className="action-button"
-            onClick={() => document.getElementById("backgroundInput").click()}
-          >
-            Alterar Background
-          </Button>
-          <Button
-            variant="secondary"
-            className="action-button"
-            onClick={() => document.getElementById("logoInput").click()}
-          >
-            Alterar Logo
-          </Button>
+        <div className="establishment-create-upload-actions">
+          <label className="establishment-create-upload-btn" htmlFor="backgroundInput">
+            Alterar capa
+          </label>
+          <label className="establishment-create-upload-btn" htmlFor="logoInput">
+            Alterar logo
+          </label>
+          <input id="backgroundInput" type="file" accept="image/*" onChange={handleBackgroundChange} />
+          <input id="logoInput" type="file" accept="image/*" onChange={handleLogoChange} />
         </div>
-        <Form.Control
-          id="backgroundInput"
-          type="file"
-          accept="image/*"
-          onChange={handleBackgroundChange}
-          style={{ display: "none" }}
-        />
-        <Form.Control
-          id="logoInput"
-          type="file"
-          accept="image/*"
-          onChange={handleLogoChange}
-          style={{ display: "none" }}
-        />
+      </section>
 
-        {/* Formulário */}
-        <Form onSubmit={handleSubmit(onSubmit)} encType="multipart/form-data">
-          <Row className="gy-3 mt-2">
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Nome*</label>
-                <input type="text" {...register("name", { required: true })} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Nome Fantasia</label>
-                <input type="text" {...register("fantasy")} />
-              </div>
-            </Col>
-            <Col xs={6} md={3} lg={2}>
-              <div className="form-group">
-                <label>CNPJ</label>
-                <input type="text" {...register("cnpj")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Telefone</label>
-                <input type="text" {...register("phone")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" {...register("email")} />
-              </div>
-            </Col>
-            <Col xs={12}>
-              <div className="form-group">
-                <label>Descrição</label>
-                <textarea {...register("description")} />
-              </div>
-            </Col>
-            <Col xs={12} md={7} lg={6}>
-              <div className="form-group">
-                <label>Endereço</label>
-                <input type="text" {...register("address")} />
-              </div>
-            </Col>
-            <Col xs={6} md={3} lg={2}>
-              <div className="form-group">
-                <label>Cidade</label>
-                <input type="text" {...register("city")} />
-              </div>
-            </Col>
-            <Col xs={6} md={2} lg={2}>
-              <div className="form-group">
-                <label>CEP</label>
-                <input type="text" {...register("cep")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Localização (Google Maps)</label>
-                <input type="text" {...register("location")} />
-              </div>
-            </Col>
+      <form
+        className="establishment-create-card establishment-create-form"
+        onSubmit={handleSubmit(onSubmit)}
+        encType="multipart/form-data"
+      >
+        <div className="establishment-create-section-heading">
+          <h2>Informações da barbearia</h2>
+          <p>Os campos com * são obrigatórios.</p>
+        </div>
 
-            {/* Redes sociais */}
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Instagram</label>
-                <input type="url" {...register("instagram_url")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Facebook</label>
-                <input type="url" {...register("facebook_url")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Twitter</label>
-                <input type="url" {...register("twitter_url")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>YouTube</label>
-                <input type="url" {...register("youtube_url")} />
-              </div>
-            </Col>
-            <Col xs={12} md={6} lg={4}>
-              <div className="form-group">
-                <label>Site</label>
-                <input type="url" {...register("website_url")} />
-              </div>
-            </Col>
+        <div className="establishment-create-grid">
+          <Field label="Nome *" className="span-4">
+            <input type="text" {...register("name", { required: true })} />
+          </Field>
+          <Field label="Nome fantasia" className="span-4">
+            <input type="text" {...register("fantasy")} />
+          </Field>
+          <Field label="CNPJ" className="span-4">
+            <input type="text" {...register("cnpj")} />
+          </Field>
 
-            {/* Segmentos */}
-            <Col md={7}>
-              <div className="form-group">
-                <label>Segmentos Atendidos</label>
-                <div className="segments-checkbox-grid">
-                  {segmentOptions.map(opt => (
-                    <div className="form-check segment-check" key={opt.value}>
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id={`segment-${opt.value}`}
-                        value={opt.value}
-                        checked={segments.includes(opt.value)}
-                        onChange={handleSegmentsChange}
-                      />
-                      <label className="form-check-label mr-2" htmlFor={`segment-${opt.value}`}>
-                        {opt.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <input type="hidden" {...register("segments")} value={segments} />
-              </div>
-            </Col>
+          <Field label="Telefone" className="span-4">
+            <input type="text" {...register("phone")} />
+          </Field>
+          <Field label="E-mail" className="span-4">
+            <input type="email" {...register("email")} />
+          </Field>
+          <Field label="CEP" className="span-4">
+            <input type="text" {...register("cep")} />
+          </Field>
 
-            <Col xs={12} className="text-end">
-              <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : "Criar Estabelecimento"}
-              </button>
-            </Col>
-          </Row>
-        </Form>
-      </div>
+          <Field label="Descrição" className="span-12">
+            <textarea rows="4" {...register("description")} />
+          </Field>
+
+          <Field label="Endereço" className="span-8">
+            <input type="text" {...register("address")} />
+          </Field>
+          <Field label="Cidade" className="span-4">
+            <input type="text" {...register("city")} />
+          </Field>
+
+          <Field label="Localização (Google Maps)" className="span-12">
+            <input type="text" {...register("location")} />
+          </Field>
+        </div>
+
+        <div className="establishment-create-divider" />
+
+        <div className="establishment-create-section-heading">
+          <h2>Redes e presença digital</h2>
+          <p>Opcional. Informe apenas os canais que você utiliza.</p>
+        </div>
+
+        <div className="establishment-create-grid">
+          <Field label="Instagram" className="span-4">
+            <input type="url" {...register("instagram_url")} />
+          </Field>
+          <Field label="Facebook" className="span-4">
+            <input type="url" {...register("facebook_url")} />
+          </Field>
+          <Field label="Site" className="span-4">
+            <input type="url" {...register("website_url")} />
+          </Field>
+          <Field label="X / Twitter" className="span-6">
+            <input type="url" {...register("twitter_url")} />
+          </Field>
+          <Field label="YouTube" className="span-6">
+            <input type="url" {...register("youtube_url")} />
+          </Field>
+        </div>
+
+        <div className="establishment-create-divider" />
+
+        <div className="establishment-create-section-heading">
+          <h2>Serviços oferecidos</h2>
+          <p>Selecione os segmentos que representam a barbearia.</p>
+        </div>
+
+        <div className="establishment-create-segments">
+          {segmentOptions.map((option) => (
+            <label
+              key={option.value}
+              className={`establishment-create-segment ${segments.includes(option.value) ? "is-selected" : ""}`}
+            >
+              <input
+                type="checkbox"
+                value={option.value}
+                checked={segments.includes(option.value)}
+                onChange={handleSegmentsChange}
+              />
+              <span className="establishment-create-check" aria-hidden="true" />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+        <input type="hidden" {...register("segments")} value={segments.join(",")} />
+
+        <div className="establishment-create-actions">
+          <button type="button" className="establishment-create-cancel" onClick={() => navigate(-1)}>
+            Cancelar
+          </button>
+          <button type="submit" className="establishment-create-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Criando..." : "Criar barbearia"}
+          </button>
+        </div>
+      </form>
     </div>
+  );
+}
+
+function Field({ label, className = "", children }) {
+  return (
+    <label className={`establishment-create-field ${className}`}>
+      <span>{label}</span>
+      {children}
+    </label>
   );
 }
