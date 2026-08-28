@@ -1,7 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Card, Col, Container, ListGroup, Row, Spinner } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
+import {
+  FaCalendarAlt,
+  FaClock,
+  FaCut,
+  FaHourglassHalf,
+  FaReceipt,
+  FaStore,
+  FaUser,
+  FaUserTie,
+} from "react-icons/fa";
 import api from "../../services/api";
+import "./OrderViewPage.css";
 
 const money = (value) =>
   Number(value || 0).toLocaleString("pt-BR", {
@@ -9,38 +19,118 @@ const money = (value) =>
     currency: "BRL",
   });
 
-const dateTime = (value) =>
-  value ? new Date(value).toLocaleString("pt-BR") : "-";
+const asDate = (value) => {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+};
 
-const statusText = (value) =>
+const dateTime = (value) => {
+  const date = asDate(value);
+  if (!date) return "Não informado";
+  return date.toLocaleString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const shortDate = (value) => {
+  const date = asDate(value);
+  if (!date) return "-";
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
+const shortTime = (value) => {
+  const date = asDate(value);
+  if (!date) return "-";
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const statusMeta = (value) =>
   ({
-    pending: "Pendente",
-    confirmed: "Confirmado",
-    attended: "Atendido",
-    not_attended: "Não atendido",
-    cancelled: "Cancelado",
-    canceled: "Cancelado",
-  })[value] || value || "-";
+    pending: ["Solicitado", "warning"],
+    confirmed: ["Confirmado", "success"],
+    completed: ["Concluído", "done"],
+    attended: ["Concluído", "done"],
+    rejected: ["Recusado", "danger"],
+    cancelled: ["Cancelado", "danger"],
+    canceled: ["Cancelado", "danger"],
+    no_show: ["Não compareceu", "muted"],
+    not_attended: ["Não compareceu", "muted"],
+  })[String(value || "").toLowerCase()] || [value || "Indefinido", "muted"];
+
+const fullName = (person, fallback = "Usuário") =>
+  [person?.first_name, person?.last_name].filter(Boolean).join(" ") ||
+  person?.name ||
+  person?.user_name ||
+  fallback;
+
+function remainingLabel(targetValue, nowMs) {
+  const target = asDate(targetValue);
+  if (!target) return "Horário não informado";
+
+  const diff = target.getTime() - nowMs;
+  const abs = Math.abs(diff);
+  const totalMinutes = Math.floor(abs / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  const parts = [];
+  if (days) parts.push(`${days}d`);
+  if (hours || days) parts.push(`${hours}h`);
+  parts.push(`${minutes}min`);
+
+  if (Math.abs(diff) < 60000) return "É agora";
+  return diff > 0 ? `Faltam ${parts.join(" ")}` : `Horário passou há ${parts.join(" ")}`;
+}
+
+function roleIcon(roleKey) {
+  if (roleKey === "barber") return <FaCut />;
+  if (roleKey === "manager") return <FaUserTie />;
+  return <FaUser />;
+}
 
 export default function OrderViewPage() {
   const { id } = useParams();
-  const [order, setOrder] = useState(null);
+  const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
 
     const load = async () => {
       setLoading(true);
-      setError(null);
+      setError("");
       try {
-        const { data } = await api.get(`/order/view/${id}`, { signal: controller.signal });
-        setOrder(data?.order || data || null);
+        const { data } = await api.get(`/rasoio/orders/${id}`, {
+          signal: controller.signal,
+        });
+        setPayload(data || null);
       } catch (requestError) {
-        if (requestError?.code !== "ERR_CANCELED") {
-          setError(requestError?.response?.data?.message || requestError?.response?.data?.error || "Não foi possível carregar o atendimento.");
-        }
+        if (requestError?.code === "ERR_CANCELED") return;
+        setError(
+          requestError?.response?.data?.message ||
+            requestError?.response?.data?.error ||
+            "Não foi possível carregar o agendamento."
+        );
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -50,103 +140,136 @@ export default function OrderViewPage() {
     return () => controller.abort();
   }, [id]);
 
+  const order = payload?.order || null;
+  const audit = payload?.audit || {};
+  const establishment = payload?.establishment || null;
+
   const customer = useMemo(() => {
-    const source = order?.customer || order?.client || {};
-    const name =
-      source.name ||
-      `${source.first_name || ""} ${source.last_name || ""}`.trim() ||
-      order?.customer_name ||
-      "Cliente";
-    return { ...source, name };
+    const source = order?.client || order?.customer || {};
+    return {
+      ...source,
+      name: fullName(source, order?.customer_name || "Cliente"),
+    };
   }, [order]);
 
+  const attendant = order?.attendant?.user || order?.attendant_user || null;
+  const creator = audit?.created_by || order?.creator || null;
+  const scheduledAt = audit?.scheduled_at || order?.scheduled_start || order?.order_datetime;
+  const requestedAt = audit?.requested_at || order?.created_at;
+  const [statusLabel, statusTone] = statusMeta(order?.appointment_status || order?.status);
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const totalDuration = Number(order?.total_duration || 0);
+
   if (loading) {
-    return (
-      <Container className="py-5 text-center" aria-live="polite">
-        <Spinner animation="border" />
-      </Container>
-    );
+    return <div className="ovp-state">Carregando detalhes do agendamento...</div>;
   }
 
   if (error || !order) {
-    return (
-      <Container className="py-4">
-        <Alert variant="danger">{error || "Atendimento não encontrado."}</Alert>
-      </Container>
-    );
+    return <div className="ovp-state ovp-state--error">{error || "Agendamento não encontrado."}</div>;
   }
 
-  const appointmentStatus = order.appointment_status || order.status;
-  const start = order.scheduled_start || order.order_datetime;
-  const totalDuration = Number(order.total_duration || 0);
-  const items = Array.isArray(order.items) ? order.items : [];
-
   return (
-    <Container className="py-4">
-      <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
-        <div>
-          <div className="text-secondary small">Atendimento</div>
-          <h1 className="h3 mb-1">#{order.order_number || order.id}</h1>
-          <div className="text-secondary">{dateTime(start)}</div>
+    <main className="ovp-page">
+      <section className="ovp-hero">
+        <div className="ovp-heroMain">
+          <div className="ovp-kicker"><FaReceipt /> Agendamento #{order.order_number || order.id}</div>
+          <h1>{customer.name}</h1>
+          <div className="ovp-heroMeta">
+            <span><FaCalendarAlt /> {shortDate(scheduledAt)}</span>
+            <span><FaClock /> {shortTime(scheduledAt)}</span>
+            {establishment?.name && <span><FaStore /> {establishment.name}</span>}
+          </div>
         </div>
-        <Badge bg="secondary" className="px-3 py-2">{statusText(appointmentStatus)}</Badge>
-      </div>
+        <div className="ovp-heroSide">
+          <span className={`ovp-status ovp-status--${statusTone}`}>{statusLabel}</span>
+          <div className="ovp-countdown"><FaHourglassHalf /><strong>{remainingLabel(scheduledAt, nowMs)}</strong></div>
+        </div>
+      </section>
 
-      <Row className="g-4">
-        <Col lg={7}>
-          <Card className="bg-dark text-light border-secondary h-100">
-            <Card.Body>
-              <h2 className="h5">Serviços e produtos</h2>
-              {items.length === 0 ? (
-                <div className="text-secondary">Nenhum item informado.</div>
-              ) : (
-                <ListGroup variant="flush">
-                  {items.map((row, index) => {
-                    const item = row.item || row;
-                    const quantity = Number(row.quantity || row.pivot?.quantity || 1);
-                    const unitPrice = Number(row.unit_price || row.pivot?.unit_price || item.price || 0);
-                    const subtotal = Number(row.subtotal || row.pivot?.subtotal || quantity * unitPrice);
-                    return (
-                      <ListGroup.Item key={row.id || item.id || index} className="bg-transparent text-light border-secondary px-0">
-                        <div className="d-flex justify-content-between gap-3">
-                          <div>
-                            <div className="fw-semibold">{item.name || "Item"}</div>
-                            <div className="text-secondary small">{quantity} × {money(unitPrice)}</div>
-                          </div>
-                          <div className="fw-semibold">{money(subtotal)}</div>
-                        </div>
-                      </ListGroup.Item>
-                    );
-                  })}
-                </ListGroup>
+      <section className="ovp-auditGrid">
+        <article className="ovp-auditCard ovp-auditCard--requested">
+          <div className="ovp-auditIcon"><FaClock /></div>
+          <span>Agendamento feito em</span>
+          <strong>{dateTime(requestedAt)}</strong>
+          <small>Momento em que a solicitação foi registrada no sistema.</small>
+        </article>
+
+        <article className="ovp-auditCard ovp-auditCard--scheduled">
+          <div className="ovp-auditIcon"><FaCalendarAlt /></div>
+          <span>Data solicitada para atendimento</span>
+          <strong>{dateTime(scheduledAt)}</strong>
+          <small>{remainingLabel(scheduledAt, nowMs)}</small>
+        </article>
+
+        <article className={`ovp-auditCard ovp-auditCard--creator ovp-auditCard--${creator?.role_key || "user"}`}>
+          <div className="ovp-auditIcon">{roleIcon(creator?.role_key)}</div>
+          <span>Agendamento criado por</span>
+          <strong>{fullName(creator, "Origem não identificada")}</strong>
+          <small>{creator?.role || "Usuário"}</small>
+          {creator?.user_name && <Link to={`/user/${creator.user_name}`}>Ver perfil</Link>}
+        </article>
+      </section>
+
+      <section className="ovp-grid">
+        <div className="ovp-column">
+          <article className="ovp-panel">
+            <header><div><span>Atendimento</span><h2>Serviços e produtos</h2></div></header>
+            {items.length === 0 ? (
+              <div className="ovp-empty">Nenhum item informado.</div>
+            ) : (
+              <div className="ovp-items">
+                {items.map((row, index) => {
+                  const item = row.item || row;
+                  const quantity = Number(row.quantity || row.pivot?.quantity || 1);
+                  const unitPrice = Number(row.unit_price || row.pivot?.unit_price || item.price || 0);
+                  const subtotal = Number(row.subtotal || row.pivot?.subtotal || quantity * unitPrice);
+                  return (
+                    <div className="ovp-item" key={row.id || item.id || index}>
+                      <div><strong>{item.name || "Item"}</strong><span>{quantity} × {money(unitPrice)}</span></div>
+                      <b>{money(subtotal)}</b>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </article>
+
+          {order.notes && (
+            <article className="ovp-panel">
+              <header><div><span>Observações</span><h2>Informações adicionais</h2></div></header>
+              <p className="ovp-notes">{order.notes}</p>
+            </article>
+          )}
+        </div>
+
+        <div className="ovp-column">
+          <article className="ovp-panel">
+            <header><div><span>Pessoas</span><h2>Participantes</h2></div></header>
+            <div className="ovp-personList">
+              <div className="ovp-person">
+                <div className="ovp-personIcon"><FaUser /></div>
+                <div><span>Cliente</span><strong>{customer.name}</strong>{customer.user_name && <Link to={`/user/${customer.user_name}`}>@{customer.user_name}</Link>}</div>
+              </div>
+              {attendant && (
+                <div className="ovp-person">
+                  <div className="ovp-personIcon"><FaCut /></div>
+                  <div><span>Barbeiro responsável</span><strong>{fullName(attendant, "Profissional")}</strong>{attendant.user_name && <Link to={`/user/${attendant.user_name}`}>@{attendant.user_name}</Link>}</div>
+                </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
+            </div>
+          </article>
 
-        <Col lg={5}>
-          <Card className="bg-dark text-light border-secondary mb-4">
-            <Card.Body>
-              <h2 className="h5">Cliente</h2>
-              <div className="fw-semibold">{customer.name}</div>
-              {customer.email && <div className="text-secondary">{customer.email}</div>}
-              {(customer.user_name || customer.username) && (
-                <Link to={`/user/${customer.user_name || customer.username}`}>Ver perfil</Link>
-              )}
-            </Card.Body>
-          </Card>
-
-          <Card className="bg-dark text-light border-secondary">
-            <Card.Body>
-              <h2 className="h5">Resumo</h2>
-              <div className="d-flex justify-content-between mb-2"><span className="text-secondary">Valor</span><strong>{money(order.total_price)}</strong></div>
-              <div className="d-flex justify-content-between mb-2"><span className="text-secondary">Duração</span><strong>{totalDuration ? `${totalDuration} min` : "-"}</strong></div>
-              <div className="d-flex justify-content-between mb-2"><span className="text-secondary">Pagamento</span><strong>{order.payment_status || "-"}</strong></div>
-              {order.notes && <div className="mt-3"><div className="text-secondary small">Observações</div><div>{order.notes}</div></div>}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+          <article className="ovp-panel">
+            <header><div><span>Resumo</span><h2>Dados do agendamento</h2></div></header>
+            <div className="ovp-summary">
+              <div><span>Valor</span><strong>{money(order.total_price)}</strong></div>
+              <div><span>Duração</span><strong>{totalDuration ? `${totalDuration} min` : "-"}</strong></div>
+              <div><span>Pagamento</span><strong>{order.payment_status || "-"}</strong></div>
+              <div><span>Status</span><strong>{statusLabel}</strong></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
   );
 }
