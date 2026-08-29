@@ -20,11 +20,18 @@ const actions = [
     path: (establishment) => `/establishment/employers/${establishment.slug}`,
   },
   {
-    key: "items",
+    key: "services",
     label: "Serviços",
-    description: "Itens e preços",
+    description: "Duração e preços",
     icon: "✂️",
     path: (establishment) => `/establishment/item/${establishment.slug}`,
+  },
+  {
+    key: "products",
+    label: "Produtos",
+    description: "Produtos e estoque",
+    icon: "🧴",
+    path: (establishment) => `/establishment/item/${establishment.slug}?type=product`,
   },
   {
     key: "edit",
