@@ -9,6 +9,7 @@ import useImageUtils from "../hooks/useImageUtils";
 import useSelectedCity from "../hooks/useSelectedCity";
 import api from "../services/api";
 import CitySelectorModal from "./CitySelectorModal";
+import NotificationBell from "./NotificationBell";
 import "./GlobalNav.css";
 
 export default function GlobalNav({ loadingMenu, handleLogout }) {
@@ -72,7 +73,6 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
         }
       }
     } finally {
-      // Mantém cidade/UF e demais preferências locais. Remove somente autenticação.
       localStorage.removeItem("token");
       localStorage.removeItem("employer");
       window.dispatchEvent(new Event("authChanged"));
@@ -133,48 +133,23 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
             </form>
 
             <nav className="nav__links nav__links--icons" aria-label="Navegação principal">
-              <Link
-                to="/establishments"
-                className={`nav__link nav__iconLink ${isActive("/establishments") ? "active" : ""}`}
-                title="Barbearias"
-                aria-label="Barbearias"
-              >
+              <Link to="/establishments" className={`nav__link nav__iconLink ${isActive("/establishments") ? "active" : ""}`} title="Barbearias" aria-label="Barbearias">
                 <FaStore className="nav__icon" />
               </Link>
-              <Link
-                to="/employers"
-                className={`nav__link nav__iconLink ${isActive("/employers") ? "active" : ""}`}
-                title="Barbeiros"
-                aria-label="Barbeiros"
-              >
+              <Link to="/employers" className={`nav__link nav__iconLink ${isActive("/employers") ? "active" : ""}`} title="Barbeiros" aria-label="Barbeiros">
                 <FaUserFriends className="nav__icon" />
               </Link>
-              <Link
-                to="/item/services"
-                className={`nav__link nav__iconLink ${isActive("/item/services") ? "active" : ""}`}
-                title="Serviços"
-                aria-label="Serviços"
-              >
+              <Link to="/item/services" className={`nav__link nav__iconLink ${isActive("/item/services") ? "active" : ""}`} title="Serviços" aria-label="Serviços">
                 <FaConciergeBell className="nav__icon" />
               </Link>
-              <Link
-                to="/item/products"
-                className={`nav__link nav__iconLink ${isActive("/item/products") ? "active" : ""}`}
-                title="Produtos"
-                aria-label="Produtos"
-              >
+              <Link to="/item/products" className={`nav__link nav__iconLink ${isActive("/item/products") ? "active" : ""}`} title="Produtos" aria-label="Produtos">
                 <FaBoxOpen className="nav__icon" />
               </Link>
             </nav>
           </div>
 
           <div className="nav__right">
-            <button
-              type="button"
-              className="nav__locationText nav__changeCityBtn p-2"
-              onClick={() => setShowCityModal(true)}
-              aria-label="Alterar cidade"
-            >
+            <button type="button" className="nav__locationText nav__changeCityBtn p-2" onClick={() => setShowCityModal(true)} aria-label="Alterar cidade">
               {city || "Selecionar cidade"}
             </button>
 
@@ -184,15 +159,11 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
               </div>
             )}
 
+            {!loadingMenu && isAuthed && <NotificationBell />}
+
             {!loadingMenu && isAuthed && (
               <div className="nav__user" ref={userMenuRef}>
-                <button
-                  className="nav__userBtn"
-                  onClick={() => setUserMenuOpen((open) => !open)}
-                  type="button"
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="menu"
-                >
+                <button className="nav__userBtn" onClick={() => setUserMenuOpen((open) => !open)} type="button" aria-expanded={userMenuOpen} aria-haspopup="menu">
                   <img src={avatarSrc} alt="" className="nav__avatar" onError={handleImgError} />
                   <span className="nav__userName">{fullName}</span>
                 </button>
@@ -207,28 +178,17 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                           <div className="nav__userMenuEmail">{user?.email || ""}</div>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        className="nav__userMenuClose"
-                        onClick={() => setUserMenuOpen(false)}
-                        aria-label="Fechar menu"
-                      >
-                        ✕
-                      </button>
+                      <button type="button" className="nav__userMenuClose" onClick={() => setUserMenuOpen(false)} aria-label="Fechar menu">✕</button>
                     </div>
 
                     <div className="nav__userMenuContent">
                       <div className="nav__menuGroup">
                         <span className="nav__menuTitle">Minha conta</span>
                         <button className="nav__userMenuItem" onClick={() => go("/orders/my")} type="button">
-                          <span className="nav__menuIcon">📅</span>
-                          <span className="nav__menuText">Meus agendamentos</span>
-                          <span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">📅</span><span className="nav__menuText">Meus agendamentos</span><span className="nav__menuArrow">›</span>
                         </button>
                         <button className="nav__userMenuItem" onClick={() => go("/user/update")} type="button">
-                          <span className="nav__menuIcon">👤</span>
-                          <span className="nav__menuText">Dados da conta</span>
-                          <span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">👤</span><span className="nav__menuText">Dados da conta</span><span className="nav__menuArrow">›</span>
                         </button>
                       </div>
 
@@ -238,19 +198,13 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                           <div className="nav__menuGroup">
                             <span className="nav__menuTitle">Área do barbeiro</span>
                             <button className="nav__userMenuItem" onClick={() => go("/employer/dashboard")} type="button">
-                              <span className="nav__menuIcon">💈</span>
-                              <span className="nav__menuText">Painel do barbeiro</span>
-                              <span className="nav__menuArrow">›</span>
+                              <span className="nav__menuIcon">💈</span><span className="nav__menuText">Painel do barbeiro</span><span className="nav__menuArrow">›</span>
                             </button>
                             <button className="nav__userMenuItem" onClick={() => go("/employer/schedules")} type="button">
-                              <span className="nav__menuIcon">⏱️</span>
-                              <span className="nav__menuText">Disponibilidade</span>
-                              <span className="nav__menuArrow">›</span>
+                              <span className="nav__menuIcon">⏱️</span><span className="nav__menuText">Disponibilidade</span><span className="nav__menuArrow">›</span>
                             </button>
                             <button className="nav__userMenuItem" onClick={() => go("/employer/orders")} type="button">
-                              <span className="nav__menuIcon">🧾</span>
-                              <span className="nav__menuText">Atendimentos</span>
-                              <span className="nav__menuArrow">›</span>
+                              <span className="nav__menuIcon">🧾</span><span className="nav__menuText">Atendimentos</span><span className="nav__menuArrow">›</span>
                             </button>
                           </div>
                         </>
@@ -260,34 +214,22 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                       <div className="nav__menuGroup">
                         <span className="nav__menuTitle">Gestão da barbearia</span>
                         <button className="nav__userMenuItem" onClick={() => go("/establishment/my")} type="button">
-                          <span className="nav__menuIcon">🏪</span>
-                          <span className="nav__menuText">Minhas barbearias</span>
-                          <span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">🏪</span><span className="nav__menuText">Minhas barbearias</span><span className="nav__menuArrow">›</span>
                         </button>
                         {!ownsEstablishment && (
                           <button className="nav__userMenuItem" onClick={() => go("/establishment/create")} type="button">
-                            <span className="nav__menuIcon">➕</span>
-                            <span className="nav__menuText">Cadastrar barbearia</span>
-                            <span className="nav__menuArrow">›</span>
+                            <span className="nav__menuIcon">➕</span><span className="nav__menuText">Cadastrar barbearia</span><span className="nav__menuArrow">›</span>
                           </button>
                         )}
                         <button className="nav__userMenuItem" onClick={() => go("/dashboard")} type="button">
-                          <span className="nav__menuIcon">📈</span>
-                          <span className="nav__menuText">Visão geral</span>
-                          <span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">📈</span><span className="nav__menuText">Visão geral</span><span className="nav__menuArrow">›</span>
                         </button>
                       </div>
 
                       <div className="nav__divider" />
                       <div className="nav__menuGroup">
-                        <button
-                          className="nav__userMenuItem nav__logout"
-                          onClick={onLogout}
-                          type="button"
-                          disabled={loggingOut}
-                        >
-                          <span className="nav__menuIcon">🚪</span>
-                          <span className="nav__menuText">{loggingOut ? "Saindo..." : "Sair"}</span>
+                        <button className="nav__userMenuItem nav__logout" onClick={onLogout} type="button" disabled={loggingOut}>
+                          <span className="nav__menuIcon">🚪</span><span className="nav__menuText">{loggingOut ? "Saindo..." : "Sair"}</span>
                         </button>
                       </div>
                     </div>
@@ -299,12 +241,7 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
         </div>
       </header>
 
-      <CitySelectorModal
-        user={user || {}}
-        show={showCityModal}
-        onClose={() => setShowCityModal(false)}
-        onSelectCity={() => setShowCityModal(false)}
-      />
+      <CitySelectorModal user={user || {}} show={showCityModal} onClose={() => setShowCityModal(false)} onSelectCity={() => setShowCityModal(false)} />
     </>
   );
 }
