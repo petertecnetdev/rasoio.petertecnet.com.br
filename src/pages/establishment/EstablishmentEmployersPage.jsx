@@ -1,11 +1,12 @@
 // src/pages/establishment/EstablishmentEmployersPage.jsx
-import React from "react";
+import React, { useState } from "react";
 import { Alert, Badge, Col, Container, Row, Spinner } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import GlobalButton from "../../components/GlobalButton";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import useEstablishmentEmployersBySlug from "../../hooks/useEstablishmentEmployersBySlug";
 import api from "../../services/api";
 import { appId } from "../../config";
@@ -15,6 +16,8 @@ import "./EstablishmentEmployersPage.css";
 export default function EstablishmentEmployersPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [processing, setProcessing] = useState(false);
+  const [processingMessages, setProcessingMessages] = useState(["Processando solicitação..."]);
   const { establishment, employers, count, loading, apiError, refetch } =
     useEstablishmentEmployersBySlug(slug);
 
@@ -32,6 +35,13 @@ export default function EstablishmentEmployersPage() {
 
     if (!result.isConfirmed) return;
 
+    setProcessingMessages([
+      `Removendo ${firstName} da equipe...`,
+      "Atualizando colaboradores...",
+      "Finalizando solicitação...",
+    ]);
+    setProcessing(true);
+
     try {
       await api.post("/employer/detach", {
         employer_id: employer.id,
@@ -39,6 +49,7 @@ export default function EstablishmentEmployersPage() {
         app_id: appId,
       });
       await refetch();
+      setProcessing(false);
       await Swal.fire({
         icon: "success",
         title: "Colaborador removido",
@@ -46,6 +57,7 @@ export default function EstablishmentEmployersPage() {
         showConfirmButton: false,
       });
     } catch (error) {
+      setProcessing(false);
       await Swal.fire({
         icon: "error",
         title: "Não foi possível remover",
@@ -74,6 +86,14 @@ export default function EstablishmentEmployersPage() {
 
   return (
     <main className="team-management-page">
+      {processing && (
+        <ProcessingIndicatorComponent
+          messages={processingMessages}
+          interval={1100}
+          blocking
+        />
+      )}
+
       <EstablishmentHero
         title={`Equipe da ${establishment.fantasy || establishment.name}`}
         subtitle="Gestão de colaboradores"
@@ -175,6 +195,7 @@ export default function EstablishmentEmployersPage() {
                         <button
                           type="button"
                           className="team-member-danger"
+                          disabled={processing}
                           onClick={() => handleDetach(employer)}
                         >
                           Remover
