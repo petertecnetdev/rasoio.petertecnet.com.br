@@ -92,7 +92,9 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      const { data } = await api.post("/employer/store", {
+      // A Rasoio possui uma regra própria de equipe: o proprietário também
+      // pode ser um profissional atendente do mesmo estabelecimento.
+      const { data } = await api.post("/rasoio/employers", {
         user_id: user.id,
         establishment_id: establishment.id,
         app_id: appId,
@@ -102,14 +104,23 @@ export default function useEmployerCreate(slug) {
 
       await Swal.fire({
         icon: "success",
-        title: "Colaborador adicionado",
-        text: data?.message || "O profissional agora faz parte da equipe.",
+        title: data?.is_owner ? "Proprietário adicionado à equipe" : "Colaborador adicionado",
+        text:
+          data?.message ||
+          (data?.is_owner
+            ? "O proprietário agora também pode atender clientes e possuir agenda própria."
+            : "O profissional agora faz parte da equipe."),
       });
 
       setUsers((prev) =>
         prev.map((candidate) =>
           candidate.id === user.id
-            ? { ...candidate, is_employer: true, employer: data?.employer }
+            ? {
+                ...candidate,
+                is_employer: true,
+                is_owner: Boolean(data?.is_owner),
+                employer: data?.employer,
+              }
             : candidate
         )
       );
