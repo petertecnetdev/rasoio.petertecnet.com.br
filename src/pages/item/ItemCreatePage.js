@@ -11,6 +11,8 @@ export default function ItemCreatePage() {
   const location = useLocation();
 
   const establishmentFromState = location.state?.establishment || null;
+  const initialItemType =
+    location.state?.itemType === "product" ? "product" : "service";
 
   const {
     register,
@@ -19,7 +21,13 @@ export default function ItemCreatePage() {
     reset,
     watch,
     formState: { isSubmitting },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      type: initialItemType,
+      status: 1,
+      limited_by_user: 0,
+    },
+  });
 
   const {
     loading,
@@ -38,6 +46,7 @@ export default function ItemCreatePage() {
   if (loading) return <GlobalNav />;
 
   const est = establishmentFromState || establishment;
+  const isService = watch("type") !== "product";
 
   return (
     <div className="item-root">
@@ -48,8 +57,12 @@ export default function ItemCreatePage() {
           logo={est.logo}
           background={est.background}
           title={est.fantasy || est.name}
-          subtitle="Criar novo item"
-          description="Cadastre produtos ou serviços do estabelecimento. Serviços exigem tempo de duração, utilizado no cálculo automático do tempo das ordens de serviço."
+          subtitle={isService ? "Criar novo serviço" : "Criar novo produto"}
+          description={
+            isService
+              ? "Cadastre o serviço e informe obrigatoriamente sua duração. Esse tempo é utilizado no cálculo automático da agenda e dos horários disponíveis."
+              : "Cadastre um produto vendido pela barbearia. Produtos ficam separados dos serviços e não interferem na duração dos atendimentos."
+          }
           city={est.city}
           uf={est.uf}
           showBack
