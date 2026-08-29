@@ -1,7 +1,7 @@
 // src/pages/establishment/EstablishmentItemPage.jsx
 import React from "react";
 import { Alert, Col, Container, Row, Spinner } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
@@ -16,9 +16,12 @@ const fmtBRL = (value) =>
     currency: "BRL",
   });
 
-export default function EstablishmentItemPage({ itemType = "service" }) {
+export default function EstablishmentItemPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const itemType = searchParams.get("type") === "product" ? "product" : "service";
+
   const {
     establishment,
     items,
@@ -32,7 +35,6 @@ export default function EstablishmentItemPage({ itemType = "service" }) {
 
   const isService = itemType === "service";
   const singular = isService ? "serviço" : "produto";
-  const plural = isService ? "serviços" : "produtos";
 
   const handleDelete = async (item) => {
     const result = await Swal.fire({
@@ -108,17 +110,13 @@ export default function EstablishmentItemPage({ itemType = "service" }) {
           <div className="d-flex flex-wrap gap-2">
             <GlobalButton
               variant={isService ? "primary" : "outline"}
-              onClick={() =>
-                navigate(`/establishment/item/${establishment.slug}`)
-              }
+              onClick={() => navigate(`/establishment/item/${establishment.slug}`)}
             >
               Serviços ({serviceCount})
             </GlobalButton>
             <GlobalButton
               variant={!isService ? "primary" : "outline"}
-              onClick={() =>
-                navigate(`/establishment/product/${establishment.slug}`)
-              }
+              onClick={() => navigate(`/establishment/item/${establishment.slug}?type=product`)}
             >
               Produtos ({productCount})
             </GlobalButton>
