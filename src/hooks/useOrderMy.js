@@ -13,6 +13,8 @@ function toMs(value) {
 }
 
 function getLatestFileByType(files, type) {
+  if (files && !Array.isArray(files) && files[type]) return files[type];
+
   const list = safeArray(files).filter((file) => file && file.type === type);
   if (!list.length) return null;
 
@@ -36,10 +38,10 @@ function normalizeFile(file, fallbackType) {
 }
 
 function normalizeOrder(order) {
-  const source = order || {};
+  const source = order && typeof order === "object" ? order : {};
   const establishment = source.establishment || null;
   const employer = source.employer || source.attendant || null;
-  const employerUser = employer?.user || null;
+  const employerUser = employer?.user || source.attendant_user || null;
 
   const establishmentLogo = getLatestFileByType(establishment?.files, "logo");
   const establishmentBackground = getLatestFileByType(establishment?.files, "background");
@@ -72,6 +74,14 @@ function normalizeOrder(order) {
   };
 }
 
+function extractOrders(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.orders)) return data.orders;
+  if (Array.isArray(data?.data?.orders)) return data.data.orders;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
 export default function useOrdersMy() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,14 +92,21 @@ export default function useOrdersMy() {
     setError("");
 
     try {
-      const { data } = await api.get(`/order/listmy/${appId}`);
-      setOrders(safeArray(data?.orders).map(normalizeOrder));
+      const { data } = await api.get(`/order/listmy/${appId}`, { timeout: 15000 });
+      setOrders(extractOrders(data).filter(Boolean).map(normalizeOrder));
     } catch (requestError) {
       setOrders([]);
+
+      const isTimeout =
+        requestError?.code === "ECONNABORTED" ||
+        String(requestError?.message || "").toLowerCase().includes("timeout");
+
       setError(
-        requestError?.response?.data?.message ||
-          requestError?.response?.data?.error ||
-          "Erro ao carregar seus agendamentos."
+        isTimeout
+          ? "A API demorou demais para responder. Tente atualizar novamente."
+          : requestError?.response?.data?.message ||
+            requestError?.response?.data?.error ||
+            "Erro ao carregar seus agendamentos."
       );
     } finally {
       setLoading(false);
