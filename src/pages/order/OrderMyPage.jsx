@@ -1,443 +1,140 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaArrowLeft,
-  FaSyncAlt,
-  FaCalendarAlt,
-  FaClock,
-  FaMapMarkerAlt,
-  FaStore,
-  FaUser,
-  FaHashtag,
-  FaMoneyBillWave,
-  FaInfoCircle,
-  FaChevronRight,
+  FaArrowLeft, FaSyncAlt, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaStore,
+  FaUser, FaHashtag, FaMoneyBillWave, FaChevronRight, FaCut, FaSearch,
+  FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaHistory, FaBoxOpen,
 } from "react-icons/fa";
 
 import useOrdersMy from "../../hooks/useOrderMy";
 import useImageUtils from "../../hooks/useImageUtils";
-import GlobalProfileHero from "../../components/GlobalProfileHero";
-
 import "./OrderMyPage.css";
 
 const PLACEHOLDER = "/images/logo.png";
 
-function safeText(v) {
-  return typeof v === "string" ? v : v == null ? "" : String(v);
+const safeText = (v) => (typeof v === "string" ? v : v == null ? "" : String(v));
+const toDate = (v) => { const d = new Date(v || ""); return Number.isNaN(d.getTime()) ? null : d; };
+const formatBRL = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatTime = (v) => toDate(v)?.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) || "—";
+const formatDay = (v) => toDate(v)?.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" }) || "—";
+
+function statusMeta(value) {
+  const raw = safeText(value).trim().toLowerCase();
+  if (["pending", "pendente"].includes(raw) || raw.includes("aguard")) return { key: "pending", label: "Pendente", tone: "warning" };
+  if (["confirmed", "confirmado"].includes(raw) || raw.includes("confirm")) return { key: "confirmed", label: "Confirmado", tone: "success" };
+  if (["completed", "attended", "finalizado", "concluido", "concluído"].includes(raw)) return { key: "completed", label: "Concluído", tone: "info" };
+  if (["rejected", "recusado"].includes(raw) || raw.includes("reject")) return { key: "rejected", label: "Recusado", tone: "danger" };
+  if (["cancelled", "canceled", "cancelado"].includes(raw) || raw.includes("cancel")) return { key: "cancelled", label: "Cancelado", tone: "danger" };
+  if (["no_show", "not_attended"].includes(raw)) return { key: "no_show", label: "Não compareceu", tone: "muted" };
+  return { key: "other", label: "Indefinido", tone: "neutral" };
 }
 
-function toDate(iso) {
-  const d = new Date(iso || "");
-  return Number.isNaN(d.getTime()) ? null : d;
+function relativeLabel(value) {
+  const d = toDate(value); if (!d) return "Horário não informado";
+  const diff = d.getTime() - Date.now();
+  const minutes = Math.floor(Math.abs(diff) / 60000);
+  if (Math.abs(diff) < 60000) return "É agora";
+  if (minutes < 60) return diff > 0 ? `Em ${minutes} min` : `Há ${minutes} min`;
+  const hours = Math.floor(minutes / 60); const mins = minutes % 60;
+  if (hours < 24) return diff > 0 ? `Em ${hours}h ${mins}min` : `Há ${hours}h ${mins}min`;
+  const days = Math.floor(hours / 24);
+  return diff > 0 ? `Em ${days} dia${days > 1 ? "s" : ""}` : `Há ${days} dia${days > 1 ? "s" : ""}`;
 }
 
-function formatDateBR(iso) {
-  const d = toDate(iso);
-  if (!d) return "—";
-  return d.toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
-}
-
-function formatDateFullBR(iso) {
-  const d = new Date((iso || "") + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatTimeBR(iso) {
-  const d = toDate(iso);
-  if (!d) return "—";
-  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatBRL(v) {
-  const n = Number(v || 0);
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function dayKey(iso) {
-  const d = toDate(iso);
-  if (!d) return "sem-data";
-  return d.toISOString().slice(0, 10);
-}
-
-function titleForDayKey(key) {
-  if (!key || key === "sem-data") return "Sem data";
-
-  const today = new Date();
-  const todayKey = today.toISOString().slice(0, 10);
-
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
-  const tomorrowKey = tomorrow.toISOString().slice(0, 10);
-
-  if (key === todayKey) return "Hoje";
-  if (key === tomorrowKey) return "Amanhã";
-
-  const d = new Date(key + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return "Data";
-  return d.toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  });
-}
-
-function normalizeStatus(s) {
-  const raw = safeText(s).trim().toLowerCase();
-  if (!raw) return { label: "Indefinido", tone: "neutral" };
-
-  if (raw.includes("confirm")) return { label: "Confirmado", tone: "success" };
-  if (raw.includes("pend") || raw.includes("aguard"))
-    return { label: "Pendente", tone: "warning" };
-  if (raw.includes("cancel")) return { label: "Cancelado", tone: "danger" };
-  if (raw.includes("final") || raw.includes("concl") || raw.includes("attended"))
-    return { label: "Finalizado", tone: "info" };
-
-  return { label: safeText(s), tone: "neutral" };
+function servicesLabel(order) {
+  const rows = Array.isArray(order?.items) ? order.items : [];
+  const names = rows.map((r) => r?.item?.name || r?.name).filter(Boolean);
+  if (!names.length) return "Detalhes do atendimento";
+  if (names.length <= 2) return names.join(" + ");
+  return `${names.slice(0, 2).join(" + ")} +${names.length - 2}`;
 }
 
 export default function OrderMyPage() {
   const navigate = useNavigate();
   const { orders, loading, error, refresh } = useOrdersMy();
   const { imageUrl } = useImageUtils();
+  const [filter, setFilter] = useState("upcoming");
+  const [search, setSearch] = useState("");
 
-  const grouped = useMemo(() => {
-    const safe = Array.isArray(orders) ? orders : [];
+  const safeOrders = useMemo(() => Array.isArray(orders) ? orders : [], [orders]);
+  const stats = useMemo(() => safeOrders.reduce((acc, o) => {
+    const st = statusMeta(o?.appointment_status || o?.status); acc.total++;
+    if (st.key === "pending") acc.pending++;
+    if (st.key === "confirmed") acc.confirmed++;
+    if (st.key === "completed") acc.completed++;
+    return acc;
+  }, { total: 0, pending: 0, confirmed: 0, completed: 0 }), [safeOrders]);
 
-    const sorted = safe
-      .slice()
-      .sort(
-        (a, b) =>
-          (toDate(b?.order_datetime)?.getTime() || 0) -
-          (toDate(a?.order_datetime)?.getTime() || 0)
-      );
+  const nextAppointment = useMemo(() => safeOrders
+    .filter((o) => ["pending", "confirmed"].includes(statusMeta(o?.appointment_status || o?.status).key) && (toDate(o?.order_datetime)?.getTime() || 0) >= Date.now())
+    .sort((a, b) => (toDate(a.order_datetime)?.getTime() || Infinity) - (toDate(b.order_datetime)?.getTime() || Infinity))[0] || null, [safeOrders]);
 
-    const map = new Map();
-
-    for (const o of sorted) {
-      const k = dayKey(o?.order_datetime);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k).push(o);
-    }
-
-    return Array.from(map.entries())
-      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-      .map(([k, items]) => ({
-        key: k,
-        title: titleForDayKey(k),
-        dateText: k !== "sem-data" ? formatDateFullBR(k) : "",
-        items,
-      }));
-  }, [orders]);
-
-  const stats = useMemo(() => {
-    const safe = Array.isArray(orders) ? orders : [];
-    const total = safe.length;
-
-    let confirmed = 0;
-    let pending = 0;
-    let canceled = 0;
-
-    safe.forEach((o) => {
-      const st = normalizeStatus(o?.appointment_status || o?.status);
-      if (st.tone === "success") confirmed++;
-      else if (st.tone === "warning") pending++;
-      else if (st.tone === "danger") canceled++;
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return safeOrders.filter((o) => {
+      const st = statusMeta(o?.appointment_status || o?.status);
+      const when = toDate(o?.order_datetime)?.getTime() || 0;
+      const upcoming = when >= Date.now() && ["pending", "confirmed"].includes(st.key);
+      if (filter === "upcoming" && !upcoming) return false;
+      if (filter === "pending" && st.key !== "pending") return false;
+      if (filter === "confirmed" && st.key !== "confirmed") return false;
+      if (filter === "history" && upcoming) return false;
+      if (!term) return true;
+      const haystack = [o?.establishment?.name, o?.employer?.user?.first_name, o?.employer?.user?.last_name, o?.order_number, servicesLabel(o)].filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(term);
+    }).sort((a, b) => {
+      const aTime = toDate(a?.order_datetime)?.getTime() || 0; const bTime = toDate(b?.order_datetime)?.getTime() || 0;
+      if (filter === "history") return bTime - aTime;
+      return aTime - bTime;
     });
+  }, [safeOrders, filter, search]);
 
-    return { total, confirmed, pending, canceled };
-  }, [orders]);
+  const openDetail = useCallback((o) => navigate(`/order/view/${o.id}`), [navigate]);
 
-  const heroBg = useMemo(() => {
-    const safe = Array.isArray(orders) ? orders : [];
-    const bg = safe.find((o) => o?.establishment?.files?.background)?.establishment
-      ?.files?.background;
-    return bg?.path || bg?.url || null;
-  }, [orders]);
-
-  const heroLogo = useMemo(() => {
-    const safe = Array.isArray(orders) ? orders : [];
-    const logo = safe.find((o) => o?.establishment?.files?.logo)?.establishment?.files
-      ?.logo;
-    return logo?.path || logo?.url || null;
-  }, [orders]);
-
-  const chips = useMemo(() => {
-    const c = [];
-    c.push({ label: `${stats.total} agendamentos`, title: "Total" });
-    if (stats.confirmed) c.push({ label: `${stats.confirmed} confirmados`, variant: "rating" });
-    if (stats.pending) c.push({ label: `${stats.pending} pendentes` });
-    if (stats.canceled) c.push({ label: `${stats.canceled} cancelados` });
-    return c;
-  }, [stats]);
-
-  const openEstablishment = useCallback(
-    (o) => {
-      const slug = o?.establishment?.slug;
-      if (!slug) return;
-      navigate(`/establishment/view/${slug}`);
-    },
-    [navigate]
-  );
-
-  const openEmployer = useCallback(
-    (o) => {
-      const userName = o?.employer?.user?.user_name;
-      if (!userName) return;
-      navigate(`/employer/view/${userName}`);
-    },
-    [navigate]
-  );
-
-  const renderCard = useCallback(
-    (o) => {
-      const st = normalizeStatus(o?.appointment_status || o?.status);
-
-      const estName = o?.establishment?.name || "Estabelecimento";
-      const estCity = o?.establishment?.city || "";
-      const estUF = o?.establishment?.uf || "";
-
-      const logo = o?.establishment?.files?.logo;
-      const bg = o?.establishment?.files?.background;
-
-      const logoSrc = logo?.path || logo?.url || null;
-      const bgSrc = bg?.path || bg?.url || null;
-
-      const emp = o?.employer?.user;
-      const empName =
-        `${safeText(emp?.first_name)} ${safeText(emp?.last_name)}`.trim() || "Profissional";
-
-      const avatar = emp?.files?.avatar;
-      const avatarSrc = avatar?.path || avatar?.url || null;
-
-      return (
-        <article className="omp-card" key={o?.id}>
-          <div className="omp-cardBg">
-            {bgSrc ? (
-              <img
-                className="omp-cardBgImg"
-                src={imageUrl(bgSrc)}
-                alt="bg"
-                draggable={false}
-              />
-            ) : (
-              <div className="omp-cardBgFallback" />
-            )}
-            <div className="omp-cardBgOverlay" />
-          </div>
-
-          <div className="omp-cardBody">
-            <div className="omp-cardTop">
-              <div className="omp-cardTopLeft">
-                <div className="omp-logoWrap">
-                  {logoSrc ? (
-                    <img
-                      className="omp-logo"
-                      src={imageUrl(logoSrc)}
-                      alt={estName}
-                      draggable={false}
-                      onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-                    />
-                  ) : (
-                    <div className="omp-logoFallback" />
-                  )}
-                </div>
-
-                <div className="omp-titleBlock">
-                  <div className="omp-estName" title={estName}>
-                    <FaStore /> {estName}
-                  </div>
-
-                  {(estCity || estUF) && (
-                    <div className="omp-sub" title={`${estCity} - ${estUF}`}>
-                      <FaMapMarkerAlt /> {estCity}
-                      {estCity && estUF ? " - " : ""}
-                      {estUF}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className={`omp-status omp-status--${st.tone}`}>{st.label}</div>
-            </div>
-
-            <div className="omp-datetime">
-              <div className="omp-date">
-                <FaCalendarAlt /> {formatDateBR(o?.order_datetime)}
-              </div>
-              <div className="omp-time">
-                <FaClock /> {formatTimeBR(o?.order_datetime)}
-              </div>
-            </div>
-
-            <div className="omp-grid">
-              <div className="omp-item">
-                <span className="omp-label">
-                  <FaHashtag /> Pedido
-                </span>
-                <b className="omp-value">#{o?.order_number || o?.id}</b>
-              </div>
-
-              <div className="omp-item">
-                <span className="omp-label">
-                  <FaMoneyBillWave /> Total
-                </span>
-                <b className="omp-value">{formatBRL(o?.total_price)}</b>
-              </div>
-
-              <div className="omp-item omp-item--wide">
-                <span className="omp-label">
-                  <FaUser /> Profissional
-                </span>
-
-                <div className="omp-emp">
-                  <div className="omp-avatarWrap">
-                    {avatarSrc ? (
-                      <img
-                        className="omp-avatar"
-                        src={imageUrl(avatarSrc)}
-                        alt={empName}
-                        draggable={false}
-                        onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-                      />
-                    ) : (
-                      <div className="omp-avatarFallback" />
-                    )}
-                  </div>
-
-                  <div className="omp-empText">
-                    <div className="omp-empName">{empName}</div>
-                    {!!emp?.user_name && <div className="omp-empUser">@{emp.user_name}</div>}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {!!o?.notes && (
-              <div className="omp-notes">
-                <div className="omp-notesTitle">
-                  <FaInfoCircle /> Observação
-                </div>
-                <div className="omp-notesText">{safeText(o.notes)}</div>
-              </div>
-            )}
-
-            <div className="omp-actions">
-              <button
-                className="omp-btn"
-                type="button"
-                onClick={() => openEstablishment(o)}
-                disabled={!o?.establishment?.slug}
-              >
-                Ver Estabelecimento <FaChevronRight />
-              </button>
-
-              <button
-                className="omp-btn omp-btn--ghost"
-                type="button"
-                onClick={() => openEmployer(o)}
-                disabled={!o?.employer?.user?.user_name}
-              >
-                Ver Profissional <FaChevronRight />
-              </button>
-            </div>
-          </div>
-        </article>
-      );
-    },
-    [imageUrl, openEmployer, openEstablishment]
-  );
-
-  return (
-    <div className="omp">
-      <GlobalProfileHero
-        title="Minha Agenda"
-        logoSrc={heroLogo || PLACEHOLDER}
-        chips={chips}
-        stats={[
-          { label: "Total", value: stats.total },
-          { label: "Confirmados", value: stats.confirmed },
-          { label: "Pendentes", value: stats.pending },
-          { label: "Cancelados", value: stats.canceled },
-        ]}
-        primaryAction={{
-          label: loading ? "Atualizando..." : "Atualizar",
-          onClick: refresh,
-          disabled: loading,
-          title: "Atualizar agendamentos",
-        }}
-        secondaryAction={{
-          label: "Voltar",
-          onClick: () => navigate(-1),
-          title: "Voltar",
-        }}
-        imageUrl={imageUrl}
-        aside={{
-          title: "Organize sua agenda",
-          subtitle: "Aqui você acompanha todos seus horários marcados",
-          image: heroLogo || null,
-          meta: ["Agendamentos", "Status", "Profissionais"],
-          clickable: false,
-        }}
-      />
-
-      <div className="omp-wrap">
-        <div className="omp-toolbar">
-          <button className="omp-toolBtn" onClick={() => navigate(-1)}>
-            <FaArrowLeft /> Voltar
-          </button>
-
-          <button className="omp-toolBtn omp-toolBtn--primary" onClick={refresh} disabled={loading}>
-            <FaSyncAlt /> {loading ? "Atualizando..." : "Atualizar"}
-          </button>
+  const renderAppointment = (o, featured = false) => {
+    const st = statusMeta(o?.appointment_status || o?.status);
+    const emp = o?.employer?.user || o?.attendant?.user || null;
+    const empName = `${safeText(emp?.first_name)} ${safeText(emp?.last_name)}`.trim() || "Profissional a definir";
+    const est = o?.establishment || {};
+    const logo = est?.files?.logo?.path || est?.files?.logo?.url;
+    return <article key={o.id} className={`omp-appointment ${featured ? "omp-appointment--featured" : ""}`} onClick={() => openDetail(o)}>
+      <div className="omp-datebox"><b>{formatTime(o.order_datetime)}</b><span>{formatDay(o.order_datetime)}</span></div>
+      <div className="omp-businessLogo">{logo ? <img src={imageUrl(logo)} alt={est.name || "Barbearia"} onError={(e) => { e.currentTarget.src = PLACEHOLDER; }} /> : <FaStore />}</div>
+      <div className="omp-mainInfo">
+        <div className="omp-rowTitle"><strong>{est.name || "Barbearia"}</strong><span className={`omp-status omp-status--${st.tone}`}>{st.label}</span></div>
+        <div className="omp-service"><FaCut /> {servicesLabel(o)}</div>
+        <div className="omp-meta">
+          <span><FaUser /> {empName}</span>
+          {(est.city || est.uf) && <span><FaMapMarkerAlt /> {[est.city, est.uf].filter(Boolean).join(" - ")}</span>}
+          <span><FaHashtag /> {o.order_number || o.id}</span>
         </div>
-
-        {loading && (
-          <div className="omp-loading">
-            <div className="omp-loadingTitle">Carregando sua agenda...</div>
-            <div className="omp-loadingSub">Aguarde um instante 😉</div>
-          </div>
-        )}
-
-        {!!error && !loading && (
-          <div className="omp-error">
-            <b>Ops! Não conseguimos carregar sua agenda.</b>
-            <div className="omp-errorText">{error}</div>
-          </div>
-        )}
-
-        {!loading && !error && (!orders || orders.length === 0) && (
-          <div className="omp-empty">
-            <div className="omp-emptyTitle">Nenhum agendamento encontrado</div>
-            <div className="omp-emptySub">
-              Quando você marcar um atendimento, ele vai aparecer aqui com todos os detalhes.
-            </div>
-          </div>
-        )}
-
-        {!loading && !error && orders?.length > 0 && (
-          <div className="omp-timeline">
-            {grouped.map((g) => (
-              <section className="omp-day" key={g.key}>
-                <div className="omp-dayHeader">
-                  <div className="omp-dayTitle">{g.title}</div>
-                  <div className="omp-daySub">{g.dateText}</div>
-                </div>
-
-                <div className="omp-gridWrap">{g.items.map(renderCard)}</div>
-              </section>
-            ))}
-          </div>
-        )}
       </div>
+      <div className="omp-rightInfo"><b>{formatBRL(o.total_price)}</b><span className="omp-relative">{relativeLabel(o.order_datetime)}</span><button type="button" onClick={(e) => { e.stopPropagation(); openDetail(o); }}>Ver detalhes <FaChevronRight /></button></div>
+    </article>;
+  };
+
+  return <main className="omp">
+    <div className="omp-shell">
+      <header className="omp-header">
+        <div><span className="omp-eyebrow">Rasoio • sua agenda</span><h1>Meus agendamentos</h1><p>Encontre rapidamente seu próximo atendimento e acompanhe todo o histórico.</p></div>
+        <div className="omp-headerActions"><button onClick={() => navigate(-1)}><FaArrowLeft /> Voltar</button><button className="primary" onClick={refresh} disabled={loading}><FaSyncAlt /> {loading ? "Atualizando..." : "Atualizar"}</button></div>
+      </header>
+
+      {nextAppointment && <section className="omp-next"><div className="omp-nextLabel"><FaClock /> Seu próximo atendimento</div>{renderAppointment(nextAppointment, true)}</section>}
+
+      <section className="omp-stats">
+        <button onClick={() => setFilter("upcoming")} className={filter === "upcoming" ? "active" : ""}><FaCalendarAlt /><span>Próximos</span><b>{safeOrders.filter((o) => (toDate(o.order_datetime)?.getTime() || 0) >= Date.now() && ["pending", "confirmed"].includes(statusMeta(o.appointment_status || o.status).key)).length}</b></button>
+        <button onClick={() => setFilter("pending")} className={filter === "pending" ? "active" : ""}><FaHourglassHalf /><span>Pendentes</span><b>{stats.pending}</b></button>
+        <button onClick={() => setFilter("confirmed")} className={filter === "confirmed" ? "active" : ""}><FaCheckCircle /><span>Confirmados</span><b>{stats.confirmed}</b></button>
+        <button onClick={() => setFilter("history")} className={filter === "history" ? "active" : ""}><FaHistory /><span>Histórico</span><b>{Math.max(0, stats.total - stats.pending - stats.confirmed)}</b></button>
+      </section>
+
+      <section className="omp-controls"><div className="omp-search"><FaSearch /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar barbearia, profissional, serviço ou número..." /></div><span>{filtered.length} {filtered.length === 1 ? "agendamento" : "agendamentos"}</span></section>
+
+      {loading && <div className="omp-state"><FaSyncAlt className="spin" /><b>Carregando seus agendamentos...</b></div>}
+      {!loading && error && <div className="omp-state omp-state--error"><FaTimesCircle /><b>Não foi possível carregar seus agendamentos.</b><span>{error}</span><button onClick={refresh}>Tentar novamente</button></div>}
+      {!loading && !error && filtered.length === 0 && <div className="omp-state"><FaBoxOpen /><b>Nenhum agendamento encontrado</b><span>Altere o filtro ou faça um novo agendamento para vê-lo aqui.</span></div>}
+      {!loading && !error && filtered.length > 0 && <section className="omp-list">{filtered.map((o) => renderAppointment(o))}</section>}
     </div>
-  );
+  </main>;
 }
