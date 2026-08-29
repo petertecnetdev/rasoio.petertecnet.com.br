@@ -31,7 +31,7 @@ const actions = [
     label: "Produtos",
     description: "Produtos e estoque",
     icon: "🧴",
-    path: (establishment) => `/establishment/product/${establishment.slug}`,
+    path: (establishment) => `/establishment/item/${establishment.slug}?type=product`,
   },
   {
     key: "edit",
