@@ -19,6 +19,8 @@ dayjs.extend(utc);
 dayjs.extend(tz);
 
 const MySwal = withReactContent(Swal);
+const TZ = "America/Sao_Paulo";
+const DAYS_TO_CHECK = 14;
 
 const buildInitialsSvg = (name = "?") => {
   const parts = String(name || "?")
@@ -70,9 +72,7 @@ const normalizeApiError = (err) => {
   if (errors && typeof errors === "object") {
     Object.entries(errors).forEach(([field, value]) => {
       if (Array.isArray(value)) {
-        value
-          .filter(Boolean)
-          .forEach((m) => fieldMessages.push({ field, message: String(m) }));
+        value.filter(Boolean).forEach((m) => fieldMessages.push({ field, message: String(m) }));
       } else if (value && typeof value === "string") {
         fieldMessages.push({ field, message: value });
       } else if (value && typeof value === "object") {
@@ -95,27 +95,21 @@ const escapeHtml = (str) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-const pickApiSuccessMessage = (data) => {
-  return (
-    data?.message ||
-    data?.msg ||
-    data?.data?.message ||
-    data?.data?.msg ||
-    "Agendamento registrado com sucesso!"
-  );
-};
+const pickApiSuccessMessage = (data) =>
+  data?.message ||
+  data?.msg ||
+  data?.data?.message ||
+  data?.data?.msg ||
+  "Agendamento registrado com sucesso!";
 
-const pickApiOrderId = (data) => {
-  return (
-    data?.id ||
-    data?.order_id ||
-    data?.data?.id ||
-    data?.data?.order_id ||
-    data?.order?.id ||
-    data?.data?.order?.id ||
-    null
-  );
-};
+const pickApiOrderId = (data) =>
+  data?.id ||
+  data?.order_id ||
+  data?.data?.id ||
+  data?.data?.order_id ||
+  data?.order?.id ||
+  data?.data?.order?.id ||
+  null;
 
 export default function AppointmentWizardModal({
   show,
@@ -135,59 +129,68 @@ export default function AppointmentWizardModal({
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedEmployer, setSelectedEmployer] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [availableDates, setAvailableDates] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingDates, setLoadingDates] = useState(false);
   const [customerCpf, setCustomerCpf] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
 
   const hasPreselectedEmployer = !!preselectedEmployer;
   const finalStep = hasPreselectedEmployer ? 4 : 5;
-
+  const dateStep = hasPreselectedEmployer ? 2 : 3;
+  const timeStep = dateStep + 1;
   const resolvedEmployer = selectedEmployer || preselectedEmployer || null;
 
-  // ✅ FIX: resolve estabelecimento mesmo quando abrir via employer
-  const resolvedEstablishment = useMemo(() => {
-    return (
+  const resolvedEstablishment = useMemo(
+    () =>
       establishment ||
       preselectedEmployer?.establishment ||
       resolvedEmployer?.establishment ||
-      null
-    );
-  }, [establishment, preselectedEmployer, resolvedEmployer]);
+      null,
+    [establishment, preselectedEmployer, resolvedEmployer]
+  );
 
-  // ✅ CORREÇÃO PRINCIPAL:
-  // Se trocar employer, APAGA horários e horário selecionado (evita agendar com horário errado)
-  useEffect(() => {
-    if (!show) return;
+  const totalDuration = useMemo(
+    () =>
+      selectedServices.reduce(
+        (sum, service) => sum + (parseInt(service?.duration, 10) || 30),
+        0
+      ),
+    [selectedServices]
+  );
 
-    setSelectedTime(null);
-    setAvailableTimes([]);
+  const totalValue = useMemo(
+    () => selectedServices.reduce((sum, service) => sum + (parseFloat(service?.price) || 0), 0),
+    [selectedServices]
+  );
 
-    // se já estava no step horário ou confirmação, volta para o step de data,
-    // para obrigar o usuário recarregar horários do employer correto
-    const stepDate = hasPreselectedEmployer ? 2 : 3;
-    if (step >= stepDate + 1) {
-      setStep(stepDate);
-    }
-  }, [resolvedEmployer?.id]); // ✅ quando muda o employer
-
-  // ✅ Se trocar a data, zera horário também
-  useEffect(() => {
-    if (!show) return;
-    setSelectedTime(null);
-    setAvailableTimes([]);
-  }, [selectedDate]);
-
-  // ✅ Segurança: se lista de horários mudou e não contém o horário selecionado, apaga
-  useEffect(() => {
-    if (!selectedTime) return;
-
-    const safe = Array.isArray(availableTimes) ? availableTimes : [];
-    if (!safe.includes(selectedTime)) {
-      setSelectedTime(null);
-    }
-  }, [availableTimes, selectedTime]);
+  const showResultModal = useCallback(async ({ type, title, html, text }) => {
+    return MySwal.fire({
+      icon: type,
+      title,
+      html: html || undefined,
+      text: text || undefined,
+      background: "#0a0a0c",
+      color: "#fff",
+      confirmButtonColor: "#00e5ff",
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+      heightAuto: false,
+      target: document.body,
+      customClass: {
+        container: "awm-swal-container",
+        popup: "awm-swal-popup",
+        title: "awm-swal-title",
+        htmlContainer: "awm-swal-html",
+      },
+      didOpen: () => {
+        const container = document.querySelector(".awm-swal-container");
+        if (container) container.style.zIndex = "2147483647";
+      },
+    });
+  }, []);
 
   const resolveImage = useCallback(
     (entity, name) => {
@@ -213,8 +216,8 @@ export default function AppointmentWizardModal({
         ...fileCandidates,
       ];
 
-      for (const p of paths) {
-        const url = imageUrl ? imageUrl(p) : imgUrl(p);
+      for (const path of paths) {
+        const url = imageUrl ? imageUrl(path) : imgUrl(path);
         if (url) return url;
       }
 
@@ -231,46 +234,56 @@ export default function AppointmentWizardModal({
     );
   }, [resolvedEstablishment, resolveImage]);
 
-  const showResultModal = useCallback(async ({ type, title, html, text }) => {
-    return MySwal.fire({
-      icon: type,
-      title,
-      html: html || undefined,
-      text: text || undefined,
-      background: "#0a0a0c",
-      color: "#fff",
-      confirmButtonColor: "#00e5ff",
-      allowOutsideClick: false,
-      allowEscapeKey: true,
-      heightAuto: false,
-      target: document.body,
-      customClass: {
-        container: "awm-swal-container",
-        popup: "awm-swal-popup",
-        title: "awm-swal-title",
-        htmlContainer: "awm-swal-html",
-      },
-      didOpen: () => {
-        const c = document.querySelector(".awm-swal-container");
-        if (c) c.style.zIndex = "2147483647";
-      },
-    });
-  }, []);
+  const prepareAvailableDates = useCallback(
+    async (employer) => {
+      if (!employer?.id || !selectedServices.length || totalDuration <= 0) {
+        setAvailableDates([]);
+        setSelectedDate(null);
+        return [];
+      }
+
+      setLoadingDates(true);
+      setSelectedDate(null);
+      setSelectedTime(null);
+      setAvailableTimes([]);
+
+      try {
+        const today = dayjs().tz(TZ).startOf("day");
+        const dates = Array.from({ length: DAYS_TO_CHECK }, (_, index) =>
+          today.add(index, "day").format("YYYY-MM-DD")
+        );
+
+        const checks = await Promise.all(
+          dates.map(async (date) => {
+            const times = await loadAvailableTimes(date, employer, totalDuration);
+            return Array.isArray(times) && times.length > 0 ? date : null;
+          })
+        );
+
+        const validDates = checks.filter(Boolean);
+        setAvailableDates(validDates);
+        return validDates;
+      } finally {
+        setLoadingDates(false);
+      }
+    },
+    [loadAvailableTimes, selectedServices.length, totalDuration]
+  );
 
   useEffect(() => {
     if (!show) return;
 
     setStep(1);
 
-    const sid =
+    const serviceId =
       preselectedServiceId ||
       preselectedService?.id ||
       preselectedService?.item_id ||
       null;
 
-    if (sid && services.length) {
+    if (serviceId && services.length) {
       const serviceFromList = services.find(
-        (s) => Number(s.id || s.item_id) === Number(sid)
+        (service) => Number(service.id || service.item_id) === Number(serviceId)
       );
       setSelectedServices(serviceFromList ? [serviceFromList] : []);
     } else {
@@ -279,9 +292,11 @@ export default function AppointmentWizardModal({
 
     setSelectedEmployer(preselectedEmployer || null);
     setSelectedDate(null);
+    setAvailableDates([]);
     setAvailableTimes([]);
     setSelectedTime(null);
     setLoading(false);
+    setLoadingDates(false);
 
     const userData = localStorage.getItem("user");
     if (userData) {
@@ -300,67 +315,104 @@ export default function AppointmentWizardModal({
     }
   }, [show, preselectedService, preselectedServiceId, preselectedEmployer, services]);
 
-  const totalDuration = useMemo(
-    () =>
-      selectedServices.reduce(
-        (sum, s) => sum + (parseInt(s.duration, 10) || 30),
-        0
-      ),
-    [selectedServices]
-  );
+  useEffect(() => {
+    if (!show) return;
+    setSelectedTime(null);
+    setAvailableTimes([]);
+  }, [selectedDate, show]);
 
-  const totalValue = useMemo(
-    () =>
-      selectedServices.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0),
-    [selectedServices]
-  );
+  useEffect(() => {
+    if (!selectedTime) return;
+    if (!availableTimes.includes(selectedTime)) setSelectedTime(null);
+  }, [availableTimes, selectedTime]);
 
   const handleServiceToggle = useCallback((service) => {
     const id = service.id || service.item_id;
-    setSelectedServices((prev) => {
-      const exists = prev.some((s) => (s.id || s.item_id) === id);
-      if (exists) return prev.filter((s) => (s.id || s.item_id) !== id);
-      return [...prev, service];
+    setSelectedServices((current) => {
+      const exists = current.some((item) => (item.id || item.item_id) === id);
+      return exists
+        ? current.filter((item) => (item.id || item.item_id) !== id)
+        : [...current, service];
     });
+    setAvailableDates([]);
+    setSelectedDate(null);
+    setAvailableTimes([]);
+    setSelectedTime(null);
   }, []);
 
-  const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+  const handleEmployerSelect = useCallback((employer) => {
+    setSelectedEmployer(employer);
+    setAvailableDates([]);
+    setSelectedDate(null);
+    setAvailableTimes([]);
+    setSelectedTime(null);
+  }, []);
+
+  const fmtBRL = (value) => `R$ ${Number(value || 0).toFixed(2).replace(".", ",")}`;
 
   const handleNext = async () => {
-    if (loading) return;
+    if (loading || loadingDates) return;
 
     if (step === 1) {
       if (!selectedServices.length) return;
-      setStep(2);
+
+      if (hasPreselectedEmployer) {
+        setLoading(true);
+        try {
+          await prepareAvailableDates(resolvedEmployer);
+          setStep(dateStep);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setStep(2);
+      }
       return;
     }
 
     if (!hasPreselectedEmployer && step === 2) {
       if (!selectedEmployer) return;
-      setStep(3);
+
+      setLoading(true);
+      try {
+        await prepareAvailableDates(selectedEmployer);
+        setStep(dateStep);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
-    if (step === (hasPreselectedEmployer ? 2 : 3)) {
+    if (step === dateStep) {
       if (!selectedDate) return;
 
       try {
         setLoading(true);
-
-        // ✅ antes de carregar de novo, limpa seleção
         setSelectedTime(null);
         setAvailableTimes([]);
 
-        const dateSP = dayjs(selectedDate).format("YYYY-MM-DD");
-        const times = await loadAvailableTimes(dateSP, resolvedEmployer, totalDuration);
+        const dateYMD = String(selectedDate).slice(0, 10);
+        const times = await loadAvailableTimes(dateYMD, resolvedEmployer, totalDuration);
+        const safeTimes = Array.isArray(times) ? times : [];
 
-        setAvailableTimes(Array.isArray(times) ? times : []);
-        setStep((prev) => prev + 1);
-      } catch (e) {
+        if (!safeTimes.length) {
+          setAvailableDates((current) => current.filter((date) => date !== dateYMD));
+          setSelectedDate(null);
+          await showResultModal({
+            type: "warning",
+            title: "Data indisponível",
+            text: "Os horários dessa data acabaram de ficar indisponíveis. Escolha outra data.",
+          });
+          return;
+        }
+
+        setAvailableTimes(safeTimes);
+        setStep(timeStep);
+      } catch (error) {
         await showResultModal({
           type: "error",
           title: "Erro ao carregar horários",
-          text: e?.message || "Não foi possível carregar os horários disponíveis.",
+          text: error?.message || "Não foi possível carregar os horários disponíveis.",
         });
       } finally {
         setLoading(false);
@@ -368,158 +420,173 @@ export default function AppointmentWizardModal({
       return;
     }
 
-    if (step === (hasPreselectedEmployer ? 3 : 4)) {
+    if (step === timeStep) {
       if (!selectedTime) return;
       setStep(finalStep);
       return;
     }
 
-    if (step === finalStep) {
-      if (!customerCpf || !customerPhone) {
+    if (step !== finalStep) return;
+
+    if (!customerCpf || !customerPhone) {
+      await showResultModal({
+        type: "warning",
+        title: "Preencha os campos",
+        text: "Informe seu CPF e telefone para continuar.",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const dateBase = String(selectedDate).slice(0, 10);
+
+      // Revalida imediatamente antes de gravar para evitar confirmação de um
+      // horário que ficou ocupado enquanto o cliente concluía o formulário.
+      const freshTimes = await loadAvailableTimes(dateBase, resolvedEmployer, totalDuration);
+      if (!Array.isArray(freshTimes) || !freshTimes.includes(selectedTime)) {
+        setAvailableTimes(Array.isArray(freshTimes) ? freshTimes : []);
+        setSelectedTime(null);
+        setStep(timeStep);
         await showResultModal({
           type: "warning",
-          title: "Preencha os campos",
-          text: "Informe seu CPF e telefone para continuar.",
+          title: "Horário não está mais disponível",
+          text: "Escolha outro horário para continuar.",
         });
         return;
       }
 
-      try {
-        setLoading(true);
+      const datetimeSP = dayjs.tz(
+        `${dateBase} ${selectedTime}`,
+        "YYYY-MM-DD HH:mm",
+        TZ
+      );
 
-        const dateBase =
-          typeof selectedDate === "string"
-            ? selectedDate
-            : dayjs(selectedDate).format("YYYY-MM-DD");
+      const userData = localStorage.getItem("user");
+      const parsed = userData ? JSON.parse(userData) : null;
 
-        const datetimeSP = dayjs.tz(
-          `${dateBase} ${selectedTime}`,
-          "YYYY-MM-DD HH:mm",
-          "America/Sao_Paulo"
-        );
+      const payload = {
+        mode: "appointment",
+        app_id: resolvedEstablishment?.app_id || 2,
+        entity_name: "establishment",
+        entity_id: resolvedEstablishment?.id,
+        items: selectedServices.map((service) => ({
+          item_id: service.id || service.item_id,
+          quantity: 1,
+        })),
+        client_id: parsed?.id || null,
+        customer_name:
+          `${parsed?.first_name || ""} ${parsed?.last_name || ""}`.trim() || "Cliente App",
+        customer_phone: customerPhone,
+        customer_cpf: customerCpf,
+        origin: "App",
+        fulfillment: "dine-in",
+        payment_status: "pending",
+        payment_method: "Pix",
+        notes: "Agendamento feito pelo aplicativo.",
+        order_datetime: datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ"),
+        attendant_id: resolvedEmployer?.id || null,
+      };
 
-        const userData = localStorage.getItem("user");
-        const parsed = userData ? JSON.parse(userData) : null;
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${apiBaseUrl}/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(payload),
+      });
 
-        const payload = {
-          mode: "appointment",
-          app_id: resolvedEstablishment?.app_id || 2,
-          entity_name: "establishment",
-          entity_id: resolvedEstablishment?.id,
-          items: selectedServices.map((s) => ({
-            item_id: s.id || s.item_id,
-            quantity: 1,
-          })),
-          client_id: parsed?.id || null,
-          customer_name:
-            `${parsed?.first_name || ""} ${parsed?.last_name || ""}`.trim() || "Cliente App",
-          customer_phone: customerPhone,
-          customer_cpf: customerCpf,
-          origin: "App",
-          fulfillment: "dine-in",
-          payment_status: "pending",
-          payment_method: "Pix",
-          notes: "Agendamento feito pelo aplicativo.",
-          order_datetime: datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ"),
-          attendant_id: resolvedEmployer?.id || null,
-        };
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw data;
 
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${apiBaseUrl}/order`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify(payload),
-        });
+      const message = pickApiSuccessMessage(data);
+      const orderId = pickApiOrderId(data);
+      const html = `
+        <div class="awm-swal">
+          <div class="awm-swal__msg">${escapeHtml(message)}</div>
+          <div class="awm-swal__title">Resumo do agendamento</div>
+          <ul class="awm-swal__list">
+            ${
+              resolvedEstablishment?.name
+                ? `<li><b>Estabelecimento</b>: ${escapeHtml(resolvedEstablishment.name)}</li>`
+                : ""
+            }
+            ${
+              resolvedEmployer?.name
+                ? `<li><b>Profissional</b>: ${escapeHtml(resolvedEmployer.name)}</li>`
+                : ""
+            }
+            <li><b>Data</b>: ${escapeHtml(dayjs(dateBase).format("DD/MM/YYYY"))}</li>
+            <li><b>Horário</b>: ${escapeHtml(selectedTime)}</li>
+            ${orderId ? `<li><b>Código</b>: ${escapeHtml(orderId)}</li>` : ""}
+            <li><b>Total</b>: ${escapeHtml(fmtBRL(totalValue))}</li>
+            <li><b>Duração</b>: ${escapeHtml(totalDuration)} min</li>
+          </ul>
+        </div>
+      `;
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw data;
-
-        const msg = pickApiSuccessMessage(data);
-        const orderId = pickApiOrderId(data);
-
-        const html = `
+      await showResultModal({ type: "success", title: "Agendamento", html });
+      onHide?.();
+    } catch (error) {
+      const { message, fieldMessages } = normalizeApiError(error);
+      const html = fieldMessages.length
+        ? `
           <div class="awm-swal">
-            <div class="awm-swal__msg">${escapeHtml(msg)}</div>
-
-            <div class="awm-swal__title">Resumo do agendamento</div>
+            <div class="awm-swal__msg">${escapeHtml(message)}</div>
+            <div class="awm-swal__title">Campos com erro:</div>
             <ul class="awm-swal__list">
-              ${
-                resolvedEstablishment?.name
-                  ? `<li><b>Estabelecimento</b>: ${escapeHtml(resolvedEstablishment.name)}</li>`
-                  : ""
-              }
-              ${
-                resolvedEmployer?.name
-                  ? `<li><b>Profissional</b>: ${escapeHtml(resolvedEmployer.name)}</li>`
-                  : ""
-              }
-              <li><b>Data</b>: ${escapeHtml(dayjs(dateBase).format("DD/MM/YYYY"))}</li>
-              <li><b>Horário</b>: ${escapeHtml(selectedTime)}</li>
-              ${orderId ? `<li><b>Código</b>: ${escapeHtml(orderId)}</li>` : ""}
-              <li><b>Total</b>: ${escapeHtml(fmtBRL(totalValue))}</li>
-              <li><b>Duração</b>: ${escapeHtml(totalDuration)} min</li>
+              ${fieldMessages
+                .map((item) => `<li><b>${escapeHtml(item.field)}</b>: ${escapeHtml(item.message)}</li>`)
+                .join("")}
             </ul>
           </div>
-        `;
+        `
+        : `<div class="awm-swal"><div class="awm-swal__msg">${escapeHtml(message)}</div></div>`;
 
-        await showResultModal({
-          type: "success",
-          title: "Agendamento",
-          html,
-        });
-
-        onHide?.();
-      } catch (e) {
-        const { message, fieldMessages } = normalizeApiError(e);
-
-        const html = fieldMessages.length
-          ? `
-            <div class="awm-swal">
-              <div class="awm-swal__msg">${escapeHtml(message)}</div>
-              <div class="awm-swal__title">Campos com erro:</div>
-              <ul class="awm-swal__list">
-                ${fieldMessages
-                  .map((x) => `<li><b>${escapeHtml(x.field)}</b>: ${escapeHtml(x.message)}</li>`)
-                  .join("")}
-              </ul>
-            </div>
-          `
-          : `<div class="awm-swal"><div class="awm-swal__msg">${escapeHtml(message)}</div></div>`;
-
-        await showResultModal({
-          type: "error",
-          title: "Erro ao agendar",
-          html,
-        });
-      } finally {
-        setLoading(false);
-      }
+      await showResultModal({ type: "error", title: "Erro ao agendar", html });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleBack = () => setStep((s) => Math.max(1, s - 1));
+  const handleBack = () => {
+    if (loading || loadingDates) return;
+    setStep((current) => Math.max(1, current - 1));
+  };
 
   const handleSafeHide = useCallback(() => {
-    if (loading) return;
+    if (loading || loadingDates) return;
     onHide?.();
-  }, [loading, onHide]);
+  }, [loading, loadingDates, onHide]);
 
   const footer = (
     <>
-      <GlobalButton variant="secondary" onClick={handleSafeHide} disabled={loading}>
+      <GlobalButton
+        variant="secondary"
+        onClick={handleSafeHide}
+        disabled={loading || loadingDates}
+      >
         Cancelar
       </GlobalButton>
 
       {step > 1 && (
-        <GlobalButton variant="secondary" onClick={handleBack} disabled={loading}>
+        <GlobalButton
+          variant="secondary"
+          onClick={handleBack}
+          disabled={loading || loadingDates}
+        >
           Voltar
         </GlobalButton>
       )}
 
-      <GlobalButton variant="primary" onClick={handleNext} disabled={loading}>
+      <GlobalButton
+        variant="primary"
+        onClick={handleNext}
+        disabled={loading || loadingDates}
+      >
         {step === finalStep ? "Confirmar" : "Avançar"}
       </GlobalButton>
     </>
@@ -532,25 +599,29 @@ export default function AppointmentWizardModal({
       size="xl"
       backdrop="static"
       title="Agendamento"
-      subtitle={
-        resolvedEstablishment?.name
-          ? resolvedEstablishment.name
-          : "Selecione serviços e horário"
-      }
+      subtitle={resolvedEstablishment?.name || "Selecione serviços e horário"}
       logoSrc={establishmentLogoSrc}
       footer={footer}
       className="awm-modal awm-modal--fullscreen"
       dialogClassName="awm-modal__dialog"
       contentClassName="awm-modal__content"
     >
-      {loading && (
+      {(loading || loadingDates) && (
         <ProcessingIndicatorComponent
-          messages={[
-            "Processando seu agendamento...",
-            "Verificando disponibilidade...",
-            "Registrando pedido...",
-            "Aguarde só mais um instante...",
-          ]}
+          messages={
+            loadingDates
+              ? [
+                  "Verificando os dias disponíveis...",
+                  "Consultando a agenda do profissional...",
+                  "Encontrando horários livres...",
+                ]
+              : [
+                  "Processando seu agendamento...",
+                  "Verificando disponibilidade...",
+                  "Registrando pedido...",
+                  "Aguarde só mais um instante...",
+                ]
+          }
           interval={1100}
           gifSrc="/images/logo.mp4"
         />
@@ -581,7 +652,9 @@ export default function AppointmentWizardModal({
                   </div>
                 </>
               ) : (
-                <div className="awm__summary-hint">Selecione um profissional no próximo passo</div>
+                <div className="awm__summary-hint">
+                  Selecione um profissional no próximo passo
+                </div>
               )}
             </div>
 
@@ -598,20 +671,26 @@ export default function AppointmentWizardModal({
           <div className="wizard-step">
             <h4 className="text-center">Escolha os Serviços</h4>
             <div className="grid">
-              {services.map((s) => {
-                const id = s.id || s.item_id;
-                const active = selectedServices.some((x) => (x.id || x.item_id) === id);
+              {services.map((service) => {
+                const id = service.id || service.item_id;
+                const active = selectedServices.some(
+                  (item) => (item.id || item.item_id) === id
+                );
 
                 return (
                   <div
                     key={id}
                     className={`card-service ${active ? "active" : ""}`}
-                    onClick={() => handleServiceToggle(s)}
+                    onClick={() => handleServiceToggle(service)}
                   >
-                    <img src={resolveImage(s, s.name)} alt={s.name} className="service-img" />
-                    <h5 className="text-white">{s.name}</h5>
-                    <p>{fmtBRL(s.price)}</p>
-                    <small>{s.duration || 30} min</small>
+                    <img
+                      src={resolveImage(service, service.name)}
+                      alt={service.name}
+                      className="service-img"
+                    />
+                    <h5 className="text-white">{service.name}</h5>
+                    <p>{fmtBRL(service.price)}</p>
+                    <small>{service.duration || 30} min</small>
                   </div>
                 );
               })}
@@ -623,26 +702,21 @@ export default function AppointmentWizardModal({
           <div className="wizard-step">
             <h4 className="text-white text-center">Escolha o Profissional</h4>
             <div className="grid">
-              {employers.map((e) => {
-                const active = selectedEmployer?.id === e.id;
+              {employers.map((employer) => {
+                const active = selectedEmployer?.id === employer.id;
 
                 return (
                   <div
-                    key={e.id}
+                    key={employer.id}
                     className={`card-emp text-white ${active ? "active" : ""}`}
-                    onClick={() => {
-                      // ✅ AO TROCAR EMPLOYER, ZERA HORÁRIO ANTERIOR
-                      setSelectedEmployer(e);
-                      setSelectedTime(null);
-                      setAvailableTimes([]);
-                    }}
+                    onClick={() => handleEmployerSelect(employer)}
                   >
                     <img
-                      src={resolveImage(e, e.name)}
-                      alt={e.name}
+                      src={resolveImage(employer, employer.name)}
+                      alt={employer.name}
                       className="emp-avatar aling-center"
                     />
-                    <strong>{e.name}</strong>
+                    <strong>{employer.name}</strong>
                   </div>
                 );
               })}
@@ -650,15 +724,17 @@ export default function AppointmentWizardModal({
           </div>
         )}
 
-        {step === (hasPreselectedEmployer ? 2 : 3) && (
+        {step === dateStep && (
           <GlobalDateCarousel
             selectedDate={selectedDate}
             onChange={setSelectedDate}
-            daysToShow={14}
+            daysToShow={DAYS_TO_CHECK}
+            availableDates={availableDates}
+            loading={loadingDates}
           />
         )}
 
-        {step === (hasPreselectedEmployer ? 3 : 4) && (
+        {step === timeStep && (
           <StepTime
             availableTimes={availableTimes}
             selected={selectedTime}
@@ -678,13 +754,13 @@ export default function AppointmentWizardModal({
             <div className="awm__inputs-grid">
               <input
                 value={customerCpf}
-                onChange={(e) => setCustomerCpf(e.target.value)}
+                onChange={(event) => setCustomerCpf(event.target.value)}
                 placeholder="CPF"
                 className="awm__input"
               />
               <input
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(event) => setCustomerPhone(event.target.value)}
                 placeholder="Telefone"
                 className="awm__input"
               />
