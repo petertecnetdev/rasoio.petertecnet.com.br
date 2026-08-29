@@ -1,17 +1,18 @@
-// src/hooks/useEstablishmentItemsByIdentifier.js
-import { useEffect, useState, useCallback } from "react";
+// src/hooks/useEstablishmentItemsBySlug.js
+import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "../services/api";
+import { appId } from "../config";
 
-export default function useEstablishmentItemsByIdentifier(identifier) {
+export default function useEstablishmentItemsBySlug(identifier, itemType = null) {
   const [establishment, setEstablishment] = useState(null);
-  const [items, setItems] = useState([]);
+  const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
   const fetchItems = useCallback(async () => {
     if (!identifier) {
       setLoading(false);
-      setItems([]);
+      setAllItems([]);
       setEstablishment(null);
       return;
     }
@@ -20,18 +21,38 @@ export default function useEstablishmentItemsByIdentifier(identifier) {
     setApiError(null);
 
     try {
-      const { data } = await api.get(
-        `/item/list-by-entity/${encodeURIComponent(identifier)}`
-      );
+      const encodedIdentifier = encodeURIComponent(identifier);
+      const [establishmentResponse, itemsResponse] = await Promise.all([
+        api.get(`/establishment/view/${encodedIdentifier}`, {
+          params: { app_id: appId },
+        }),
+        api.get(`/item/list-by-entity/${encodedIdentifier}`),
+      ]);
 
-      setEstablishment(data.establishment || null);
-      setItems(Array.isArray(data.items) ? data.items : []);
+      const resolvedEstablishment =
+        establishmentResponse?.data?.establishment || null;
+
+      if (
+        !resolvedEstablishment ||
+        Number(resolvedEstablishment.app_id) !== Number(appId)
+      ) {
+        throw new Error("Esta barbearia não pertence à Rasoio.");
+      }
+
+      setEstablishment(resolvedEstablishment);
+      setAllItems(
+        Array.isArray(itemsResponse?.data?.items)
+          ? itemsResponse.data.items
+          : []
+      );
     } catch (error) {
       setApiError(
         error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          error?.message ||
           "Erro ao buscar itens do estabelecimento."
       );
-      setItems([]);
+      setAllItems([]);
       setEstablishment(null);
     } finally {
       setLoading(false);
@@ -42,9 +63,24 @@ export default function useEstablishmentItemsByIdentifier(identifier) {
     fetchItems();
   }, [fetchItems]);
 
+  const items = useMemo(() => {
+    if (!itemType) return allItems;
+    return allItems.filter(
+      (item) => String(item?.type || "").toLowerCase() === itemType
+    );
+  }, [allItems, itemType]);
+
   return {
     establishment,
     items,
+    allItems,
+    count: items.length,
+    serviceCount: allItems.filter(
+      (item) => String(item?.type || "").toLowerCase() === "service"
+    ).length,
+    productCount: allItems.filter(
+      (item) => String(item?.type || "").toLowerCase() === "product"
+    ).length,
     loading,
     apiError,
     reload: fetchItems,
