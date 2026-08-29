@@ -16,15 +16,27 @@ const fmtBRL = (value) =>
     currency: "BRL",
   });
 
-export default function EstablishmentItemPage() {
+export default function EstablishmentItemPage({ itemType = "service" }) {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { establishment, items, count, loading, apiError, reload } =
-    useEstablishmentItemsBySlug(slug);
+  const {
+    establishment,
+    items,
+    count,
+    serviceCount,
+    productCount,
+    loading,
+    apiError,
+    reload,
+  } = useEstablishmentItemsBySlug(slug, itemType);
+
+  const isService = itemType === "service";
+  const singular = isService ? "serviço" : "produto";
+  const plural = isService ? "serviços" : "produtos";
 
   const handleDelete = async (item) => {
     const result = await Swal.fire({
-      title: "Excluir item?",
+      title: `Excluir ${singular}?`,
       text: `Deseja excluir “${item.name}”?`,
       icon: "warning",
       showCancelButton: true,
@@ -40,7 +52,7 @@ export default function EstablishmentItemPage() {
       await reload();
       await Swal.fire({
         icon: "success",
-        title: "Item removido",
+        title: `${isService ? "Serviço" : "Produto"} removido`,
         timer: 1300,
         showConfirmButton: false,
       });
@@ -51,7 +63,7 @@ export default function EstablishmentItemPage() {
         text:
           error?.response?.data?.message ||
           error?.response?.data?.error ||
-          "Não foi possível excluir o item.",
+          `Não foi possível excluir o ${singular}.`,
       });
     }
   };
@@ -78,8 +90,12 @@ export default function EstablishmentItemPage() {
     <>
       <EstablishmentHero
         title={establishment.fantasy || establishment.name}
-        subtitle="Serviços e produtos"
-        description="Gerencie o catálogo da barbearia. A duração dos serviços é usada para calcular a agenda dos barbeiros."
+        subtitle={isService ? "Serviços" : "Produtos"}
+        description={
+          isService
+            ? "Gerencie os serviços oferecidos pela barbearia. Todo serviço possui duração, usada para calcular corretamente os horários disponíveis na agenda."
+            : "Gerencie os produtos vendidos pela barbearia separadamente dos serviços de atendimento."
+        }
         city={establishment.city}
         uf={establishment.uf}
         logo={establishment?.images?.logo || establishment.logo}
@@ -88,22 +104,41 @@ export default function EstablishmentItemPage() {
       />
 
       <Container className="mt-4">
-        <div className="d-flex justify-content-end mb-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+          <div className="d-flex flex-wrap gap-2">
+            <GlobalButton
+              variant={isService ? "primary" : "outline"}
+              onClick={() =>
+                navigate(`/establishment/item/${establishment.slug}`)
+              }
+            >
+              Serviços ({serviceCount})
+            </GlobalButton>
+            <GlobalButton
+              variant={!isService ? "primary" : "outline"}
+              onClick={() =>
+                navigate(`/establishment/product/${establishment.slug}`)
+              }
+            >
+              Produtos ({productCount})
+            </GlobalButton>
+          </div>
+
           <GlobalButton
             variant="success"
             onClick={() =>
               navigate(`/item/create/${establishment.slug}`, {
-                state: { establishment },
+                state: { establishment, itemType },
               })
             }
           >
-            + Novo item
+            + Novo {singular}
           </GlobalButton>
         </div>
 
         {count === 0 ? (
           <Alert variant="secondary">
-            Nenhum serviço ou produto cadastrado para esta barbearia.
+            Nenhum {singular} cadastrado para esta barbearia.
           </Alert>
         ) : (
           <Row className="g-4">
