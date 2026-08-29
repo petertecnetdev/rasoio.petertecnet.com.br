@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   FaCalendarAlt,
+  FaCheckCircle,
   FaClock,
   FaCut,
   FaHourglassHalf,
@@ -58,7 +59,7 @@ const shortTime = (value) => {
 
 const statusMeta = (value) =>
   ({
-    pending: ["Solicitado", "warning"],
+    pending: ["Pendente", "warning"],
     confirmed: ["Confirmado", "success"],
     completed: ["Concluído", "done"],
     attended: ["Concluído", "done"],
@@ -67,7 +68,17 @@ const statusMeta = (value) =>
     canceled: ["Cancelado", "danger"],
     no_show: ["Não compareceu", "muted"],
     not_attended: ["Não compareceu", "muted"],
-  })[String(value || "").toLowerCase()] || [value || "Indefinido", "muted"];
+  })[String(value || "").toLowerCase()] || ["Indefinido", "muted"];
+
+const paymentText = (value) =>
+  ({
+    pending: "Pendente",
+    paid: "Pago",
+    approved: "Aprovado",
+    refunded: "Reembolsado",
+    cancelled: "Cancelado",
+    canceled: "Cancelado",
+  })[String(value || "").toLowerCase()] || (value ? "Não informado" : "Não informado");
 
 const fullName = (person, fallback = "Usuário") =>
   [person?.first_name, person?.last_name].filter(Boolean).join(" ") ||
@@ -99,6 +110,20 @@ function roleIcon(roleKey) {
   if (roleKey === "barber") return <FaCut />;
   if (roleKey === "manager") return <FaUserTie />;
   return <FaUser />;
+}
+
+function PersonCard({ kind, icon, label, person, fallback, role, linkUserName }) {
+  return (
+    <article className={`ovp-personCard ovp-personCard--${kind}`}>
+      <div className="ovp-personCardIcon">{icon}</div>
+      <div className="ovp-personCardBody">
+        <span>{label}</span>
+        <strong>{fullName(person, fallback)}</strong>
+        {role && <small>{role}</small>}
+        {linkUserName && <Link to={`/user/${linkUserName}`}>Ver perfil</Link>}
+      </div>
+    </article>
+  );
 }
 
 export default function OrderViewPage() {
@@ -156,9 +181,15 @@ export default function OrderViewPage() {
   const creator = audit?.created_by || order?.creator || null;
   const scheduledAt = audit?.scheduled_at || order?.scheduled_start || order?.order_datetime;
   const requestedAt = audit?.requested_at || order?.created_at;
+  const totalDuration = Number(order?.total_duration || 0);
+  const scheduledEnd = useMemo(() => {
+    const start = asDate(scheduledAt);
+    if (!start) return null;
+    return new Date(start.getTime() + Math.max(0, totalDuration) * 60000).toISOString();
+  }, [scheduledAt, totalDuration]);
+  const completedAt = order?.attended_at || null;
   const [statusLabel, statusTone] = statusMeta(order?.appointment_status || order?.status);
   const items = Array.isArray(order?.items) ? order.items : [];
-  const totalDuration = Number(order?.total_duration || 0);
 
   if (loading) {
     return <div className="ovp-state">Carregando detalhes do agendamento...</div>;
@@ -176,7 +207,7 @@ export default function OrderViewPage() {
           <h1>{customer.name}</h1>
           <div className="ovp-heroMeta">
             <span><FaCalendarAlt /> {shortDate(scheduledAt)}</span>
-            <span><FaClock /> {shortTime(scheduledAt)}</span>
+            <span><FaClock /> {shortTime(scheduledAt)} às {shortTime(scheduledEnd)}</span>
             {establishment?.name && <span><FaStore /> {establishment.name}</span>}
           </div>
         </div>
@@ -186,28 +217,66 @@ export default function OrderViewPage() {
         </div>
       </section>
 
-      <section className="ovp-auditGrid">
+      <section className="ovp-peopleHighlight" aria-label="Pessoas envolvidas no agendamento">
+        <PersonCard
+          kind="attendant"
+          icon={<FaCut />}
+          label="Responsável pelo atendimento"
+          person={attendant}
+          fallback="Profissional não informado"
+          role="Quem irá atender o cliente"
+          linkUserName={attendant?.user_name}
+        />
+        <PersonCard
+          kind="client"
+          icon={<FaUser />}
+          label="Cliente"
+          person={customer}
+          fallback="Cliente"
+          role="Pessoa que receberá o atendimento"
+          linkUserName={customer?.user_name}
+        />
+        <PersonCard
+          kind="creator"
+          icon={roleIcon(creator?.role_key)}
+          label="Quem cadastrou o agendamento"
+          person={creator}
+          fallback="Origem não identificada"
+          role={creator?.role || "Usuário"}
+          linkUserName={creator?.user_name}
+        />
+      </section>
+
+      <section className="ovp-auditGrid ovp-auditGrid--time">
         <article className="ovp-auditCard ovp-auditCard--requested">
           <div className="ovp-auditIcon"><FaClock /></div>
-          <span>Agendamento feito em</span>
+          <span>Solicitação registrada em</span>
           <strong>{dateTime(requestedAt)}</strong>
-          <small>Momento em que a solicitação foi registrada no sistema.</small>
+          <small>Data e horário em que o agendamento foi cadastrado.</small>
         </article>
 
         <article className="ovp-auditCard ovp-auditCard--scheduled">
           <div className="ovp-auditIcon"><FaCalendarAlt /></div>
-          <span>Data solicitada para atendimento</span>
+          <span>Início do atendimento</span>
           <strong>{dateTime(scheduledAt)}</strong>
           <small>{remainingLabel(scheduledAt, nowMs)}</small>
         </article>
 
-        <article className={`ovp-auditCard ovp-auditCard--creator ovp-auditCard--${creator?.role_key || "user"}`}>
-          <div className="ovp-auditIcon">{roleIcon(creator?.role_key)}</div>
-          <span>Agendamento criado por</span>
-          <strong>{fullName(creator, "Origem não identificada")}</strong>
-          <small>{creator?.role || "Usuário"}</small>
-          {creator?.user_name && <Link to={`/user/${creator.user_name}`}>Ver perfil</Link>}
+        <article className="ovp-auditCard ovp-auditCard--scheduledEnd">
+          <div className="ovp-auditIcon"><FaClock /></div>
+          <span>Fim previsto do atendimento</span>
+          <strong>{dateTime(scheduledEnd)}</strong>
+          <small>Duração prevista: {totalDuration ? `${totalDuration} minutos` : "não informada"}.</small>
         </article>
+
+        {completedAt && (
+          <article className="ovp-auditCard ovp-auditCard--completed">
+            <div className="ovp-auditIcon"><FaCheckCircle /></div>
+            <span>Atendimento concluído em</span>
+            <strong>{dateTime(completedAt)}</strong>
+            <small>Horário real em que o atendimento foi marcado como concluído.</small>
+          </article>
+        )}
       </section>
 
       <section className="ovp-grid">
@@ -244,27 +313,14 @@ export default function OrderViewPage() {
 
         <div className="ovp-column">
           <article className="ovp-panel">
-            <header><div><span>Pessoas</span><h2>Participantes</h2></div></header>
-            <div className="ovp-personList">
-              <div className="ovp-person">
-                <div className="ovp-personIcon"><FaUser /></div>
-                <div><span>Cliente</span><strong>{customer.name}</strong>{customer.user_name && <Link to={`/user/${customer.user_name}`}>@{customer.user_name}</Link>}</div>
-              </div>
-              {attendant && (
-                <div className="ovp-person">
-                  <div className="ovp-personIcon"><FaCut /></div>
-                  <div><span>Barbeiro responsável</span><strong>{fullName(attendant, "Profissional")}</strong>{attendant.user_name && <Link to={`/user/${attendant.user_name}`}>@{attendant.user_name}</Link>}</div>
-                </div>
-              )}
-            </div>
-          </article>
-
-          <article className="ovp-panel">
             <header><div><span>Resumo</span><h2>Dados do agendamento</h2></div></header>
             <div className="ovp-summary">
+              <div><span>Início</span><strong>{shortDate(scheduledAt)} às {shortTime(scheduledAt)}</strong></div>
+              <div><span>Fim previsto</span><strong>{shortDate(scheduledEnd)} às {shortTime(scheduledEnd)}</strong></div>
+              {completedAt && <div><span>Concluído em</span><strong>{shortDate(completedAt)} às {shortTime(completedAt)}</strong></div>}
+              <div><span>Duração prevista</span><strong>{totalDuration ? `${totalDuration} min` : "-"}</strong></div>
               <div><span>Valor</span><strong>{money(order.total_price)}</strong></div>
-              <div><span>Duração</span><strong>{totalDuration ? `${totalDuration} min` : "-"}</strong></div>
-              <div><span>Pagamento</span><strong>{order.payment_status || "-"}</strong></div>
+              <div><span>Pagamento</span><strong>{paymentText(order.payment_status)}</strong></div>
               <div><span>Status</span><strong>{statusLabel}</strong></div>
             </div>
           </article>
