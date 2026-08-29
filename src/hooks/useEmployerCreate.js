@@ -67,13 +67,42 @@ export default function useEmployerCreate(slug) {
       setUsers([]);
       setErrors({});
 
-      const { data } = await api.post("/user/find-for-employer", {
-        ...payload,
-        app_id: appId,
-        establishment_id: establishment?.id,
-      });
+      const [usersResponse, employersResponse] = await Promise.all([
+        api.post("/user/find-for-employer", {
+          ...payload,
+          app_id: appId,
+          establishment_id: establishment?.id,
+        }),
+        api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`),
+      ]);
 
-      setUsers(Array.isArray(data?.users) ? data.users : []);
+      const foundUsers = Array.isArray(usersResponse?.data?.users)
+        ? usersResponse.data.users
+        : [];
+      const establishmentEmployers = Array.isArray(
+        employersResponse?.data?.employers
+      )
+        ? employersResponse.data.employers
+        : [];
+
+      const employerByUserId = new Map(
+        establishmentEmployers.map((employer) => [
+          Number(employer?.user_id),
+          employer,
+        ])
+      );
+
+      setUsers(
+        foundUsers.map((user) => {
+          const employer = employerByUserId.get(Number(user.id)) || null;
+          return {
+            ...user,
+            is_employer: Boolean(employer),
+            employer,
+            establishments: employer ? [establishment] : [],
+          };
+        })
+      );
     } catch (error) {
       await Swal.fire({
         icon: "error",
@@ -92,8 +121,6 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      // A Rasoio possui uma regra própria de equipe: o proprietário também
-      // pode ser um profissional atendente do mesmo estabelecimento.
       const { data } = await api.post("/rasoio/employers", {
         user_id: user.id,
         establishment_id: establishment.id,
@@ -104,7 +131,9 @@ export default function useEmployerCreate(slug) {
 
       await Swal.fire({
         icon: "success",
-        title: data?.is_owner ? "Proprietário adicionado à equipe" : "Colaborador adicionado",
+        title: data?.is_owner
+          ? "Proprietário adicionado à equipe"
+          : "Colaborador adicionado",
         text:
           data?.message ||
           (data?.is_owner
@@ -120,6 +149,7 @@ export default function useEmployerCreate(slug) {
                 is_employer: true,
                 is_owner: Boolean(data?.is_owner),
                 employer: data?.employer,
+                establishments: [establishment],
               }
             : candidate
         )
@@ -142,6 +172,18 @@ export default function useEmployerCreate(slug) {
   const detachEmployer = async (employerId) => {
     if (!establishment || !employerId) return null;
 
+    const confirmation = await Swal.fire({
+      icon: "warning",
+      title: "Remover colaborador?",
+      text: "O profissional deixará de fazer parte da equipe desta barbearia.",
+      showCancelButton: true,
+      confirmButtonText: "Remover",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+    });
+
+    if (!confirmation.isConfirmed) return null;
+
     try {
       setLoading(true);
 
@@ -159,8 +201,13 @@ export default function useEmployerCreate(slug) {
 
       setUsers((prev) =>
         prev.map((candidate) =>
-          candidate.employer?.id === employerId
-            ? { ...candidate, is_employer: false, employer: null }
+          Number(candidate.employer?.id) === Number(employerId)
+            ? {
+                ...candidate,
+                is_employer: false,
+                employer: null,
+                establishments: [],
+              }
             : candidate
         )
       );
