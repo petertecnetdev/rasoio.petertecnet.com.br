@@ -2,26 +2,24 @@
 import axios from "axios";
 import { apiBaseUrl } from "../config";
 
+const APP_SLUG = "rasoio";
+
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || apiBaseUrl,
   headers: {
     Accept: "application/json",
+    "X-Peter-App": APP_SLUG,
   },
   timeout: 20000,
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-
   config.headers = config.headers || {};
+  config.headers["X-Peter-App"] = APP_SLUG;
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
 
-  // Nunca force Content-Type em FormData. O browser/axios precisa gerar o
-  // boundary correto do multipart; isso corrige uploads de avatar, logo,
-  // background e imagens de itens em toda a aplicação.
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
     delete config.headers["Content-Type"];
     delete config.headers["content-type"];
@@ -41,10 +39,7 @@ api.interceptors.response.use(
     if (error?.response?.status === 401 && !isAuthAttempt) {
       const hadToken = Boolean(localStorage.getItem("token"));
       localStorage.removeItem("token");
-
-      if (hadToken && typeof window !== "undefined") {
-        window.dispatchEvent(new Event("authChanged"));
-      }
+      if (hadToken && typeof window !== "undefined") window.dispatchEvent(new Event("authChanged"));
     }
 
     return Promise.reject(error);
