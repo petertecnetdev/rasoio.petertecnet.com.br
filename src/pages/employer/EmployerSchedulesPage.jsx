@@ -1,6 +1,6 @@
 // src/pages/employer/EmployerSchedulesPage.jsx
 import React from "react";
-import { Alert, Button, Card, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import EmployerHero from "../../components/employer/EmployerHero";
 import EmployerScheduleAddForm from "../../components/employer/EmployerScheduleAddForm";
@@ -10,6 +10,7 @@ export default function EmployerSchedulesPage() {
   const {
     employerId,
     schedulesByDay,
+    dayOffByDay,
     addDay,
     setAddDay,
     addStart,
@@ -21,6 +22,7 @@ export default function EmployerSchedulesPage() {
     deleting,
     apiError,
     actionMessage,
+    handleSetDayOff,
     handleAddScheduleLocal,
     handleSaveSchedules,
     handleRemoveSchedule,
@@ -40,10 +42,35 @@ export default function EmployerSchedulesPage() {
     if (result.isConfirmed) await handleRemoveSchedule(schedule);
   };
 
+  const toggleDayOff = async (day, checked) => {
+    if (!checked) {
+      handleSetDayOff(day.key, false);
+      return;
+    }
+
+    const schedules = schedulesByDay[day.key] || [];
+    if (schedules.length === 0) {
+      handleSetDayOff(day.key, true);
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: `Definir ${day.label} como folga?`,
+      text: "Os horários de trabalho deste dia serão removidos. Depois de salvar, nenhuma terça/quarta/etc. futura deste dia da semana ficará disponível para clientes.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sim, é minha folga",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
+
+    if (result.isConfirmed) handleSetDayOff(day.key, true);
+  };
+
   const confirmSave = async () => {
     const result = await Swal.fire({
       title: "Salvar disponibilidade?",
-      text: "Os horários serão usados para calcular quando clientes podem agendar.",
+      text: "Os dias marcados como folga ficarão indisponíveis em todas as semanas. Os demais usarão os horários configurados abaixo.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Salvar",
@@ -76,12 +103,16 @@ export default function EmployerSchedulesPage() {
     <Container className="py-4">
       <EmployerHero
         title="Disponibilidade"
-        subtitle="Defina os dias e horários em que clientes podem agendar com você."
+        subtitle="Defina sua escala semanal: dias de trabalho, folgas recorrentes e horários em que clientes podem agendar com você."
         badge="Área do barbeiro"
       />
 
       {apiError && <Alert variant="danger">{apiError}</Alert>}
       {actionMessage && <Alert variant="success">{actionMessage}</Alert>}
+
+      <Alert variant="info" className="mb-4">
+        <strong>Folga semanal:</strong> marque “Não trabalho neste dia” quando você não atende em determinado dia da semana. Exemplo: se sua folga é toda terça-feira, todas as terças ficarão automaticamente fora do calendário de agendamento.
+      </Alert>
 
       <EmployerScheduleAddForm
         days={EMPLOYER_DAYS}
@@ -96,37 +127,76 @@ export default function EmployerSchedulesPage() {
 
       {EMPLOYER_DAYS.map((day) => {
         const schedules = schedulesByDay[day.key] || [];
-        return (
-          <Card key={day.key} className="mb-3 bg-dark text-light border-secondary">
-            <Card.Header className="fw-bold">{day.label}</Card.Header>
-            <Card.Body>
-              {schedules.length === 0 && (
-                <div className="text-secondary">Nenhum horário cadastrado.</div>
-              )}
+        const isDayOff = Boolean(dayOffByDay[day.key]);
 
-              {schedules.map((schedule) => (
-                <Row
-                  key={schedule.id}
-                  className="align-items-center py-2 border-bottom border-secondary"
-                >
-                  <Col md={8} className="fw-medium">
-                    {schedule.start_time} – {schedule.end_time}
-                    {schedule.__local && (
-                      <span className="text-warning small ms-2">não salvo</span>
-                    )}
-                  </Col>
-                  <Col md={4} className="text-md-end mt-2 mt-md-0">
-                    <Button
-                      size="sm"
-                      variant="outline-danger"
-                      disabled={deleting || saving}
-                      onClick={() => confirmRemove(schedule)}
+        return (
+          <Card
+            key={day.key}
+            className={`mb-3 bg-dark text-light ${isDayOff ? "border-warning" : "border-secondary"}`}
+          >
+            <Card.Header className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+              <div>
+                <div className="fw-bold">{day.label}</div>
+                <small className={isDayOff ? "text-warning" : "text-secondary"}>
+                  {isDayOff ? "Folga semanal — clientes não podem agendar neste dia" : "Dia de trabalho"}
+                </small>
+              </div>
+
+              <Form.Check
+                type="switch"
+                id={`weekly-day-off-${day.key}`}
+                label="Não trabalho neste dia"
+                checked={isDayOff}
+                disabled={saving || deleting}
+                onChange={(event) => toggleDayOff(day, event.target.checked)}
+              />
+            </Card.Header>
+
+            <Card.Body>
+              {isDayOff ? (
+                <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                  <div>
+                    <strong className="text-warning">Folga recorrente</strong>
+                    <div className="text-secondary small mt-1">
+                      Nenhum horário será oferecido aos clientes nas {day.label.toLowerCase()}s.
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline-light"
+                    disabled={saving || deleting}
+                    onClick={() => handleSetDayOff(day.key, false)}
+                  >
+                    Voltar a trabalhar neste dia
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {schedules.map((schedule) => (
+                    <Row
+                      key={schedule.id}
+                      className="align-items-center py-2 border-bottom border-secondary"
                     >
-                      Remover
-                    </Button>
-                  </Col>
-                </Row>
-              ))}
+                      <Col md={8} className="fw-medium">
+                        {schedule.start_time} – {schedule.end_time}
+                        {schedule.__local && (
+                          <span className="text-warning small ms-2">não salvo</span>
+                        )}
+                      </Col>
+                      <Col md={4} className="text-md-end mt-2 mt-md-0">
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          disabled={deleting || saving}
+                          onClick={() => confirmRemove(schedule)}
+                        >
+                          Remover
+                        </Button>
+                      </Col>
+                    </Row>
+                  ))}
+                </>
+              )}
             </Card.Body>
           </Card>
         );
