@@ -442,8 +442,6 @@ export default function AppointmentWizardModal({
 
       const dateBase = String(selectedDate).slice(0, 10);
 
-      // Revalida imediatamente antes de gravar para evitar confirmação de um
-      // horário que ficou ocupado enquanto o cliente concluía o formulário.
       const freshTimes = await loadAvailableTimes(dateBase, resolvedEmployer, totalDuration);
       if (!Array.isArray(freshTimes) || !freshTimes.includes(selectedTime)) {
         setAvailableTimes(Array.isArray(freshTimes) ? freshTimes : []);
@@ -628,7 +626,7 @@ export default function AppointmentWizardModal({
       )}
 
       <div className="awm__root">
-        {(resolvedEstablishment || resolvedEmployer) && (
+        {(resolvedEstablishment || resolvedEmployer || selectedServices.length > 0) && (
           <div className="awm__summary">
             <div className="awm__summary-left">
               {resolvedEstablishment?.name && (
@@ -653,17 +651,28 @@ export default function AppointmentWizardModal({
                 </>
               ) : (
                 <div className="awm__summary-hint">
-                  Selecione um profissional no próximo passo
+                  {step === 1 ? "Monte seu atendimento" : "Selecione um profissional no próximo passo"}
                 </div>
               )}
             </div>
 
-            {resolvedEstablishment?.name && (
-              <div className="awm__summary-right">
-                <div className="awm__summary-label">Estabelecimento</div>
-                <div className="awm__summary-name">{resolvedEstablishment.name}</div>
-              </div>
-            )}
+            <div className="awm__summary-right">
+              {selectedServices.length > 0 ? (
+                <>
+                  <div className="awm__summary-label">
+                    {selectedServices.length} {selectedServices.length === 1 ? "serviço selecionado" : "serviços selecionados"}
+                  </div>
+                  <div className="awm__summary-name">
+                    {fmtBRL(totalValue)} · {totalDuration} min
+                  </div>
+                </>
+              ) : resolvedEstablishment?.name ? (
+                <>
+                  <div className="awm__summary-label">Estabelecimento</div>
+                  <div className="awm__summary-name">{resolvedEstablishment.name}</div>
+                </>
+              ) : null}
+            </div>
           </div>
         )}
 
