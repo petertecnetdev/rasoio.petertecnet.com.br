@@ -1,3 +1,5 @@
+import { startTelemetry } from "./telemetry";
+import { apiBaseUrl, appSlug } from "./config";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import axios from "axios";
@@ -6,6 +8,8 @@ import AppErrorBoundary from "./components/AppErrorBoundary";
 import PeterTecnetSignature from "./components/PeterTecnetSignature";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
+
+startTelemetry({ apiBaseUrl, appSlug });
 
 axios.defaults.headers.common["X-Peter-App"] = "rasoio";
 
