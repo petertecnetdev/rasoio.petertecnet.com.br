@@ -1,0 +1,97 @@
+/* Compacta apenas os cards de serviços do Step 1 do agendamento. */
+.awm-modal .wizard-step .grid .card-service {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-areas:
+    "image title"
+    "image price"
+    "image duration";
+  column-gap: 12px;
+  row-gap: 2px;
+  min-height: 108px;
+  padding: 10px;
+  border-radius: 16px;
+  align-items: center;
+}
+
+.awm-modal .wizard-step .grid .card-service .service-img {
+  grid-area: image;
+  width: 92px;
+  height: 88px;
+  min-height: 88px;
+  max-height: 88px;
+  aspect-ratio: auto;
+  border-radius: 12px;
+}
+
+.awm-modal .wizard-step .grid .card-service h5 {
+  grid-area: title;
+  align-self: end;
+  margin: 0;
+  padding-right: 30px;
+  font-size: 13.5px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.012em;
+}
+
+.awm-modal .wizard-step .grid .card-service p {
+  grid-area: price;
+  margin: 1px 0 0;
+  font-size: 12.5px;
+  line-height: 1.2;
+}
+
+.awm-modal .wizard-step .grid .card-service small {
+  grid-area: duration;
+  justify-self: start;
+  margin: 4px 0 0;
+  padding: 3px 7px;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.awm-modal .wizard-step .grid .card-service.active::after {
+  top: 9px;
+  right: 9px;
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.awm-modal .wizard-step .grid .card-service:hover {
+  transform: translateY(-2px);
+}
+
+@media (min-width: 760px) {
+  .awm-modal .wizard-step .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 759px) {
+  .awm-modal .wizard-step .grid {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+
+  .awm-modal .wizard-step .grid .card-service {
+    grid-template-columns: 78px minmax(0, 1fr);
+    min-height: 94px;
+    padding: 8px;
+    column-gap: 10px;
+  }
+
+  .awm-modal .wizard-step .grid .card-service .service-img {
+    width: 78px;
+    height: 76px;
+    min-height: 76px;
+    max-height: 76px;
+    border-radius: 11px;
+  }
+
+  .awm-modal .wizard-step .grid .card-service h5 {
+    font-size: 13px;
+  }
+}

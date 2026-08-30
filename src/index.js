@@ -8,6 +8,7 @@ import AppErrorBoundary from "./components/AppErrorBoundary";
 import PeterTecnetSignature from "./components/PeterTecnetSignature";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
+import "./styles/appointment-step1-compact.css";
 
 startTelemetry({ apiBaseUrl, appSlug });
 
