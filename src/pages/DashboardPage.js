@@ -1,7 +1,7 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Col, Container, Row } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../App";
 import "./dashboard-v2.css";
 
@@ -29,69 +29,118 @@ OverviewCard.propTypes = {
 
 export default function DashboardPage() {
   const { user, isEmployer, establishments } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
   const name =
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
     user?.name ||
     "usuário";
   const owned = Array.isArray(establishments) ? establishments : [];
+  const requestedSlug = searchParams.get("establishment");
+  const selected = useMemo(
+    () => owned.find((establishment) => establishment.slug === requestedSlug) || null,
+    [owned, requestedSlug]
+  );
+  const selectedName = selected?.fantasy || selected?.name || null;
 
   return (
     <main className="rasoio-dashboard">
       <Container className="py-4 py-lg-5">
         <header className="rasoio-dashboard-hero">
           <div>
-            <span className="rasoio-dashboard-kicker">Central Rasoio</span>
-            <h1>Olá, {name}</h1>
+            <span className="rasoio-dashboard-kicker">
+              {selected ? "Visão geral da barbearia" : "Central Rasoio"}
+            </span>
+            <h1>{selected ? selectedName : `Olá, ${name}`}</h1>
             <p>
-              Agendamentos pessoais, operação das suas barbearias e sua agenda como profissional ficam separados para evitar ambiguidades.
+              {selected
+                ? "Acesse rapidamente a agenda, equipe, serviços, produtos e configurações desta unidade."
+                : "Agendamentos pessoais, operação das suas barbearias e sua agenda como profissional ficam separados para evitar ambiguidades."}
             </p>
           </div>
           <div className="rasoio-dashboard-status">
-            <strong>{owned.length}</strong>
-            <span>{owned.length === 1 ? "barbearia na Rasoio" : "barbearias na Rasoio"}</span>
+            <strong>{selected ? "1" : owned.length}</strong>
+            <span>{selected ? "unidade selecionada" : owned.length === 1 ? "barbearia na Rasoio" : "barbearias na Rasoio"}</span>
           </div>
         </header>
 
-        <section className="rasoio-overview-grid" aria-label="Visão geral dos agendamentos">
-          <OverviewCard
-            icon="◷"
-            eyebrow="Como cliente"
-            title="Meus agendamentos"
-            text="Somente os horários que você marcou para receber um atendimento em uma barbearia."
-            to="/orders/my"
-            cta="Ver minhas reservas"
-            accent
-          />
+        {selected ? (
+          <section className="rasoio-overview-grid" aria-label={`Visão geral da ${selectedName}`}>
+            <OverviewCard
+              icon="▦"
+              eyebrow="Operação"
+              title="Agenda e atendimentos"
+              text="Acompanhe solicitações, confirme horários e organize os atendimentos desta barbearia."
+              to={`/establishment/orders/${selected.slug}`}
+              cta="Abrir agenda"
+              accent
+            />
+            <OverviewCard
+              icon="👥"
+              eyebrow="Equipe"
+              title="Colaboradores"
+              text="Gerencie quem trabalha nesta unidade e quem pode receber os próximos atendimentos."
+              to={`/establishment/employers/${selected.slug}`}
+              cta="Gerenciar equipe"
+            />
+            <OverviewCard
+              icon="✂"
+              eyebrow="Catálogo"
+              title="Serviços"
+              text="Configure serviços, duração e valores usados na agenda desta unidade."
+              to={`/establishment/item/${selected.slug}`}
+              cta="Gerenciar serviços"
+            />
+            <OverviewCard
+              icon="◎"
+              eyebrow="Cadastro"
+              title="Dados da barbearia"
+              text="Atualize informações, identidade e dados públicos desta unidade."
+              to={`/establishment/update/${selected.id}`}
+              cta="Abrir configurações"
+            />
+          </section>
+        ) : (
+          <section className="rasoio-overview-grid" aria-label="Visão geral dos agendamentos">
+            <OverviewCard
+              icon="◷"
+              eyebrow="Como cliente"
+              title="Meus agendamentos"
+              text="Somente os horários que você marcou para receber um atendimento em uma barbearia."
+              to="/orders/my"
+              cta="Ver minhas reservas"
+              accent
+            />
 
-          <OverviewCard
-            icon="▦"
-            eyebrow="Como proprietário"
-            title="Agenda das barbearias"
-            text="Acompanhe os pedidos de agendamento recebidos por cada barbearia que pertence à sua conta."
-            to={owned.length ? "/establishment/my" : "/establishment/create"}
-            cta={owned.length ? "Abrir gestão" : "Cadastrar barbearia"}
-          />
+            <OverviewCard
+              icon="▦"
+              eyebrow="Como proprietário"
+              title="Minhas barbearias"
+              text="Escolha uma unidade para abrir a visão geral e administrar sua operação separadamente."
+              to={owned.length ? "/establishment/my" : "/establishment/create"}
+              cta={owned.length ? "Escolher barbearia" : "Cadastrar barbearia"}
+            />
 
-          <OverviewCard
-            icon="✂"
-            eyebrow="Como profissional"
-            title="Minha agenda de trabalho"
-            text={isEmployer
-              ? "Veja os atendimentos atribuídos diretamente ao seu perfil de colaborador."
-              : "Quando você estiver vinculado como colaborador, sua agenda profissional aparecerá aqui."}
-            to={isEmployer ? "/employer/orders" : "/employers"}
-            cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"}
-          />
+            <OverviewCard
+              icon="✂"
+              eyebrow="Como profissional"
+              title="Minha agenda de trabalho"
+              text={isEmployer
+                ? "Veja os atendimentos atribuídos diretamente ao seu perfil de colaborador."
+                : "Quando você estiver vinculado como colaborador, sua agenda profissional aparecerá aqui."}
+              to={isEmployer ? "/employer/orders" : "/employers"}
+              cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"}
+            />
 
-          <OverviewCard
-            icon="◎"
-            eyebrow="Operação"
-            title="Resumo geral"
-            text="Entre na gestão das suas barbearias para revisar equipe, serviços, agenda e situação operacional em um único fluxo."
-            to={owned.length ? "/establishment/my" : "/establishment/create"}
-            cta="Abrir operação"
-          />
-        </section>
+            <OverviewCard
+              icon="＋"
+              eyebrow="Expansão"
+              title="Nova barbearia"
+              text="Cadastre outra unidade na mesma conta e mantenha equipe, serviços e agenda separados."
+              to="/establishment/create"
+              cta="Cadastrar nova unidade"
+            />
+          </section>
+        )}
 
         {owned.length > 0 && (
           <section className="rasoio-owned-section" aria-labelledby="dashboard-barbershops-title">
@@ -116,9 +165,9 @@ export default function DashboardPage() {
                       {[establishment.city, establishment.uf].filter(Boolean).join(" • ") || "Localização não informada"}
                     </p>
                     <div className="rasoio-owned-actions">
+                      <Link to={`/dashboard?establishment=${encodeURIComponent(establishment.slug)}`}>Visão geral</Link>
                       <Link to={`/establishment/orders/${establishment.slug}`}>Agenda</Link>
                       <Link to={`/establishment/employers/${establishment.slug}`}>Equipe</Link>
-                      <Link to={`/establishment/item/${establishment.slug}`}>Serviços</Link>
                     </div>
                   </article>
                 </Col>

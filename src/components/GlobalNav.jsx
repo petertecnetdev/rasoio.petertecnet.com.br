@@ -13,7 +13,7 @@ import NotificationBell from "./NotificationBell";
 import "./GlobalNav.css";
 
 export default function GlobalNav({ loadingMenu, handleLogout }) {
-  const { user, isEmployer, establishments } = useContext(AuthContext);
+  const { user, isEmployer } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const { city } = useSelectedCity();
@@ -48,8 +48,6 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
     const raw = user?.images?.avatar || user?.images?.profile || user?.avatar || null;
     return imageUrl(raw) || placeholderSvg || "/images/user.png";
   }, [user, imageUrl, placeholderSvg]);
-
-  const ownsEstablishment = Array.isArray(establishments) && establishments.length > 0;
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -216,13 +214,8 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                         <button className="nav__userMenuItem" onClick={() => go("/establishment/my")} type="button">
                           <span className="nav__menuIcon">🏪</span><span className="nav__menuText">Minhas barbearias</span><span className="nav__menuArrow">›</span>
                         </button>
-                        {!ownsEstablishment && (
-                          <button className="nav__userMenuItem" onClick={() => go("/establishment/create")} type="button">
-                            <span className="nav__menuIcon">➕</span><span className="nav__menuText">Cadastrar barbearia</span><span className="nav__menuArrow">›</span>
-                          </button>
-                        )}
-                        <button className="nav__userMenuItem" onClick={() => go("/dashboard")} type="button">
-                          <span className="nav__menuIcon">📈</span><span className="nav__menuText">Visão geral</span><span className="nav__menuArrow">›</span>
+                        <button className="nav__userMenuItem" onClick={() => go("/establishment/create")} type="button">
+                          <span className="nav__menuIcon">➕</span><span className="nav__menuText">Cadastrar nova barbearia</span><span className="nav__menuArrow">›</span>
                         </button>
                       </div>
 

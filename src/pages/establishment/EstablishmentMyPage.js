@@ -1,16 +1,16 @@
 // src/pages/establishment/EstablishmentMyPage.js
 import React from "react";
-import { Alert, Button, Col, Container, Row, Spinner } from "react-bootstrap";
+import { Alert, Button, Container, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import EstablishmentDashboard from "../../components/establishment/EstablishmentDashboard";
 import useEstablishmentMy from "../../hooks/useEstablishmentMy";
 import { appId } from "../../config";
+import "./EstablishmentMy.css";
 
 export default function EstablishmentMyPage() {
   const navigate = useNavigate();
   const { establishments, isLoading, apiError } = useEstablishmentMy(appId);
-  const heroEstablishment = establishments?.[0] || null;
+  const count = Array.isArray(establishments) ? establishments.length : 0;
 
   if (isLoading) {
     return (
@@ -29,45 +29,65 @@ export default function EstablishmentMyPage() {
   }
 
   return (
-    <>
-      {heroEstablishment ? (
-        <EstablishmentHero
-          title={heroEstablishment.fantasy || heroEstablishment.name}
-          subtitle="Gestão das suas barbearias"
-          description="Gerencie equipe, serviços, produtos, agenda e atendimentos em um só lugar."
-          city={heroEstablishment.city}
-          uf={heroEstablishment.uf}
-          logo={heroEstablishment?.images?.logo}
-          background={heroEstablishment?.images?.background}
-          showBack
-        />
-      ) : (
-        <Container className="py-5 text-center">
-          <h2>Cadastre sua primeira barbearia</h2>
-          <p className="text-muted">
-            Depois do cadastro você poderá adicionar barbeiros, serviços e acompanhar os atendimentos.
-          </p>
-          <Button onClick={() => navigate("/establishment/create")}>Criar barbearia</Button>
-        </Container>
-      )}
+    <main className="my-barbershops-page">
+      <Container className="py-4 py-lg-5">
+        <header className="my-barbershops-hero">
+          <div className="my-barbershops-copy">
+            <span className="my-barbershops-kicker">Gestão Rasoio</span>
+            <h1>Minhas barbearias</h1>
+            <p>
+              Administre cada unidade separadamente. Cada barbearia possui sua própria equipe,
+              serviços, produtos, agenda e visão operacional.
+            </p>
+          </div>
 
-      <Container fluid className="establishment-my-wrapper mt-4">
-        {establishments.length === 0 ? (
-          <Row>
-            <Col xs={12} className="text-center text-muted">
-              Nenhuma barbearia cadastrada ainda.
-            </Col>
-          </Row>
+          <div className="my-barbershops-hero-actions">
+            <div className="my-barbershops-count" aria-label={`${count} barbearias cadastradas`}>
+              <strong>{count}</strong>
+              <span>{count === 1 ? "barbearia" : "barbearias"}</span>
+            </div>
+            <Button
+              className="my-barbershops-add"
+              onClick={() => navigate("/establishment/create")}
+            >
+              + Cadastrar nova barbearia
+            </Button>
+          </div>
+        </header>
+
+        {count === 0 ? (
+          <section className="my-barbershops-empty">
+            <div className="my-barbershops-empty-icon" aria-hidden="true">✂</div>
+            <span>Comece sua operação</span>
+            <h2>Cadastre sua primeira barbearia</h2>
+            <p>
+              Depois do cadastro você poderá adicionar colaboradores, serviços, produtos
+              e organizar os atendimentos dessa unidade.
+            </p>
+            <Button onClick={() => navigate("/establishment/create")}>Criar barbearia</Button>
+          </section>
         ) : (
-          establishments.map((establishment) => (
-            <EstablishmentDashboard
-              key={establishment.id}
-              establishment={establishment}
-              navigate={navigate}
-            />
-          ))
+          <section className="my-barbershops-list" aria-label="Barbearias administradas">
+            <div className="my-barbershops-section-heading">
+              <div>
+                <span>Suas unidades</span>
+                <h2>Escolha qual barbearia deseja gerenciar</h2>
+              </div>
+              <p>A visão geral e todas as ações ficam vinculadas à unidade escolhida.</p>
+            </div>
+
+            <div className="my-barbershops-grid">
+              {establishments.map((establishment) => (
+                <EstablishmentDashboard
+                  key={establishment.id}
+                  establishment={establishment}
+                  navigate={navigate}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </Container>
-    </>
+    </main>
   );
 }

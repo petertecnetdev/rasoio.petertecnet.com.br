@@ -7,10 +7,9 @@ const actions = [
   {
     key: "agenda",
     label: "Agenda",
-    description: "Pedidos e horários",
+    description: "Atendimentos e horários",
     icon: "📅",
     path: (establishment) => `/establishment/orders/${establishment.slug}`,
-    primary: true,
   },
   {
     key: "team",
@@ -46,11 +45,7 @@ export default function EstablishmentActionsBar({ establishment }) {
   return (
     <nav className="barbershop-actions" aria-label={`Gerenciar ${establishment.fantasy || establishment.name || "barbearia"}`}>
       {actions.map((action) => (
-        <Link
-          key={action.key}
-          to={action.path(establishment)}
-          className={`barbershop-action${action.primary ? " barbershop-action-primary" : ""}`}
-        >
+        <Link key={action.key} to={action.path(establishment)} className="barbershop-action">
           <span className="barbershop-action-icon" aria-hidden="true">{action.icon}</span>
           <span className="barbershop-action-copy">
             <strong>{action.label}</strong>
