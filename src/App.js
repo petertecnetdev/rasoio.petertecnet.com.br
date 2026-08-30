@@ -140,7 +140,9 @@ function AppInner() {
     syncAuth();
 
     const handleAuthChanged = () => {
-      setInitialLoading(true);
+      // Não desmonta o Router durante login/logout. Desmontar a árvore aqui
+      // fazia o React Router perder o destino de retorno e o fluxo pendente
+      // de agendamento, enviando o usuário para a home após autenticar.
       syncAuth();
     };
 
