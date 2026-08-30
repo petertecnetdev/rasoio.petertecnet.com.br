@@ -1,329 +1,104 @@
 /* src/components/establishment/EstablishmentDashboard.css */
-.barbershop-management-card {
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 24px;
-  padding: clamp(18px, 2.4vw, 28px);
-  border: 1px solid rgba(130, 205, 255, 0.14);
-  border-radius: 28px;
+.barbershop-management-card{
+  overflow:hidden;
+  border:1px solid rgba(73,216,255,.15);
+  border-radius:26px;
+  background:linear-gradient(180deg,rgba(8,18,32,.98),rgba(4,10,19,.99));
+  box-shadow:0 24px 60px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.04);
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.barbershop-management-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(73,216,255,.28);
+  box-shadow:0 30px 75px rgba(0,0,0,.42),0 0 42px rgba(0,174,255,.06);
+}
+.barbershop-cover{
+  min-height:112px;
+  padding:16px 18px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
   background:
-    radial-gradient(circle at 0% 0%, rgba(0, 184, 255, 0.14), transparent 34%),
-    radial-gradient(circle at 100% 100%, rgba(80, 98, 255, 0.12), transparent 38%),
-    linear-gradient(145deg, rgba(16, 21, 30, 0.98), rgba(7, 10, 15, 0.99));
-  box-shadow:
-    0 30px 80px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  isolation: isolate;
+    radial-gradient(circle at 12% 10%,rgba(0,191,255,.20),transparent 34%),
+    linear-gradient(135deg,#0b2334,#07121f 55%,#0b1020);
+  background-size:cover;
+  background-position:center;
 }
-
-.barbershop-management-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(115deg, transparent 10%, rgba(255,255,255,.025) 42%, transparent 70%);
-  pointer-events: none;
+.barbershop-status,.barbershop-public-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(2,8,16,.66);
+  backdrop-filter:blur(12px);
+  color:#dff7ff;
+  font-size:.72rem;
+  font-weight:800;
+  text-decoration:none;
 }
-
-.barbershop-management-glow {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  top: -170px;
-  right: -80px;
-  border-radius: 50%;
-  background: rgba(0, 187, 255, 0.16);
-  filter: blur(60px);
-  pointer-events: none;
+.barbershop-status i{
+  width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 12px rgba(52,211,153,.8)
 }
-
-.barbershop-management-main {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
-  gap: 24px;
-  align-items: center;
+.barbershop-public-pill:hover{color:#fff;border-color:rgba(125,223,255,.34)}
+.barbershop-card-body{padding:0 20px 20px}
+.barbershop-identity{
+  width:100%;display:flex;align-items:center;gap:15px;margin-top:-36px;padding:0 0 16px;
+  border:0;background:transparent;color:inherit;text-align:left;cursor:pointer
 }
-
-.barbershop-identity {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 0;
-  color: inherit;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+.barbershop-identity:focus-visible{outline:2px solid #4ed8ff;outline-offset:5px;border-radius:18px}
+.barbershop-logo-shell{
+  flex:0 0 auto;width:82px;height:82px;padding:4px;border-radius:22px;
+  background:linear-gradient(145deg,#56dcff,rgba(78,93,255,.78));
+  box-shadow:0 14px 34px rgba(0,0,0,.42)
 }
-
-.barbershop-identity:focus-visible {
-  outline: 2px solid #48d6ff;
-  outline-offset: 6px;
-  border-radius: 18px;
+.barbershop-logo{width:100%;height:100%;object-fit:cover;border-radius:18px;background:#050b13}
+.barbershop-identity-copy{min-width:0;display:flex;flex-direction:column;padding-top:38px}
+.barbershop-eyebrow{color:#67e8f9;font-size:.66rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.barbershop-name{margin-top:3px;color:#f8fbff;font-size:1.3rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barbershop-meta{margin-top:5px;color:#a8b8c9;font-size:.83rem}
+.barbershop-slug{margin-top:3px;color:#63839a;font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barbershop-card-overview{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;padding:13px 14px;
+  border:1px solid rgba(73,216,255,.12);border-radius:17px;background:rgba(19,44,63,.34)
 }
-
-.barbershop-logo-shell {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 88px;
-  padding: 4px;
-  border-radius: 24px;
-  background: linear-gradient(145deg, rgba(78, 214, 255, .9), rgba(89, 95, 255, .35));
-  box-shadow: 0 16px 40px rgba(0, 167, 255, .18);
+.barbershop-card-overview>div{display:flex;min-width:0;flex-direction:column}
+.barbershop-card-overview span{color:#6f8da2;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.barbershop-card-overview strong{margin-top:3px;color:#dceaf4;font-size:.82rem;font-weight:700}
+.barbershop-overview-button{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border-radius:13px;
+  background:linear-gradient(135deg,#0fb9f2,#5567ee);color:white;text-decoration:none;font-size:.78rem;font-weight:900;
+  box-shadow:0 10px 24px rgba(18,170,236,.16)
 }
-
-.barbershop-logo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 20px;
-  background: #090c12;
+.barbershop-overview-button:hover{color:white;filter:brightness(1.08)}
+.barbershop-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.barbershop-action{
+  min-width:0;display:grid;grid-template-columns:35px minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px;
+  min-height:62px;border:1px solid rgba(255,255,255,.065);border-radius:15px;background:rgba(255,255,255,.025);
+  color:#e8f5ff;text-decoration:none;transition:transform .18s ease,border-color .18s ease,background .18s ease
 }
-
-.barbershop-identity-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+.barbershop-action:hover{transform:translateY(-1px);color:#fff;border-color:rgba(78,216,255,.22);background:rgba(35,148,196,.08)}
+.barbershop-action-primary{border-color:rgba(78,216,255,.18);background:linear-gradient(145deg,rgba(25,172,231,.12),rgba(69,83,220,.08))}
+.barbershop-action-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:11px;background:rgba(0,8,16,.46);font-size:.9rem}
+.barbershop-action-copy{display:flex;min-width:0;flex-direction:column}
+.barbershop-action-copy strong{font-size:.76rem;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barbershop-action-copy small{margin-top:3px;color:#687f91;font-size:.62rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barbershop-action-arrow{color:#55cbed;font-size:.8rem}
+@media(max-width:980px){.barbershop-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){
+  .barbershop-management-card{border-radius:21px}
+  .barbershop-cover{min-height:96px;padding:13px}
+  .barbershop-card-body{padding:0 14px 14px}
+  .barbershop-logo-shell{width:70px;height:70px;border-radius:19px}
+  .barbershop-logo{border-radius:15px}
+  .barbershop-identity-copy{padding-top:34px}
+  .barbershop-name{font-size:1.08rem}
+  .barbershop-card-overview{align-items:flex-start;flex-direction:column}
+  .barbershop-overview-button{width:100%;justify-content:center}
+  .barbershop-actions{grid-template-columns:1fr 1fr}
+  .barbershop-action{grid-template-columns:32px minmax(0,1fr);min-height:58px}
+  .barbershop-action-arrow{display:none}
 }
-
-.barbershop-eyebrow {
-  width: fit-content;
-  margin-bottom: 7px;
-  padding: 5px 9px;
-  border: 1px solid rgba(73, 216, 255, .22);
-  border-radius: 999px;
-  background: rgba(42, 194, 255, .07);
-  color: #8ce8ff;
-  font-size: .68rem;
-  font-weight: 800;
-  letter-spacing: .11em;
-  text-transform: uppercase;
-}
-
-.barbershop-name {
-  overflow: hidden;
-  color: #f7fbff;
-  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
-  line-height: 1.08;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.barbershop-meta,
-.barbershop-slug {
-  margin-top: 6px;
-  color: rgba(220, 232, 244, .66);
-  font-size: .9rem;
-}
-
-.barbershop-slug {
-  color: rgba(129, 208, 255, .68);
-  font-size: .78rem;
-}
-
-.barbershop-management-summary {
-  display: grid;
-  gap: 10px;
-}
-
-.barbershop-summary-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 66px;
-  padding: 13px 14px;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 18px;
-  background: rgba(255,255,255,.025);
-}
-
-.barbershop-summary-icon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: rgba(29, 179, 255, .10);
-  color: #82e7ff;
-  font-size: 1.1rem;
-}
-
-.barbershop-summary-item div {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-
-.barbershop-summary-item strong {
-  color: #f4f9ff;
-  font-size: .88rem;
-}
-
-.barbershop-summary-item span:last-child {
-  margin-top: 2px;
-  color: rgba(214, 227, 239, .56);
-  font-size: .74rem;
-}
-
-.barbershop-actions {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.barbershop-action {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 76px;
-  padding: 12px 13px;
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
-  color: #edf7ff;
-  text-decoration: none;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
-}
-
-.barbershop-action:hover {
-  transform: translateY(-2px);
-  border-color: rgba(87, 213, 255, .28);
-  background: linear-gradient(180deg, rgba(58, 194, 255, .10), rgba(255,255,255,.025));
-  color: #fff;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .20);
-}
-
-.barbershop-action-primary {
-  border-color: rgba(55, 200, 255, .22);
-  background: linear-gradient(145deg, rgba(30, 183, 255, .18), rgba(76, 85, 255, .10));
-}
-
-.barbershop-action-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 13px;
-  background: rgba(2, 9, 17, .45);
-  font-size: 1.06rem;
-}
-
-.barbershop-action-copy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-}
-
-.barbershop-action-copy strong {
-  font-size: .85rem;
-  line-height: 1.1;
-}
-
-.barbershop-action-copy small {
-  overflow: hidden;
-  margin-top: 4px;
-  color: rgba(216, 229, 241, .52);
-  font-size: .69rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.barbershop-action-arrow {
-  color: rgba(133, 220, 255, .6);
-  transition: transform .18s ease;
-}
-
-.barbershop-action:hover .barbershop-action-arrow {
-  transform: translateX(2px);
-}
-
-.barbershop-management-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 17px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,.06);
-}
-
-.barbershop-public-link {
-  color: rgba(205, 235, 255, .72);
-  font-size: .78rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.barbershop-public-link:hover {
-  color: #8de9ff;
-}
-
-.barbershop-app-badge {
-  padding: 5px 9px;
-  border: 1px solid rgba(102, 219, 255, .18);
-  border-radius: 999px;
-  color: rgba(142, 230, 255, .82);
-  background: rgba(55, 202, 255, .05);
-  font-size: .66rem;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 1080px) {
-  .barbershop-management-main {
-    grid-template-columns: 1fr;
-  }
-
-  .barbershop-management-summary {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .barbershop-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .barbershop-management-card {
-    padding: 16px;
-    border-radius: 22px;
-  }
-
-  .barbershop-identity {
-    align-items: flex-start;
-  }
-
-  .barbershop-logo-shell {
-    width: 68px;
-    height: 68px;
-    border-radius: 19px;
-  }
-
-  .barbershop-logo {
-    border-radius: 16px;
-  }
-
-  .barbershop-management-summary,
-  .barbershop-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .barbershop-action {
-    min-height: 68px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .barbershop-action,
-  .barbershop-action-arrow {
-    transition: none;
-  }
-}
+@media(prefers-reduced-motion:reduce){.barbershop-management-card,.barbershop-action{transition:none}}
