@@ -1,5 +1,5 @@
 import { startTelemetry } from "./telemetry";
-import { apiBaseUrl, appSlug } from "./config";
+import { apiBaseUrl, appId, appSlug } from "./config";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import axios from "axios";
@@ -11,7 +11,7 @@ import "./index.css";
 import "./styles/appointment-step1-compact.css";
 import "./styles/appointment-wizard-responsive.css";
 
-startTelemetry({ apiBaseUrl, appSlug });
+startTelemetry({ apiBaseUrl, appSlug, appId });
 
 axios.defaults.headers.common["X-Peter-App"] = "rasoio";
 
