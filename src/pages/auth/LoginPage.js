@@ -7,10 +7,20 @@ import "./LoginPage.css";
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location?.state?.from?.pathname || "/";
+  const fromState = location?.state?.from;
+  const from =
+    typeof fromState === "string"
+      ? fromState
+      : fromState?.pathname
+        ? `${fromState.pathname}${fromState.search || ""}${fromState.hash || ""}`
+        : "/";
+  const resumeAppointment = Boolean(location?.state?.resumeAppointment);
 
   const handleSuccess = () => {
-    navigate(from, { replace: true });
+    navigate(from, {
+      replace: true,
+      state: resumeAppointment ? { resumeAppointment: true } : undefined,
+    });
   };
 
   return (
@@ -111,7 +121,9 @@ export default function LoginPage() {
                 </div>
                 <h2 className="lp__title">Bem-vindo de volta</h2>
                 <p className="lp__subtitle">
-                  Entre para acessar seus agendamentos e recursos de gestão.
+                  {resumeAppointment
+                    ? "Entre para continuar seu agendamento de onde parou."
+                    : "Entre para acessar seus agendamentos e recursos de gestão."}
                 </p>
               </header>
 
