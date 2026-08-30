@@ -13,7 +13,8 @@ import "./styles/appointment-wizard-responsive.css";
 
 startTelemetry({ apiBaseUrl, appSlug, appId });
 
-axios.defaults.headers.common["X-Peter-App"] = "rasoio";
+axios.defaults.headers.common["X-Peter-App"] = appSlug;
+axios.defaults.headers.common["X-App-ID"] = String(appId);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
