@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { FaCalendarAlt, FaClock, FaCut, FaShoppingBag, FaStore, FaWhatsapp } from "react-icons/fa";
+import { FaCalendarAlt, FaClock, FaCut, FaImage, FaShoppingBag, FaStore, FaWhatsapp } from "react-icons/fa";
 
 import { apiBaseUrl, appId } from "../../config";
 import useItemView from "../../hooks/useItemView";
@@ -54,8 +54,21 @@ export default function ItemViewPage() {
     <>
       <main className={`iv-page ${isProduct ? "iv-page--product" : "iv-page--service"}`}>
         <div className="iv-shell">
-          <section className="iv-stage">
-            <div className="iv-mediaPanel"><span className="iv-typeBadge">{isProduct ? <FaShoppingBag /> : <FaCut />} {isProduct ? "PRODUTO" : "SERVIÇO"}</span><img src={imageUrl(itemImage || PLACEHOLDER)} alt={item?.name || "Item"} /><div className="iv-mediaShade" /></div>
+          <section className={`iv-stage ${!itemImage ? "iv-stage--noImage" : ""}`}>
+            <div className="iv-mediaPanel">
+              <span className="iv-typeBadge">{isProduct ? <FaShoppingBag /> : <FaCut />} {isProduct ? "PRODUTO" : "SERVIÇO"}</span>
+              {itemImage ? (
+                <img src={imageUrl(itemImage)} alt={item?.name || "Item"} />
+              ) : (
+                <div className="iv-mediaFallback" aria-label="Item sem imagem cadastrada">
+                  <div className="iv-fallbackMark">{isProduct ? <FaShoppingBag /> : <FaCut />}</div>
+                  <strong>{isProduct ? "Produto" : "Serviço"}</strong>
+                  <span>{establishment?.name || "Rasoio"}</span>
+                  <small><FaImage /> Imagem ainda não cadastrada</small>
+                </div>
+              )}
+              <div className="iv-mediaShade" />
+            </div>
             <div className="iv-infoPanel">
               {establishment?.name && <button type="button" className="iv-establishment" onClick={() => establishment?.slug && navigate(`/establishment/view/${establishment.slug}`)}>{estLogo && <img src={imageUrl(estLogo)} alt="" />}<span><small>Disponível em</small><strong>{establishment.name}</strong></span><FaStore /></button>}
               <span className="iv-eyebrow">{isProduct ? "CUIDADO E ESTILO" : "RESERVE SEU HORÁRIO"}</span>
