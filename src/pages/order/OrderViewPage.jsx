@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
 import {
   FaCalendarAlt,
   FaCheckCircle,
   FaClock,
   FaCut,
+  FaExchangeAlt,
   FaHourglassHalf,
   FaReceipt,
   FaStore,
   FaUser,
   FaUserTie,
 } from "react-icons/fa";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import api from "../../services/api";
 import "./OrderViewPage.css";
 
@@ -86,6 +89,9 @@ const fullName = (person, fallback = "Usuário") =>
   person?.user_name ||
   fallback;
 
+const employerName = (employer) =>
+  fullName(employer?.user, employer?.role || "Colaborador");
+
 function remainingLabel(targetValue, nowMs) {
   const target = asDate(targetValue);
   if (!target) return "Horário não informado";
@@ -132,6 +138,7 @@ export default function OrderViewPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [nowMs, setNowMs] = useState(Date.now());
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowMs(Date.now()), 30000);
@@ -168,6 +175,9 @@ export default function OrderViewPage() {
   const order = payload?.order || null;
   const audit = payload?.audit || {};
   const establishment = payload?.establishment || null;
+  const employers = Array.isArray(establishment?.employers)
+    ? establishment.employers
+    : [];
 
   const customer = useMemo(() => {
     const source = order?.client || order?.customer || {};
@@ -190,6 +200,89 @@ export default function OrderViewPage() {
   const completedAt = order?.attended_at || null;
   const [statusLabel, statusTone] = statusMeta(order?.appointment_status || order?.status);
   const items = Array.isArray(order?.items) ? order.items : [];
+  const currentStatus = String(order?.appointment_status || order?.status || "").toLowerCase();
+
+  const currentUserId = useMemo(() => {
+    try {
+      return Number(JSON.parse(localStorage.getItem("user") || "{}")?.id || 0);
+    } catch {
+      return 0;
+    }
+  }, []);
+
+  const canManageEstablishment = useMemo(() => {
+    if (!establishment || !currentUserId) return false;
+
+    if (
+      Number(establishment.user_id) === currentUserId ||
+      Number(establishment.created_by) === currentUserId
+    ) {
+      return true;
+    }
+
+    const managerRoles = ["gerente", "manager", "gestor", "administrador"];
+    return employers.some(
+      (employer) =>
+        Number(employer?.user_id) === currentUserId &&
+        managerRoles.includes(String(employer?.role || "").trim().toLowerCase())
+    );
+  }, [currentUserId, employers, establishment]);
+
+  const canReassign =
+    canManageEstablishment &&
+    ["pending", "confirmed"].includes(currentStatus) &&
+    employers.length > 0;
+
+  const changeAttendant = async (nextEmployerId) => {
+    const nextId = Number(nextEmployerId || 0);
+    if (!nextId || nextId === Number(order?.attendant_id)) return;
+
+    const selected = employers.find((employer) => Number(employer.id) === nextId);
+    const selectedName = employerName(selected);
+
+    const confirmation = await Swal.fire({
+      icon: "question",
+      title: "Alterar profissional?",
+      text: `${selectedName} passará a ser responsável por este atendimento.`,
+      showCancelButton: true,
+      confirmButtonText: "Alterar profissional",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
+
+    if (!confirmation.isConfirmed) return;
+
+    setAssigning(true);
+    try {
+      const { data } = await api.patch(`/rasoio/orders/${order.id}/assign`, {
+        attendant_id: nextId,
+      });
+
+      setPayload((current) => ({
+        ...current,
+        order: data?.order || current?.order,
+      }));
+
+      await Swal.fire({
+        icon: "success",
+        title: "Profissional alterado",
+        text: data?.message || `${selectedName} agora é responsável pelo atendimento.`,
+        timer: 1600,
+        showConfirmButton: false,
+      });
+    } catch (requestError) {
+      await Swal.fire({
+        icon: "error",
+        title: "Não foi possível alterar",
+        text:
+          requestError?.response?.data?.message ||
+          requestError?.response?.data?.error ||
+          "Não foi possível alterar o profissional deste atendimento.",
+      });
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   if (loading) {
     return <div className="ovp-state">Carregando detalhes do agendamento...</div>;
@@ -201,6 +294,18 @@ export default function OrderViewPage() {
 
   return (
     <main className="ovp-page">
+      {assigning && (
+        <ProcessingIndicatorComponent
+          messages={[
+            "Alterando profissional responsável...",
+            "Validando disponibilidade da equipe...",
+            "Atualizando atendimento...",
+          ]}
+          interval={1100}
+          blocking
+        />
+      )}
+
       <section className="ovp-hero">
         <div className="ovp-heroMain">
           <div className="ovp-kicker"><FaReceipt /> Agendamento #{order.order_number || order.id}</div>
@@ -246,6 +351,34 @@ export default function OrderViewPage() {
           linkUserName={creator?.user_name}
         />
       </section>
+
+      {canReassign && (
+        <section className="ovp-assignmentPanel" aria-label="Alterar profissional responsável">
+          <div className="ovp-assignmentIcon"><FaExchangeAlt /></div>
+          <div className="ovp-assignmentCopy">
+            <span>Gestão do atendimento</span>
+            <strong>Alterar quem irá atender o cliente</strong>
+            <small>
+              Selecione outro colaborador desta barbearia. A API impede a troca caso o profissional tenha conflito de agenda.
+            </small>
+          </div>
+          <label className="ovp-assignmentField">
+            <span>Profissional responsável</span>
+            <select
+              value={order.attendant_id || ""}
+              disabled={assigning}
+              onChange={(event) => changeAttendant(event.target.value)}
+            >
+              <option value="">Selecione um colaborador</option>
+              {employers.map((employer) => (
+                <option key={employer.id} value={employer.id}>
+                  {employerName(employer)}{employer.role ? ` — ${employer.role}` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </section>
+      )}
 
       <section className="ovp-auditGrid ovp-auditGrid--time">
         <article className="ovp-auditCard ovp-auditCard--requested">
