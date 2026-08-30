@@ -5,12 +5,19 @@ import { Link } from "react-router-dom";
 
 const actions = [
   {
+    key: "overview",
+    label: "Visão geral",
+    description: "Resumo desta unidade",
+    icon: "📈",
+    path: (establishment) => `/dashboard?establishment=${encodeURIComponent(establishment.slug)}`,
+    primary: true,
+  },
+  {
     key: "agenda",
     label: "Agenda",
-    description: "Pedidos e horários",
+    description: "Atendimentos e horários",
     icon: "📅",
     path: (establishment) => `/establishment/orders/${establishment.slug}`,
-    primary: true,
   },
   {
     key: "team",
