@@ -1,420 +1,128 @@
-  // src/pages/establishment/EstablishmentViewPage.jsx
-  import React, { useCallback, useMemo } from "react";
-  import { useNavigate, useParams } from "react-router-dom";
-  import Swal from "sweetalert2";
+import React, { useCallback, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Swal from "sweetalert2";
+import { FaCalendarAlt, FaMapMarkerAlt, FaWhatsapp, FaStar, FaCut, FaUsers } from "react-icons/fa";
 
-  import { apiBaseUrl, appId } from "../../config";
+import { apiBaseUrl, appId } from "../../config";
+import useEstablishmentView from "../../hooks/useEstablishmentView";
+import useAppointment from "../../hooks/useAppointment";
+import useImageUtils from "../../hooks/useImageUtils";
+import useSchedulePopup from "../../hooks/useSchedulePopup";
+import useWhatsappLink from "../../hooks/useWhatsappLink";
 
-  import useEstablishmentView from "../../hooks/useEstablishmentView";
-  import useAppointment from "../../hooks/useAppointment";
-  import useImageUtils from "../../hooks/useImageUtils";
-  import useSchedulePopup from "../../hooks/useSchedulePopup";
-  import useWhatsappLink from "../../hooks/useWhatsappLink";
+import GlobalCarousel from "../../components/GlobalCarousel";
+import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
+import ShareButton from "../../components/ShareButton";
+import GlobalMap from "../../components/GlobalMap";
+import "./EstablishmentView.css";
 
-  import GlobalPageHeader from "../../components/GlobalPageHeader";
-  import GlobalCarousel from "../../components/GlobalCarousel";
-  import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
-  import ShareButton from "../../components/ShareButton";
-  import GlobalMap from "../../components/GlobalMap";
-  import GlobalProfileHero from "../../components/GlobalProfileHero";
+const PLACEHOLDER = "/images/logo.png";
 
-  import "./EstablishmentView.css";
+export default function EstablishmentViewPage() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const { establishment, metrics, otherEstablishments, otherEmployers, otherItems, services, products, employers, isLoading } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
+  const { imageUrl } = useImageUtils(PLACEHOLDER);
+  const { showWizard, setShowWizard, wizardEstablishment, wizardEmployers, wizardServices, preselectedEmployer, preselectedServiceId, openSchedulePopup } = useSchedulePopup(apiBaseUrl, token, appId);
+  const { loadAvailableTimes, handleCreateAppointment } = useAppointment(apiBaseUrl, appId, token, wizardEstablishment);
+  const whatsappLink = useWhatsappLink(establishment);
+  const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
 
-  const PLACEHOLDER = "/images/logo.png";
+  const heroLogo = establishment?.images?.logo || establishment?.logo || null;
+  const heroBg = establishment?.images?.background || establishment?.background || null;
+  const gallery = Array.isArray(establishment?.images?.gallery) ? establishment.images.gallery : [];
+  const description = establishment?.description || establishment?.about || establishment?.bio || "Cuidado, estilo e atendimento profissional em um ambiente pensado para você.";
+  const cityLabel = [establishment?.city, establishment?.uf].filter(Boolean).join(" - ");
+  const rating = metrics?.rating ?? establishment?.metrics?.rating ?? metrics?.avg_rating ?? establishment?.avg_rating ?? establishment?.rating;
+  const ratingLabel = rating != null && !Number.isNaN(Number(rating)) ? Number(rating).toFixed(1) : null;
 
-  export default function EstablishmentViewPage() {
-    const { slug } = useParams();
-    const navigate = useNavigate();
-    const token = localStorage.getItem("token");
-
-    const {
-      establishment,
-      metrics,
-      otherEstablishments,
-      otherEmployers,
-      otherItems,
-      services,
-      products,
-      employers,
-      isLoading,
-    } = useEstablishmentView(apiBaseUrl, slug, token, navigate);
-
-    const { imageUrl } = useImageUtils(PLACEHOLDER);
-
-    const {
-      showWizard,
-      setShowWizard,
-      wizardEstablishment,
-      wizardEmployers,
-      wizardServices,
-      preselectedEmployer,
-      preselectedServiceId,
-      openSchedulePopup,
-    } = useSchedulePopup(apiBaseUrl, token, appId);
-
-    const { loadAvailableTimes, handleCreateAppointment } = useAppointment(
-      apiBaseUrl,
-      appId,
-      token,
-      wizardEstablishment
-    );
-
-    const whatsappLink = useWhatsappLink(establishment);
-
-    const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
-
-    const headerMeta = useMemo(() => {
-      const cityUf =
-        establishment?.city && establishment?.uf
-          ? `${establishment.city} - ${establishment.uf}`
-          : establishment?.city || establishment?.uf || "";
-
-      const category =
-        establishment?.category?.name ||
-        establishment?.segment?.name ||
-        establishment?.category ||
-        "";
-
-      return [cityUf, category].filter(Boolean);
-    }, [establishment]);
-
-    const heroLogo = useMemo(
-      () => establishment?.images?.logo || establishment?.logo || null,
-      [establishment]
-    );
-
-    const heroBg = useMemo(
-      () => establishment?.images?.background || establishment?.background || null,
-      [establishment]
-    );
-
-    const ratingLabel = useMemo(() => {
-      const r =
-        metrics?.rating ??
-        establishment?.metrics?.rating ??
-        metrics?.avg_rating ??
-        establishment?.avg_rating ??
-        establishment?.rating ??
-        null;
-
-      if (r == null) return null;
-      const num = Number(r);
-      if (Number.isNaN(num)) return null;
-      return num.toFixed(1);
-    }, [metrics, establishment]);
-
-    const toNumberOrNull = (v) => {
-      if (v == null) return null;
-      const n = Number(v);
-      return Number.isNaN(n) ? null : n;
-    };
-
-    const fmtPercent = useCallback((v) => {
-      const n = toNumberOrNull(v);
-      if (n == null) return "—";
-      return `${n.toFixed(0)}%`;
-    }, []);
-
-    const heroMetrics = useMemo(() => {
-      const m = establishment?.metrics || metrics || null;
-      return {
-        total_views: toNumberOrNull(m?.total_views),
-        total_orders: toNumberOrNull(m?.total_orders),
-        completed_orders: toNumberOrNull(m?.completed_orders),
-        pending_orders: toNumberOrNull(m?.pending_orders),
-        engagement_score: toNumberOrNull(m?.engagement_score),
-        return_rate: toNumberOrNull(m?.return_rate),
-      };
-    }, [establishment, metrics]);
-
-    const heroStats = useMemo(() => {
-      const m = heroMetrics;
-
-      const base = [
-        { label: "Visualizações", value: m.total_views ?? "—" },
-        { label: "Pedidos", value: m.total_orders ?? "—" },
-      ];
-
-      if (m.completed_orders != null) base.push({ label: "Concluídos", value: m.completed_orders });
-      if (m.pending_orders != null) base.push({ label: "Pendentes", value: m.pending_orders });
-      if (m.return_rate != null) base.push({ label: "Retorno", value: fmtPercent(m.return_rate) });
-      if (m.engagement_score != null) base.push({ label: "Engajamento", value: m.engagement_score });
-
-      return base.slice(0, 8);
-    }, [heroMetrics, fmtPercent]);
-
-    const handleOpenFromEstablishment = useCallback(
-      async (est) => {
-        try {
-          const estId = est?.id ?? establishment?.id ?? null;
-
-          const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
-            (emp) => Number(emp?.establishment_id) === Number(estId)
-          );
-
-          await openSchedulePopup({
-            establishment: est || establishment,
-            filteredEmployers,
-          });
-        } catch (e) {
-          console.error(e);
-          Swal.fire({
-            icon: "error",
-            title: "Erro",
-            text: "Não foi possível abrir o agendamento agora.",
-          });
-        }
-      },
-      [openSchedulePopup, employers, establishment]
-    );
-
-    const handleOpenFromEmployer = useCallback(
-      (emp) => {
-        try {
-          openSchedulePopup({
-            employer: emp,
-            establishment: establishment || emp?.establishment || null,
-          });
-        } catch (e) {
-          console.error(e);
-          Swal.fire({
-            icon: "error",
-            title: "Erro",
-            text: "Não foi possível abrir o agendamento agora.",
-          });
-        }
-      },
-      [openSchedulePopup, establishment]
-    );
-
-    const handleOpenFromService = useCallback(
-      (item) => {
-        try {
-          const estId =
-            item?.establishment_id ||
-            item?.entity_id ||
-            item?.entityId ||
-            establishment?.id ||
-            null;
-
-          const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
-            (emp) => Number(emp?.establishment_id) === Number(estId)
-          );
-
-          openSchedulePopup({
-            service: item,
-            filteredEmployers,
-            establishment,
-          });
-        } catch (e) {
-          console.error(e);
-          Swal.fire({
-            icon: "error",
-            title: "Erro",
-            text: "Não foi possível abrir o agendamento agora.",
-          });
-        }
-      },
-      [openSchedulePopup, employers, establishment]
-    );
-
-    if (isLoading) {
-      return (
-        <div className="wrapper">
-          <GlobalPageHeader
-            title="Estabelecimento"
-            variant="establishment"
-            description="Carregando perfil..."
-            meta={headerMeta}
-            compact
-          />
-          <div className="loading">Carregando…</div>
-        </div>
-      );
+  const handleOpenFromEstablishment = useCallback(async (est) => {
+    try {
+      const estId = est?.id ?? establishment?.id ?? null;
+      const filteredEmployers = (Array.isArray(employers) ? employers : []).filter((emp) => Number(emp?.establishment_id) === Number(estId));
+      await openSchedulePopup({ establishment: est || establishment, filteredEmployers });
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
     }
+  }, [openSchedulePopup, employers, establishment]);
 
-    if (!establishment) {
-      return (
-        <div className="wrapper">
-          <GlobalPageHeader
-            title="Estabelecimento"
-            variant="establishment"
-            description="Não foi possível carregar este perfil."
-            meta={headerMeta}
-            compact
-          />
-          <div className="loading">Perfil indisponível.</div>
-        </div>
-      );
-    }
+  const handleOpenFromEmployer = useCallback((emp) => {
+    try { openSchedulePopup({ employer: emp, establishment: establishment || emp?.establishment || null }); }
+    catch (e) { console.error(e); Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." }); }
+  }, [openSchedulePopup, establishment]);
 
-    const chips = [
-      establishment?.address ? { label: establishment.address } : null,
-      establishment?.city || establishment?.uf
-        ? {
-            label: `${establishment?.city || ""}${
-              establishment?.city && establishment?.uf ? " - " : ""
-            }${establishment?.uf || ""}`,
-          }
-        : null,
-      ratingLabel ? { label: `⭐ ${ratingLabel}`, variant: "rating" } : null,
-    ].filter(Boolean);
+  const handleOpenFromService = useCallback((item) => {
+    try {
+      const estId = item?.establishment_id || item?.entity_id || item?.entityId || establishment?.id || null;
+      const filteredEmployers = (Array.isArray(employers) ? employers : []).filter((emp) => Number(emp?.establishment_id) === Number(estId));
+      openSchedulePopup({ service: item, filteredEmployers, establishment });
+    } catch (e) { console.error(e); Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." }); }
+  }, [openSchedulePopup, employers, establishment]);
 
-    return (
-      <>
-        <div className="wrapper">
-          <GlobalProfileHero
-            title={establishment?.name || "Estabelecimento"}
-            logoSrc={heroLogo}
-            bgSrc={heroBg}
-            imageUrl={imageUrl}
-            placeholder={PLACEHOLDER}
-            chips={chips}
-            stats={heroStats}
-            primaryAction={{
-              label: "Agendar agora",
-              onClick: () => handleOpenFromEstablishment(establishment),
-            }}
-            secondaryAction={{
-              label: "WhatsApp",
-              href: whatsappLink || undefined,
-              disabled: !whatsappLink,
-              title: !whatsappLink ? "Telefone não informado" : undefined,
-            }}
-          />
+  if (isLoading) return <div className="ev-state">Carregando barbearia…</div>;
+  if (!establishment) return <div className="ev-state">Esta barbearia não está disponível.</div>;
 
-          {Array.isArray(establishment?.images?.gallery) &&
-            establishment.images.gallery.length > 0 && (
-              <section className="gallery">
-                <div className="galleryHeader">
-                  <h2 className="sectionTitle">Galeria</h2>
-                  <p className="sectionSub">Alguns registros do estabelecimento</p>
-                </div>
+  return (
+    <>
+      <main className="ev-page">
+        <section className="ev-hero" style={heroBg ? { backgroundImage: `linear-gradient(90deg, rgba(3,9,18,.96) 0%, rgba(3,9,18,.78) 46%, rgba(3,9,18,.30) 100%), url(${imageUrl(heroBg)})` } : undefined}>
+          <div className="ev-heroGlow" />
+          <div className="ev-shell ev-heroInner">
+            <div className="ev-identity">
+              <div className="ev-logo"><img src={imageUrl(heroLogo || PLACEHOLDER)} alt={establishment.name} /></div>
+              <div className="ev-eyebrow"><FaCut /> BARBEARIA</div>
+              <h1>{establishment.name}</h1>
+              <p>{description}</p>
+              <div className="ev-meta">
+                {cityLabel && <span><FaMapMarkerAlt /> {cityLabel}</span>}
+                {ratingLabel && <span className="ev-rating"><FaStar /> {ratingLabel}</span>}
+                <span><FaUsers /> {employers?.length || 0} profissionais</span>
+              </div>
+              <div className="ev-actions">
+                <button type="button" className="ev-primary" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button>
+                {whatsappLink && <a className="ev-secondary" href={whatsappLink} target="_blank" rel="noreferrer"><FaWhatsapp /> WhatsApp</a>}
+              </div>
+            </div>
+          </div>
+        </section>
 
-                <div className="galleryGrid">
-                  {establishment.images.gallery.slice(0, 12).map((src, idx) => (
-                    <button
-                      key={`${src}-${idx}`}
-                      className="galleryItem"
-                      type="button"
-                      onClick={() => {
-                        Swal.fire({
-                          imageUrl: imageUrl(src),
-                          imageAlt: "Imagem da galeria",
-                          showConfirmButton: false,
-                          showCloseButton: true,
-                          background: "#0b1220",
-                        });
-                      }}
-                    >
-                      <img
-                        src={imageUrl(src)}
-                        alt={`Galeria ${idx + 1}`}
-                        draggable={false}
-                        loading="lazy"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
+        <div className="ev-shell">
+          <section className="ev-quickbar">
+            <div><strong>{services?.length || 0}</strong><span>serviços disponíveis</span></div>
+            <div><strong>{employers?.length || 0}</strong><span>profissionais na equipe</span></div>
+            <div><strong>{ratingLabel || "—"}</strong><span>avaliação da barbearia</span></div>
+            <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Escolher meu horário <span>→</span></button>
+          </section>
 
-          <div className="sections">
-            <GlobalCarousel
-              title="Profissionais"
-              subtitle="Escolha com quem você quer agendar"
-              items={employers}
-              fmtBRL={(v) => v}
-              navigate={navigate}
-              openSchedulePopup={handleOpenFromEmployer}
-              showSchedule
-              showDots
-            />
+          <section className="ev-intro">
+            <div><span className="ev-kicker">SUA EXPERIÊNCIA</span><h2>Seu estilo começa aqui.</h2><p>{description}</p></div>
+            <div className="ev-introCard"><FaCalendarAlt /><div><strong>Agendamento simples</strong><span>Escolha o serviço, o profissional e o melhor horário para você.</span></div></div>
+          </section>
 
-            <GlobalCarousel
-              title="Serviços"
-              subtitle="Escolha um serviço e finalize em poucos cliques"
-              items={services}
-              fmtBRL={(v) => v}
-              navigate={safeNavigate}
-              openSchedulePopup={handleOpenFromService}
-              showSchedule
-              showDots
-            />
+          <div className="ev-sections">
+            {Array.isArray(services) && services.length > 0 && <section className="ev-block ev-services"><div className="ev-sectionHeading"><div><span>O QUE FAZEMOS</span><h2>Serviços da barbearia</h2></div><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Agendar agora</button></div><GlobalCarousel title="" subtitle="Escolha seu serviço" items={services} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromService} showSchedule showDots /></section>}
+            {Array.isArray(employers) && employers.length > 0 && <section className="ev-block"><div className="ev-sectionHeading"><div><span>NOSSA EQUIPE</span><h2>Profissionais que cuidam do seu estilo</h2></div></div><GlobalCarousel title="" subtitle="Escolha com quem você quer agendar" items={employers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={handleOpenFromEmployer} showSchedule showDots /></section>}
 
-            <GlobalCarousel
-              title="Produtos"
-              subtitle="Produtos disponíveis neste estabelecimento"
-              items={products}
-              fmtBRL={(v) => v}
-              navigate={safeNavigate}
-              // ✅ produto não abre agendamento
-              showSchedule={false}
-              showDots
-            />
+            {gallery.length > 0 && <section className="ev-block ev-gallery"><div className="ev-sectionHeading"><div><span>AMBIENTE</span><h2>Conheça a barbearia</h2></div></div><div className="ev-galleryGrid">{gallery.slice(0, 8).map((src, idx) => <button key={`${src}-${idx}`} type="button" className={`ev-galleryItem ev-galleryItem-${idx + 1}`} onClick={() => Swal.fire({ imageUrl: imageUrl(src), imageAlt: "Ambiente da barbearia", showConfirmButton: false, showCloseButton: true, background: "#07111f" })}><img src={imageUrl(src)} alt={`Ambiente ${idx + 1}`} loading="lazy" /></button>)}</div></section>}
 
-            <GlobalMap
-              location={establishment?.location}
-              address={establishment?.address}
-              city={establishment?.city}
-              uf={establishment?.uf}
-            />
+            {Array.isArray(products) && products.length > 0 && <section className="ev-block"><div className="ev-sectionHeading"><div><span>CUIDADO EM CASA</span><h2>Produtos selecionados</h2></div></div><GlobalCarousel title="" subtitle="Produtos disponíveis nesta barbearia" items={products} fmtBRL={(v) => v} navigate={safeNavigate} showSchedule={false} showDots /></section>}
 
-            {Array.isArray(otherEstablishments) && otherEstablishments.length > 0 && (
-              <GlobalCarousel
-                title="Outros estabelecimentos"
-                subtitle="Descubra opções próximas"
-                items={otherEstablishments}
-                fmtBRL={(v) => v}
-                navigate={safeNavigate}
-                openSchedulePopup={handleOpenFromEstablishment}
-                showSchedule
-                showDots
-              />
-            )}
+            <section className="ev-block ev-location"><div className="ev-sectionHeading"><div><span>ONDE ESTAMOS</span><h2>Venha nos visitar</h2>{establishment?.address && <p>{establishment.address}{cityLabel ? ` · ${cityLabel}` : ""}</p>}</div></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>
 
-            {Array.isArray(otherEmployers) && otherEmployers.length > 0 && (
-              <GlobalCarousel
-                title="Outros profissionais"
-                subtitle="Veja outros profissionais disponíveis"
-                items={otherEmployers}
-                fmtBRL={(v) => v}
-                navigate={navigate}
-                openSchedulePopup={handleOpenFromEmployer}
-                showSchedule
-                showDots
-              />
-            )}
+            <section className="ev-finalCta"><div><span>PRONTO PARA MUDAR O VISUAL?</span><h2>Reserve seu horário em poucos cliques.</h2><p>Escolha seus serviços, seu profissional e encontre os horários disponíveis.</p></div><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar agora</button></section>
 
-            {Array.isArray(otherItems) && otherItems.length > 0 && (
-              <GlobalCarousel
-                title="Outros serviços"
-                subtitle="Mais serviços para você"
-                items={otherItems}
-                fmtBRL={(v) => v}
-                navigate={safeNavigate}
-                openSchedulePopup={handleOpenFromService}
-                showSchedule
-                showDots
-              />
-            )}
+            {Array.isArray(otherEstablishments) && otherEstablishments.length > 0 && <section className="ev-block ev-related"><GlobalCarousel title="Outras barbearias" subtitle="Conheça outras opções" items={otherEstablishments} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromEstablishment} showSchedule showDots /></section>}
+            {Array.isArray(otherEmployers) && otherEmployers.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros profissionais" subtitle="Mais profissionais para conhecer" items={otherEmployers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={handleOpenFromEmployer} showSchedule showDots /></section>}
+            {Array.isArray(otherItems) && otherItems.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros serviços" subtitle="Veja mais opções" items={otherItems} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromService} showSchedule showDots /></section>}
           </div>
         </div>
+      </main>
 
-        <ShareButton />
-
-        <AppointmentWizardModal
-          show={showWizard}
-          onHide={() => setShowWizard(false)}
-          employers={wizardEmployers}
-          services={wizardServices}
-          loadAvailableTimes={loadAvailableTimes}
-          handleCreateAppointment={handleCreateAppointment}
-          imageUrl={imageUrl}
-          preselectedServiceId={preselectedServiceId}
-          preselectedEmployer={preselectedEmployer}
-          establishment={wizardEstablishment}
-        />
-      </>
-    );
-  }
+      <div className="ev-mobileBooking"><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button></div>
+      <ShareButton />
+      <AppointmentWizardModal show={showWizard} onHide={() => setShowWizard(false)} employers={wizardEmployers} services={wizardServices} loadAvailableTimes={loadAvailableTimes} handleCreateAppointment={handleCreateAppointment} imageUrl={imageUrl} preselectedServiceId={preselectedServiceId} preselectedEmployer={preselectedEmployer} establishment={wizardEstablishment} />
+    </>
+  );
+}
