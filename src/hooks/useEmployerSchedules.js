@@ -12,6 +12,9 @@ export const EMPLOYER_DAYS = [
   { key: "sunday", label: "Domingo" },
 ];
 
+const DEFAULT_START = "09:00";
+const DEFAULT_END = "18:00";
+
 const toHM = (value) => {
   if (!value) return "";
   const text = String(value);
@@ -40,8 +43,8 @@ export default function useEmployerSchedules() {
   const [employerId, setEmployerId] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [addDay, setAddDay] = useState("monday");
-  const [addStart, setAddStart] = useState("09:00");
-  const [addEnd, setAddEnd] = useState("18:00");
+  const [addStart, setAddStart] = useState(DEFAULT_START);
+  const [addEnd, setAddEnd] = useState(DEFAULT_END);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -76,7 +79,15 @@ export default function useEmployerSchedules() {
         const { data } = await api.post("/employer/list-schedules", {
           employer_id: targetId,
         });
-        if (mountedRef.current) setSchedules(getSchedulesArray(data).map(normalize));
+
+        // Esta tela administra somente a escala semanal recorrente. Reservas
+        // pontuais (break/holiday) têm outra finalidade e não devem ser
+        // transformadas em expediente ao salvar a disponibilidade semanal.
+        const workSchedules = getSchedulesArray(data)
+          .filter((schedule) => !schedule.type || schedule.type === "work")
+          .map(normalize);
+
+        if (mountedRef.current) setSchedules(workSchedules);
       } catch (error) {
         if (mountedRef.current) {
           setApiError(error?.response?.data?.message || error?.response?.data?.error || "Erro ao carregar horários.");
@@ -110,6 +121,44 @@ export default function useEmployerSchedules() {
     );
     return result;
   }, [schedules]);
+
+  const dayOffByDay = useMemo(
+    () => Object.fromEntries(
+      EMPLOYER_DAYS.map((day) => [day.key, (schedulesByDay[day.key] || []).length === 0])
+    ),
+    [schedulesByDay]
+  );
+
+  const handleSetDayOff = useCallback((dayKey, shouldBeOff) => {
+    setApiError(null);
+    setActionMessage(null);
+
+    if (shouldBeOff) {
+      setSchedules((current) => current.filter((schedule) => schedule.day_of_week !== dayKey));
+      setActionMessage("Folga semanal definida. Salve as alterações para confirmar.");
+      return;
+    }
+
+    setSchedules((current) => {
+      if (current.some((schedule) => schedule.day_of_week === dayKey)) return current;
+      return [
+        ...current,
+        {
+          id: `tmp-${dayKey}-${Date.now()}`,
+          day_of_week: dayKey,
+          start_time: DEFAULT_START,
+          end_time: DEFAULT_END,
+          type: "work",
+          is_active: true,
+          __local: true,
+        },
+      ];
+    });
+    setAddDay(dayKey);
+    setAddStart(DEFAULT_START);
+    setAddEnd(DEFAULT_END);
+    setActionMessage("Dia reativado com horário inicial de 09:00 às 18:00. Ajuste se necessário e salve.");
+  }, []);
 
   const handleAddScheduleLocal = useCallback(() => {
     setApiError(null);
@@ -157,6 +206,7 @@ export default function useEmployerSchedules() {
 
     if (schedule.__local) {
       setSchedules((current) => current.filter((item) => item.id !== schedule.id));
+      setActionMessage("Horário removido. Se este era o último período do dia, o dia passa a ser folga semanal ao salvar.");
       return;
     }
 
@@ -184,8 +234,6 @@ export default function useEmployerSchedules() {
         day_of_week: schedule.day_of_week,
         start_time: toHM(schedule.start_time),
         end_time: toHM(schedule.end_time),
-        type: schedule.type || "work",
-        is_active: schedule.is_active !== false,
       }));
 
       await api.post("/employer/save-schedules", {
@@ -194,7 +242,7 @@ export default function useEmployerSchedules() {
       });
 
       await loadSchedules(employerId);
-      setActionMessage("Horários salvos com sucesso.");
+      setActionMessage("Disponibilidade semanal salva com sucesso.");
     } catch (error) {
       setApiError(error?.response?.data?.message || error?.response?.data?.error || "Erro ao salvar horários.");
     } finally {
@@ -205,6 +253,7 @@ export default function useEmployerSchedules() {
   return {
     employerId,
     schedulesByDay,
+    dayOffByDay,
     addDay,
     setAddDay,
     addStart,
@@ -216,6 +265,7 @@ export default function useEmployerSchedules() {
     deleting,
     apiError,
     actionMessage,
+    handleSetDayOff,
     handleAddScheduleLocal,
     handleRemoveSchedule,
     handleSaveSchedules,
