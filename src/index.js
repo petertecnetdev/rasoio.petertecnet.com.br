@@ -9,6 +9,7 @@ import PeterTecnetSignature from "./components/PeterTecnetSignature";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 import "./styles/appointment-step1-compact.css";
+import "./styles/appointment-wizard-responsive.css";
 
 startTelemetry({ apiBaseUrl, appSlug });
 

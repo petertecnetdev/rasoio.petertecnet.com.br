@@ -16,7 +16,7 @@ export default function GlobalModal({
   backdrop = "static", // "static" | true | false
   closeOnEsc = true,
   closeButton = true,
-  logoSrc = null, // ✅ agora pode ser null/undefined/"" para não renderizar logo
+  logoSrc = null,
   logoAlt = "",
   className,
 }) {
@@ -29,6 +29,15 @@ export default function GlobalModal({
     const map = { sm: 420, md: 560, lg: 860, xl: 1080 };
     return map[size] || map.lg;
   }, [size]);
+
+  const overlayScopedClasses = useMemo(() => {
+    if (!className) return "";
+    return String(className)
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((name) => `${name}-overlay`)
+      .join(" ");
+  }, [className]);
 
   const lockBodyScroll = useCallback((lock) => {
     const body = document.body;
@@ -106,7 +115,7 @@ export default function GlobalModal({
 
   const content = (
     <div
-      className={`gmodal-overlay ${showBackdrop ? "gmodal-backdrop" : "gmodal-nobackdrop"}`}
+      className={`gmodal-overlay ${showBackdrop ? "gmodal-backdrop" : "gmodal-nobackdrop"} ${overlayScopedClasses}`}
       onMouseDown={handleBackdropMouseDown}
       aria-hidden={false}
     >
@@ -172,7 +181,7 @@ GlobalModal.propTypes = {
   backdrop: PropTypes.oneOfType([PropTypes.oneOf(["static"]), PropTypes.bool]),
   closeOnEsc: PropTypes.bool,
   closeButton: PropTypes.bool,
-  logoSrc: PropTypes.string, // pode ser undefined/null/"" também
+  logoSrc: PropTypes.string,
   logoAlt: PropTypes.string,
   className: PropTypes.string,
 };
