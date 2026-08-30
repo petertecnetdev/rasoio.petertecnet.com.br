@@ -10,21 +10,30 @@ const FALLBACK_LOGO = "/images/logo.png";
 export default function EstablishmentDashboard({ establishment, navigate }) {
   const title = establishment.fantasy || establishment.name || "Barbearia";
   const location = [establishment.city, establishment.uf].filter(Boolean).join(" • ");
-  const logo =
-    establishment?.images?.logo ||
-    establishment?.logo ||
-    FALLBACK_LOGO;
+  const logo = establishment?.images?.logo || establishment?.logo || FALLBACK_LOGO;
+  const background = establishment?.images?.background || establishment?.background || null;
 
   return (
     <article className="barbershop-management-card">
-      <div className="barbershop-management-glow" aria-hidden="true" />
+      <div
+        className="barbershop-cover"
+        style={background ? { backgroundImage: `linear-gradient(180deg, rgba(2,8,16,.08), rgba(2,8,16,.92)), url(${background})` } : undefined}
+      >
+        <span className="barbershop-status"><i /> Unidade ativa</span>
+        <Link
+          to={`/establishment/view/${establishment.slug}`}
+          className="barbershop-public-pill"
+        >
+          Página pública ↗
+        </Link>
+      </div>
 
-      <div className="barbershop-management-main">
+      <div className="barbershop-card-body">
         <button
           type="button"
           className="barbershop-identity"
-          onClick={() => navigate(`/establishment/view/${establishment.slug}`)}
-          aria-label={`Abrir página da ${title}`}
+          onClick={() => navigate(`/dashboard?establishment=${encodeURIComponent(establishment.slug)}`)}
+          aria-label={`Abrir visão geral da ${title}`}
         >
           <span className="barbershop-logo-shell">
             <img
@@ -38,43 +47,28 @@ export default function EstablishmentDashboard({ establishment, navigate }) {
           </span>
 
           <span className="barbershop-identity-copy">
-            <span className="barbershop-eyebrow">Barbearia ativa</span>
+            <span className="barbershop-eyebrow">Sua barbearia</span>
             <strong className="barbershop-name">{title}</strong>
-            <span className="barbershop-meta">
-              {location || "Localização não informada"}
-            </span>
-            <span className="barbershop-slug">/{establishment.slug}</span>
+            <span className="barbershop-meta">{location || "Localização não informada"}</span>
+            <span className="barbershop-slug">rasoio / {establishment.slug}</span>
           </span>
         </button>
 
-        <div className="barbershop-management-summary">
-          <div className="barbershop-summary-item">
-            <span className="barbershop-summary-icon" aria-hidden="true">✂</span>
-            <div>
-              <strong>Operação</strong>
-              <span>Equipe, serviços e agenda</span>
-            </div>
+        <div className="barbershop-card-overview">
+          <div>
+            <span>Gestão independente</span>
+            <strong>Equipe, catálogo e agenda próprios</strong>
           </div>
-          <div className="barbershop-summary-item">
-            <span className="barbershop-summary-icon" aria-hidden="true">⌁</span>
-            <div>
-              <strong>Página pública</strong>
-              <span>Perfil da barbearia na Rasoio</span>
-            </div>
-          </div>
+          <Link
+            className="barbershop-overview-button"
+            to={`/dashboard?establishment=${encodeURIComponent(establishment.slug)}`}
+          >
+            Visão geral
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
-      </div>
 
-      <EstablishmentActionsBar establishment={establishment} />
-
-      <div className="barbershop-management-footer">
-        <Link
-          to={`/establishment/view/${establishment.slug}`}
-          className="barbershop-public-link"
-        >
-          Ver página pública <span aria-hidden="true">↗</span>
-        </Link>
-        <span className="barbershop-app-badge">Rasoio</span>
+        <EstablishmentActionsBar establishment={establishment} />
       </div>
     </article>
   );
@@ -89,8 +83,10 @@ EstablishmentDashboard.propTypes = {
     city: PropTypes.string,
     uf: PropTypes.string,
     logo: PropTypes.string,
+    background: PropTypes.string,
     images: PropTypes.shape({
       logo: PropTypes.string,
+      background: PropTypes.string,
     }),
   }).isRequired,
   navigate: PropTypes.func.isRequired,
