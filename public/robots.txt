@@ -1,3 +1,29 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard
+Disallow: /orders/
+Disallow: /order/
+Disallow: /user/
+Disallow: /item/list/
+Disallow: /item/create/
+Disallow: /item/update/
+Disallow: /employer/list/
+Disallow: /employer/create/
+Disallow: /employer/update/
+Disallow: /employer/dashboard
+Disallow: /employer/schedules
+Disallow: /employer/orders
+Disallow: /establishment/create
+Disallow: /establishment/update/
+Disallow: /establishment/my
+Disallow: /establishment/orders/
+Disallow: /establishment/item/
+Disallow: /establishment/employers/
+Disallow: /login
+Disallow: /register
+Disallow: /password
+Disallow: /email-verify
+Disallow: /logout
+Disallow: /invite
+
+Sitemap: https://rasoio.petertecnet.com.br/sitemap.xml
