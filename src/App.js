@@ -18,6 +18,7 @@ import {
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
+import SeoManager from "./components/SeoManager";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
 import api from "./services/api";
@@ -140,9 +141,6 @@ function AppInner() {
     syncAuth();
 
     const handleAuthChanged = () => {
-      // Não desmonta o Router durante login/logout. Desmontar a árvore aqui
-      // fazia o React Router perder o destino de retorno e o fluxo pendente
-      // de agendamento, enviando o usuário para a home após autenticar.
       syncAuth();
     };
 
@@ -195,6 +193,7 @@ function AppInner() {
       {isLoading && <RouteFallback />}
 
       <Router>
+        <SeoManager />
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route element={<AppLayout loadingMenu={false} />}>
