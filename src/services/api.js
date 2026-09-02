@@ -1,22 +1,29 @@
 // src/services/api.js
 import axios from "axios";
-import { apiBaseUrl } from "../config";
+import { apiV1BaseUrl, appSlug } from "../config";
 
-const APP_SLUG = "rasoio";
+const legacyProductPrefix = `/${appSlug}`;
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || apiBaseUrl,
+  baseURL: process.env.REACT_APP_API_V1_URL || apiV1BaseUrl,
   headers: {
     Accept: "application/json",
-    "X-Peter-App": APP_SLUG,
+    "X-Peter-App": appSlug,
   },
   timeout: 20000,
 });
 
 api.interceptors.request.use((config) => {
+  if (typeof config.url === "string") {
+    if (config.url === legacyProductPrefix) config.url = "/";
+    else if (config.url.startsWith(`${legacyProductPrefix}/`)) {
+      config.url = config.url.slice(legacyProductPrefix.length);
+    }
+  }
+
   const token = localStorage.getItem("token");
   config.headers = config.headers || {};
-  config.headers["X-Peter-App"] = APP_SLUG;
+  config.headers["X-Peter-App"] = appSlug;
 
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
