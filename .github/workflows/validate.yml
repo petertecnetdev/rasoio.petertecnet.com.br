@@ -28,25 +28,22 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.20.2
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Critical dependency audit
-        run: npm audit --audit-level=critical
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Lint
         run: npm run lint
 
       - name: Tests
-        env:
-          CI: "true"
         run: npm run test:ci
 
       - name: Production build
         env:
-          CI: "true"
           REACT_APP_API_URL: https://api.petertecnet.com.br/api
           REACT_APP_GOOGLE_CLIENT_ID: 404224718244-5tudlgk5q63fmtg2q816eso8c76nvel3.apps.googleusercontent.com
         run: npm run build
