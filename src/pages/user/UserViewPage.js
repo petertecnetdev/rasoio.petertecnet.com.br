@@ -20,18 +20,18 @@ const metricCards = (metrics, kind) => {
   if (!metrics) return [];
   if (kind === "barber") {
     return [
-      ["Solicitados", metrics.requested, <FaClock />],
-      ["Confirmados", metrics.confirmed, <FaCalendarCheck />],
-      ["Concluídos", metrics.completed, <FaCheckCircle />],
-      ["Recusados", metrics.rejected, <FaTimesCircle />],
-      ["Cancelados", metrics.cancelled, <FaCalendarTimes />],
+      ["Solicitados", metrics.requested, <FaClock key="requested" />],
+      ["Confirmados", metrics.confirmed, <FaCalendarCheck key="confirmed" />],
+      ["Concluídos", metrics.completed, <FaCheckCircle key="completed" />],
+      ["Recusados", metrics.rejected, <FaTimesCircle key="rejected" />],
+      ["Cancelados", metrics.cancelled, <FaCalendarTimes key="cancelled" />],
     ];
   }
   return [
-    ["Solicitados", metrics.requested, <FaClock />],
-    ["Concluídos", metrics.completed, <FaCheckCircle />],
-    ["Cancelados", metrics.cancelled, <FaCalendarTimes />],
-    ["Não compareceu", metrics.no_show, <FaTimesCircle />],
+    ["Solicitados", metrics.requested, <FaClock key="requested" />],
+    ["Concluídos", metrics.completed, <FaCheckCircle key="completed" />],
+    ["Cancelados", metrics.cancelled, <FaCalendarTimes key="cancelled" />],
+    ["Não compareceu", metrics.no_show, <FaTimesCircle key="no-show" />],
   ];
 };
 
