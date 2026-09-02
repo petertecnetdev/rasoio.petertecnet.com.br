@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { apiBaseUrl, appId, appSlug, linkApp } from "./config";
 
 describe("Rasoio production configuration", () => {
