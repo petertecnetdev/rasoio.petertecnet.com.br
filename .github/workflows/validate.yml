@@ -1,15 +1,25 @@
 name: Validate Rasoio
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: rasoio-validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -19,12 +29,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
-      - name: Build
+      - name: Critical dependency audit
+        run: npm audit --audit-level=critical
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
         env:
-          CI: "false"
+          CI: "true"
+        run: npm run test:ci
+
+      - name: Production build
+        env:
+          CI: "true"
           REACT_APP_API_URL: https://api.petertecnet.com.br/api
+          REACT_APP_GOOGLE_CLIENT_ID: 404224718244-5tudlgk5q63fmtg2q816eso8c76nvel3.apps.googleusercontent.com
         run: npm run build
