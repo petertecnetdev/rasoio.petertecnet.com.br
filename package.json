@@ -2,6 +2,7 @@
   "name": "rasoio",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Rasoio - gestão e agendamento para barbearias, barbeiros e clientes.",
   "scripts": {
     "start": "vite",
