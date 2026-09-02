@@ -1,14 +1,12 @@
 // src/services/api.js
 import axios from "axios";
-import { apiBaseUrl } from "../config";
-
-const APP_SLUG = "rasoio";
+import { apiV1BaseUrl, appSlug } from "../config";
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || apiBaseUrl,
+  baseURL: process.env.REACT_APP_API_URL || apiV1BaseUrl,
   headers: {
     Accept: "application/json",
-    "X-Peter-App": APP_SLUG,
+    "X-Peter-App": appSlug,
   },
   timeout: 20000,
 });
@@ -16,7 +14,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   config.headers = config.headers || {};
-  config.headers["X-Peter-App"] = APP_SLUG;
+  config.headers["X-Peter-App"] = appSlug;
 
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
