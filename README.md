@@ -1,97 +1,84 @@
-# We are using Laravel 9 for jwt authentication based login and signup API. (React.js)
+# Rasoio
 
-We are using Laravel 9 for jwt authentication based login and 
-signup API. We use react.js on the frontend.
+Rasoio é a plataforma Peter Tecnet para gestão e agendamento de barbearias, profissionais e clientes.
 
-For detailed information, please read Document.pdf.
+## Arquitetura
 
-## Follow the steps below to run the API.
+- Frontend: React 18 + React Router + Axios.
+- API: `https://api.petertecnet.com.br/api`.
+- Identidade da aplicação: `app_id=1`, `app_slug=rasoio`.
+- Autenticação: JWT da API Peter Tecnet e Google OAuth.
+- Login convencional: e-mail, nome de usuário, CPF ou telefone.
+- Telemetria: integração com `/interactions/batch`.
 
-First, update the .env file with your own database information.
+## Ambiente local
 
-then run the following commands in order.
+Copie `.env.example` para `.env` e informe o Client ID do Google autorizado para o ambiente:
 
-php artisan migrate
-
-php artisan jwt:secret
-
-## Run the commands below to run the React application.
-
+```bash
+cp .env.example .env
 npm install
+npm start
+```
 
-npm run serve
+O arquivo `.env` é local e não deve ser versionado.
 
-![image](https://user-images.githubusercontent.com/26199757/177057917-2bd7e9c2-0b15-464b-9a0c-57f1d2f6b08c.png)
-![image](https://user-images.githubusercontent.com/26199757/177057920-516f6cc7-3a4d-4dac-bbe8-50d5b9b5c007.png)
-![image](https://user-images.githubusercontent.com/26199757/177057926-1ab15688-9779-4f6e-947b-1a21dc74a89d.png)
+## Validação obrigatória
 
-# Getting Started with Create React App
+Antes de qualquer deploy:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+```bash
+npm install
+npm audit --audit-level=critical
+npm run lint
+CI=true npm run test:ci
+CI=true npm run build
+```
 
-## Available Scripts
+O workflow `.github/workflows/validate.yml` executa os mesmos gates em pull requests e no `main`.
 
-In the project directory, you can run:
+## Build de produção
 
-### `npm start`
+```bash
+REACT_APP_API_URL=https://api.petertecnet.com.br/api \
+REACT_APP_GOOGLE_CLIENT_ID=<google-client-id> \
+CI=true npm run build
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+O diretório `build/` é artefato gerado e não deve ser commitado.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Fluxo funcional de produção
 
-### `npm test`
+O fluxo crítico que deve permanecer íntegro é:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. cadastro ou login;
+2. verificação de e-mail quando aplicável;
+3. criação/gestão de estabelecimento;
+4. cadastro e vínculo de profissionais;
+5. cadastro de serviços/produtos;
+6. definição de disponibilidade;
+7. consulta de estabelecimento, serviço e profissional;
+8. criação de agendamento;
+9. confirmação, cancelamento, redirecionamento e conclusão do atendimento;
+10. consulta dos agendamentos por cliente, profissional e estabelecimento.
 
-### `npm run build`
+## Segurança
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Não versionar `.env`, keystores (`*.jks`, `*.keystore`) ou credenciais.
+- Todas as chamadas autenticadas usam Bearer Token.
+- O frontend envia o contexto `X-Peter-App: rasoio`.
+- Autorizações e isolamento entre aplicações devem ser garantidos na API, nunca apenas pela interface.
+- Mudanças de produção só devem ser integradas com CI verde.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Deploy na VPS
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+O deploy deve ser feito somente depois do merge do PR validado:
 
-### `npm run eject`
+```bash
+cd /var/www/rasoio.petertecnet.com.br
+git pull --ff-only origin main
+npm install --no-audit --no-fund
+CI=true npm run build
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+A API possui repositório e pipeline próprios; mudanças que afetam contratos do Rasoio precisam estar publicadas nela antes do build do frontend depender dessas mudanças.

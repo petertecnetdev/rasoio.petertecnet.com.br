@@ -1,49 +1,56 @@
-// src/components/auth/InviteFormComponent.jsx
 import React, { useState } from "react";
 import { Form, Button, Spinner } from "react-bootstrap";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl, appId } from "../../config";
+import { appId } from "../../config";
+import api from "../../services/api";
 import "./InviteFormComponent.css";
 
-export default function InviteFormComponent({ redirectTo }) {
+export default function InviteFormComponent({ redirectTo, onSuccess }) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    first_name: "",
-    email: "",
-    app_id: appId,
-  });
+  const [form, setForm] = useState({ first_name: "", email: "", app_id: appId });
 
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
 
     try {
-      await axios.post(`${apiBaseUrl}/invite`, form);
-
-      await Swal.fire({
-        title: "Convite enviado!",
-        text: "O usuário recebeu o código por email.",
-        icon: "success",
-        confirmButtonText: "OK",
+      const { data } = await api.post("/invite", {
+        ...form,
+        first_name: form.first_name.trim(),
+        email: form.email.trim().toLowerCase(),
       });
-
-      if (redirectTo) {
-        window.location.href = redirectTo;
-      }
-    } catch (error) {
-      const msg =
-        error?.response?.data?.message || "Erro ao enviar convite.";
-      await Swal.fire("Erro", msg, "error");
-    } finally {
       setLoading(false);
+
+      if (typeof onSuccess === "function") {
+        onSuccess(data);
+      } else {
+        await Swal.fire({
+          title: "Convite enviado!",
+          text: data?.message || "O usuário recebeu o código por e-mail.",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      }
+
+      setForm({ first_name: "", email: "", app_id: appId });
+      if (redirectTo) window.location.assign(redirectTo);
+    } catch (error) {
+      setLoading(false);
+      const validation = error?.response?.data?.errors;
+      const firstValidationMessage = validation
+        ? Object.values(validation).flat().find(Boolean)
+        : null;
+      const message =
+        firstValidationMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Erro ao enviar convite.";
+      await Swal.fire("Erro", String(message), "error");
     }
   };
 
@@ -57,7 +64,10 @@ export default function InviteFormComponent({ redirectTo }) {
           value={form.first_name}
           onChange={handleChange}
           placeholder="Nome do usuário"
+          autoComplete="name"
+          maxLength={100}
           required
+          disabled={loading}
         />
       </Form.Group>
 
@@ -69,26 +79,17 @@ export default function InviteFormComponent({ redirectTo }) {
           value={form.email}
           onChange={handleChange}
           placeholder="email@exemplo.com"
+          autoComplete="email"
+          maxLength={255}
           required
+          disabled={loading}
         />
       </Form.Group>
 
-      <Button
-        type="submit"
-        variant="primary"
-        className="w-100 mt-2"
-        disabled={loading}
-      >
+      <Button type="submit" variant="primary" className="w-100 mt-2" disabled={loading}>
         {loading ? (
           <>
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-              className="me-2"
-            />
+            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
             Enviando...
           </>
         ) : (

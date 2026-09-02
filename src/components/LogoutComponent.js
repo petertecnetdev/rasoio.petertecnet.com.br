@@ -1,23 +1,28 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import authService from '../services/authService';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import authService from "../services/AuthService";
 
 const LogoutComponent = () => {
-  
-  const history = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await authService.logout 
-        history('/login', { replace: true });
+      await authService.logout();
     } catch (error) {
-      console.error('Erro durante o logout:', error);
+      // Mesmo quando a API falha, encerra a sessão local para não prender o usuário.
+      console.error("Erro durante o logout:", error);
+      localStorage.removeItem("token");
+      window.dispatchEvent(new Event("authChanged"));
+      navigate("/login", { replace: true });
     }
   };
 
   return (
-    <li  onClick={handleLogout}><Link to="/logout" className="dropdown-item">Sair</Link></li>
-
+    <li>
+      <button type="button" className="dropdown-item" onClick={handleLogout}>
+        Sair
+      </button>
+    </li>
   );
 };
 
