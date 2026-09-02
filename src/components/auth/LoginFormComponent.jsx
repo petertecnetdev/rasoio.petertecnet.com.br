@@ -63,7 +63,7 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
       <div className="lfg">
         <div className="lfg__field">
           <label className="lfg__label" htmlFor="login-username">
-            Usuário ou e-mail
+            E-mail, usuário, CPF ou telefone
           </label>
           <div className="lfg__inputWrap">
             <span className="lfg__icon" aria-hidden="true">✉</span>
@@ -71,7 +71,7 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
               id="login-username"
               type="text"
               autoComplete="username"
-              placeholder="Digite seu usuário ou e-mail"
+              placeholder="Digite e-mail, usuário, CPF ou telefone"
               className="lfg__input"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
