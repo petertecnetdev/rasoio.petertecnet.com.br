@@ -12,6 +12,8 @@
 .env
 .env.*
 !.env.example
+*.jks
+*.keystore
 
 # Logs
 npm-debug.log*
