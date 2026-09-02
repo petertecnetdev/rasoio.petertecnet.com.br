@@ -6,10 +6,17 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: rasoio-validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -19,12 +26,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-fund
 
-      - name: Build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
         env:
-          CI: "false"
+          CI: "true"
           REACT_APP_API_URL: https://api.petertecnet.com.br/api
         run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          test -s build/index.html
+          test -d build/static/js
+          test -d build/static/css
