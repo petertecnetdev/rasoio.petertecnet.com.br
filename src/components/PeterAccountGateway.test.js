@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 describe("Peter Account gateway", () => {
   it("keeps SSO codes separate from application JWTs", () => {
     const url = new URL("https://rasoio.petertecnet.com.br/?peter_sso=temporary-code");
