@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { describe, expect, test } from "vitest";
+import { appId, appSlug, linkApp } from "./config";
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+describe("Rasoio application identity", () => {
+  test("keeps the canonical application contract", () => {
+    expect(appId).toBe(1);
+    expect(appSlug).toBe("rasoio");
+    expect(linkApp).toBe("https://rasoio.petertecnet.com.br");
+  });
 });
