@@ -31,7 +31,38 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+        id: production_audit
+        shell: bash
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high --json > npm-audit.json
+          audit_exit=$?
+          set -e
+          echo "exit_code=${audit_exit}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rasoio-npm-audit
+          path: npm-audit.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce production audit
+        if: steps.production_audit.outputs.exit_code != '0'
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const vulnerabilities = report.vulnerabilities || {};
+          for (const [name, details] of Object.entries(vulnerabilities)) {
+            if (details.severity === 'high' || details.severity === 'critical') {
+              console.error(`::error title=npm audit ${details.severity}::${name} requires remediation before production deploy`);
+            }
+          }
+          process.exit(1);
+          NODE
 
       - name: Lint
         run: npm run lint
