@@ -1,22 +1,38 @@
 // src/pages/establishment/EstablishmentCreatePage.js
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Badge } from "react-bootstrap";
 
 import api from "../../services/api";
+import schedulingApi from "../../services/schedulingApi";
 import { appId } from "../../config";
 import "./Establishment.css";
 import "./EstablishmentCreatePage.css";
 
-const segmentOptions = [
-  { value: "corte_masculino", label: "Corte Masculino" },
-  { value: "barba", label: "Barba" },
-  { value: "sobrancelha", label: "Sobrancelha" },
-  { value: "pintura", label: "Pintura" },
-  { value: "hidratacao", label: "Hidratação" },
-  { value: "alisamento", label: "Alisamento" },
+const FALLBACK_BUSINESS_CATEGORIES = [
+  { key: "beauty_aesthetics", label: "Beleza e estética" },
+  { key: "health_wellness", label: "Saúde e bem-estar" },
+  { key: "pet_care", label: "Saúde e cuidados para animais" },
+  { key: "automotive", label: "Automotivo" },
+  { key: "home_services", label: "Serviços residenciais" },
+  { key: "technical_assistance", label: "Tecnologia e assistência técnica" },
+  { key: "education", label: "Educação e treinamento" },
+  { key: "sports_fitness", label: "Esportes e condicionamento" },
+  { key: "photo_audiovisual", label: "Fotografia e audiovisual" },
+  { key: "events", label: "Eventos" },
+  { key: "professional_services", label: "Consultoria e serviços profissionais" },
+  { key: "real_estate", label: "Imobiliário" },
+  { key: "financial_services", label: "Serviços financeiros" },
+  { key: "resource_rental", label: "Locação de espaços e recursos" },
+  { key: "tourism_leisure", label: "Turismo e lazer" },
+  { key: "gastronomy", label: "Gastronomia e experiências" },
+  { key: "fashion", label: "Moda e imagem" },
+  { key: "weddings", label: "Casamentos e celebrações" },
+  { key: "institutional", label: "Atendimento institucional" },
+  { key: "b2b_services", label: "Serviços empresariais B2B" },
+  { key: "independent_professional", label: "Profissional autônomo" },
+  { key: "other", label: "Outro negócio com agendamento" },
 ];
 
 const onlyDigits = (value = "") => String(value).replace(/\D/g, "");
@@ -56,7 +72,9 @@ const buildAddress = ({ street, number, complement, neighborhood }) =>
 
 const buildMapsUrl = ({ address, city, uf, cep }) => {
   const query = [address, city, uf, cep].filter(Boolean).join(", ");
-  return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : "";
+  return query
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+    : "";
 };
 
 const getApiErrorMessage = (error) => {
@@ -76,7 +94,7 @@ const getApiErrorMessage = (error) => {
     return "Não foi possível se comunicar com a API. Verifique sua conexão e tente novamente.";
   }
 
-  return `Não foi possível criar a barbearia (erro ${error.response.status}).`;
+  return `Não foi possível criar o estabelecimento (erro ${error.response.status}).`;
 };
 
 export default function EstablishmentCreatePage() {
@@ -95,6 +113,7 @@ export default function EstablishmentCreatePage() {
       cnpj: "",
       name: "",
       fantasy: "",
+      category: "",
       phone: "",
       email: "",
       cep: "",
@@ -108,19 +127,42 @@ export default function EstablishmentCreatePage() {
       website_url: "",
       twitter_url: "",
       youtube_url: "",
-      segments: [],
     },
   });
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [backgroundPreview, setBackgroundPreview] = useState(null);
-  const [segments, setSegments] = useState([]);
   const [files, setFiles] = useState({});
   const [cnpjLoading, setCnpjLoading] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
+  const [businessCategories, setBusinessCategories] = useState(FALLBACK_BUSINESS_CATEGORIES);
 
   const establishmentName = watch("name");
   const description = watch("description");
+  const category = watch("category");
+
+  const selectedCategory = useMemo(
+    () => businessCategories.find((item) => item.key === category) || null,
+    [businessCategories, category]
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    schedulingApi.catalog
+      .businessCategories()
+      .then(({ data }) => {
+        const categories = Array.isArray(data?.data) ? data.data : [];
+        if (active && categories.length) setBusinessCategories(categories);
+      })
+      .catch(() => {
+        // O fallback mantém o onboarding utilizável durante falhas transitórias.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleResizeImage = (file, setPreview, width, height, key) =>
     new Promise((resolve, reject) => {
@@ -197,7 +239,10 @@ export default function EstablishmentCreatePage() {
     }
   };
 
-  const applyAddress = ({ cep, street, number, complement, neighborhood, city, uf }, { preserveExisting = false } = {}) => {
+  const applyAddress = (
+    { cep, street, number, complement, neighborhood, city, uf },
+    { preserveExisting = false } = {}
+  ) => {
     const current = getValues();
     const address = buildAddress({ street, number, complement, neighborhood });
     const formattedCep = formatCep(cep);
@@ -219,14 +264,21 @@ export default function EstablishmentCreatePage() {
     const finalCity = preserveExisting && current.city ? current.city : city;
     const finalUf = preserveExisting && current.uf ? current.uf : uf;
     const finalCep = preserveExisting && current.cep ? current.cep : formattedCep;
-    const mapsUrl = buildMapsUrl({ address: finalAddress, city: finalCity, uf: finalUf, cep: finalCep });
+    const mapsUrl = buildMapsUrl({
+      address: finalAddress,
+      city: finalCity,
+      uf: finalUf,
+      cep: finalCep,
+    });
     if (mapsUrl) setValue("location", mapsUrl, { shouldDirty: true });
   };
 
   const lookupCep = async (rawCep, { silent = false, preserveExisting = false } = {}) => {
     const cep = onlyDigits(rawCep);
     if (cep.length !== 8) {
-      if (!silent) setError("cep", { type: "manual", message: "Informe um CEP com 8 dígitos." });
+      if (!silent) {
+        setError("cep", { type: "manual", message: "Informe um CEP com 8 dígitos." });
+      }
       return null;
     }
 
@@ -236,7 +288,6 @@ export default function EstablishmentCreatePage() {
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
       const data = await response.json();
-
       if (!response.ok) throw new Error(data?.message || "CEP não encontrado.");
 
       applyAddress(
@@ -264,7 +315,9 @@ export default function EstablishmentCreatePage() {
   const lookupCnpj = async (rawCnpj, { silent = false } = {}) => {
     const cnpj = onlyDigits(rawCnpj);
     if (cnpj.length !== 14) {
-      if (!silent) setError("cnpj", { type: "manual", message: "Informe um CNPJ com 14 dígitos." });
+      if (!silent) {
+        setError("cnpj", { type: "manual", message: "Informe um CNPJ com 14 dígitos." });
+      }
       return null;
     }
 
@@ -274,12 +327,12 @@ export default function EstablishmentCreatePage() {
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
       const data = await response.json();
-
       if (!response.ok) throw new Error(data?.message || "CNPJ não encontrado.");
 
       const fantasy = String(data.nome_fantasia || "").trim();
       const corporateName = String(data.razao_social || "").trim();
-      const phone = data.ddd_telefone_1 || data.telefone1 || data.telefone || data.ddd_telefone_2 || "";
+      const phone =
+        data.ddd_telefone_1 || data.telefone1 || data.telefone || data.ddd_telefone_2 || "";
       const email = String(data.email || "").trim().toLowerCase();
 
       setValue("cnpj", formatCnpj(data.cnpj || cnpj), { shouldDirty: true });
@@ -298,32 +351,21 @@ export default function EstablishmentCreatePage() {
         uf: data.uf,
       });
 
-      // Usa o CEP apenas como complemento quando a base do CNPJ não trouxer algum dado,
-      // sem apagar número/complemento já retornados pela Receita.
       if (data.cep) await lookupCep(data.cep, { silent: true, preserveExisting: true });
 
       if (!silent) {
-        const filled = [
-          fantasy || corporateName ? "nome" : null,
-          fantasy || corporateName ? "nome fantasia" : null,
-          phone ? "telefone" : null,
-          email ? "e-mail" : null,
-          data.cep ? "CEP" : null,
-          data.logradouro ? "endereço" : null,
-          data.municipio ? "cidade/UF" : null,
-        ].filter(Boolean);
-
         await Swal.fire({
           icon: "success",
           title: "Dados encontrados",
-          text: filled.length
-            ? `Preenchemos automaticamente: ${filled.join(", ")}. Confira os dados antes de salvar.`
-            : "CNPJ localizado. Confira os dados cadastrais antes de salvar.",
+          text: "Preenchemos os dados disponíveis. Confira as informações e escolha o tipo de negócio antes de salvar.",
           confirmButtonText: "Continuar",
         });
       }
 
-      if (data.descricao_situacao_cadastral && data.descricao_situacao_cadastral !== "ATIVA") {
+      if (
+        data.descricao_situacao_cadastral &&
+        data.descricao_situacao_cadastral !== "ATIVA"
+      ) {
         await Swal.fire(
           "Atenção",
           `A situação cadastral retornada para este CNPJ é: ${data.descricao_situacao_cadastral}.`,
@@ -334,8 +376,15 @@ export default function EstablishmentCreatePage() {
       return data;
     } catch (error) {
       if (!silent) {
-        setError("cnpj", { type: "manual", message: error.message || "CNPJ não encontrado." });
-        await Swal.fire("CNPJ não encontrado", error.message || "Não foi possível consultar este CNPJ.", "error");
+        setError("cnpj", {
+          type: "manual",
+          message: error.message || "CNPJ não encontrado.",
+        });
+        await Swal.fire(
+          "CNPJ não encontrado",
+          error.message || "Não foi possível consultar este CNPJ.",
+          "error"
+        );
       }
       return null;
     } finally {
@@ -357,16 +406,6 @@ export default function EstablishmentCreatePage() {
     if (onlyDigits(formatted).length === 8) lookupCep(formatted, { silent: true });
   };
 
-  const handleSegmentsChange = (event) => {
-    const { value, checked } = event.target;
-    const updated = checked
-      ? Array.from(new Set([...segments, value]))
-      : segments.filter((segment) => segment !== value);
-
-    setSegments(updated);
-    setValue("segments", updated, { shouldDirty: true });
-  };
-
   const onInvalid = async (formErrors) => {
     const first = Object.values(formErrors)?.[0];
     await Swal.fire(
@@ -379,25 +418,28 @@ export default function EstablishmentCreatePage() {
   const onSubmit = async (dataInput) => {
     const formData = new FormData();
     formData.append("app_id", String(appId));
-    formData.append("category", "barbershop");
 
     Object.entries(dataInput).forEach(([key, value]) => {
-      if (key === "segments") return;
-      if (value !== undefined && value !== null && value !== "") formData.append(key, value);
+      if (value !== undefined && value !== null && value !== "") {
+        formData.append(key, value);
+      }
     });
 
-    segments.forEach((segment) => formData.append("segments[]", segment));
     if (files.logo) formData.append("logo", files.logo);
     if (files.background) formData.append("background", files.background);
 
     try {
       const { data } = await api.post("/establishment", formData);
-      await Swal.fire("Barbearia criada", data?.message || "Cadastro realizado com sucesso.", "success");
+      await Swal.fire(
+        "Estabelecimento criado",
+        data?.message || "Cadastro realizado com sucesso.",
+        "success"
+      );
       navigate(`/establishment/view/${data.establishment.slug}`);
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Não foi possível criar a barbearia",
+        title: "Não foi possível criar o estabelecimento",
         text: getApiErrorMessage(error),
         confirmButtonText: "Corrigir dados",
       });
@@ -407,9 +449,11 @@ export default function EstablishmentCreatePage() {
   return (
     <div className="establishment-create-shell">
       <section className="establishment-create-header">
-        <span className="establishment-create-eyebrow">Gestão da barbearia</span>
-        <h1>Cadastrar barbearia</h1>
-        <p>Comece pelo CNPJ. Quando encontrado, os dados da empresa e o endereço serão preenchidos automaticamente.</p>
+        <span className="establishment-create-eyebrow">Gestão de serviços e agenda</span>
+        <h1>Cadastrar estabelecimento</h1>
+        <p>
+          Cadastre qualquer empresa ou profissional que trabalhe com serviços agendáveis. O tipo de negócio define apenas a experiência da interface; a agenda continua usando o mesmo domínio genérico.
+        </p>
       </section>
 
       <section className="establishment-create-card establishment-create-preview-card">
@@ -417,7 +461,9 @@ export default function EstablishmentCreatePage() {
           className="establishment-create-preview"
           style={
             backgroundPreview
-              ? { backgroundImage: `linear-gradient(90deg, rgba(3,8,17,.92), rgba(3,8,17,.58)), url('${backgroundPreview}')` }
+              ? {
+                  backgroundImage: `linear-gradient(90deg, rgba(3,8,17,.92), rgba(3,8,17,.58)), url('${backgroundPreview}')`,
+                }
               : undefined
           }
         >
@@ -426,23 +472,23 @@ export default function EstablishmentCreatePage() {
           </div>
           <div className="establishment-create-preview-copy">
             <span className="establishment-create-preview-label">Prévia pública</span>
-            <h2>{establishmentName || "Nome da barbearia"}</h2>
-            <p>{description || "A descrição da sua barbearia aparecerá aqui."}</p>
-            {segments.length > 0 && (
+            <h2>{establishmentName || "Nome do estabelecimento"}</h2>
+            <p>{description || "A descrição do seu negócio aparecerá aqui."}</p>
+            {selectedCategory && (
               <div className="establishment-create-badges">
-                {segments.map((segment) => (
-                  <Badge key={segment} className="establishment-create-badge">
-                    {segmentOptions.find((item) => item.value === segment)?.label || segment}
-                  </Badge>
-                ))}
+                <span className="establishment-create-badge">{selectedCategory.label}</span>
               </div>
             )}
           </div>
         </div>
 
         <div className="establishment-create-upload-actions">
-          <label className="establishment-create-upload-btn" htmlFor="backgroundInput">Alterar capa</label>
-          <label className="establishment-create-upload-btn" htmlFor="logoInput">Alterar logo</label>
+          <label className="establishment-create-upload-btn" htmlFor="backgroundInput">
+            Alterar capa
+          </label>
+          <label className="establishment-create-upload-btn" htmlFor="logoInput">
+            Alterar logo
+          </label>
           <input id="backgroundInput" type="file" accept="image/*" onChange={handleBackgroundChange} />
           <input id="logoInput" type="file" accept="image/*" onChange={handleLogoChange} />
         </div>
@@ -455,7 +501,7 @@ export default function EstablishmentCreatePage() {
       >
         <div className="establishment-create-section-heading">
           <h2>Dados da empresa</h2>
-          <p>Digite primeiro o CNPJ para preencher automaticamente os dados disponíveis.</p>
+          <p>O CNPJ é opcional. Empresas sem CNPJ e profissionais autônomos também podem usar a Rasoio.</p>
         </div>
 
         <div className="establishment-create-grid">
@@ -467,7 +513,9 @@ export default function EstablishmentCreatePage() {
                 placeholder="00.000.000/0000-00"
                 {...register("cnpj")}
                 onChange={handleCnpjChange}
-                onBlur={(event) => onlyDigits(event.target.value).length === 14 && lookupCnpj(event.target.value)}
+                onBlur={(event) =>
+                  onlyDigits(event.target.value).length === 14 && lookupCnpj(event.target.value)
+                }
               />
               <button
                 type="button"
@@ -480,24 +528,47 @@ export default function EstablishmentCreatePage() {
             </div>
           </Field>
 
-          <Field label="Nome da barbearia *" className="span-6" error={errors.name?.message}>
+          <Field label="Nome do estabelecimento *" className="span-6" error={errors.name?.message}>
             <input
               type="text"
               placeholder="Nome exibido para os clientes"
-              {...register("name", { required: "Informe o nome da barbearia." })}
+              {...register("name", { required: "Informe o nome do estabelecimento." })}
             />
           </Field>
           <Field label="Nome fantasia" className="span-6">
-            <input type="text" placeholder="Nome fantasia cadastrado no CNPJ" {...register("fantasy")} />
+            <input type="text" placeholder="Nome fantasia, se houver" {...register("fantasy")} />
           </Field>
 
-          <Field label="Telefone da barbearia" className="span-6">
+          <Field label="Tipo de negócio *" className="span-12" error={errors.category?.message}>
+            <select
+              {...register("category", {
+                required: "Selecione o tipo de negócio que melhor representa este estabelecimento.",
+              })}
+            >
+              <option value="">Selecione uma categoria</option>
+              {businessCategories.map((item) => (
+                <option key={item.key} value={item.key}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          {selectedCategory?.examples?.length > 0 && (
+            <div className="span-12 establishment-create-section-heading">
+              <p>
+                Exemplos desta categoria: {selectedCategory.examples.slice(0, 8).join(", ")}.
+              </p>
+            </div>
+          )}
+
+          <Field label="Telefone" className="span-6">
             <input type="tel" placeholder="(00) 00000-0000" {...register("phone")} />
           </Field>
-          <Field label="E-mail da barbearia" className="span-6" error={errors.email?.message}>
+          <Field label="E-mail" className="span-6" error={errors.email?.message}>
             <input
               type="email"
-              placeholder="contato@barbearia.com.br"
+              placeholder="contato@empresa.com.br"
               {...register("email", {
                 pattern: { value: /^\S+@\S+\.\S+$/, message: "Informe um e-mail válido." },
               })}
@@ -505,7 +576,11 @@ export default function EstablishmentCreatePage() {
           </Field>
 
           <Field label="Descrição" className="span-12">
-            <textarea rows="4" placeholder="Conte um pouco sobre a barbearia..." {...register("description")} />
+            <textarea
+              rows="4"
+              placeholder="Conte aos clientes sobre o estabelecimento e os serviços oferecidos..."
+              {...register("description")}
+            />
           </Field>
         </div>
 
@@ -513,7 +588,7 @@ export default function EstablishmentCreatePage() {
 
         <div className="establishment-create-section-heading">
           <h2>Endereço</h2>
-          <p>O CEP e o endereço também são preenchidos pelo CNPJ quando disponíveis.</p>
+          <p>Informe a localização quando o atendimento ocorrer presencialmente.</p>
         </div>
 
         <div className="establishment-create-grid">
@@ -525,7 +600,9 @@ export default function EstablishmentCreatePage() {
                 placeholder="00000-000"
                 {...register("cep")}
                 onChange={handleCepChange}
-                onBlur={(event) => onlyDigits(event.target.value).length === 8 && lookupCep(event.target.value)}
+                onBlur={(event) =>
+                  onlyDigits(event.target.value).length === 8 && lookupCep(event.target.value)
+                }
               />
               <button
                 type="button"
@@ -561,43 +638,33 @@ export default function EstablishmentCreatePage() {
         </div>
 
         <div className="establishment-create-grid">
-          <Field label="Instagram" className="span-4"><input type="url" {...register("instagram_url")} /></Field>
-          <Field label="Facebook" className="span-4"><input type="url" {...register("facebook_url")} /></Field>
-          <Field label="Site" className="span-4"><input type="url" {...register("website_url")} /></Field>
-          <Field label="X / Twitter" className="span-6"><input type="url" {...register("twitter_url")} /></Field>
-          <Field label="YouTube" className="span-6"><input type="url" {...register("youtube_url")} /></Field>
+          <Field label="Instagram" className="span-4">
+            <input type="url" {...register("instagram_url")} />
+          </Field>
+          <Field label="Facebook" className="span-4">
+            <input type="url" {...register("facebook_url")} />
+          </Field>
+          <Field label="Site" className="span-4">
+            <input type="url" {...register("website_url")} />
+          </Field>
+          <Field label="X / Twitter" className="span-6">
+            <input type="url" {...register("twitter_url")} />
+          </Field>
+          <Field label="YouTube" className="span-6">
+            <input type="url" {...register("youtube_url")} />
+          </Field>
         </div>
-
-        <div className="establishment-create-divider" />
-
-        <div className="establishment-create-section-heading">
-          <h2>Serviços oferecidos</h2>
-          <p>Selecione os segmentos que representam a barbearia.</p>
-        </div>
-
-        <div className="establishment-create-segments">
-          {segmentOptions.map((option) => (
-            <label
-              key={option.value}
-              className={`establishment-create-segment ${segments.includes(option.value) ? "is-selected" : ""}`}
-            >
-              <input
-                type="checkbox"
-                value={option.value}
-                checked={segments.includes(option.value)}
-                onChange={handleSegmentsChange}
-              />
-              <span className="establishment-create-check" aria-hidden="true" />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </div>
-        <input type="hidden" {...register("segments")} value={segments.join(",")} />
 
         <div className="establishment-create-actions">
-          <button type="button" className="establishment-create-cancel" onClick={() => navigate(-1)}>Cancelar</button>
-          <button type="submit" className="establishment-create-submit" disabled={isSubmitting || cnpjLoading || cepLoading}>
-            {isSubmitting ? "Criando..." : "Criar barbearia"}
+          <button type="button" className="establishment-create-cancel" onClick={() => navigate(-1)}>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="establishment-create-submit"
+            disabled={isSubmitting || cnpjLoading || cepLoading}
+          >
+            {isSubmitting ? "Criando..." : "Criar estabelecimento"}
           </button>
         </div>
       </form>
