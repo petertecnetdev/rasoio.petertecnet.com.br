@@ -9,8 +9,7 @@ export default function OrderSelectedEmployerCard({ employer, onClear }) {
   const { imageUrl } = useImageUtils();
   const [broken, setBroken] = useState(false);
 
-  const safeEmployer = employer || {};
-  const user = safeEmployer.user || {};
+  const user = useMemo(() => employer?.user || {}, [employer]);
 
   const safeItem = useMemo(
     () => ({
