@@ -3,7 +3,9 @@ import { Card, Badge } from "react-bootstrap";
 import useImageUtils from "../../hooks/useImageUtils";
 
 export default function HomeSpotlight({ item, fmtBRL, navigate }) {
-  const { imageUrl, handleImgError } = useImageUtils("/images/logo.png");
+  const { imageUrl, handleImgError, placeholderSvg } = useImageUtils({
+    fallbackText: item?.name || "",
+  });
 
   const img =
     item.type === "employer"
@@ -24,8 +26,9 @@ export default function HomeSpotlight({ item, fmtBRL, navigate }) {
     <Card bg="dark" text="light" className="rounded-4 spotlight-card" onClick={go}>
       <Card.Body className="d-flex align-items-center gap-3">
         <img
-          src={imageUrl(img)}
+          src={imageUrl(img) || placeholderSvg}
           onError={handleImgError}
+          data-fallback-text={item?.name || ""}
           className="spotlight-image"
           alt={item.name}
         />
