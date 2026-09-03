@@ -9,9 +9,11 @@ import GlobalButton from "../../components/GlobalButton";
 import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import useEstablishmentEmployersBySlug from "../../hooks/useEstablishmentEmployersBySlug";
 import api from "../../services/api";
-import { appId } from "../../config";
+import { appSlug } from "../../config";
 import { getApiErrorMessage } from "../../utils/apiError";
 import "./EstablishmentEmployersPage.css";
+
+const teamMembersPath = `/v1/apps/${encodeURIComponent(appSlug)}/team-members`;
 
 export default function EstablishmentEmployersPage() {
   const { slug } = useParams();
@@ -43,11 +45,7 @@ export default function EstablishmentEmployersPage() {
     setProcessing(true);
 
     try {
-      await api.post("/employer/detach", {
-        employer_id: employer.id,
-        establishment_id: establishment.id,
-        app_id: appId,
-      });
+      await api.delete(`${teamMembersPath}/${employer.id}`);
       await refetch();
       setProcessing(false);
       await Swal.fire({
