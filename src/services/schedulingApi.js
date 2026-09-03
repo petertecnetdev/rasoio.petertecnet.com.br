@@ -4,6 +4,12 @@ import { apiV1BaseUrl } from "../config";
 const schedulingBase = `${apiV1BaseUrl}/scheduling`;
 
 const schedulingApi = {
+  catalog: {
+    businessCategories: () =>
+      api.get(`${schedulingBase}/catalog/business-categories`),
+    resourceTypes: () => api.get(`${schedulingBase}/catalog/resource-types`),
+  },
+
   resources: {
     list: (establishmentId) =>
       api.get(`${schedulingBase}/establishments/${establishmentId}/resources`),
