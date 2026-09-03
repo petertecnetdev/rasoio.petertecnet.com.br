@@ -5,7 +5,8 @@ import api from "../services/api";
 import { appId, appSlug } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
-const teamMembersPath = `/v1/apps/${encodeURIComponent(appSlug)}/team-members`;
+const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
+const teamMembersPath = `${appContextPath}/team-members`;
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -13,41 +14,63 @@ export default function useEmployerCreate(slug) {
   const [role, setRole] = useState("barbeiro");
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (!slug) return undefined;
+    if (!slug) {
+      setEstablishment(null);
+      setLoadError("Estabelecimento não informado.");
+      setInitialLoading(false);
+      return undefined;
+    }
 
     const controller = new AbortController();
 
     (async () => {
-      try {
-        const { data } = await api.get(
-          `/establishment/view/${encodeURIComponent(slug)}`,
-          {
-            params: { app_id: appId },
-            signal: controller.signal,
-          }
-        );
+      setInitialLoading(true);
+      setLoadError("");
 
-        const resolved = data?.establishment || null;
-        if (!resolved || Number(resolved.app_id) !== Number(appId)) {
-          throw new Error("Esta empresa não pertence à Rasoio.");
+      try {
+        // Resolve the establishment inside the generic application context.
+        // Using /me/establishments also allows the owner to manage the team
+        // before the establishment is publicly published.
+        const { data } = await api.get(`${appContextPath}/me/establishments`, {
+          signal: controller.signal,
+        });
+
+        const ownedEstablishments = Array.isArray(data?.data) ? data.data : [];
+        const resolved =
+          ownedEstablishments.find(
+            (candidate) => String(candidate?.slug || "") === String(slug)
+          ) || null;
+
+        if (!resolved) {
+          throw new Error(
+            "Este estabelecimento não foi encontrado entre os estabelecimentos que você administra na Rasoio."
+          );
         }
 
         setEstablishment(resolved);
       } catch (error) {
         if (isRequestCanceled(error)) return;
+
+        const message =
+          error?.message?.startsWith("Este estabelecimento")
+            ? error.message
+            : getApiErrorMessage(
+                error,
+                "Não foi possível carregar o estabelecimento para adicionar colaboradores."
+              );
+
         setEstablishment(null);
-        await Swal.fire({
-          icon: "error",
-          title: "Não foi possível abrir a equipe",
-          text:
-            error?.message === "Esta empresa não pertence à Rasoio."
-              ? error.message
-              : getApiErrorMessage(error, "Barbearia não encontrada."),
-        });
+        setLoadError(message);
+      } finally {
+        if (!controller.signal.aborted) {
+          setInitialLoading(false);
+        }
       }
     })();
 
@@ -55,6 +78,15 @@ export default function useEmployerCreate(slug) {
   }, [slug]);
 
   const searchUsers = async (payload) => {
+    if (!establishment) {
+      await Swal.fire({
+        icon: "error",
+        title: "Estabelecimento indisponível",
+        text: loadError || "Não foi possível identificar o estabelecimento.",
+      });
+      return;
+    }
+
     if (!payload || Object.keys(payload).length === 0) {
       await Swal.fire({
         icon: "warning",
@@ -73,7 +105,7 @@ export default function useEmployerCreate(slug) {
         api.post("/user/find-for-employer", {
           ...payload,
           app_id: appId,
-          establishment_id: establishment?.id,
+          establishment_id: establishment.id,
         }),
         api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`),
       ]);
@@ -123,8 +155,6 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      // The canonical URL resolves the application by slug. Avoid sending the
-      // legacy numeric app_id here because it is not the source of truth anymore.
       const { data } = await api.post(teamMembersPath, {
         user_id: user.id,
         establishment_id: establishment.id,
@@ -234,8 +264,10 @@ export default function useEmployerCreate(slug) {
     role,
     permissions,
     loading,
+    initialLoading,
     searching,
     errors,
+    loadError,
     setRole,
     setPermissions,
     searchUsers,
