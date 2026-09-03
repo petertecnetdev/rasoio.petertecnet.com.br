@@ -25,7 +25,7 @@ export default function EstablishmentEmployersPage() {
     const firstName = employer.user?.first_name || "este colaborador";
     const result = await Swal.fire({
       title: "Remover colaborador?",
-      text: `Deseja remover ${firstName} desta barbearia?`,
+      text: `Deseja remover ${firstName} deste estabelecimento?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Remover da equipe",
@@ -66,21 +66,48 @@ export default function EstablishmentEmployersPage() {
     }
   };
 
-  if (loading) {
+  if (loading && !establishment) {
     return (
-      <Container className="py-5 text-center" aria-live="polite">
-        <Spinner animation="border" />
-      </Container>
+      <main className="team-management-page">
+        <Container className="py-5" aria-live="polite">
+          <section className="team-management-shell team-management-loading">
+            <Spinner animation="border" role="status" />
+            <div>
+              <h2>Carregando colaboradores</h2>
+              <p className="mb-0">
+                Identificando o estabelecimento e preparando a gestão da equipe.
+              </p>
+            </div>
+          </section>
+        </Container>
+      </main>
     );
   }
 
   if (!establishment) {
     return (
-      <Container className="py-4">
-        <Alert variant="danger">
-          {apiError || "Barbearia não encontrada ou você não possui acesso a ela."}
-        </Alert>
-      </Container>
+      <main className="team-management-page">
+        <Container className="py-5">
+          <section className="team-management-shell">
+            <Alert variant="danger" className="mb-4">
+              <Alert.Heading>Não foi possível abrir os colaboradores</Alert.Heading>
+              <p className="mb-0">
+                {apiError ||
+                  "Não foi possível identificar este estabelecimento na sua conta."}
+              </p>
+            </Alert>
+
+            <div className="d-flex flex-wrap gap-2">
+              <GlobalButton variant="primary" onClick={() => refetch()}>
+                Tentar novamente
+              </GlobalButton>
+              <GlobalButton variant="outline" onClick={() => navigate("/establishment/my")}>
+                Voltar aos estabelecimentos
+              </GlobalButton>
+            </div>
+          </section>
+        </Container>
+      </main>
     );
   }
 
@@ -97,7 +124,7 @@ export default function EstablishmentEmployersPage() {
       <EstablishmentHero
         title={`Equipe da ${establishment.fantasy || establishment.name}`}
         subtitle="Gestão de colaboradores"
-        description="Adicione profissionais, confira o vínculo de cada pessoa e mantenha a equipe da barbearia organizada."
+        description="Adicione profissionais, confira o vínculo de cada pessoa e mantenha a equipe do estabelecimento organizada."
         city={establishment.city}
         uf={establishment.uf}
         logo={establishment?.images?.logo}
@@ -105,7 +132,15 @@ export default function EstablishmentEmployersPage() {
       />
 
       <Container className="py-4 py-lg-5">
-        {apiError && <Alert variant="danger" className="mb-4">{apiError}</Alert>}
+        {apiError && (
+          <Alert variant="warning" className="mb-4">
+            <Alert.Heading>Não foi possível atualizar a lista da equipe</Alert.Heading>
+            <p className="mb-2">{apiError}</p>
+            <GlobalButton variant="outline" size="sm" onClick={() => refetch()}>
+              Tentar carregar novamente
+            </GlobalButton>
+          </Alert>
+        )}
 
         <section className="team-management-shell">
           <header className="team-management-header">
@@ -116,7 +151,7 @@ export default function EstablishmentEmployersPage() {
                 <Badge bg="info" text="dark">{count}</Badge>
               </div>
               <p>
-                Profissionais vinculados exclusivamente a esta barbearia na Rasoio.
+                Profissionais vinculados a este estabelecimento na Rasoio.
               </p>
             </div>
 
@@ -132,7 +167,9 @@ export default function EstablishmentEmployersPage() {
             <div className="team-empty-state">
               <div className="team-empty-icon" aria-hidden="true">👥</div>
               <h3>Nenhum colaborador cadastrado</h3>
-              <p>Adicione o primeiro profissional para começar a organizar a agenda da equipe.</p>
+              <p>
+                Adicione o primeiro profissional para liberar os agendamentos deste estabelecimento.
+              </p>
               <GlobalButton
                 variant="primary"
                 onClick={() => navigate(`/employer/create/${establishment.slug}`)}
