@@ -27,7 +27,7 @@ export default function GlobalCard({ item, fmtBRL, navigate, showSchedule, openS
     product: { label: "Produto", icon: <FaBoxOpen /> },
   }[cardKind];
 
-  const canSchedule = !!showSchedule && typeof openSchedulePopup === "function" && !isProduct;
+  const canSchedule = !!showSchedule && typeof openSchedulePopup === "function" && !isProduct && safeItem.can_schedule !== false;
 
   const image = useMemo(() => {
     const paths = [safeItem.image, safeItem.avatar, safeItem.images?.avatar, safeItem.images?.logo, safeItem.images?.background, Array.isArray(safeItem.images?.gallery) ? safeItem.images.gallery[0] : null];
