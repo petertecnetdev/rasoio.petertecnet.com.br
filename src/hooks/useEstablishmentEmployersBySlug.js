@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
-import { appId } from "../config";
+import { appId, appSlug } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
+
+const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
 
 export default function useEstablishmentEmployersBySlug(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -14,6 +16,7 @@ export default function useEstablishmentEmployersBySlug(slug) {
       if (!slug) {
         setEstablishment(null);
         setEmployers([]);
+        setApiError("Estabelecimento não informado.");
         setLoading(false);
         return;
       }
@@ -22,42 +25,48 @@ export default function useEstablishmentEmployersBySlug(slug) {
       setApiError(null);
 
       try {
-        const [establishmentResponse, employersResponse] = await Promise.all([
-          api.get(`/establishment/view/${encodeURIComponent(slug)}`, {
-            params: { app_id: appId },
-            signal,
-          }),
-          api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`, {
-            params: { app_id: appId },
-            signal,
-          }),
-        ]);
+        // Resolve ownership through the generic application context. This avoids
+        // depending on the numeric legacy app_id to open the team management UI.
+        const establishmentResponse = await api.get(
+          `${appContextPath}/me/establishments`,
+          { signal }
+        );
 
-        const resolvedEstablishment = establishmentResponse?.data?.establishment || null;
+        const ownedEstablishments = Array.isArray(establishmentResponse?.data?.data)
+          ? establishmentResponse.data.data
+          : [];
+        const resolvedEstablishment =
+          ownedEstablishments.find(
+            (candidate) => String(candidate?.slug || "") === String(slug)
+          ) || null;
 
-        if (
-          !resolvedEstablishment ||
-          Number(resolvedEstablishment.app_id) !== Number(appId)
-        ) {
-          throw new Error("Esta barbearia não pertence ao aplicativo Rasoio.");
+        if (!resolvedEstablishment) {
+          throw new Error(
+            "Este estabelecimento não foi encontrado entre os estabelecimentos que você administra na Rasoio."
+          );
         }
+
+        // Employer listing still has a compatibility endpoint while the
+        // workforce read contract is moved completely to /v1/apps/{app}/.
+        const employersResponse = await api.get(
+          `/employer/list-by-entity/${encodeURIComponent(slug)}`,
+          {
+            params: { app_id: appId },
+            signal,
+          }
+        );
 
         const rawEmployers = Array.isArray(employersResponse?.data?.employers)
           ? employersResponse.data.employers
           : [];
 
-        const scopedEmployers = rawEmployers.filter((employer) => {
-          const employerAppId = employer?.establishment?.app_id;
-          return employerAppId == null || Number(employerAppId) === Number(appId);
-        });
-
         setEstablishment(resolvedEstablishment);
-        setEmployers(scopedEmployers);
+        setEmployers(rawEmployers);
       } catch (error) {
         if (isRequestCanceled(error) || signal?.aborted) return;
 
         setApiError(
-          error?.message === "Esta barbearia não pertence ao aplicativo Rasoio."
+          error?.message?.startsWith("Este estabelecimento")
             ? error.message
             : getApiErrorMessage(error, "Erro ao carregar colaboradores da equipe.")
         );
