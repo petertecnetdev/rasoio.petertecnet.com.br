@@ -7,12 +7,17 @@ export default function EstablishmentCard({ data }) {
     data?.images?.logo ||
     data?.images?.avatar ||
     data?.images?.background ||
-    "/images/placeholder.png";
+    "";
 
   return (
-    <div className="estcard">
+    <div className="estcard" data-name={data?.name || ""}>
       <div className="estcard-top">
-        <img src={img} alt="" className="estcard-logo" />
+        <img
+          src={img}
+          alt={data?.name || "Estabelecimento"}
+          data-fallback-text={data?.name || ""}
+          className="estcard-logo"
+        />
 
         <div className="estcard-info">
           <div className="estcard-name">{data.name}</div>
