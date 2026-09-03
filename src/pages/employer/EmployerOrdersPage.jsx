@@ -79,6 +79,27 @@ export default function EmployerOrdersPage() {
     return result;
   }, [orders]);
 
+  const statusChart = useMemo(() => [
+    { label: "Solicitados", value: stats.pending },
+    { label: "Confirmados", value: stats.confirmed },
+    { label: "Concluídos", value: stats.completed },
+    { label: "Encerrados", value: stats.cancelled },
+  ], [stats]);
+
+  const dailyChart = useMemo(() => {
+    const buckets = new Map();
+    (orders || []).forEach((order) => {
+      const date = asDate(order?.order_datetime);
+      if (!date) return;
+      const key = date.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      const current = buckets.get(key) || { key, label: date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), total: 0, completed: 0 };
+      current.total += 1;
+      if (["completed", "attended"].includes(order?.appointment_status || order?.status)) current.completed += 1;
+      buckets.set(key, current);
+    });
+    return Array.from(buckets.values()).sort((a, b) => a.key.localeCompare(b.key)).slice(-14);
+  }, [orders]);
+
   const runAction = async (order, action) => {
     const labels = {
       accept: ["Aceitar este agendamento?", "O horário ficará confirmado para o cliente.", "Aceitar"],
@@ -111,7 +132,7 @@ export default function EmployerOrdersPage() {
 
   return (
     <main className="eop-page">
-      <EmployerHero title="Minha agenda" subtitle="Solicitações e atendimentos em ordem de prioridade" employer={employer} />
+      <EmployerHero title="Minha agenda" subtitle="Solicitações, atendimentos e evolução visual da sua rotina" employer={employer} />
 
       <section className="eop-toolbar">
         <div className="eop-stats">
@@ -122,6 +143,13 @@ export default function EmployerOrdersPage() {
         </div>
         <button className="eop-refresh" type="button" onClick={refetch} disabled={loading}><FaSyncAlt /> Atualizar</button>
       </section>
+
+      {!loading && !apiError && (orders || []).length > 0 && (
+        <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: "16px", margin: "0 0 24px" }} aria-label="Análises visuais da agenda profissional">
+          <peter-insight-chart type="donut" title="Situação da minha agenda" subtitle="Distribuição dos seus atendimentos por status para leitura rápida da carga de trabalho." data={JSON.stringify(statusChart)} primary-label="Atendimentos" />
+          <peter-insight-chart type="line" title="Ritmo dos últimos dias" subtitle="Agendamentos registrados por dia comparados aos atendimentos concluídos." data={JSON.stringify(dailyChart)} label-key="label" value-key="total" secondary-key="completed" primary-label="Agendados" secondary-label="Concluídos" />
+        </section>
+      )}
 
       {apiError && <div className="eop-message eop-message--error"><FaExclamationCircle /> {apiError}</div>}
       {loading && <div className="eop-message"><FaUserClock /> Carregando agenda...</div>}
