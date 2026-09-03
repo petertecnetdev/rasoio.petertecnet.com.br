@@ -2,8 +2,10 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import api from "../services/api";
-import { appId } from "../config";
+import { appId, appSlug } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
+
+const teamMembersPath = `/v1/apps/${encodeURIComponent(appSlug)}/team-members`;
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -121,10 +123,11 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      const { data } = await api.post("/rasoio/employers", {
+      // The canonical URL resolves the application by slug. Avoid sending the
+      // legacy numeric app_id here because it is not the source of truth anymore.
+      const { data } = await api.post(teamMembersPath, {
         user_id: user.id,
         establishment_id: establishment.id,
-        app_id: appId,
         role,
         permissions,
       });
