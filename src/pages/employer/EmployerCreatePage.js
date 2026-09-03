@@ -37,8 +37,8 @@ export default function EmployerCreatePage() {
     return {
       logo: establishment?.logo || PLACEHOLDER,
       background: null,
-      title: "Associar colaborador",
-      description: "Buscar usuário e gerenciar associação ao estabelecimento",
+      title: "Associar profissional",
+      description: "Adicione prestadores e colaboradores à equipe e conecte-os aos serviços agendáveis.",
       subtitle,
       metrics: [],
     };
@@ -79,17 +79,10 @@ export default function EmployerCreatePage() {
               loading={loading}
               searching={searching}
               errors={errors}
-              imageUrl={imageUrl}
-              handleImgError={handleImgError}
               onSearch={searchUsers}
               setRole={setRole}
-              establishmentId={establishment.id}
-              onAssociate={async (user) => {
-                await createEmployer(user);
-              }}
-              onDetach={async (employerId) => {
-                await detachEmployer(employerId);
-              }}
+              onAssociate={createEmployer}
+              onDetach={detachEmployer}
             />
           </Col>
         </Row>
