@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaBell, FaCheckDouble, FaClock, FaExclamationCircle } from "react-icons/fa";
 
 import api from "../services/api";
+import { apiV1BaseUrl } from "../config";
 import "./NotificationBell.css";
 
 const POLL_MS = 5000;
@@ -46,7 +47,9 @@ export default function NotificationBell() {
 
   const fetchCount = useCallback(async () => {
     try {
-      const { data } = await api.get("/rasoio/notifications/unread-count", { timeout: 8000 });
+      const { data } = await api.get(`${apiV1BaseUrl}/notifications/unread-count`, {
+        timeout: 8000,
+      });
       if (!mountedRef.current) return;
       setUnreadCount(Number(data?.unread_count || 0));
     } catch {
@@ -59,7 +62,9 @@ export default function NotificationBell() {
     setError("");
 
     try {
-      const { data } = await api.get("/rasoio/notifications?limit=20", { timeout: 10000 });
+      const { data } = await api.get(`${apiV1BaseUrl}/notifications?limit=20`, {
+        timeout: 10000,
+      });
       if (!mountedRef.current) return;
       setNotifications(normalizeNotifications(data));
       setUnreadCount(Number(data?.unread_count || 0));
@@ -118,13 +123,17 @@ export default function NotificationBell() {
     if (!notification.read_at) {
       setNotifications((current) =>
         current.map((item) =>
-          item.id === notification.id ? { ...item, read_at: new Date().toISOString() } : item
+          item.id === notification.id
+            ? { ...item, read_at: new Date().toISOString() }
+            : item
         )
       );
       setUnreadCount((current) => Math.max(0, current - 1));
 
       try {
-        await api.patch(`/rasoio/notifications/${notification.id}/read`);
+        await api.patch(
+          `${apiV1BaseUrl}/notifications/${notification.id}/read`
+        );
       } catch {
         fetchCount();
       }
@@ -139,11 +148,14 @@ export default function NotificationBell() {
 
     setUnreadCount(0);
     setNotifications((current) =>
-      current.map((item) => ({ ...item, read_at: item.read_at || new Date().toISOString() }))
+      current.map((item) => ({
+        ...item,
+        read_at: item.read_at || new Date().toISOString(),
+      }))
     );
 
     try {
-      await api.patch("/rasoio/notifications/read-all");
+      await api.patch(`${apiV1BaseUrl}/notifications/read-all`);
     } catch {
       fetchNotifications(false);
     }
@@ -168,7 +180,11 @@ export default function NotificationBell() {
           <header className="notificationBell__header">
             <div>
               <strong>Notificações</strong>
-              <span>{unreadCount ? `${unreadCount} não lida${unreadCount > 1 ? "s" : ""}` : "Tudo em dia"}</span>
+              <span>
+                {unreadCount
+                  ? `${unreadCount} não lida${unreadCount > 1 ? "s" : ""}`
+                  : "Tudo em dia"}
+              </span>
             </div>
             <button type="button" onClick={markAllRead} disabled={!unreadCount}>
               <FaCheckDouble /> Marcar lidas
@@ -176,13 +192,19 @@ export default function NotificationBell() {
           </header>
 
           <div className="notificationBell__list">
-            {loading && <div className="notificationBell__state"><FaClock /> Carregando notificações...</div>}
+            {loading && (
+              <div className="notificationBell__state">
+                <FaClock /> Carregando notificações...
+              </div>
+            )}
 
             {!loading && error && (
               <div className="notificationBell__state notificationBell__state--error">
                 <FaExclamationCircle />
                 <span>{error}</span>
-                <button type="button" onClick={() => fetchNotifications(true)}>Tentar novamente</button>
+                <button type="button" onClick={() => fetchNotifications(true)}>
+                  Tentar novamente
+                </button>
               </div>
             )}
 
@@ -194,22 +216,26 @@ export default function NotificationBell() {
               </div>
             )}
 
-            {!loading && !error && notifications.map((notification) => (
-              <button
-                type="button"
-                key={notification.id}
-                className={`notificationBell__item ${notification.read_at ? "is-read" : "is-unread"}`}
-                onClick={() => openNotification(notification)}
-              >
-                <span className="notificationBell__dot" />
-                <span className="notificationBell__content">
-                  <strong>{notification.title || "Nova notificação"}</strong>
-                  {notification.message && <span>{notification.message}</span>}
-                  <small>{relativeTime(notification.created_at)}</small>
-                </span>
-                <span className="notificationBell__arrow">›</span>
-              </button>
-            ))}
+            {!loading &&
+              !error &&
+              notifications.map((notification) => (
+                <button
+                  type="button"
+                  key={notification.id}
+                  className={`notificationBell__item ${
+                    notification.read_at ? "is-read" : "is-unread"
+                  }`}
+                  onClick={() => openNotification(notification)}
+                >
+                  <span className="notificationBell__dot" />
+                  <span className="notificationBell__content">
+                    <strong>{notification.title || "Nova notificação"}</strong>
+                    {notification.message && <span>{notification.message}</span>}
+                    <small>{relativeTime(notification.created_at)}</small>
+                  </span>
+                  <span className="notificationBell__arrow">›</span>
+                </button>
+              ))}
           </div>
         </section>
       )}
