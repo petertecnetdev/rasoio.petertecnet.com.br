@@ -9,7 +9,7 @@ export default function OrderSelectedClientCard({ client, onClear }) {
   const { imageUrl } = useImageUtils();
   const [broken, setBroken] = useState(false);
 
-  const safeClient = client || {};
+  const safeClient = useMemo(() => client || {}, [client]);
 
   const safeItem = useMemo(
     () => ({
