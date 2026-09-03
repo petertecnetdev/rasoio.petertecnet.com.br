@@ -40,6 +40,7 @@ const ProcessingIndicatorComponent = ({
             alt=""
             aria-hidden="true"
             draggable={false}
+            data-peter-branding="logo"
           />
         )}
         {current && (
