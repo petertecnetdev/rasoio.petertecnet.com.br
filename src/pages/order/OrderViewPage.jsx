@@ -175,9 +175,10 @@ export default function OrderViewPage() {
   const order = payload?.order || null;
   const audit = payload?.audit || {};
   const establishment = payload?.establishment || null;
-  const employers = Array.isArray(establishment?.employers)
-    ? establishment.employers
-    : [];
+  const employers = useMemo(
+    () => (Array.isArray(establishment?.employers) ? establishment.employers : []),
+    [establishment]
+  );
 
   const customer = useMemo(() => {
     const source = order?.client || order?.customer || {};
