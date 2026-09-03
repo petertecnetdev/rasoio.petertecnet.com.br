@@ -28,6 +28,7 @@ export default function EstablishmentViewPage() {
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(apiBaseUrl, appId, token, wizardEstablishment);
   const whatsappLink = useWhatsappLink(establishment);
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+  const hasSchedulableEmployers = Array.isArray(employers) && employers.length > 0;
 
   const heroLogo = establishment?.images?.logo || establishment?.logo || null;
   const heroBg = establishment?.images?.background || establishment?.background || null;
@@ -41,6 +42,7 @@ export default function EstablishmentViewPage() {
     try {
       const estId = est?.id ?? establishment?.id ?? null;
       const filteredEmployers = (Array.isArray(employers) ? employers : []).filter((emp) => Number(emp?.establishment_id) === Number(estId));
+      if (!filteredEmployers.length) return;
       await openSchedulePopup({ establishment: est || establishment, filteredEmployers });
     } catch (e) {
       console.error(e);
@@ -57,6 +59,7 @@ export default function EstablishmentViewPage() {
     try {
       const estId = item?.establishment_id || item?.entity_id || item?.entityId || establishment?.id || null;
       const filteredEmployers = (Array.isArray(employers) ? employers : []).filter((emp) => Number(emp?.establishment_id) === Number(estId));
+      if (!filteredEmployers.length) return;
       openSchedulePopup({ service: item, filteredEmployers, establishment });
     } catch (e) { console.error(e); Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." }); }
   }, [openSchedulePopup, employers, establishment]);
@@ -81,7 +84,7 @@ export default function EstablishmentViewPage() {
                 <span><FaUsers /> {employers?.length || 0} profissionais</span>
               </div>
               <div className="ev-actions">
-                <button type="button" className="ev-primary" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button>
+                {hasSchedulableEmployers && <button type="button" className="ev-primary" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button>}
                 {whatsappLink && <a className="ev-secondary" href={whatsappLink} target="_blank" rel="noreferrer"><FaWhatsapp /> WhatsApp</a>}
               </div>
             </div>
@@ -93,16 +96,16 @@ export default function EstablishmentViewPage() {
             <div><strong>{services?.length || 0}</strong><span>serviços disponíveis</span></div>
             <div><strong>{employers?.length || 0}</strong><span>profissionais na equipe</span></div>
             <div><strong>{ratingLabel || "—"}</strong><span>avaliação da barbearia</span></div>
-            <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Escolher meu horário <span>→</span></button>
+            {hasSchedulableEmployers && <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Escolher meu horário <span>→</span></button>}
           </section>
 
           <section className="ev-intro">
             <div><span className="ev-kicker">SUA EXPERIÊNCIA</span><h2>Seu estilo começa aqui.</h2><p>{description}</p></div>
-            <div className="ev-introCard"><FaCalendarAlt /><div><strong>Agendamento simples</strong><span>Escolha o serviço, o profissional e o melhor horário para você.</span></div></div>
+            <div className="ev-introCard"><FaCalendarAlt /><div><strong>{hasSchedulableEmployers ? "Agendamento simples" : "Agendamento indisponível"}</strong><span>{hasSchedulableEmployers ? "Escolha o serviço, o profissional e o melhor horário para você." : "Este estabelecimento ainda não possui profissional disponível para agendamentos."}</span></div></div>
           </section>
 
           <div className="ev-sections">
-            {Array.isArray(services) && services.length > 0 && <section className="ev-block ev-services"><div className="ev-sectionHeading"><div><span>O QUE FAZEMOS</span><h2>Serviços da barbearia</h2></div><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Agendar agora</button></div><GlobalCarousel title="" subtitle="Escolha seu serviço" items={services} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromService} showSchedule showDots /></section>}
+            {Array.isArray(services) && services.length > 0 && <section className="ev-block ev-services"><div className="ev-sectionHeading"><div><span>O QUE FAZEMOS</span><h2>Serviços da barbearia</h2></div>{hasSchedulableEmployers && <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}>Agendar agora</button>}</div><GlobalCarousel title="" subtitle="Escolha seu serviço" items={services.map((service) => ({ ...service, can_schedule: hasSchedulableEmployers }))} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromService} showSchedule={hasSchedulableEmployers} showDots /></section>}
             {Array.isArray(employers) && employers.length > 0 && <section className="ev-block"><div className="ev-sectionHeading"><div><span>NOSSA EQUIPE</span><h2>Profissionais que cuidam do seu estilo</h2></div></div><GlobalCarousel title="" subtitle="Escolha com quem você quer agendar" items={employers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={handleOpenFromEmployer} showSchedule showDots /></section>}
 
             {gallery.length > 0 && <section className="ev-block ev-gallery"><div className="ev-sectionHeading"><div><span>AMBIENTE</span><h2>Conheça a barbearia</h2></div></div><div className="ev-galleryGrid">{gallery.slice(0, 8).map((src, idx) => <button key={`${src}-${idx}`} type="button" className={`ev-galleryItem ev-galleryItem-${idx + 1}`} onClick={() => Swal.fire({ imageUrl: imageUrl(src), imageAlt: "Ambiente da barbearia", showConfirmButton: false, showCloseButton: true, background: "#07111f" })}><img src={imageUrl(src)} alt={`Ambiente ${idx + 1}`} loading="lazy" /></button>)}</div></section>}
@@ -111,16 +114,16 @@ export default function EstablishmentViewPage() {
 
             <section className="ev-block ev-location"><div className="ev-sectionHeading"><div><span>ONDE ESTAMOS</span><h2>Venha nos visitar</h2>{establishment?.address && <p>{establishment.address}{cityLabel ? ` · ${cityLabel}` : ""}</p>}</div></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>
 
-            <section className="ev-finalCta"><div><span>PRONTO PARA MUDAR O VISUAL?</span><h2>Reserve seu horário em poucos cliques.</h2><p>Escolha seus serviços, seu profissional e encontre os horários disponíveis.</p></div><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar agora</button></section>
+            <section className="ev-finalCta"><div><span>{hasSchedulableEmployers ? "PRONTO PARA MUDAR O VISUAL?" : "AGENDA INDISPONÍVEL"}</span><h2>{hasSchedulableEmployers ? "Reserve seu horário em poucos cliques." : "Este estabelecimento ainda não possui profissional disponível para agendamento."}</h2>{hasSchedulableEmployers && <p>Escolha seus serviços, seu profissional e encontre os horários disponíveis.</p>}</div>{hasSchedulableEmployers && <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar agora</button>}</section>
 
-            {Array.isArray(otherEstablishments) && otherEstablishments.length > 0 && <section className="ev-block ev-related"><GlobalCarousel title="Outras barbearias" subtitle="Conheça outras opções" items={otherEstablishments} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromEstablishment} showSchedule showDots /></section>}
+            {Array.isArray(otherEstablishments) && otherEstablishments.length > 0 && <section className="ev-block ev-related"><GlobalCarousel title="Outras barbearias" subtitle="Conheça outras opções" items={otherEstablishments} fmtBRL={(v) => v} navigate={safeNavigate} showSchedule={false} showDots /></section>}
             {Array.isArray(otherEmployers) && otherEmployers.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros profissionais" subtitle="Mais profissionais para conhecer" items={otherEmployers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={handleOpenFromEmployer} showSchedule showDots /></section>}
-            {Array.isArray(otherItems) && otherItems.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros serviços" subtitle="Veja mais opções" items={otherItems} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={handleOpenFromService} showSchedule showDots /></section>}
+            {Array.isArray(otherItems) && otherItems.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros serviços" subtitle="Veja mais opções" items={otherItems} fmtBRL={(v) => v} navigate={safeNavigate} showSchedule={false} showDots /></section>}
           </div>
         </div>
       </main>
 
-      <div className="ev-mobileBooking"><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button></div>
+      {hasSchedulableEmployers && <div className="ev-mobileBooking"><button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar horário</button></div>}
       <ShareButton />
       <AppointmentWizardModal show={showWizard} onHide={() => setShowWizard(false)} employers={wizardEmployers} services={wizardServices} loadAvailableTimes={loadAvailableTimes} handleCreateAppointment={handleCreateAppointment} imageUrl={imageUrl} preselectedServiceId={preselectedServiceId} preselectedEmployer={preselectedEmployer} establishment={wizardEstablishment} />
     </>
