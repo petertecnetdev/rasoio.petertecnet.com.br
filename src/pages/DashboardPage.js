@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../App";
-import api from "../services/api";
+import { getAppointmentDashboard } from "../services/platformManagementApi";
 import "./dashboard-v2.css";
 
 const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
@@ -43,7 +43,7 @@ function LiveOperations({ selected }) {
     const load = async (silent = false) => {
       if (!silent) setRefreshing(true);
       try {
-        const { data } = await api.get(`/rasoio/establishments/${selected.slug}/overview`);
+        const data = await getAppointmentDashboard(selected.slug);
         if (!active) return;
         setSnapshot(data || null);
         setError("");
@@ -52,7 +52,7 @@ function LiveOperations({ selected }) {
         setError(
           requestError?.response?.data?.message ||
             requestError?.response?.data?.error ||
-            "Não foi possível atualizar os indicadores da barbearia."
+            "Não foi possível atualizar os indicadores do estabelecimento."
         );
       } finally {
         if (active && !silent) setRefreshing(false);
@@ -113,7 +113,7 @@ function LiveOperations({ selected }) {
           <header>
             <div>
               <span>Fluxo por horário</span>
-              <h3>Movimento da barbearia hoje</h3>
+              <h3>Movimento do estabelecimento hoje</h3>
             </div>
             <div className="live-chart-legend">
               <span><i className="legend-dot legend-dot-scheduled" />Agendamentos</span>
@@ -191,43 +191,43 @@ export default function DashboardPage() {
         <header className="rasoio-dashboard-hero">
           <div>
             <span className="rasoio-dashboard-kicker">
-              {selected ? "Visão geral da barbearia" : "Central Rasoio"}
+              {selected ? "Visão geral do estabelecimento" : "Central Rasoio"}
             </span>
             <h1>{selected ? selectedName : `Olá, ${name}`}</h1>
             <p>
               {selected
                 ? "Acompanhe a operação desta unidade, o movimento do dia e acesse rapidamente equipe, agenda e serviços."
-                : "Agendamentos pessoais, operação das suas barbearias e sua agenda como profissional ficam separados para evitar ambiguidades."}
+                : "Agendamentos pessoais, operação dos seus estabelecimentos e sua agenda como profissional ficam separados para evitar ambiguidades."}
             </p>
           </div>
           <div className="rasoio-dashboard-status">
             <strong>{selected ? "1" : owned.length}</strong>
-            <span>{selected ? "unidade selecionada" : owned.length === 1 ? "barbearia na Rasoio" : "barbearias na Rasoio"}</span>
+            <span>{selected ? "unidade selecionada" : owned.length === 1 ? "estabelecimento na Rasoio" : "estabelecimentos na Rasoio"}</span>
           </div>
         </header>
 
         {selected && <LiveOperations selected={selected} />}
 
         {selected ? (
-          <section className="rasoio-overview-grid" aria-label={`Visão geral da ${selectedName}`}>
-            <OverviewCard icon="▦" eyebrow="Operação" title="Agenda e atendimentos" text="Acompanhe solicitações, confirme horários e organize os atendimentos desta barbearia." to={`/establishment/orders/${selected.slug}`} cta="Abrir agenda" accent />
+          <section className="rasoio-overview-grid" aria-label={`Visão geral de ${selectedName}`}>
+            <OverviewCard icon="▦" eyebrow="Operação" title="Agenda e atendimentos" text="Acompanhe solicitações, confirme horários e organize os atendimentos deste estabelecimento." to={`/establishment/orders/${selected.slug}`} cta="Abrir agenda" accent />
             <OverviewCard icon="👥" eyebrow="Equipe" title="Colaboradores" text="Gerencie quem trabalha nesta unidade e quem pode receber os próximos atendimentos." to={`/establishment/employers/${selected.slug}`} cta="Gerenciar equipe" />
             <OverviewCard icon="✂" eyebrow="Catálogo" title="Serviços" text="Configure serviços, duração e valores usados na agenda desta unidade." to={`/establishment/item/${selected.slug}`} cta="Gerenciar serviços" />
-            <OverviewCard icon="◎" eyebrow="Cadastro" title="Dados da barbearia" text="Atualize informações, identidade e dados públicos desta unidade." to={`/establishment/update/${selected.id}`} cta="Abrir configurações" />
+            <OverviewCard icon="◎" eyebrow="Cadastro" title="Dados do estabelecimento" text="Atualize informações, identidade e dados públicos desta unidade." to={`/establishment/update/${selected.id}`} cta="Abrir configurações" />
           </section>
         ) : (
           <section className="rasoio-overview-grid" aria-label="Visão geral dos agendamentos">
-            <OverviewCard icon="◷" eyebrow="Como cliente" title="Meus agendamentos" text="Somente os horários que você marcou para receber um atendimento em uma barbearia." to="/orders/my" cta="Ver minhas reservas" accent />
-            <OverviewCard icon="▦" eyebrow="Como proprietário" title="Minhas barbearias" text="Escolha uma unidade para abrir a visão geral e administrar sua operação separadamente." to={owned.length ? "/establishment/my" : "/establishment/create"} cta={owned.length ? "Escolher barbearia" : "Cadastrar barbearia"} />
+            <OverviewCard icon="◷" eyebrow="Como cliente" title="Meus agendamentos" text="Somente os horários que você marcou para receber um atendimento." to="/orders/my" cta="Ver minhas reservas" accent />
+            <OverviewCard icon="▦" eyebrow="Como proprietário" title="Meus estabelecimentos" text="Escolha uma unidade para abrir a visão geral e administrar sua operação separadamente." to={owned.length ? "/establishment/my" : "/establishment/create"} cta={owned.length ? "Escolher estabelecimento" : "Cadastrar estabelecimento"} />
             <OverviewCard icon="✂" eyebrow="Como profissional" title="Minha agenda de trabalho" text={isEmployer ? "Veja os atendimentos atribuídos diretamente ao seu perfil de colaborador." : "Quando você estiver vinculado como colaborador, sua agenda profissional aparecerá aqui."} to={isEmployer ? "/employer/orders" : "/employers"} cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"} />
-            <OverviewCard icon="＋" eyebrow="Expansão" title="Nova barbearia" text="Cadastre outra unidade na mesma conta e mantenha equipe, serviços e agenda separados." to="/establishment/create" cta="Cadastrar nova unidade" />
+            <OverviewCard icon="＋" eyebrow="Expansão" title="Nova unidade" text="Cadastre outra unidade na mesma conta e mantenha equipe, serviços e agenda separados." to="/establishment/create" cta="Cadastrar nova unidade" />
           </section>
         )}
 
         {owned.length > 0 && (
-          <section className="rasoio-owned-section" aria-labelledby="dashboard-barbershops-title">
+          <section className="rasoio-owned-section" aria-labelledby="dashboard-establishments-title">
             <div className="rasoio-section-heading">
-              <div><span>Gestão</span><h2 id="dashboard-barbershops-title">Minhas barbearias</h2></div>
+              <div><span>Gestão</span><h2 id="dashboard-establishments-title">Meus estabelecimentos</h2></div>
               <Link to="/establishment/my">Ver painel completo →</Link>
             </div>
 
