@@ -89,7 +89,7 @@ export default function ItemViewPage() {
 
           {Array.isArray(otherItems) && otherItems.length > 0 && <section className="iv-section iv-section--related"><div className="iv-heading"><span>VOCÊ TAMBÉM PODE GOSTAR</span><h2>{isProduct ? "Outros produtos" : "Outros serviços"}</h2></div><GlobalCarousel title="" subtitle="Mais opções deste estabelecimento" items={otherItems.map((it) => ({ ...it, type: "item", item_type: it?.item_type || it?.type || null, image: it?.imageUrl || it?.image || it?.image_url || null, can_schedule: hasSchedulableEmployers }))} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={(it) => { const t = it?.item_type || it?.type; if (t === "product" || !hasSchedulableEmployers) return; openSchedulePopup({ service: it, establishment: establishment || null, filteredEmployers: employers }); }} showSchedule={!isProduct && hasSchedulableEmployers} showDots /></section>}
 
-          {establishment && <section className="iv-section iv-map"><div className="iv-heading"><span>LOCAL</span><h2>Onde encontrar</h2><p>{[establishment?.address, establishment?.city, establishment?.uf].filter(Boolean).join(" · ")}</p></div></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>}
+          {establishment && <section className="iv-section iv-map"><div className="iv-heading"><span>LOCAL</span><h2>Onde encontrar</h2><p>{[establishment?.address, establishment?.city, establishment?.uf].filter(Boolean).join(" · ")}</p></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>}
         </div>
       </main>
 
