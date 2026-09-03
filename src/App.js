@@ -21,6 +21,7 @@ import ProcessingIndicatorComponent from "./components/ProcessingIndicatorCompon
 import SeoManager from "./components/SeoManager";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
+import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
 import api from "./services/api";
 import { appId } from "./config";
 
@@ -67,7 +68,6 @@ const EstablishmentViewPage = lazy(() => import("./pages/establishment/Establish
 const EstablishmentUpdatePage = lazy(() => import("./pages/establishment/EstablishmentUpdatePage"));
 const EstablishmentOrderPage = lazy(() => import("./pages/establishment/EstablishmentOrderPage"));
 const EstablishmentMyPage = lazy(() => import("./pages/establishment/EstablishmentMyPage"));
-const EstablishmentEmployersPage = lazy(() => import("./pages/establishment/EstablishmentEmployersPage"));
 const EstablishmentItemPage = lazy(() => import("./pages/establishment/EstablishmentItemPage"));
 const EstablishmentHomePage = lazy(() => import("./pages/establishment/EstablishmentHomePage"));
 
