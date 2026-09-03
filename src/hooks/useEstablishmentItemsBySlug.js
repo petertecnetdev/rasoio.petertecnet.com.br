@@ -1,7 +1,10 @@
 // src/hooks/useEstablishmentItemsBySlug.js
 import { useCallback, useEffect, useMemo, useState } from "react";
-import api from "../services/api";
-import { appId } from "../config";
+import {
+  findManagedEstablishmentBySlug,
+  listManagedItems,
+} from "../services/platformManagementApi";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useEstablishmentItemsBySlug(identifier, itemType = null) {
   const [establishment, setEstablishment] = useState(null);
@@ -9,11 +12,12 @@ export default function useEstablishmentItemsBySlug(identifier, itemType = null)
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (signal) => {
     if (!identifier) {
       setLoading(false);
       setAllItems([]);
       setEstablishment(null);
+      setApiError("Estabelecimento não informado.");
       return;
     }
 
@@ -21,46 +25,41 @@ export default function useEstablishmentItemsBySlug(identifier, itemType = null)
     setApiError(null);
 
     try {
-      const encodedIdentifier = encodeURIComponent(identifier);
-      const [establishmentResponse, itemsResponse] = await Promise.all([
-        api.get(`/establishment/view/${encodedIdentifier}`, {
-          params: { app_id: appId },
-        }),
-        api.get(`/item/list-by-entity/${encodedIdentifier}`),
-      ]);
+      const options = signal ? { signal } : {};
+      const resolvedEstablishment = await findManagedEstablishmentBySlug(
+        identifier,
+        options
+      );
 
-      const resolvedEstablishment =
-        establishmentResponse?.data?.establishment || null;
-
-      if (
-        !resolvedEstablishment ||
-        Number(resolvedEstablishment.app_id) !== Number(appId)
-      ) {
-        throw new Error("Esta barbearia não pertence à Rasoio.");
+      if (signal?.aborted) return;
+      if (!resolvedEstablishment) {
+        throw new Error(
+          "Este estabelecimento não foi encontrado entre as unidades que você administra na Rasoio."
+        );
       }
 
       setEstablishment(resolvedEstablishment);
-      setAllItems(
-        Array.isArray(itemsResponse?.data?.items)
-          ? itemsResponse.data.items
-          : []
-      );
+      const items = await listManagedItems(resolvedEstablishment.id, options);
+      if (signal?.aborted) return;
+      setAllItems(items);
     } catch (error) {
+      if (isRequestCanceled(error) || signal?.aborted) return;
       setApiError(
-        error?.response?.data?.error ||
-          error?.response?.data?.message ||
-          error?.message ||
-          "Erro ao buscar itens do estabelecimento."
+        error?.message?.startsWith("Este estabelecimento")
+          ? error.message
+          : getApiErrorMessage(error, "Erro ao buscar itens do estabelecimento.")
       );
       setAllItems([]);
       setEstablishment(null);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   }, [identifier]);
 
   useEffect(() => {
-    fetchItems();
+    const controller = new AbortController();
+    fetchItems(controller.signal);
+    return () => controller.abort();
   }, [fetchItems]);
 
   const items = useMemo(() => {
@@ -83,6 +82,6 @@ export default function useEstablishmentItemsBySlug(identifier, itemType = null)
     ).length,
     loading,
     apiError,
-    reload: fetchItems,
+    reload: () => fetchItems(),
   };
 }
