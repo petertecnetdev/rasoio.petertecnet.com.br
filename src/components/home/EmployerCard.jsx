@@ -6,7 +6,7 @@ export default function EmployerCard({ data, openSchedulePopup }) {
   const img =
     data?.avatar ||
     data?.images?.avatar ||
-    "/images/placeholder.png";
+    "";
 
   const handleScheduleClick = () => {
     if (typeof openSchedulePopup !== "function") return;
@@ -19,9 +19,19 @@ export default function EmployerCard({ data, openSchedulePopup }) {
   };
 
   return (
-    <div className="ecard" onClick={handleScheduleClick} style={{ cursor: "pointer" }}>
+    <div
+      className="ecard"
+      data-name={data?.name || ""}
+      onClick={handleScheduleClick}
+      style={{ cursor: "pointer" }}
+    >
       <div className="ecard-top">
-        <img src={img} alt={data.name} className="ecard-avatar" />
+        <img
+          src={img}
+          alt={data?.name || "Profissional"}
+          data-fallback-text={data?.name || ""}
+          className="ecard-avatar"
+        />
 
         <div className="ecard-info">
           <div className="ecard-name">{data.name}</div>
