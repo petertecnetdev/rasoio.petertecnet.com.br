@@ -108,17 +108,13 @@ export default function useEmployerCreate(slug) {
         ? usersResponse.data.users
         : [];
 
-      // The compatibility team read must not block user search. If it fails,
-      // the generic create endpoint remains authoritative and will return 409
-      // for an already-linked user.
       let establishmentEmployers = [];
       try {
-        const employersResponse = await api.get(
-          `/employer/list-by-entity/${encodeURIComponent(slug)}`,
-          { params: { app_id: appId } }
-        );
-        establishmentEmployers = Array.isArray(employersResponse?.data?.employers)
-          ? employersResponse.data.employers
+        const employersResponse = await api.get(teamMembersPath, {
+          params: { establishment_id: establishment.id },
+        });
+        establishmentEmployers = Array.isArray(employersResponse?.data?.data)
+          ? employersResponse.data.data
           : [];
       } catch (error) {
         if (isRequestCanceled(error)) return;
@@ -225,11 +221,7 @@ export default function useEmployerCreate(slug) {
     try {
       setLoading(true);
 
-      const { data } = await api.post("/employer/detach", {
-        employer_id: employerId,
-        establishment_id: establishment.id,
-        app_id: appId,
-      });
+      const { data } = await api.delete(`${teamMembersPath}/${employerId}`);
 
       await Swal.fire({
         icon: "success",
