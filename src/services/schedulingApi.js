@@ -10,6 +10,17 @@ const schedulingApi = {
     resourceTypes: () => api.get(`${schedulingBase}/catalog/resource-types`),
   },
 
+  professionals: {
+    list: (establishmentId) =>
+      api.get(`${apiV1BaseUrl}/establishments/${establishmentId}/employers`),
+    create: (payload) => api.post(`${apiV1BaseUrl}/employers`, payload),
+    remove: (employerId) => api.delete(`${apiV1BaseUrl}/employers/${employerId}`),
+    items: (employerId) => api.get(`${apiV1BaseUrl}/employers/${employerId}/items`),
+    syncItems: (employerId, itemIds) =>
+      api.put(`${apiV1BaseUrl}/employers/${employerId}/items`, { item_ids: itemIds }),
+    metrics: (employerId) => api.get(`${apiV1BaseUrl}/employers/${employerId}/metrics`),
+  },
+
   resources: {
     list: (establishmentId) =>
       api.get(`${schedulingBase}/establishments/${establishmentId}/resources`),
