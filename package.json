@@ -2,7 +2,7 @@
   "name": "rasoio",
   "version": "1.0.0",
   "private": true,
-  "description": "Rasoio - gestão e agendamento para barbearias, barbeiros e clientes.",
+  "description": "Rasoio - gestão e agendamento de serviços para empresas, profissionais e clientes.",
   "homepage": "/",
   "scripts": {
     "start": "react-scripts start",
@@ -12,9 +12,10 @@
     "lint": "eslint 'src/**/*.{js,jsx}'"
   },
   "keywords": [
-    "barbearia",
-    "barbeiro",
     "agendamento",
+    "servicos",
+    "estabelecimentos",
+    "profissionais",
     "gestao"
   ],
   "author": "Peter Tecnet",
