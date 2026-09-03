@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Col, Container, Row } from "react-bootstrap";
 import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../App";
-import api from "../services/api";
+import schedulingApi from "../services/schedulingApi";
 import "./dashboard-v2.css";
 
 const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
@@ -29,7 +29,9 @@ OverviewCard.propTypes = {
 };
 
 const personName = (person, fallback = "Não informado") =>
-  [person?.first_name, person?.last_name].filter(Boolean).join(" ") || person?.user_name || fallback;
+  [person?.first_name, person?.last_name].filter(Boolean).join(" ") ||
+  person?.user_name ||
+  fallback;
 
 function LiveOperations({ selected }) {
   const [snapshot, setSnapshot] = useState(null);
@@ -43,16 +45,16 @@ function LiveOperations({ selected }) {
     const load = async (silent = false) => {
       if (!silent) setRefreshing(true);
       try {
-        const { data } = await api.get(`/rasoio/establishments/${selected.slug}/overview`);
+        const { data } = await schedulingApi.dashboard(selected.id);
         if (!active) return;
-        setSnapshot(data || null);
+        setSnapshot(data?.data || null);
         setError("");
       } catch (requestError) {
         if (!active) return;
         setError(
           requestError?.response?.data?.message ||
             requestError?.response?.data?.error ||
-            "Não foi possível atualizar os indicadores da barbearia."
+            "Não foi possível atualizar os indicadores do estabelecimento."
         );
       } finally {
         if (active && !silent) setRefreshing(false);
@@ -74,11 +76,17 @@ function LiveOperations({ selected }) {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [selected.slug]);
+  }, [selected.id]);
 
   const summary = snapshot?.summary || {};
   const timeline = Array.isArray(snapshot?.timeline) ? snapshot.timeline : [];
-  const maxValue = Math.max(1, ...timeline.flatMap((point) => [Number(point.scheduled || 0), Number(point.completed || 0)]));
+  const maxValue = Math.max(
+    1,
+    ...timeline.flatMap((point) => [
+      Number(point.scheduled || 0),
+      Number(point.completed || 0),
+    ])
+  );
   const updatedAt = snapshot?.updated_at ? new Date(snapshot.updated_at) : null;
   const next = snapshot?.next_appointment || null;
 
@@ -93,7 +101,15 @@ function LiveOperations({ selected }) {
         <div className="live-status">
           <span className="live-status-dot" />
           <strong>{refreshing && !snapshot ? "Conectando..." : "Atualização automática"}</strong>
-          <small>{updatedAt ? `Última leitura ${updatedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : "Aguardando primeira leitura"}</small>
+          <small>
+            {updatedAt
+              ? `Última leitura ${updatedAt.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}`
+              : "Aguardando primeira leitura"}
+          </small>
         </div>
       </div>
 
@@ -113,7 +129,7 @@ function LiveOperations({ selected }) {
           <header>
             <div>
               <span>Fluxo por horário</span>
-              <h3>Movimento da barbearia hoje</h3>
+              <h3>Movimento do estabelecimento hoje</h3>
             </div>
             <div className="live-chart-legend">
               <span><i className="legend-dot legend-dot-scheduled" />Agendamentos</span>
@@ -127,12 +143,22 @@ function LiveOperations({ selected }) {
                 <div className="live-chart-bars">
                   <span
                     className="live-bar live-bar-scheduled"
-                    style={{ height: `${Math.max(4, (Number(point.scheduled || 0) / maxValue) * 100)}%` }}
+                    style={{
+                      height: `${Math.max(
+                        4,
+                        (Number(point.scheduled || 0) / maxValue) * 100
+                      )}%`,
+                    }}
                     title={`${point.hour}: ${point.scheduled || 0} agendamentos`}
                   />
                   <span
                     className="live-bar live-bar-completed"
-                    style={{ height: `${Math.max(4, (Number(point.completed || 0) / maxValue) * 100)}%` }}
+                    style={{
+                      height: `${Math.max(
+                        4,
+                        (Number(point.completed || 0) / maxValue) * 100
+                      )}%`,
+                    }}
                     title={`${point.hour}: ${point.completed || 0} concluídos`}
                   />
                 </div>
@@ -146,9 +172,14 @@ function LiveOperations({ selected }) {
           <span>Próximo atendimento</span>
           {next ? (
             <>
-              <strong>{new Date(next.order_datetime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</strong>
+              <strong>
+                {new Date(next.order_datetime).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </strong>
               <h3>{personName(next.client, "Cliente")}</h3>
-              <p>Profissional: {personName(next.attendant, "A definir")}</p>
+              <p>Profissional: {personName(next.provider, "A definir")}</p>
               <small>{next.total_duration || 30} min · #{next.order_number || next.id}</small>
               <Link to={`/order/view/${next.id}`}>Abrir atendimento →</Link>
             </>
@@ -163,6 +194,7 @@ function LiveOperations({ selected }) {
 
 LiveOperations.propTypes = {
   selected: PropTypes.shape({
+    id: PropTypes.number.isRequired,
     slug: PropTypes.string.isRequired,
   }).isRequired,
 };
@@ -191,43 +223,50 @@ export default function DashboardPage() {
         <header className="rasoio-dashboard-hero">
           <div>
             <span className="rasoio-dashboard-kicker">
-              {selected ? "Visão geral da barbearia" : "Central Rasoio"}
+              {selected ? "Visão geral do estabelecimento" : "Central Rasoio"}
             </span>
             <h1>{selected ? selectedName : `Olá, ${name}`}</h1>
             <p>
               {selected
-                ? "Acompanhe a operação desta unidade, o movimento do dia e acesse rapidamente equipe, agenda e serviços."
-                : "Agendamentos pessoais, operação das suas barbearias e sua agenda como profissional ficam separados para evitar ambiguidades."}
+                ? "Acompanhe a operação desta unidade, o movimento do dia e acesse rapidamente equipe, recursos, agenda e serviços."
+                : "Seus agendamentos, a operação dos seus estabelecimentos e sua agenda profissional ficam organizados em um só lugar."}
             </p>
           </div>
           <div className="rasoio-dashboard-status">
             <strong>{selected ? "1" : owned.length}</strong>
-            <span>{selected ? "unidade selecionada" : owned.length === 1 ? "barbearia na Rasoio" : "barbearias na Rasoio"}</span>
+            <span>
+              {selected
+                ? "unidade selecionada"
+                : owned.length === 1
+                  ? "estabelecimento na Rasoio"
+                  : "estabelecimentos na Rasoio"}
+            </span>
           </div>
         </header>
 
         {selected && <LiveOperations selected={selected} />}
 
         {selected ? (
-          <section className="rasoio-overview-grid" aria-label={`Visão geral da ${selectedName}`}>
-            <OverviewCard icon="▦" eyebrow="Operação" title="Agenda e atendimentos" text="Acompanhe solicitações, confirme horários e organize os atendimentos desta barbearia." to={`/establishment/orders/${selected.slug}`} cta="Abrir agenda" accent />
-            <OverviewCard icon="👥" eyebrow="Equipe" title="Colaboradores" text="Gerencie quem trabalha nesta unidade e quem pode receber os próximos atendimentos." to={`/establishment/employers/${selected.slug}`} cta="Gerenciar equipe" />
+          <section className="rasoio-overview-grid" aria-label={`Visão geral de ${selectedName}`}>
+            <OverviewCard icon="▦" eyebrow="Operação" title="Agenda e atendimentos" text="Acompanhe solicitações, confirme horários e organize os atendimentos deste estabelecimento." to={`/establishment/orders/${selected.slug}`} cta="Abrir agenda" accent />
+            <OverviewCard icon="👥" eyebrow="Equipe" title="Profissionais" text="Gerencie quem trabalha nesta unidade e quem pode receber os próximos atendimentos." to={`/establishment/employers/${selected.slug}`} cta="Gerenciar equipe" />
+            <OverviewCard icon="◫" eyebrow="Capacidade" title="Recursos agendáveis" text="Gerencie salas, boxes, equipamentos, veículos e espaços usados na execução dos serviços." to={`/establishment/resources/${selected.id}`} cta="Gerenciar recursos" />
             <OverviewCard icon="✂" eyebrow="Catálogo" title="Serviços" text="Configure serviços, duração e valores usados na agenda desta unidade." to={`/establishment/item/${selected.slug}`} cta="Gerenciar serviços" />
-            <OverviewCard icon="◎" eyebrow="Cadastro" title="Dados da barbearia" text="Atualize informações, identidade e dados públicos desta unidade." to={`/establishment/update/${selected.id}`} cta="Abrir configurações" />
+            <OverviewCard icon="◎" eyebrow="Cadastro" title="Dados do estabelecimento" text="Atualize informações, identidade e dados públicos desta unidade." to={`/establishment/update/${selected.id}`} cta="Abrir configurações" />
           </section>
         ) : (
           <section className="rasoio-overview-grid" aria-label="Visão geral dos agendamentos">
-            <OverviewCard icon="◷" eyebrow="Como cliente" title="Meus agendamentos" text="Somente os horários que você marcou para receber um atendimento em uma barbearia." to="/orders/my" cta="Ver minhas reservas" accent />
-            <OverviewCard icon="▦" eyebrow="Como proprietário" title="Minhas barbearias" text="Escolha uma unidade para abrir a visão geral e administrar sua operação separadamente." to={owned.length ? "/establishment/my" : "/establishment/create"} cta={owned.length ? "Escolher barbearia" : "Cadastrar barbearia"} />
-            <OverviewCard icon="✂" eyebrow="Como profissional" title="Minha agenda de trabalho" text={isEmployer ? "Veja os atendimentos atribuídos diretamente ao seu perfil de colaborador." : "Quando você estiver vinculado como colaborador, sua agenda profissional aparecerá aqui."} to={isEmployer ? "/employer/orders" : "/employers"} cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"} />
-            <OverviewCard icon="＋" eyebrow="Expansão" title="Nova barbearia" text="Cadastre outra unidade na mesma conta e mantenha equipe, serviços e agenda separados." to="/establishment/create" cta="Cadastrar nova unidade" />
+            <OverviewCard icon="◷" eyebrow="Como cliente" title="Meus agendamentos" text="Veja os horários que você marcou para receber serviços nos estabelecimentos da Rasoio." to="/orders/my" cta="Ver minhas reservas" accent />
+            <OverviewCard icon="▦" eyebrow="Como proprietário" title="Meus estabelecimentos" text="Escolha uma unidade para abrir a visão geral e administrar sua operação separadamente." to={owned.length ? "/establishment/my" : "/establishment/create"} cta={owned.length ? "Escolher estabelecimento" : "Cadastrar estabelecimento"} />
+            <OverviewCard icon="✂" eyebrow="Como profissional" title="Minha agenda de trabalho" text={isEmployer ? "Veja os atendimentos atribuídos diretamente ao seu perfil profissional." : "Quando você estiver vinculado como profissional, sua agenda de trabalho aparecerá aqui."} to={isEmployer ? "/employer/orders" : "/employers"} cta={isEmployer ? "Abrir minha agenda" : "Conhecer profissionais"} />
+            <OverviewCard icon="＋" eyebrow="Expansão" title="Nova unidade" text="Cadastre outro estabelecimento na mesma conta e mantenha equipe, recursos, serviços e agenda separados." to="/establishment/create" cta="Cadastrar nova unidade" />
           </section>
         )}
 
         {owned.length > 0 && (
-          <section className="rasoio-owned-section" aria-labelledby="dashboard-barbershops-title">
+          <section className="rasoio-owned-section" aria-labelledby="dashboard-establishments-title">
             <div className="rasoio-section-heading">
-              <div><span>Gestão</span><h2 id="dashboard-barbershops-title">Minhas barbearias</h2></div>
+              <div><span>Gestão</span><h2 id="dashboard-establishments-title">Meus estabelecimentos</h2></div>
               <Link to="/establishment/my">Ver painel completo →</Link>
             </div>
 
@@ -242,6 +281,7 @@ export default function DashboardPage() {
                       <Link to={`/dashboard?establishment=${encodeURIComponent(establishment.slug)}`}>Visão geral</Link>
                       <Link to={`/establishment/orders/${establishment.slug}`}>Agenda</Link>
                       <Link to={`/establishment/employers/${establishment.slug}`}>Equipe</Link>
+                      <Link to={`/establishment/resources/${establishment.id}`}>Recursos</Link>
                     </div>
                   </article>
                 </Col>
