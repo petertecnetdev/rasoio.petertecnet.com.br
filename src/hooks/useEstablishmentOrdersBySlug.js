@@ -1,5 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
-import api from "../services/api";
+import { useCallback, useEffect, useState } from "react";
+import {
+  assignAppointment,
+  listEstablishmentAppointments,
+  transitionAppointment,
+} from "../services/platformManagementApi";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useEstablishmentOrdersBySlug(slug) {
@@ -15,6 +19,7 @@ export default function useEstablishmentOrdersBySlug(slug) {
       setEstablishment(null);
       setEmployers([]);
       setOrders([]);
+      setApiError("Estabelecimento não informado.");
       setLoading(false);
       return;
     }
@@ -22,13 +27,19 @@ export default function useEstablishmentOrdersBySlug(slug) {
     setLoading(true);
     setApiError(null);
     try {
-      const { data } = await api.get(`/rasoio/establishments/${encodeURIComponent(slug)}/orders`, { signal });
+      const data = await listEstablishmentAppointments(
+        slug,
+        signal ? { signal } : {}
+      );
+      if (signal?.aborted) return;
       setEstablishment(data?.establishment || null);
       setEmployers(Array.isArray(data?.employers) ? data.employers : []);
       setOrders(Array.isArray(data?.orders) ? data.orders : []);
     } catch (error) {
       if (isRequestCanceled(error) || signal?.aborted) return;
-      setApiError(getApiErrorMessage(error, "Erro ao carregar a agenda da barbearia."));
+      setApiError(
+        getApiErrorMessage(error, "Erro ao carregar a agenda do estabelecimento.")
+      );
       setOrders([]);
       setEmployers([]);
       setEstablishment(null);
@@ -39,27 +50,43 @@ export default function useEstablishmentOrdersBySlug(slug) {
 
   const refetch = useCallback(() => fetchOrders(), [fetchOrders]);
 
-  const transitionOrder = useCallback(async (orderId, action, reason = null) => {
+  const handleTransitionOrder = useCallback(async (orderId, action, reason = null) => {
     setActionLoading(orderId);
     try {
-      const { data } = await api.patch(`/rasoio/orders/${orderId}/transition`, { action, reason });
-      setOrders((current) => current.map((order) => order.id === orderId ? data.order : order));
-      return data.order;
+      const data = await transitionAppointment(orderId, action, reason);
+      const updated = data?.order;
+      if (updated) {
+        setOrders((current) =>
+          current.map((order) => (order.id === orderId ? updated : order))
+        );
+      }
+      return updated;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, "Não foi possível atualizar o agendamento."));
+      throw new Error(
+        getApiErrorMessage(error, "Não foi possível atualizar o agendamento.")
+      );
     } finally {
       setActionLoading(null);
     }
   }, []);
 
-  const assignOrder = useCallback(async (orderId, attendantId) => {
+  const handleAssignOrder = useCallback(async (orderId, attendantId) => {
     setActionLoading(orderId);
     try {
-      const { data } = await api.patch(`/rasoio/orders/${orderId}/assign`, { attendant_id: attendantId });
-      setOrders((current) => current.map((order) => order.id === orderId ? { ...order, ...data.order } : order));
-      return data.order;
+      const data = await assignAppointment(orderId, attendantId);
+      const updated = data?.order;
+      if (updated) {
+        setOrders((current) =>
+          current.map((order) =>
+            order.id === orderId ? { ...order, ...updated } : order
+          )
+        );
+      }
+      return updated;
     } catch (error) {
-      throw new Error(getApiErrorMessage(error, "Não foi possível redirecionar o agendamento."));
+      throw new Error(
+        getApiErrorMessage(error, "Não foi possível redirecionar o agendamento.")
+      );
     } finally {
       setActionLoading(null);
     }
@@ -71,5 +98,15 @@ export default function useEstablishmentOrdersBySlug(slug) {
     return () => controller.abort();
   }, [fetchOrders]);
 
-  return { establishment, employers, orders, loading, actionLoading, apiError, refetch, transitionOrder, assignOrder };
+  return {
+    establishment,
+    employers,
+    orders,
+    loading,
+    actionLoading,
+    apiError,
+    refetch,
+    transitionOrder: handleTransitionOrder,
+    assignOrder: handleAssignOrder,
+  };
 }
