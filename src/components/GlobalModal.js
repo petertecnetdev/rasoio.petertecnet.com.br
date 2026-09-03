@@ -121,7 +121,7 @@ export default function GlobalModal({
     >
       <div
         className={`gmodal ${centered ? "gmodal-centered" : ""} ${className || ""}`}
-        style={{ ["--gmodal-maxw"]: `${maxWidth}px` }}
+        style={{ "--gmodal-maxw": `${maxWidth}px` }}
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === "string" ? title : "Modal"}
