@@ -1,5 +1,5 @@
 // src/pages/auth/LogoutPage.js
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { apiBaseUrl, appSlug } from "../../config";
 
 export default function LogoutPage() {
@@ -32,7 +32,9 @@ export default function LogoutPage() {
     }
 
     logout();
-    return () => { active = false };
+    return () => {
+      active = false;
+    };
   }, []);
 
   return null;
