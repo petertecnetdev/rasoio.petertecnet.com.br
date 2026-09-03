@@ -1,0 +1,27 @@
+:root {
+  --rasoio-cyan: var(--peter-brand-primary, #19d6ff) !important;
+  --rasoio-blue: var(--peter-brand-secondary, #00a8ff) !important;
+  --rasoio-purple: var(--peter-brand-accent, #7c5cff) !important;
+  --rasoio-border: rgba(var(--peter-brand-primary-rgb, 25, 214, 255), .14) !important;
+
+  --r-primary: var(--peter-brand-primary, #1fe1ff) !important;
+  --r-primary-2: var(--peter-brand-secondary, #14bfff) !important;
+  --r-primary-3: var(--peter-brand-accent, #0aa3ff) !important;
+  --r-accent: var(--peter-brand-accent, #22d3ee) !important;
+  --r-glass: rgba(var(--peter-brand-primary-rgb, 31, 225, 255), .10) !important;
+  --r-glow-sm: 0 0 10px rgba(var(--peter-brand-primary-rgb, 31, 225, 255), .45) !important;
+  --r-glow-md: 0 0 18px rgba(var(--peter-brand-primary-rgb, 31, 225, 255), .50), 0 0 38px rgba(var(--peter-brand-secondary-rgb, 10, 163, 255), .25) !important;
+  --r-glow-lg: 0 0 28px rgba(var(--peter-brand-primary-rgb, 31, 225, 255), .55), 0 0 60px rgba(var(--peter-brand-accent-rgb, 10, 163, 255), .35) !important;
+  --r-grad-primary: var(--peter-brand-gradient, linear-gradient(90deg, #0aa3ff 0%, #1fe1ff 50%, #14bfff 100%)) !important;
+  --r-focus-ring: 0 0 0 3px rgba(var(--peter-brand-primary-rgb, 31, 225, 255), .35) !important;
+
+  --neon-cyan: var(--peter-brand-primary, #00eaff) !important;
+  --neon-purple: var(--peter-brand-secondary, #b966ff) !important;
+  --neon-green: var(--peter-brand-accent, #00ffae) !important;
+}
+
+.swal2-confirm,
+.u-btn,
+.u-nav-fixed .tabs button.active {
+  background: var(--peter-brand-gradient, var(--r-grad-primary)) !important;
+}
