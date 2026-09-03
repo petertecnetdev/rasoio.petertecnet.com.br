@@ -6,12 +6,17 @@ export default function ItemCard({ data }) {
     data?.images?.avatar ||
     data?.images?.logo ||
     data?.images?.background ||
-    "/images/placeholder.png";
+    "";
 
   return (
-    <div className="icard">
+    <div className="icard" data-name={data?.name || ""}>
       <div className="icard-top">
-        <img src={img} alt="" className="icard-img" />
+        <img
+          src={img}
+          alt={data?.name || "Item"}
+          data-fallback-text={data?.name || ""}
+          className="icard-img"
+        />
 
         <div className="icard-info">
           <div className="icard-name">{data.name}</div>
