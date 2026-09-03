@@ -53,8 +53,7 @@ export default function LoginPage() {
                 <div className="lp__heroText">
                   <h1 className="lp__heroTitle">Rasoio</h1>
                   <p className="lp__heroSubtitle">
-                    Gestão e agendamento para barbearias, barbeiros e clientes em
-                    um só lugar.
+                    Gestão e agendamento de serviços para empresas, profissionais e clientes em um só lugar.
                   </p>
                 </div>
               </div>
@@ -62,36 +61,32 @@ export default function LoginPage() {
               <div className="lp__heroInfo">
                 <div className="lp__heroBadge">
                   <span className="lp__dot" />
-                  Agenda • equipe • serviços • clientes
+                  Agenda • equipe • recursos • serviços • clientes
                 </div>
 
                 <ul className="lp__heroList">
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Agenda organizada</b> por profissional, com horários e
-                      disponibilidade em um só fluxo.
+                      <b>Agenda inteligente</b> por profissional e recurso, com horários e disponibilidade em um só fluxo.
                     </div>
                   </li>
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Gestão da barbearia</b> com equipe, serviços, produtos e
-                      atendimentos.
+                      <b>Gestão do estabelecimento</b> com equipe, serviços, recursos, produtos e atendimentos.
                     </div>
                   </li>
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Área do barbeiro</b> para acompanhar agenda e rotina de
-                      atendimento.
+                      <b>Área do profissional</b> para acompanhar disponibilidade, agenda e rotina de atendimento.
                     </div>
                   </li>
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Experiência do cliente</b> para encontrar barbearias,
-                      profissionais e agendar rapidamente.
+                      <b>Experiência do cliente</b> para encontrar empresas, profissionais e serviços e agendar rapidamente.
                     </div>
                   </li>
                 </ul>
@@ -134,8 +129,7 @@ export default function LoginPage() {
               <footer className="lp__cardFooter">
                 <div className="lp__footerLine" />
                 <small className="lp__footerText">
-                  Ao entrar, você concorda com as políticas de uso e privacidade
-                  do sistema.
+                  Ao entrar, você concorda com as políticas de uso e privacidade do sistema.
                 </small>
               </footer>
             </div>
