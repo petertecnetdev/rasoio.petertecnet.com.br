@@ -2,8 +2,12 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import api from "../services/api";
-import { appId } from "../config";
+import { appId, appSlug } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
+
+const teamMembersPath = `/v1/apps/${encodeURIComponent(appSlug)}/team-members`;
+const establishmentPath = (slug) =>
+  `/v1/apps/${encodeURIComponent(appSlug)}/establishments/${encodeURIComponent(slug)}`;
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -21,17 +25,13 @@ export default function useEmployerCreate(slug) {
 
     (async () => {
       try {
-        const { data } = await api.get(
-          `/establishment/view/${encodeURIComponent(slug)}`,
-          {
-            params: { app_id: appId },
-            signal: controller.signal,
-          }
-        );
+        const { data } = await api.get(establishmentPath(slug), {
+          signal: controller.signal,
+        });
 
-        const resolved = data?.establishment || null;
-        if (!resolved || Number(resolved.app_id) !== Number(appId)) {
-          throw new Error("Esta empresa não pertence à Rasoio.");
+        const resolved = data?.data || null;
+        if (!resolved) {
+          throw new Error("Estabelecimento não encontrado.");
         }
 
         setEstablishment(resolved);
@@ -41,10 +41,7 @@ export default function useEmployerCreate(slug) {
         await Swal.fire({
           icon: "error",
           title: "Não foi possível abrir a equipe",
-          text:
-            error?.message === "Esta empresa não pertence à Rasoio."
-              ? error.message
-              : getApiErrorMessage(error, "Barbearia não encontrada."),
+          text: getApiErrorMessage(error, "Estabelecimento não encontrado."),
         });
       }
     })();
@@ -121,10 +118,12 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      const { data } = await api.post("/rasoio/employers", {
+      // The application slug in the canonical URL is the authoritative context.
+      // Do not send the legacy numeric app_id here: it can drift between databases
+      // and was causing otherwise valid collaborator associations to be rejected.
+      const { data } = await api.post(teamMembersPath, {
         user_id: user.id,
         establishment_id: establishment.id,
-        app_id: appId,
         role,
         permissions,
       });
@@ -175,7 +174,7 @@ export default function useEmployerCreate(slug) {
     const confirmation = await Swal.fire({
       icon: "warning",
       title: "Remover colaborador?",
-      text: "O profissional deixará de fazer parte da equipe desta barbearia.",
+      text: "O profissional deixará de fazer parte da equipe deste estabelecimento.",
       showCancelButton: true,
       confirmButtonText: "Remover",
       cancelButtonText: "Cancelar",
