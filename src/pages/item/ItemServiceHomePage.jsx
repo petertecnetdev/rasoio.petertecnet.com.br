@@ -47,6 +47,38 @@ export default function ItemServiceHomePage() {
     wizardEstablishment
   );
 
+  const schedulableEstablishmentIds = useMemo(
+    () =>
+      new Set(
+        (Array.isArray(employers) ? employers : [])
+          .map((employer) =>
+            employer?.establishment_id ??
+            employer?.establishmentId ??
+            employer?.entity_id ??
+            employer?.entityId ??
+            employer?.establishment?.id ??
+            null
+          )
+          .filter((id) => id != null)
+          .map((id) => String(id))
+      ),
+    [employers]
+  );
+
+  const visibleServiceItems = useMemo(
+    () =>
+      (Array.isArray(serviceItems) ? serviceItems : []).map((item) => {
+        const establishmentId =
+          item?.establishment_id ?? item?.entity_id ?? item?.entityId ?? item?.establishment?.id ?? null;
+        return {
+          ...item,
+          can_schedule:
+            establishmentId != null && schedulableEstablishmentIds.has(String(establishmentId)),
+        };
+      }),
+    [serviceItems, schedulableEstablishmentIds]
+  );
+
   const headerMeta = useMemo(
     () => [cityLabel, "Serviços de barbearia"].filter(Boolean),
     [cityLabel]
@@ -103,7 +135,7 @@ export default function ItemServiceHomePage() {
         <GlobalCarousel
           title="Serviços"
           subtitle="Cortes, barba e outros serviços disponíveis nas barbearias"
-          items={serviceItems}
+          items={visibleServiceItems}
           fmtBRL={(value) => value}
           navigate={navigate}
           openSchedulePopup={async (item) => {
@@ -127,6 +159,7 @@ export default function ItemServiceHomePage() {
               (employer) => Number(employer.establishment_id) === Number(establishmentId)
             );
 
+            if (!filteredEmployers.length) return;
             await openSchedulePopup({ service: item, filteredEmployers });
           }}
           showSchedule
