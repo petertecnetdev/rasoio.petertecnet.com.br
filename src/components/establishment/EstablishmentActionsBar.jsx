@@ -14,36 +14,45 @@ const actions = [
   {
     key: "team",
     label: "Equipe",
-    description: "Colaboradores",
+    description: "Profissionais e colaboradores",
     icon: "👥",
     path: (establishment) => `/establishment/employers/${establishment.slug}`,
+  },
+  {
+    key: "resources",
+    label: "Recursos",
+    description: "Salas, equipamentos e espaços",
+    icon: "🧩",
+    path: (establishment) => `/establishment/resources/${establishment.id}`,
   },
   {
     key: "services",
     label: "Serviços",
     description: "Duração e preços",
-    icon: "✂️",
+    icon: "🛎️",
     path: (establishment) => `/establishment/item/${establishment.slug}`,
   },
   {
     key: "products",
     label: "Produtos",
     description: "Produtos e estoque",
-    icon: "🧴",
+    icon: "📦",
     path: (establishment) => `/establishment/item/${establishment.slug}?type=product`,
   },
   {
     key: "edit",
     label: "Configurações",
-    description: "Dados da barbearia",
+    description: "Dados do estabelecimento",
     icon: "⚙️",
     path: (establishment) => `/establishment/update/${establishment.id}`,
   },
 ];
 
 export default function EstablishmentActionsBar({ establishment }) {
+  const name = establishment.fantasy || establishment.name || "estabelecimento";
+
   return (
-    <nav className="barbershop-actions" aria-label={`Gerenciar ${establishment.fantasy || establishment.name || "barbearia"}`}>
+    <nav className="barbershop-actions" aria-label={`Gerenciar ${name}`}>
       {actions.map((action) => (
         <Link key={action.key} to={action.path(establishment)} className="barbershop-action">
           <span className="barbershop-action-icon" aria-hidden="true">{action.icon}</span>
