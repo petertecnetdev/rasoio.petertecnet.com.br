@@ -174,7 +174,10 @@ export default function DashboardPage() {
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
     user?.name ||
     "usuário";
-  const owned = Array.isArray(establishments) ? establishments : [];
+  const owned = useMemo(
+    () => (Array.isArray(establishments) ? establishments : []),
+    [establishments]
+  );
   const requestedSlug = searchParams.get("establishment");
   const selected = useMemo(
     () => owned.find((establishment) => establishment.slug === requestedSlug) || null,
