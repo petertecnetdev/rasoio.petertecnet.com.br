@@ -1,10 +1,10 @@
 // src/hooks/useAppointment.js
 import { useCallback } from "react";
 import Swal from "sweetalert2";
-import axios from "axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
+import schedulingApi from "../services/schedulingApi";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -21,55 +21,36 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
     }
   };
 
-  // ✅ padroniza SEMPRE como YYYY-MM-DD (evita UTC quebrando o dia)
   const normalizeDateToYMD = (date) => {
     if (!date) return null;
-
-    if (typeof date === "string") {
-      // aceita "YYYY-MM-DD" ou "YYYY-MM-DDTHH:mm..."
-      return date.slice(0, 10);
-    }
-
-    // caso venha Date/objeto
+    if (typeof date === "string") return date.slice(0, 10);
     return dayjs(date).tz(TZ).format("YYYY-MM-DD");
   };
 
   const loadAvailableTimes = useCallback(
-    async (date, employer, totalDuration) => {
+    async (date, employer, totalDuration, resourceIds = []) => {
       try {
-        const userToken = getToken();
-        if (!userToken || !employer?.id || !date) return [];
+        if (!getToken() || !establishment?.id || !date) return [];
+        const providerId = employer?.employer_id ?? employer?.id ?? null;
+        if (!providerId && !resourceIds.length) return [];
 
         const dateYMD = normalizeDateToYMD(date);
-        if (!dateYMD) return [];
-
-        const payload = {
-          employer_id: employer.id,
-          // ✅ IMPORTANTÍSSIMO: SEMPRE "YYYY-MM-DD"
+        const { data } = await schedulingApi.availability.times({
+          establishment_id: establishment.id,
+          provider_id: providerId || undefined,
+          resource_ids: resourceIds.length ? resourceIds : undefined,
           date: dateYMD,
-          duration: Number(totalDuration || 0),
-        };
+          duration: Number(totalDuration || 30),
+        });
 
-        const res = await axios.post(
-          `${apiBaseUrl}/employer/available-times`,
-          payload,
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        return Array.isArray(res.data?.available_times)
-          ? res.data.available_times
+        return Array.isArray(data?.data?.available_times)
+          ? data.data.available_times
           : [];
       } catch {
         return [];
       }
     },
-    [apiBaseUrl]
+    [establishment]
   );
 
   const handleCreateAppointment = useCallback(
@@ -89,33 +70,39 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         return null;
       }
 
-      try {
-        let selectedServices = Array.isArray(initialService)
-          ? [...initialService]
-          : [initialService];
+      if (!establishment?.id) {
+        await Swal.fire({
+          icon: "error",
+          title: "Estabelecimento não identificado",
+          text: "Não foi possível identificar onde o serviço será realizado.",
+        });
+        return false;
+      }
 
-        let selectedEmployer = preselectedEmployer;
-        let selectedDate = null;
-        let selectedTime = null;
+      try {
+        const selectedServices = Array.isArray(initialService)
+          ? initialService.filter(Boolean)
+          : [initialService].filter(Boolean);
+        if (!selectedServices.length) return false;
 
         const { value: servicesConfirmed } = await Swal.fire({
-          title: "Escolha os serviços",
+          title: "Serviços selecionados",
           background: "#0a0a0c",
           color: "#fff",
           html: `
             <div style="text-align:left;max-height:250px;overflow-y:auto;padding:10px;">
               ${selectedServices
                 .map(
-                  (s, i) => `
-                  <div>
-                    <input type="checkbox" id="srv-${i}" checked>
-                    <label for="srv-${i}">
-                      ${s.name || s.title} - R$ ${parseFloat(s.price || 0)
+                  (service) => `
+                    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">
+                      <strong>${service.name || service.title}</strong><br/>
+                      <small>${parseInt(service?.duration, 10) || 30} min · R$ ${parseFloat(
+                        service.price || 0
+                      )
                         .toFixed(2)
-                        .replace(".", ",")}
-                    </label>
-                  </div>
-                `
+                        .replace(".", ",")}</small>
+                    </div>
+                  `
                 )
                 .join("")}
             </div>
@@ -125,77 +112,71 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           cancelButtonText: "Cancelar",
           confirmButtonColor: "#00ffcc",
           cancelButtonColor: "#ff5555",
-          preConfirm: () => selectedServices,
+          preConfirm: () => true,
         });
-
         if (!servicesConfirmed) return false;
 
+        let selectedEmployer = preselectedEmployer;
+        let selectedResourceId = null;
+
         if (!selectedEmployer) {
-          const { value: employer } = await Swal.fire({
+          const { data } = await schedulingApi.resources.list(establishment.id);
+          const professionals = Array.isArray(data?.data)
+            ? data.data.filter(
+                (resource) => resource.type === "professional" && resource.employer_id
+              )
+            : [];
+
+          if (!professionals.length) {
+            await Swal.fire({
+              background: "#0a0a0c",
+              color: "#fff",
+              icon: "warning",
+              title: "Sem profissionais disponíveis",
+              text: "Este estabelecimento ainda não possui profissionais disponíveis para agendamento.",
+            });
+            return false;
+          }
+
+          const { value: professional } = await Swal.fire({
             title: "Escolha o profissional",
             background: "#0a0a0c",
             color: "#fff",
-            html: `<div id="employers" style="text-align:left;max-height:250px;overflow-y:auto;padding:10px;">Carregando...</div>`,
-            confirmButtonText: "Avançar",
+            input: "select",
+            inputOptions: professionals.reduce((options, resource) => {
+              const user = resource?.employer?.user || {};
+              const name =
+                `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+                user.user_name ||
+                resource.name ||
+                "Profissional";
+              options[String(resource.id)] = name;
+              return options;
+            }, {}),
+            inputPlaceholder: "Selecione",
             showCancelButton: true,
+            confirmButtonText: "Avançar",
             cancelButtonText: "Voltar",
-            confirmButtonColor: "#00ffcc",
-            cancelButtonColor: "#ff5555",
-            didOpen: async () => {
-              const res = await axios.get(`${apiBaseUrl}/employer/list`, {
-                headers: { Authorization: `Bearer ${userToken}` },
-              });
-
-              const container = Swal.getPopup().querySelector("#employers");
-
-              container.innerHTML = res.data
-                .map((emp) => {
-                  const isSelf = Number(emp.id) === Number(authUser.id);
-
-                  return `
-                    <div style="margin-bottom:8px;">
-                      <input 
-                        type="radio" 
-                        name="emp" 
-                        id="emp-${emp.id}"
-                        value='${JSON.stringify(emp)}'
-                        ${isSelf ? "disabled" : ""}
-                      >
-                      <label for="emp-${emp.id}" style="${
-                    isSelf ? "color:#ff7777;font-style:italic;" : ""
-                  }">
-                        ${emp.name}
-                        ${
-                          isSelf
-                            ? " (você não pode agendar consigo mesmo)"
-                            : ""
-                        }
-                      </label>
-                    </div>
-                  `;
-                })
-                .join("");
-            },
-            preConfirm: () => {
-              const checked = Swal.getPopup().querySelector(
-                "input[name='emp']:checked"
-              );
-              return checked ? JSON.parse(checked.value) : null;
-            },
+            inputValidator: (value) => (!value ? "Selecione um profissional." : undefined),
           });
 
-          if (!employer) return false;
-          selectedEmployer = employer;
+          if (!professional) return false;
+          const resource = professionals.find(
+            (candidate) => String(candidate.id) === String(professional)
+          );
+          selectedEmployer = resource?.employer || null;
+          selectedResourceId = resource?.id || null;
         }
 
-        if (Number(selectedEmployer.id) === Number(authUser.id)) {
+        const providerId = selectedEmployer?.employer_id ?? selectedEmployer?.id ?? null;
+        const providerUserId = selectedEmployer?.user_id ?? selectedEmployer?.user?.id ?? null;
+        if (providerUserId && Number(providerUserId) === Number(authUser.id)) {
           await Swal.fire({
             background: "#0a0a0c",
             color: "#fff",
             icon: "warning",
             title: "Agendamento inválido",
-            text: "Você não pode criar um agendamento onde o profissional e o cliente são a mesma pessoa.",
-            confirmButtonColor: "#ff5555",
+            text: "Você não pode criar um agendamento consigo mesmo como cliente e profissional.",
           });
           return false;
         }
@@ -205,25 +186,22 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           background: "#0a0a0c",
           color: "#fff",
           input: "date",
+          inputAttributes: { min: dayjs().tz(TZ).format("YYYY-MM-DD") },
           showCancelButton: true,
           confirmButtonColor: "#00ffcc",
         });
-
         if (!date) return false;
 
-        // ✅ Garante YYYY-MM-DD limpo
-        selectedDate = normalizeDateToYMD(date);
-
-        // ✅ duração com fallback (se duration vier vazio)
+        const selectedDate = normalizeDateToYMD(date);
         const totalDuration = selectedServices.reduce(
-          (sum, s) => sum + (parseInt(s?.duration, 10) || 30),
+          (sum, service) => sum + (parseInt(service?.duration, 10) || 30),
           0
         );
-
         const availableTimes = await loadAvailableTimes(
           selectedDate,
           selectedEmployer,
-          totalDuration
+          totalDuration,
+          selectedResourceId ? [selectedResourceId] : []
         );
 
         if (!availableTimes.length) {
@@ -237,92 +215,68 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           return false;
         }
 
-        const { value: time } = await Swal.fire({
+        const { value: selectedTime } = await Swal.fire({
           title: "Escolha o horário",
           background: "#0a0a0c",
           color: "#fff",
-          html: `
-            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
-              ${availableTimes
-                .map(
-                  (t) =>
-                    `<button type="button" class="swal2-confirm swal2-styled" data-time="${t}">${t}</button>`
-                )
-                .join("")}
-            </div>
-          `,
+          input: "select",
+          inputOptions: availableTimes.reduce((options, time) => {
+            options[time] = time;
+            return options;
+          }, {}),
+          inputPlaceholder: "Selecione",
           showCancelButton: true,
           cancelButtonText: "Voltar",
-          didOpen: () => {
-            Swal.getPopup()
-              .querySelectorAll("[data-time]")
-              .forEach((btn) =>
-                btn.addEventListener("click", () =>
-                  Swal.clickConfirm(btn.dataset.time)
-                )
-              );
-          },
-          preConfirm: (v) => v,
+          inputValidator: (value) => (!value ? "Selecione um horário." : undefined),
         });
+        if (!selectedTime) return false;
 
-        if (!time) return false;
-        selectedTime = time;
-
-        // ✅ ISO completo com timezone SP (resolve 100% UTC bugs)
-        const datetimeSP = dayjs.tz(
+        const scheduledAt = dayjs.tz(
           `${selectedDate} ${selectedTime}`,
           "YYYY-MM-DD HH:mm",
           TZ
         );
 
-        const payload = {
-          mode: "appointment",
-          app_id: appId,
-          entity_name: "establishment",
-          entity_id: establishment?.id,
-          items: selectedServices.map((s) => ({
-            item_id: Number(s?.item_id ?? s?.id),
+        await schedulingApi.appointments.create({
+          establishment_id: establishment.id,
+          items: selectedServices.map((service) => ({
+            item_id: Number(service?.item_id ?? service?.id),
             quantity: 1,
           })),
-          customer_name: authUser?.name || authUser?.first_name || "Cliente App",
-          customer_phone: authUser?.phone ?? null,
-
-          // ✅ MUITO IMPORTANTE:
-          // envia timezone (-03:00)
-          order_datetime: datetimeSP.format("YYYY-MM-DDTHH:mm:ssZ"),
-
-          attendant_id: selectedEmployer.id,
-          origin: "App",
-          fulfillment: "dine-in",
-          payment_status: "pending",
+          provider_id: providerId || undefined,
+          resource_ids: selectedResourceId ? [selectedResourceId] : undefined,
+          scheduled_at: scheduledAt.format("YYYY-MM-DDTHH:mm:ssZ"),
+          customer_name:
+            `${authUser.first_name || ""} ${authUser.last_name || ""}`.trim() ||
+            authUser.user_name ||
+            "Cliente",
+          customer_phone: authUser.phone || null,
+          customer_email: authUser.email || null,
           payment_method: "Pix",
           notes: "Agendamento feito pelo aplicativo.",
-        };
-
-        await axios.post(`${apiBaseUrl}/order`, payload, {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
         });
 
         await Swal.fire({
           background: "#0a0a0c",
           color: "#fff",
           icon: "success",
-          title: "Agendamento confirmado",
+          title: "Agendamento solicitado",
+          text: "Seu horário foi registrado e está aguardando confirmação.",
           confirmButtonColor: "#00ffcc",
         });
 
         return true;
       } catch (error) {
+        const validationMessage = error?.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().filter(Boolean)[0]
+          : null;
         await Swal.fire({
           background: "#0a0a0c",
           color: "#fff",
           icon: "error",
           title: "Erro",
           text:
+            validationMessage ||
             error?.response?.data?.message ||
             error?.message ||
             "Erro ao realizar o agendamento.",
@@ -330,7 +284,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         return false;
       }
     },
-    [apiBaseUrl, appId, establishment, loadAvailableTimes]
+    [establishment, loadAvailableTimes]
   );
 
   return { loadAvailableTimes, handleCreateAppointment };
