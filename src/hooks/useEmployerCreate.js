@@ -11,7 +11,7 @@ const teamMembersPath = `${appContextPath}/team-members`;
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
   const [users, setUsers] = useState([]);
-  const [role, setRole] = useState("barbeiro");
+  const [role, setRole] = useState("profissional");
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -34,9 +34,6 @@ export default function useEmployerCreate(slug) {
       setLoadError("");
 
       try {
-        // Resolve the establishment inside the generic application context.
-        // Using /me/establishments also allows the owner to manage the team
-        // before the establishment is publicly published.
         const { data } = await api.get(`${appContextPath}/me/establishments`, {
           signal: controller.signal,
         });
@@ -101,23 +98,31 @@ export default function useEmployerCreate(slug) {
       setUsers([]);
       setErrors({});
 
-      const [usersResponse, employersResponse] = await Promise.all([
-        api.post("/user/find-for-employer", {
-          ...payload,
-          app_id: appId,
-          establishment_id: establishment.id,
-        }),
-        api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`),
-      ]);
+      const usersResponse = await api.post("/user/find-for-employer", {
+        ...payload,
+        app_id: appId,
+        establishment_id: establishment.id,
+      });
 
       const foundUsers = Array.isArray(usersResponse?.data?.users)
         ? usersResponse.data.users
         : [];
-      const establishmentEmployers = Array.isArray(
-        employersResponse?.data?.employers
-      )
-        ? employersResponse.data.employers
-        : [];
+
+      // The compatibility team read must not block user search. If it fails,
+      // the generic create endpoint remains authoritative and will return 409
+      // for an already-linked user.
+      let establishmentEmployers = [];
+      try {
+        const employersResponse = await api.get(
+          `/employer/list-by-entity/${encodeURIComponent(slug)}`,
+          { params: { app_id: appId } }
+        );
+        establishmentEmployers = Array.isArray(employersResponse?.data?.employers)
+          ? employersResponse.data.employers
+          : [];
+      } catch (error) {
+        if (isRequestCanceled(error)) return;
+      }
 
       const employerByUserId = new Map(
         establishmentEmployers.map((employer) => [
@@ -208,7 +213,7 @@ export default function useEmployerCreate(slug) {
     const confirmation = await Swal.fire({
       icon: "warning",
       title: "Remover colaborador?",
-      text: "O profissional deixará de fazer parte da equipe desta barbearia.",
+      text: "O profissional deixará de fazer parte da equipe deste estabelecimento.",
       showCancelButton: true,
       confirmButtonText: "Remover",
       cancelButtonText: "Cancelar",
