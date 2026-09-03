@@ -16,35 +16,28 @@ const getFirstFileUrl = (files, types = []) => {
 };
 
 const normalizeItemType = (rawType, item) => {
-  // tenta inferir por campos comuns
   const t = rawType ?? item?.item_type ?? item?.kind ?? item?.category?.type ?? item?.category_type;
 
-  // booleans / flags
   if (item?.is_product === true || item?.isProduct === true) return "product";
   if (item?.is_service === true || item?.isService === true) return "service";
 
-  // ids que podem existir em payloads diferentes
   if (item?.product_id || item?.productId) return "product";
   if (item?.service_id || item?.serviceId) return "service";
 
-  // números (muito comum em APIs)
   if (t === 1 || t === "1") return "service";
   if (t === 2 || t === "2") return "product";
 
-  // string
   const s = String(t ?? "").trim().toLowerCase();
 
   if (!s) return "";
 
-  // variações comuns
   if (s === "product" || s === "products" || s.includes("prod")) return "product";
   if (s === "service" || s === "services" || s.includes("serv")) return "service";
 
-  // PT/ES comuns
   if (s === "produto" || s === "produtos") return "product";
   if (s === "servico" || s === "serviços" || s === "servicos") return "service";
 
-  return s; // fallback
+  return s;
 };
 
 const distributeItems = (items) => {
@@ -65,7 +58,10 @@ const distributeItems = (items) => {
   let lastEstId = null;
 
   while (Object.keys(groups).length) {
-    const candidates = Object.keys(groups).filter((id) => id !== lastEstId && groups[id]?.length);
+    const previousEstId = lastEstId;
+    const candidates = Object.keys(groups).filter(
+      (id) => id !== previousEstId && groups[id]?.length
+    );
 
     const selectedId = candidates.length
       ? candidates[Math.floor(Math.random() * candidates.length)]
@@ -101,7 +97,6 @@ export default function useHome(apiBaseUrl, appId) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // lê sempre do localStorage, mas memoiza a string do query para evitar refetch “sem mudança real”
   const city = localStorage.getItem("selectedCity") || "";
   const uf = localStorage.getItem("selectedUF") || "";
 
@@ -126,7 +121,6 @@ export default function useHome(apiBaseUrl, appId) {
 
         if (!active) return;
 
-        // Mapeia establishments
         const mappedEstablishments = (estRes.data?.establishments || []).map((est) => {
           const logo = getFileUrlByType(est?.files, "logo");
           const bg = getFileUrlByType(est?.files, "background");
@@ -142,7 +136,6 @@ export default function useHome(apiBaseUrl, appId) {
           };
         });
 
-        // Mapeia employers
         const mappedEmployers = (empRes.data?.employers || []).map((emp) => {
           const firstName = emp?.user?.first_name || "";
           const lastName = emp?.user?.last_name || "";
@@ -162,7 +155,6 @@ export default function useHome(apiBaseUrl, appId) {
           };
         });
 
-        // Mapeia items (serviços + produtos)
         const mappedItems = (itemRes.data?.items || []).map((item) => {
           const normalizedType = normalizeItemType(item?.type, item);
 
@@ -184,7 +176,6 @@ export default function useHome(apiBaseUrl, appId) {
 
           return {
             ...item,
-            // garante ids consistentes p/ filtros e wizard
             establishment_id: estId,
             entity_id: item?.entity_id ?? item?.entityId ?? estId ?? null,
             type: normalizedType,
