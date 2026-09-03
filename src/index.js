@@ -13,6 +13,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 import "./styles/appointment-step1-compact.css";
 import "./styles/appointment-wizard-responsive.css";
+import "./styles/peter-branding-bridge.css";
 
 installGlobalImageFallbacks();
 installPasswordFieldEnhancer();
