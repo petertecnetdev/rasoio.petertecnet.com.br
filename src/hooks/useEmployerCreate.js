@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import api from "../services/api";
+import schedulingApi from "../services/schedulingApi";
 import { appId } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
   const [users, setUsers] = useState([]);
-  const [role, setRole] = useState("barbeiro");
+  const [role, setRole] = useState("professional");
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -31,7 +32,7 @@ export default function useEmployerCreate(slug) {
 
         const resolved = data?.establishment || null;
         if (!resolved || Number(resolved.app_id) !== Number(appId)) {
-          throw new Error("Esta empresa não pertence à Rasoio.");
+          throw new Error("Este estabelecimento não pertence à Rasoio.");
         }
 
         setEstablishment(resolved);
@@ -42,9 +43,9 @@ export default function useEmployerCreate(slug) {
           icon: "error",
           title: "Não foi possível abrir a equipe",
           text:
-            error?.message === "Esta empresa não pertence à Rasoio."
+            error?.message === "Este estabelecimento não pertence à Rasoio."
               ? error.message
-              : getApiErrorMessage(error, "Barbearia não encontrada."),
+              : getApiErrorMessage(error, "Estabelecimento não encontrado."),
         });
       }
     })();
@@ -67,26 +68,26 @@ export default function useEmployerCreate(slug) {
       setUsers([]);
       setErrors({});
 
-      const [usersResponse, employersResponse] = await Promise.all([
+      const [usersResponse, professionalsResponse] = await Promise.all([
         api.post("/user/find-for-employer", {
           ...payload,
           app_id: appId,
           establishment_id: establishment?.id,
         }),
-        api.get(`/employer/list-by-entity/${encodeURIComponent(slug)}`),
+        schedulingApi.professionals.list(establishment.id),
       ]);
 
       const foundUsers = Array.isArray(usersResponse?.data?.users)
         ? usersResponse.data.users
         : [];
-      const establishmentEmployers = Array.isArray(
-        employersResponse?.data?.employers
+      const establishmentProfessionals = Array.isArray(
+        professionalsResponse?.data?.data
       )
-        ? employersResponse.data.employers
+        ? professionalsResponse.data.data
         : [];
 
       const employerByUserId = new Map(
-        establishmentEmployers.map((employer) => [
+        establishmentProfessionals.map((employer) => [
           Number(employer?.user_id),
           employer,
         ])
@@ -121,24 +122,21 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      const { data } = await api.post("/rasoio/employers", {
+      const { data } = await schedulingApi.professionals.create({
         user_id: user.id,
         establishment_id: establishment.id,
-        app_id: appId,
         role,
         permissions,
       });
 
+      const employer = data?.data || null;
+
       await Swal.fire({
         icon: "success",
-        title: data?.is_owner
-          ? "Proprietário adicionado à equipe"
-          : "Colaborador adicionado",
+        title: "Profissional adicionado",
         text:
           data?.message ||
-          (data?.is_owner
-            ? "O proprietário agora também pode atender clientes e possuir agenda própria."
-            : "O profissional agora faz parte da equipe."),
+          "O profissional agora faz parte da equipe e possui um recurso agendável associado.",
       });
 
       setUsers((prev) =>
@@ -147,8 +145,7 @@ export default function useEmployerCreate(slug) {
             ? {
                 ...candidate,
                 is_employer: true,
-                is_owner: Boolean(data?.is_owner),
-                employer: data?.employer,
+                employer,
                 establishments: [establishment],
               }
             : candidate
@@ -161,7 +158,7 @@ export default function useEmployerCreate(slug) {
       await Swal.fire({
         icon: "error",
         title: "Não foi possível adicionar",
-        text: getApiErrorMessage(error, "Erro ao associar colaborador."),
+        text: getApiErrorMessage(error, "Erro ao associar profissional."),
       });
       return null;
     } finally {
@@ -174,8 +171,8 @@ export default function useEmployerCreate(slug) {
 
     const confirmation = await Swal.fire({
       icon: "warning",
-      title: "Remover colaborador?",
-      text: "O profissional deixará de fazer parte da equipe desta barbearia.",
+      title: "Remover profissional?",
+      text: "O profissional deixará de fazer parte da equipe deste estabelecimento e seu recurso agendável será desativado.",
       showCancelButton: true,
       confirmButtonText: "Remover",
       cancelButtonText: "Cancelar",
@@ -187,15 +184,11 @@ export default function useEmployerCreate(slug) {
     try {
       setLoading(true);
 
-      const { data } = await api.post("/employer/detach", {
-        employer_id: employerId,
-        establishment_id: establishment.id,
-        app_id: appId,
-      });
+      const { data } = await schedulingApi.professionals.remove(employerId);
 
       await Swal.fire({
         icon: "success",
-        title: "Colaborador removido",
+        title: "Profissional removido",
         text: data?.message || "O vínculo foi removido.",
       });
 
