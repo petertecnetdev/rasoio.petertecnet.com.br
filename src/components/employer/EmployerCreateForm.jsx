@@ -10,24 +10,21 @@ function parseSearchInput(value) {
 
   const onlyNumbers = v.replace(/\D/g, "");
 
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-    return { email: v };
-  }
-
-  if (onlyNumbers.length === 11) {
-    return { cpf: onlyNumbers };
-  }
-
-  if (onlyNumbers.length >= 10 && onlyNumbers.length <= 13) {
-    return { phone: onlyNumbers };
-  }
-
-  if (v.startsWith("@")) {
-    return { user_name: v.replace("@", "") };
-  }
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return { email: v };
+  if (onlyNumbers.length === 11) return { cpf: onlyNumbers };
+  if (onlyNumbers.length >= 10 && onlyNumbers.length <= 13) return { phone: onlyNumbers };
+  if (v.startsWith("@")) return { user_name: v.replace("@", "") };
 
   return { first_name: v };
 }
+
+const ROLE_OPTIONS = [
+  ["professional", "Profissional / prestador"],
+  ["manager", "Gerente"],
+  ["receptionist", "Recepção"],
+  ["assistant", "Assistente"],
+  ["other", "Outra função"],
+];
 
 export default function EmployerCreateForm({
   users,
@@ -35,8 +32,6 @@ export default function EmployerCreateForm({
   loading,
   searching,
   errors,
-  imageUrl,
-  handleImgError,
   onSearch,
   onAssociate,
   onDetach,
@@ -48,18 +43,28 @@ export default function EmployerCreateForm({
     <>
       <Card className="p-4 mb-4">
         <Form
-          onSubmit={(e) => {
-            e.preventDefault();
+          onSubmit={(event) => {
+            event.preventDefault();
             onSearch(parseSearchInput(query));
           }}
         >
           <Row className="gy-3">
-            <Col md={12}>
+            <Col md={8}>
+              <Form.Label>Localizar usuário</Form.Label>
               <Form.Control
                 placeholder="Nome, e-mail, CPF, telefone ou @username"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(event) => setQuery(event.target.value)}
               />
+            </Col>
+            <Col md={4}>
+              <Form.Label>Função no estabelecimento</Form.Label>
+              <Form.Select value={role} onChange={(event) => setRole(event.target.value)}>
+                {ROLE_OPTIONS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </Form.Select>
+              {errors?.role?.[0] && <Form.Text className="text-danger">{errors.role[0]}</Form.Text>}
             </Col>
           </Row>
 
@@ -102,7 +107,7 @@ export default function EmployerCreateForm({
 
                       <div className="mt-2 d-flex justify-content-center gap-2 flex-wrap">
                         {isLinked ? (
-                          <Badge bg="info">Colaborador desta barbearia</Badge>
+                          <Badge bg="info">Profissional deste estabelecimento</Badge>
                         ) : (
                           <Badge bg="secondary">Não vinculado</Badge>
                         )}
@@ -116,7 +121,7 @@ export default function EmployerCreateForm({
                             disabled={loading}
                             onClick={() => onDetach(linkedEmployer.id)}
                           >
-                            {loading ? "Removendo..." : "Remover colaborador"}
+                            {loading ? "Removendo..." : "Remover profissional"}
                           </GlobalButton>
                         ) : (
                           <GlobalButton
@@ -125,7 +130,7 @@ export default function EmployerCreateForm({
                             disabled={loading}
                             onClick={() => onAssociate(user)}
                           >
-                            {loading ? "Associando..." : "Associar"}
+                            {loading ? "Associando..." : "Associar profissional"}
                           </GlobalButton>
                         )}
                       </div>
