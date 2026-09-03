@@ -5,7 +5,7 @@ import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
 
-async function requestTeamData(slug, signal) {
+async function requestOwnedEstablishment(slug, signal) {
   if (!slug) {
     throw new Error("Estabelecimento não informado.");
   }
@@ -30,8 +30,10 @@ async function requestTeamData(slug, signal) {
     );
   }
 
-  // Workforce read still uses the compatibility endpoint while the generic
-  // /v1/apps/{application}/team-members read contract is being completed.
+  return establishment;
+}
+
+async function requestEmployers(slug, signal) {
   const employersResponse = await api.get(
     `/employer/list-by-entity/${encodeURIComponent(slug)}`,
     {
@@ -40,14 +42,12 @@ async function requestTeamData(slug, signal) {
     }
   );
 
-  const employers = Array.isArray(employersResponse?.data?.employers)
+  return Array.isArray(employersResponse?.data?.employers)
     ? employersResponse.data.employers
     : [];
-
-  return { establishment, employers };
 }
 
-function resolveLoadError(error) {
+function resolveEstablishmentError(error) {
   if (error?.message === "Estabelecimento não informado.") {
     return error.message;
   }
@@ -56,7 +56,17 @@ function resolveLoadError(error) {
     return error.message;
   }
 
-  return getApiErrorMessage(error, "Erro ao carregar colaboradores da equipe.");
+  return getApiErrorMessage(
+    error,
+    "Não foi possível carregar o estabelecimento para gerenciar a equipe."
+  );
+}
+
+function resolveEmployersError(error) {
+  return getApiErrorMessage(
+    error,
+    "O estabelecimento foi carregado, mas não foi possível atualizar a lista de colaboradores. Você ainda pode adicionar um colaborador."
+  );
 }
 
 export default function useEstablishmentEmployersBySlug(slug) {
@@ -65,50 +75,56 @@ export default function useEstablishmentEmployersBySlug(slug) {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setApiError(null);
-
-    requestTeamData(slug, controller.signal)
-      .then((result) => {
-        if (controller.signal.aborted) return;
-        setEstablishment(result.establishment);
-        setEmployers(result.employers);
-      })
-      .catch((error) => {
-        if (isRequestCanceled(error) || controller.signal.aborted) return;
-        setEstablishment(null);
-        setEmployers([]);
-        setApiError(resolveLoadError(error));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, [slug]);
-
-  const refetch = async () => {
+  const loadData = async (signal) => {
     setLoading(true);
     setApiError(null);
 
     try {
-      const result = await requestTeamData(slug);
-      setEstablishment(result.establishment);
-      setEmployers(result.employers);
-      return result;
+      const resolvedEstablishment = await requestOwnedEstablishment(slug, signal);
+      if (signal?.aborted) return null;
+
+      // Keep the management page available as soon as ownership is resolved.
+      // A failure in the legacy workforce read endpoint must never blank the page
+      // or prevent the owner from opening the collaborator creation flow.
+      setEstablishment(resolvedEstablishment);
+
+      try {
+        const resolvedEmployers = await requestEmployers(slug, signal);
+        if (signal?.aborted) return null;
+        setEmployers(resolvedEmployers);
+        return {
+          establishment: resolvedEstablishment,
+          employers: resolvedEmployers,
+        };
+      } catch (error) {
+        if (isRequestCanceled(error) || signal?.aborted) return null;
+        setEmployers([]);
+        setApiError(resolveEmployersError(error));
+        return {
+          establishment: resolvedEstablishment,
+          employers: [],
+        };
+      }
     } catch (error) {
-      if (isRequestCanceled(error)) return null;
+      if (isRequestCanceled(error) || signal?.aborted) return null;
       setEstablishment(null);
       setEmployers([]);
-      setApiError(resolveLoadError(error));
+      setApiError(resolveEstablishmentError(error));
       return null;
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadData(controller.signal);
+    return () => controller.abort();
+    // loadData intentionally follows the current route slug only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
+
+  const refetch = async () => loadData();
 
   return {
     establishment,
