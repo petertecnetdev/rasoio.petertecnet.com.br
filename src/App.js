@@ -70,6 +70,7 @@ const EstablishmentMyPage = lazy(() => import("./pages/establishment/Establishme
 const EstablishmentEmployersPage = lazy(() => import("./pages/establishment/EstablishmentEmployersPage"));
 const EstablishmentItemPage = lazy(() => import("./pages/establishment/EstablishmentItemPage"));
 const EstablishmentHomePage = lazy(() => import("./pages/establishment/EstablishmentHomePage"));
+const EstablishmentResourcesPage = lazy(() => import("./pages/establishment/EstablishmentResourcesPage"));
 
 export const AuthContext = createContext(null);
 
@@ -247,6 +248,7 @@ function AppInner() {
               <Route path="/establishment/orders/:slug" element={protectedRoute(<EstablishmentOrderPage />)} />
               <Route path="/establishment/item/:slug" element={protectedRoute(<EstablishmentItemPage />)} />
               <Route path="/establishment/employers/:slug" element={protectedRoute(<EstablishmentEmployersPage />)} />
+              <Route path="/establishment/resources/:id" element={protectedRoute(<EstablishmentResourcesPage />)} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
