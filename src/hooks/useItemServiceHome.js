@@ -18,8 +18,9 @@ const distributeItems = (items) => {
   let lastEstId = null;
 
   while (Object.keys(groups).length) {
+    const previousEstId = lastEstId;
     const candidates = Object.keys(groups).filter(
-      (id) => id !== lastEstId && groups[id].length
+      (id) => id !== previousEstId && groups[id].length
     );
 
     const selectedId = candidates.length
