@@ -16,7 +16,7 @@ export default function HomeGrid({ loading, error, items, onClick }) {
     );
 
   if (error) return <div className="hp-empty">{error}</div>;
-  if (items.length === 0) return <div className="hp-empty">Nenhuma barbearia encontrada.</div>;
+  if (items.length === 0) return <div className="hp-empty">Nenhum estabelecimento encontrado.</div>;
 
   return (
     <Row className="hp-grid">
