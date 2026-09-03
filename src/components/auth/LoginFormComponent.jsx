@@ -11,6 +11,7 @@ import "./LoginFormComponent.css";
 export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const googleClientId = String(process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
 
   const canSubmit = useMemo(
@@ -83,11 +84,11 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
 
         <div className="lfg__field">
           <label className="lfg__label" htmlFor="login-password">Senha</label>
-          <div className="lfg__inputWrap">
+          <div className="lfg__inputWrap lfg__inputWrap--password">
             <span className="lfg__icon" aria-hidden="true">🔒</span>
             <Form.Control
               id="login-password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Digite sua senha"
               className="lfg__input"
@@ -96,6 +97,16 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
               disabled={loading}
               required
             />
+            <button
+              type="button"
+              className="lfg__passwordToggle"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              aria-pressed={showPassword}
+              disabled={loading}
+            >
+              {showPassword ? "Ocultar" : "Mostrar"}
+            </button>
           </div>
         </div>
 

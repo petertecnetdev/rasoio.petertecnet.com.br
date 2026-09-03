@@ -81,6 +81,46 @@
   transition: all 0.18s ease;
 }
 
+.lfg__inputWrap--password .lfg__input {
+  padding-right: 5.75rem !important;
+}
+
+.lfg__passwordToggle {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  right: 10px;
+  min-width: 68px;
+  min-height: 36px;
+  padding: 0 10px;
+  transform: translateY(-50%);
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 10px;
+  background: rgba(3, 22, 32, 0.86);
+  color: rgba(211, 248, 255, 0.9);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.lfg__passwordToggle:hover:not(:disabled) {
+  border-color: rgba(0, 229, 255, 0.42);
+  background: rgba(0, 157, 255, 0.14);
+  color: #fff;
+}
+
+.lfg__passwordToggle:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.72);
+  outline-offset: 2px;
+}
+
+.lfg__passwordToggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .lfg__input::placeholder {
   color: rgba(255, 255, 255, 0.50);
 }
@@ -282,6 +322,18 @@
 @media (max-width: 480px) {
   .lfg__submit {
     height: 46px;
+  }
+
+  .lfg__passwordToggle {
+    min-width: 64px;
+    min-height: 34px;
+    right: 8px;
+    padding-inline: 8px;
+    font-size: 0.72rem;
+  }
+
+  .lfg__inputWrap--password .lfg__input {
+    padding-right: 5.35rem !important;
   }
 
   .google-auth-wrapper,
