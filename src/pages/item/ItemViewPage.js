@@ -29,6 +29,7 @@ export default function ItemViewPage() {
   const { loadAvailableTimes, handleCreateAppointment } = useAppointment(apiBaseUrl, appId, token, wizardEstablishment);
   const whatsappLink = useWhatsappLink(establishment || item || null);
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
+  const hasSchedulableEmployers = Array.isArray(employers) && employers.length > 0;
 
   const isProduct = useMemo(() => {
     const t = item?.item_type || item?.type || null;
@@ -42,10 +43,10 @@ export default function ItemViewPage() {
   const estLogo = establishment?.images?.logo || establishment?.logo || establishment?.files?.find?.((f) => f?.type === "logo")?.public_url || null;
 
   const handleOpenScheduleFromItem = useCallback(async () => {
-    if (isProduct) return;
-    try { await openSchedulePopup({ service: item, establishment: establishment || null, filteredEmployers: Array.isArray(employers) ? employers : [] }); }
+    if (isProduct || !hasSchedulableEmployers) return;
+    try { await openSchedulePopup({ service: item, establishment: establishment || null, filteredEmployers: employers }); }
     catch (e) { console.error(e); Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." }); }
-  }, [openSchedulePopup, item, establishment, employers, isProduct]);
+  }, [openSchedulePopup, item, establishment, employers, isProduct, hasSchedulableEmployers]);
 
   if (isLoading) return <div className="iv-state">Carregando item…</div>;
   if (!item || error) return <div className="iv-state">{error?.message || error?.error || (typeof error === "string" ? error : "Item indisponível.")}</div>;
@@ -76,23 +77,23 @@ export default function ItemViewPage() {
               <p className="iv-description">{description}</p>
               <div className="iv-purchaseRow"><div className="iv-price"><small>Valor</small><strong>{price}</strong></div>{duration && <div className="iv-duration"><FaClock /><span><small>Duração</small><strong>{duration}</strong></span></div>}</div>
               <div className="iv-actions">
-                {!isProduct && <button type="button" className="iv-primary" onClick={handleOpenScheduleFromItem}><FaCalendarAlt /> Agendar este serviço</button>}
+                {!isProduct && hasSchedulableEmployers && <button type="button" className="iv-primary" onClick={handleOpenScheduleFromItem}><FaCalendarAlt /> Agendar este serviço</button>}
                 {isProduct && whatsappLink && <a className="iv-primary" href={whatsappLink} target="_blank" rel="noreferrer"><FaWhatsapp /> Consultar no WhatsApp</a>}
                 {!isProduct && whatsappLink && <a className="iv-secondary" href={whatsappLink} target="_blank" rel="noreferrer"><FaWhatsapp /> Dúvidas</a>}
               </div>
-              <div className="iv-note">{isProduct ? "Consulte disponibilidade diretamente com a barbearia." : "Você poderá escolher o profissional e os horários disponíveis no próximo passo."}</div>
+              <div className="iv-note">{isProduct ? "Consulte disponibilidade diretamente com a barbearia." : hasSchedulableEmployers ? "Você poderá escolher o profissional e os horários disponíveis no próximo passo." : "Este estabelecimento ainda não possui profissional disponível para agendamentos."}</div>
             </div>
           </section>
 
-          {!isProduct && Array.isArray(employers) && employers.length > 0 && <section className="iv-section"><div className="iv-heading"><span>QUEM REALIZA</span><h2>Escolha seu profissional</h2><p>Selecione quem você prefere para realizar este serviço.</p></div><GlobalCarousel title="" subtitle="" items={employers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={(emp) => openSchedulePopup({ employer: emp, establishment: establishment || null, service: item, filteredEmployers: [emp] })} showSchedule showDots /></section>}
+          {!isProduct && hasSchedulableEmployers && <section className="iv-section"><div className="iv-heading"><span>QUEM REALIZA</span><h2>Escolha seu profissional</h2><p>Selecione quem você prefere para realizar este serviço.</p></div><GlobalCarousel title="" subtitle="" items={employers} fmtBRL={(v) => v} navigate={navigate} openSchedulePopup={(emp) => openSchedulePopup({ employer: emp, establishment: establishment || null, service: item, filteredEmployers: [emp] })} showSchedule showDots /></section>}
 
-          {Array.isArray(otherItems) && otherItems.length > 0 && <section className="iv-section iv-section--related"><div className="iv-heading"><span>VOCÊ TAMBÉM PODE GOSTAR</span><h2>{isProduct ? "Outros produtos" : "Outros serviços"}</h2></div><GlobalCarousel title="" subtitle="Mais opções deste estabelecimento" items={otherItems.map((it) => ({ ...it, type: "item", item_type: it?.item_type || it?.type || null, image: it?.imageUrl || it?.image || it?.image_url || null }))} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={(it) => { const t = it?.item_type || it?.type; if (t === "product") return; openSchedulePopup({ service: it, establishment: establishment || null, filteredEmployers: Array.isArray(employers) ? employers : [] }); }} showSchedule={!isProduct} showDots /></section>}
+          {Array.isArray(otherItems) && otherItems.length > 0 && <section className="iv-section iv-section--related"><div className="iv-heading"><span>VOCÊ TAMBÉM PODE GOSTAR</span><h2>{isProduct ? "Outros produtos" : "Outros serviços"}</h2></div><GlobalCarousel title="" subtitle="Mais opções deste estabelecimento" items={otherItems.map((it) => ({ ...it, type: "item", item_type: it?.item_type || it?.type || null, image: it?.imageUrl || it?.image || it?.image_url || null, can_schedule: hasSchedulableEmployers }))} fmtBRL={(v) => v} navigate={safeNavigate} openSchedulePopup={(it) => { const t = it?.item_type || it?.type; if (t === "product" || !hasSchedulableEmployers) return; openSchedulePopup({ service: it, establishment: establishment || null, filteredEmployers: employers }); }} showSchedule={!isProduct && hasSchedulableEmployers} showDots /></section>}
 
-          {establishment && <section className="iv-section iv-map"><div className="iv-heading"><span>LOCAL</span><h2>Onde encontrar</h2><p>{[establishment?.address, establishment?.city, establishment?.uf].filter(Boolean).join(" · ")}</p></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>}
+          {establishment && <section className="iv-section iv-map"><div className="iv-heading"><span>LOCAL</span><h2>Onde encontrar</h2><p>{[establishment?.address, establishment?.city, establishment?.uf].filter(Boolean).join(" · ")}</p></div></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>}
         </div>
       </main>
 
-      {!isProduct && <div className="iv-mobileAction"><button type="button" onClick={handleOpenScheduleFromItem}><FaCalendarAlt /> Agendar este serviço · {price}</button></div>}
+      {!isProduct && hasSchedulableEmployers && <div className="iv-mobileAction"><button type="button" onClick={handleOpenScheduleFromItem}><FaCalendarAlt /> Agendar este serviço · {price}</button></div>}
       <ShareButton />
       <AppointmentWizardModal show={showWizard} onHide={() => setShowWizard(false)} employers={wizardEmployers} services={wizardServices} loadAvailableTimes={loadAvailableTimes} handleCreateAppointment={handleCreateAppointment} imageUrl={imageUrl} preselectedServiceId={preselectedServiceId} preselectedEmployer={preselectedEmployer} establishment={wizardEstablishment} />
     </>
