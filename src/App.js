@@ -21,9 +21,19 @@ import ProcessingIndicatorComponent from "./components/ProcessingIndicatorCompon
 import SeoManager from "./components/SeoManager";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
+import DashboardPage from "./pages/DashboardPage";
+import OrderCreatePage from "./pages/order/OrderCreatePage";
+import OrderViewPage from "./pages/order/OrderViewPage";
+import ItemCreatePage from "./pages/item/ItemCreatePage";
+import ItemUpdatePage from "./pages/item/ItemUpdatePage";
+import EmployerCreatePage from "./pages/employer/EmployerCreatePage";
+import EstablishmentCreatePage from "./pages/establishment/EstablishmentCreatePage";
+import EstablishmentUpdatePage from "./pages/establishment/EstablishmentUpdatePage";
+import EstablishmentOrderPage from "./pages/establishment/EstablishmentOrderPage";
+import EstablishmentMyPage from "./pages/establishment/EstablishmentMyPage";
+import EstablishmentItemPage from "./pages/establishment/EstablishmentItemPage";
 import EstablishmentEmployersPage from "./pages/establishment/EstablishmentEmployersPage";
-import api from "./services/api";
-import { appId } from "./config";
+import { getAccountContext } from "./services/platformManagementApi";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
@@ -36,26 +46,20 @@ const PasswordResetPage = lazy(() => import("./pages/auth/PasswordResetPage"));
 const PasswordPage = lazy(() => import("./pages/auth/PasswordPage"));
 const InvitePage = lazy(() => import("./pages/auth/InvitePage"));
 const InviteCompletePage = lazy(() => import("./pages/auth/InviteCompletePage"));
-const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 
-const OrderCreatePage = lazy(() => import("./pages/order/OrderCreatePage"));
 const OrderListPage = lazy(() => import("./pages/order/OrderListPage"));
 const OrderEditPage = lazy(() => import("./pages/order/OrderEditPage"));
 const OrderMyPage = lazy(() => import("./pages/order/OrderMyPage"));
-const OrderViewPage = lazy(() => import("./pages/order/OrderViewPage"));
 
 const UserViewPage = lazy(() => import("./pages/user/UserViewPage"));
 const UserUpdatePage = lazy(() => import("./pages/user/UserUpdatePage"));
 
 const ItemListPage = lazy(() => import("./pages/item/ItemListPage"));
-const ItemCreatePage = lazy(() => import("./pages/item/ItemCreatePage"));
 const ItemViewPage = lazy(() => import("./pages/item/ItemViewPage"));
-const ItemUpdatePage = lazy(() => import("./pages/item/ItemUpdatePage"));
 const ItemServiceHomePage = lazy(() => import("./pages/item/ItemServiceHomePage"));
 const ItemProductHomePage = lazy(() => import("./pages/item/ItemProductHomePage"));
 
 const EmployerListPage = lazy(() => import("./pages/employer/EmployerListPage"));
-const EmployerCreatePage = lazy(() => import("./pages/employer/EmployerCreatePage"));
 const EmployerUpdatePage = lazy(() => import("./pages/employer/EmployerUpdatePage"));
 const EmployerViewPage = lazy(() => import("./pages/employer/EmployerViewPage"));
 const EmployerMePage = lazy(() => import("./pages/employer/EmployerMePage"));
@@ -63,12 +67,7 @@ const EmployerSchedulesPage = lazy(() => import("./pages/employer/EmployerSchedu
 const EmployerOrdersPage = lazy(() => import("./pages/employer/EmployerOrdersPage"));
 const EmployerHomePage = lazy(() => import("./pages/employer/EmployerHomePage"));
 
-const EstablishmentCreatePage = lazy(() => import("./pages/establishment/EstablishmentCreatePage"));
 const EstablishmentViewPage = lazy(() => import("./pages/establishment/EstablishmentViewPage"));
-const EstablishmentUpdatePage = lazy(() => import("./pages/establishment/EstablishmentUpdatePage"));
-const EstablishmentOrderPage = lazy(() => import("./pages/establishment/EstablishmentOrderPage"));
-const EstablishmentMyPage = lazy(() => import("./pages/establishment/EstablishmentMyPage"));
-const EstablishmentItemPage = lazy(() => import("./pages/establishment/EstablishmentItemPage"));
 const EstablishmentHomePage = lazy(() => import("./pages/establishment/EstablishmentHomePage"));
 
 export const AuthContext = createContext(null);
@@ -108,13 +107,11 @@ function AppInner() {
     }
 
     try {
-      const { data } = await api.get("/auth/me");
-      const nextUser = data?.user ?? null;
-      const nextEmployer = data?.employer ?? null;
-      const appEstablishments = Array.isArray(data?.establishments)
-        ? data.establishments.filter(
-            (establishment) => Number(establishment?.app_id) === Number(appId)
-          )
+      const context = await getAccountContext();
+      const nextUser = context?.user ?? null;
+      const nextEmployer = context?.employer ?? null;
+      const appEstablishments = Array.isArray(context?.establishments)
+        ? context.establishments
         : [];
 
       if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
@@ -125,7 +122,7 @@ function AppInner() {
 
       setUser(nextUser);
       setEmployer(nextEmployer);
-      setIsEmployer(Boolean(data?.is_employer));
+      setIsEmployer(Boolean(context?.is_employer));
       setEstablishments(appEstablishments);
     } catch (error) {
       if ([401, 403].includes(error?.response?.status)) {
