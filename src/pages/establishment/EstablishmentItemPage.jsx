@@ -8,7 +8,8 @@ import EstablishmentHero from "../../components/establishment/EstablishmentHero"
 import GlobalButton from "../../components/GlobalButton";
 import GlobalCard from "../../components/GlobalCard";
 import useEstablishmentItemsBySlug from "../../hooks/useEstablishmentItemsBySlug";
-import api from "../../services/api";
+import { deleteManagedItem } from "../../services/platformManagementApi";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 const fmtBRL = (value) =>
   Number(value || 0).toLocaleString("pt-BR", {
@@ -50,7 +51,7 @@ export default function EstablishmentItemPage() {
     if (!result.isConfirmed) return;
 
     try {
-      await api.delete(`/item/${item.id}`);
+      await deleteManagedItem(item.id);
       await reload();
       await Swal.fire({
         icon: "success",
@@ -62,10 +63,10 @@ export default function EstablishmentItemPage() {
       await Swal.fire({
         icon: "error",
         title: "Erro",
-        text:
-          error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          `Não foi possível excluir o ${singular}.`,
+        text: getApiErrorMessage(
+          error,
+          `Não foi possível excluir o ${singular}.`
+        ),
       });
     }
   };
@@ -74,6 +75,7 @@ export default function EstablishmentItemPage() {
     return (
       <Container className="py-5 text-center" aria-live="polite">
         <Spinner animation="border" />
+        <p className="mt-3 mb-0">Carregando catálogo do estabelecimento...</p>
       </Container>
     );
   }
@@ -82,7 +84,16 @@ export default function EstablishmentItemPage() {
     return (
       <Container className="py-4">
         <Alert variant="danger">
-          {apiError || "Barbearia não encontrada ou você não possui acesso a ela."}
+          <Alert.Heading>Não foi possível abrir o catálogo</Alert.Heading>
+          <p>{apiError || "Estabelecimento não encontrado ou você não possui acesso a ele."}</p>
+          <div className="d-flex gap-2 flex-wrap">
+            <GlobalButton variant="primary" onClick={() => reload()}>
+              Tentar novamente
+            </GlobalButton>
+            <GlobalButton variant="outline" onClick={() => navigate("/establishment/my")}>
+              Voltar aos estabelecimentos
+            </GlobalButton>
+          </div>
         </Alert>
       </Container>
     );
@@ -95,8 +106,8 @@ export default function EstablishmentItemPage() {
         subtitle={isService ? "Serviços" : "Produtos"}
         description={
           isService
-            ? "Gerencie os serviços oferecidos pela barbearia. Todo serviço possui duração, usada para calcular corretamente os horários disponíveis na agenda."
-            : "Gerencie os produtos vendidos pela barbearia separadamente dos serviços de atendimento."
+            ? "Gerencie os serviços oferecidos pelo estabelecimento. Todo serviço possui duração, usada para calcular corretamente os horários disponíveis na agenda."
+            : "Gerencie os produtos vendidos pelo estabelecimento separadamente dos serviços de atendimento."
         }
         city={establishment.city}
         uf={establishment.uf}
@@ -136,7 +147,7 @@ export default function EstablishmentItemPage() {
 
         {count === 0 ? (
           <Alert variant="secondary">
-            Nenhum {singular} cadastrado para esta barbearia.
+            Nenhum {singular} cadastrado para este estabelecimento.
           </Alert>
         ) : (
           <Row className="g-4">
