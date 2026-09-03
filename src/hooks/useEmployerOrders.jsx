@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import api from "../services/api";
+import schedulingApi from "../services/schedulingApi";
 
 export default function useEmployerOrders() {
   const [orders, setOrders] = useState([]);
@@ -12,11 +12,23 @@ export default function useEmployerOrders() {
     setLoading(true);
     setApiError(null);
     try {
-      const { data } = await api.get("/rasoio/orders/employer");
-      setEmployer(data?.employer || null);
-      setOrders(Array.isArray(data?.orders) ? data.orders : []);
+      const { data } = await schedulingApi.appointments.provider();
+      const storedEmployer = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("employer") || "null");
+        } catch {
+          return null;
+        }
+      })();
+
+      setEmployer(storedEmployer);
+      setOrders(Array.isArray(data?.data) ? data.data : []);
     } catch (err) {
-      setApiError(err?.response?.data?.message || err?.response?.data?.error || "Erro ao listar os agendamentos do colaborador.");
+      setApiError(
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Erro ao listar os agendamentos do profissional."
+      );
       setOrders([]);
       setEmployer(null);
     } finally {
@@ -24,21 +36,36 @@ export default function useEmployerOrders() {
     }
   }, []);
 
-  const updateOrderStatus = useCallback(async (orderId, action, reason = null) => {
-    setActionLoading(orderId);
-    try {
-      await api.patch(`/rasoio/orders/${orderId}/transition`, { action, reason });
-      await fetchOrders();
-    } catch (err) {
-      throw new Error(err?.response?.data?.message || err?.response?.data?.error || "Erro ao atualizar o agendamento.");
-    } finally {
-      setActionLoading(null);
-    }
-  }, [fetchOrders]);
+  const updateOrderStatus = useCallback(
+    async (orderId, action, reason = null) => {
+      setActionLoading(orderId);
+      try {
+        await schedulingApi.appointments.transition(orderId, { action, reason });
+        await fetchOrders();
+      } catch (err) {
+        throw new Error(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            "Erro ao atualizar o agendamento."
+        );
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [fetchOrders]
+  );
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  return { orders, employer, loading, apiError, actionLoading, updateOrderStatus, refetch: fetchOrders };
+  return {
+    orders,
+    employer,
+    loading,
+    apiError,
+    actionLoading,
+    updateOrderStatus,
+    refetch: fetchOrders,
+  };
 }
