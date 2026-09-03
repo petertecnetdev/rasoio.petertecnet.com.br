@@ -155,6 +155,25 @@ export default function useHome(apiBaseUrl, appId) {
           };
         });
 
+        const schedulableEstablishmentIds = new Set(
+          mappedEmployers
+            .map((employer) =>
+              employer?.establishment_id ??
+              employer?.establishmentId ??
+              employer?.entity_id ??
+              employer?.entityId ??
+              employer?.establishment?.id ??
+              null
+            )
+            .filter((id) => id != null)
+            .map((id) => String(id))
+        );
+
+        const establishmentsWithAvailability = mappedEstablishments.map((establishment) => ({
+          ...establishment,
+          can_schedule: schedulableEstablishmentIds.has(String(establishment?.id)),
+        }));
+
         const mappedItems = (itemRes.data?.items || []).map((item) => {
           const normalizedType = normalizeItemType(item?.type, item);
 
@@ -180,6 +199,10 @@ export default function useHome(apiBaseUrl, appId) {
             entity_id: item?.entity_id ?? item?.entityId ?? estId ?? null,
             type: normalizedType,
             image,
+            can_schedule:
+              normalizedType === "product"
+                ? false
+                : estId != null && schedulableEstablishmentIds.has(String(estId)),
           };
         });
 
@@ -188,7 +211,7 @@ export default function useHome(apiBaseUrl, appId) {
         const services = orderedItems.filter((i) => i?.type === "service");
         const products = orderedItems.filter((i) => i?.type === "product");
 
-        setEstablishments(mappedEstablishments);
+        setEstablishments(establishmentsWithAvailability);
         setEmployers(mappedEmployers);
         setServiceItems(services);
         setProductItems(products);
