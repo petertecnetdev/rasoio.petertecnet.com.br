@@ -158,13 +158,13 @@ export default function CitySelectorModal({ user = {}, show, onClose, onSelectCi
               ))}
             </div>
           ) : (
-            <div className="city-modal__grid" role="list">
+            <div className="city-modal__grid" role="listbox" aria-label="Cidades disponíveis">
               {cityItems.map((item) => {
                 const active = isSelected(item.city, item.uf);
                 return (
                   <div
                     key={item.key}
-                    role="listitem"
+                    role="option"
                     tabIndex={0}
                     aria-selected={active}
                     className={`city-tile ${active ? "is-active" : ""}`}
