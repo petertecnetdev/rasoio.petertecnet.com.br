@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
 
 import useEstablishmentHome from "../../hooks/useEstablishmentHome";
+import useEmployerHome from "../../hooks/useEmployerHome";
 import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
@@ -19,6 +20,7 @@ const PLACEHOLDER = "/images/logo.png";
 
 export default function EstablishmentHomePage() {
   const { establishments, isLoading, error } = useEstablishmentHome(apiBaseUrl, appId);
+  const { employers, isLoading: isLoadingEmployers } = useEmployerHome(apiBaseUrl, appId);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const { cityLabel } = useSelectedCity();
@@ -42,6 +44,33 @@ export default function EstablishmentHomePage() {
     wizardEstablishment
   );
 
+  const schedulableEstablishmentIds = useMemo(
+    () =>
+      new Set(
+        (Array.isArray(employers) ? employers : [])
+          .map((employer) =>
+            employer?.establishment_id ??
+            employer?.establishmentId ??
+            employer?.entity_id ??
+            employer?.entityId ??
+            employer?.establishment?.id ??
+            null
+          )
+          .filter((id) => id != null)
+          .map((id) => String(id))
+      ),
+    [employers]
+  );
+
+  const visibleEstablishments = useMemo(
+    () =>
+      (Array.isArray(establishments) ? establishments : []).map((establishment) => ({
+        ...establishment,
+        can_schedule: schedulableEstablishmentIds.has(String(establishment?.id)),
+      })),
+    [establishments, schedulableEstablishmentIds]
+  );
+
   const headerMeta = useMemo(
     () => [cityLabel, "Agende em poucos cliques"].filter(Boolean),
     [cityLabel]
@@ -55,7 +84,7 @@ export default function EstablishmentHomePage() {
     [cityLabel]
   );
 
-  if (isLoading) {
+  if (isLoading || isLoadingEmployers) {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader
@@ -98,10 +127,16 @@ export default function EstablishmentHomePage() {
         <GlobalCarousel
           title="Barbearias"
           subtitle="Conheça a estrutura, os barbeiros e os serviços"
-          items={establishments}
+          items={visibleEstablishments}
           fmtBRL={(value) => value}
           navigate={navigate}
-          openSchedulePopup={(item) => openSchedulePopup({ establishment: item })}
+          openSchedulePopup={(item) => {
+            const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
+              (employer) => Number(employer?.establishment_id) === Number(item?.id)
+            );
+            if (!filteredEmployers.length) return;
+            openSchedulePopup({ establishment: item, filteredEmployers });
+          }}
           showSchedule
           showDots
         />
