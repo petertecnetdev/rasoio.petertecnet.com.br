@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
-import { appId, appSlug } from "../config";
+import { appSlug } from "../config";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
+const teamMembersPath = `${appContextPath}/team-members`;
 
 async function requestOwnedEstablishment(slug, signal) {
   if (!slug) {
@@ -33,18 +34,13 @@ async function requestOwnedEstablishment(slug, signal) {
   return establishment;
 }
 
-async function requestEmployers(slug, signal) {
-  const employersResponse = await api.get(
-    `/employer/list-by-entity/${encodeURIComponent(slug)}`,
-    {
-      params: { app_id: appId },
-      signal,
-    }
-  );
+async function requestEmployers(establishmentId, signal) {
+  const response = await api.get(teamMembersPath, {
+    params: { establishment_id: establishmentId },
+    signal,
+  });
 
-  return Array.isArray(employersResponse?.data?.employers)
-    ? employersResponse.data.employers
-    : [];
+  return Array.isArray(response?.data?.data) ? response.data.data : [];
 }
 
 function resolveEstablishmentError(error) {
@@ -83,13 +79,13 @@ export default function useEstablishmentEmployersBySlug(slug) {
       const resolvedEstablishment = await requestOwnedEstablishment(slug, signal);
       if (signal?.aborted) return null;
 
-      // Keep the management page available as soon as ownership is resolved.
-      // A failure in the legacy workforce read endpoint must never blank the page
-      // or prevent the owner from opening the collaborator creation flow.
       setEstablishment(resolvedEstablishment);
 
       try {
-        const resolvedEmployers = await requestEmployers(slug, signal);
+        const resolvedEmployers = await requestEmployers(
+          resolvedEstablishment.id,
+          signal
+        );
         if (signal?.aborted) return null;
         setEmployers(resolvedEmployers);
         return {
