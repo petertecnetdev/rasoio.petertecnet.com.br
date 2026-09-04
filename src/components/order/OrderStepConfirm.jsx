@@ -1,13 +1,9 @@
-// src/components/order/steps/OrderStepConfirm.jsx
-import React, { useEffect } from "react";
+// src/components/order/OrderStepConfirm.jsx
+import React from "react";
 import PropTypes from "prop-types";
-import dayjs from "dayjs";
-import tz from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-import "./OrderStepConfirm.css";
 
-dayjs.extend(utc);
-dayjs.extend(tz);
+import { formatCurrencyBr, formatDatePtBr } from "../../utils/dateTime";
+import "./OrderStepConfirm.css";
 
 export default function OrderStepConfirm({
   services = [],
@@ -21,51 +17,23 @@ export default function OrderStepConfirm({
   onCpfChange,
   onPhoneChange,
 }) {
-  const fmtBRL = (v) =>
-    `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
-
-  let formattedDate = "";
-  try {
-    if (date) {
-      const [y, m, d] = date.split("-");
-      const localDate = new Date(Number(y), Number(m) - 1, Number(d));
-      formattedDate = localDate.toLocaleDateString("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-      });
-    }
-  } catch {}
-
-  useEffect(() => {
-    console.log("[OrderStepConfirm]", {
-      date,
-      time,
-      formattedDate,
-      timezone: dayjs.tz.guess(),
-    });
-  }, [date, time, formattedDate]);
+  const formattedDate = formatDatePtBr(date);
+  const professionalName =
+    employer?.user?.first_name || employer?.first_name || employer?.name || "Profissional não informado";
 
   return (
-    <div className="order-step-container">
-      <h4>Confirmar Ordem de Serviço</h4>
+    <section className="order-step-container" aria-labelledby="order-confirm-title">
+      <h4 id="order-confirm-title">Confirmar Ordem de Serviço</h4>
 
       <div className="order-confirm-box">
-        <p>
-          <b>Profissional:</b>{" "}
-          {employer?.user?.first_name || "—"}
-        </p>
+        <p><b>Profissional:</b> {professionalName}</p>
+        <p><b>Data:</b> {formattedDate || "Data não informada"}</p>
+        <p><b>Horário:</b> {time || "Horário não informado"}</p>
 
-        <p>
-          <b>Data:</b> {formattedDate || "—"}
-        </p>
-
-        <p>
-          <b>Horário:</b> {time || "—"}
-        </p>
-
-        <ul className="order-confirm-services">
-          {services.map((s) => (
-            <li key={s.id || s.item_id}>
-              {s.name} — {fmtBRL(s.price)}
+        <ul className="order-confirm-services" aria-label="Serviços selecionados">
+          {services.map((service) => (
+            <li key={service.id || service.item_id}>
+              {service.name} — {formatCurrencyBr(service.price)}
             </li>
           ))}
         </ul>
@@ -73,27 +41,38 @@ export default function OrderStepConfirm({
         <hr />
 
         <p>
-          <b>Total:</b> {fmtBRL(total)} |{" "}
-          <b>Duração:</b> {duration} min
+          <b>Total:</b> {formatCurrencyBr(total)} | <b>Duração:</b> {duration} min
         </p>
 
         <div className="order-confirm-inputs">
-          <input
-            type="text"
-            placeholder="CPF"
-            value={customerCpf}
-            onChange={(e) => onCpfChange(e.target.value)}
-          />
+          <label htmlFor="order-customer-cpf">
+            <span>CPF do cliente</span>
+            <input
+              id="order-customer-cpf"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="000.000.000-00"
+              value={customerCpf}
+              onChange={(event) => onCpfChange(event.target.value)}
+            />
+          </label>
 
-          <input
-            type="text"
-            placeholder="Telefone"
-            value={customerPhone}
-            onChange={(e) => onPhoneChange(e.target.value)}
-          />
+          <label htmlFor="order-customer-phone">
+            <span>Telefone do cliente</span>
+            <input
+              id="order-customer-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(00) 00000-0000"
+              value={customerPhone}
+              onChange={(event) => onPhoneChange(event.target.value)}
+            />
+          </label>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
