@@ -2,6 +2,7 @@
 import React, { useMemo, useCallback } from "react";
 import { Card, Button, Badge } from "react-bootstrap";
 import PropTypes from "prop-types";
+import { buildSafeMapEmbedUrl } from "../utils/mapEmbed";
 import "./GlobalSidebar.css";
 
 const fmtBRL = new Intl.NumberFormat("pt-BR", {
@@ -44,6 +45,17 @@ function GlobalSidebar({
     () => entity?.items?.filter((it) => it?.type === "product") || [],
     [entity]
   );
+  const mapFallback = useMemo(
+    () =>
+      [entity?.address, entity?.city, entity?.uf]
+        .filter((part) => typeof part === "string" && part.trim())
+        .join(", "),
+    [entity]
+  );
+  const mapEmbedUrl = useMemo(
+    () => buildSafeMapEmbedUrl(entity?.location, mapFallback),
+    [entity, mapFallback]
+  );
 
   if (!entity) return <div className="sidebar-loading-skeleton"></div>;
 
@@ -51,15 +63,23 @@ function GlobalSidebar({
     <div className="global-sidebar">
       {/* 🌍 LOCALIZAÇÃO */}
       {["establishment", "employer"].includes(entityType) &&
-        (isValid(entity?.location) || isValid(entity?.address)) && (
+        (isValid(mapEmbedUrl) || isValid(entity?.address)) && (
           <Card className="global-card">
             <Card.Header>📍 Localização</Card.Header>
             <Card.Body>
-              {isValid(entity?.location) && (
-                <div
-                  className="global-map ratio ratio-16x9 rounded overflow-hidden"
-                  dangerouslySetInnerHTML={{ __html: entity.location }}
-                />
+              {isValid(mapEmbedUrl) && (
+                <div className="global-map ratio ratio-16x9 rounded overflow-hidden">
+                  <iframe
+                    src={mapEmbedUrl}
+                    title={mapFallback ? `Mapa de ${mapFallback}` : "Mapa de localização"}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
               )}
               {isValid(entity?.address) && (
                 <p className="mt-3 small text-secondary">
@@ -240,7 +260,7 @@ function GlobalSidebar({
                 isValid(orders[key]) && (
                   <div key={key} className="mb-3">
                     <div className="d-flex justify-content-between text-white">
-                      <span >{label}</span>
+                      <span>{label}</span>
                       <span>{orders[key]}%</span>
                     </div>
                     <div className="progress progress-sm bg-secondary ">
