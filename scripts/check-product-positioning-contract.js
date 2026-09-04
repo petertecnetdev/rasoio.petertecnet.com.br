@@ -13,6 +13,10 @@ const checks = [
     file: 'src/components/GlobalNav.jsx',
     forbidden: ['Barbearia', 'Barbearias', 'Barbeiro', 'Barbeiros'],
   },
+  {
+    file: 'src/pages/HomePage.jsx',
+    forbidden: ['barbearia', 'barbearias', 'Barbearia', 'Barbearias', 'barbeiro', 'barbeiros', 'Barbeiro', 'Barbeiros'],
+  },
 ];
 
 const required = [
@@ -23,6 +27,10 @@ const required = [
   {
     file: 'src/components/GlobalNav.jsx',
     tokens: ['Estabelecimentos', 'Profissionais', 'Área profissional', 'Gestão de estabelecimentos'],
+  },
+  {
+    file: 'src/pages/HomePage.jsx',
+    tokens: ['Estabelecimentos', 'Profissionais', 'estabelecimentos', 'profissionais'],
   },
 ];
 
