@@ -50,7 +50,7 @@ export default function HomePage() {
 
   const headerDescription = useMemo(
     () =>
-      `Encontre barbearias, barbeiros, serviços e produtos para agendar com rapidez.${
+      `Encontre estabelecimentos, profissionais, serviços e produtos para agendar com rapidez.${
         cityLabel ? ` (${cityLabel})` : ""
       }`,
     [cityLabel]
@@ -129,7 +129,7 @@ export default function HomePage() {
         <GlobalPageHeader
           title="Rasoio"
           variant="home"
-          description="Carregando barbearias e profissionais da sua região..."
+          description="Carregando estabelecimentos e profissionais da sua região..."
           meta={headerMeta}
           compact
         />
@@ -165,8 +165,8 @@ export default function HomePage() {
 
         <div className="hp-sections">
           <GlobalCarousel
-            title="Barbearias"
-            subtitle="Escolha uma barbearia e agende seu horário"
+            title="Estabelecimentos"
+            subtitle="Escolha um estabelecimento e agende seu horário"
             items={establishments}
             fmtBRL={(value) => value}
             navigate={navigate}
@@ -176,7 +176,7 @@ export default function HomePage() {
           />
 
           <GlobalCarousel
-            title="Barbeiros"
+            title="Profissionais"
             subtitle="Encontre o profissional ideal para você"
             items={employers}
             fmtBRL={(value) => value}
@@ -199,7 +199,7 @@ export default function HomePage() {
 
           <GlobalCarousel
             title="Produtos"
-            subtitle="Conheça os produtos das barbearias"
+            subtitle="Conheça os produtos dos estabelecimentos"
             items={productItems}
             fmtBRL={(value) => value}
             navigate={navigate}
