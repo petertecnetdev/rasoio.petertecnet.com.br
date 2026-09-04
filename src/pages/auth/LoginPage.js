@@ -39,13 +39,13 @@ export default function LoginPage() {
               <div className="lp__heroTop">
                 <div className="lp__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt=""
                     className="lp__heroLogo"
                     draggable={false}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
-                      event.currentTarget.src = "/images/logo.gif";
+                      event.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
@@ -53,7 +53,7 @@ export default function LoginPage() {
                 <div className="lp__heroText">
                   <h1 className="lp__heroTitle">Rasoio</h1>
                   <p className="lp__heroSubtitle">
-                    Gestão e agendamento para barbearias, barbeiros e clientes em
+                    Gestão e agendamento para estabelecimentos, profissionais e clientes em
                     um só lugar.
                   </p>
                 </div>
@@ -76,21 +76,21 @@ export default function LoginPage() {
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Gestão da barbearia</b> com equipe, serviços, produtos e
+                      <b>Gestão do estabelecimento</b> com equipe, serviços, produtos e
                       atendimentos.
                     </div>
                   </li>
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Área do barbeiro</b> para acompanhar agenda e rotina de
+                      <b>Área profissional</b> para acompanhar agenda e rotina de
                       atendimento.
                     </div>
                   </li>
                   <li>
                     <span className="lp__check">✓</span>
                     <div className="lp__heroListText">
-                      <b>Experiência do cliente</b> para encontrar barbearias,
+                      <b>Experiência do cliente</b> para encontrar estabelecimentos,
                       profissionais e agendar rapidamente.
                     </div>
                   </li>
@@ -109,13 +109,13 @@ export default function LoginPage() {
               <header className="lp__cardHeader">
                 <div className="lp__logoWrap">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt="Rasoio"
                     className="lp__logo"
                     draggable={false}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
-                      event.currentTarget.src = "/images/logo.gif";
+                      event.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
