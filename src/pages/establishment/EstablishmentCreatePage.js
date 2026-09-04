@@ -11,12 +11,12 @@ import "./Establishment.css";
 import "./EstablishmentCreatePage.css";
 
 const segmentOptions = [
-  { value: "corte_masculino", label: "Corte Masculino" },
-  { value: "barba", label: "Barba" },
-  { value: "sobrancelha", label: "Sobrancelha" },
-  { value: "pintura", label: "Pintura" },
-  { value: "hidratacao", label: "Hidratação" },
-  { value: "alisamento", label: "Alisamento" },
+  { value: "beleza_estetica", label: "Beleza e estética" },
+  { value: "saude_bem_estar", label: "Saúde e bem-estar" },
+  { value: "servicos_profissionais", label: "Serviços profissionais" },
+  { value: "aulas_treinamentos", label: "Aulas e treinamentos" },
+  { value: "assistencia_manutencao", label: "Assistência e manutenção" },
+  { value: "atendimento_personalizado", label: "Atendimento personalizado" },
 ];
 
 const onlyDigits = (value = "") => String(value).replace(/\D/g, "");
@@ -59,24 +59,27 @@ const buildMapsUrl = ({ address, city, uf, cep }) => {
   return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : "";
 };
 
+const asMessage = (value) => (typeof value === "string" && value.trim() ? value.trim() : null);
+
 const getApiErrorMessage = (error) => {
   const payload = error?.response?.data;
 
   if (payload?.errors && typeof payload.errors === "object") {
     const messages = Object.values(payload.errors)
       .flatMap((item) => (Array.isArray(item) ? item : [item]))
+      .map(asMessage)
       .filter(Boolean);
     if (messages.length) return messages.join("\n");
   }
 
-  if (payload?.error) return payload.error;
-  if (payload?.message) return payload.message;
+  const errorMessage = asMessage(payload?.error) || asMessage(payload?.message);
+  if (errorMessage) return errorMessage;
 
   if (!error?.response) {
     return "Não foi possível se comunicar com a API. Verifique sua conexão e tente novamente.";
   }
 
-  return `Não foi possível criar a barbearia (erro ${error.response.status}).`;
+  return `Não foi possível criar o estabelecimento (erro ${error.response.status}).`;
 };
 
 export default function EstablishmentCreatePage() {
@@ -153,7 +156,7 @@ export default function EstablishmentCreatePage() {
           const y = (height - drawHeight) / 2;
           ctx.drawImage(img, x, y, drawWidth, drawHeight);
 
-          setPreview(canvas.toDataURL("image/jpeg", 0.9));
+          setPreview(canvas.toDataURL("image/jpeg", 0.88));
           canvas.toBlob(
             (blob) => {
               if (!blob) {
@@ -165,7 +168,7 @@ export default function EstablishmentCreatePage() {
               resolve(resized);
             },
             "image/jpeg",
-            0.9
+            0.88
           );
         };
         img.src = reader.result;
@@ -178,7 +181,7 @@ export default function EstablishmentCreatePage() {
     if (!file) return;
     try {
       await handleResizeImage(file, setLogoPreview, 512, 512, "logo");
-    } catch (error) {
+    } catch {
       await Swal.fire("Erro", "Não foi possível processar a logo.", "error");
     } finally {
       event.target.value = "";
@@ -190,14 +193,17 @@ export default function EstablishmentCreatePage() {
     if (!file) return;
     try {
       await handleResizeImage(file, setBackgroundPreview, 1920, 600, "background");
-    } catch (error) {
+    } catch {
       await Swal.fire("Erro", "Não foi possível processar a imagem de capa.", "error");
     } finally {
       event.target.value = "";
     }
   };
 
-  const applyAddress = ({ cep, street, number, complement, neighborhood, city, uf }, { preserveExisting = false } = {}) => {
+  const applyAddress = (
+    { cep, street, number, complement, neighborhood, city, uf },
+    { preserveExisting = false } = {}
+  ) => {
     const current = getValues();
     const address = buildAddress({ street, number, complement, neighborhood });
     const formattedCep = formatCep(cep);
@@ -236,8 +242,7 @@ export default function EstablishmentCreatePage() {
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`);
       const data = await response.json();
-
-      if (!response.ok) throw new Error(data?.message || "CEP não encontrado.");
+      if (!response.ok) throw new Error(asMessage(data?.message) || "CEP não encontrado.");
 
       applyAddress(
         {
@@ -253,7 +258,7 @@ export default function EstablishmentCreatePage() {
       return data;
     } catch (error) {
       if (!silent) {
-        setError("cep", { type: "manual", message: error.message || "CEP não encontrado." });
+        setError("cep", { type: "manual", message: asMessage(error?.message) || "CEP não encontrado." });
       }
       return null;
     } finally {
@@ -274,8 +279,7 @@ export default function EstablishmentCreatePage() {
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
       const data = await response.json();
-
-      if (!response.ok) throw new Error(data?.message || "CNPJ não encontrado.");
+      if (!response.ok) throw new Error(asMessage(data?.message) || "CNPJ não encontrado.");
 
       const fantasy = String(data.nome_fantasia || "").trim();
       const corporateName = String(data.razao_social || "").trim();
@@ -298,14 +302,11 @@ export default function EstablishmentCreatePage() {
         uf: data.uf,
       });
 
-      // Usa o CEP apenas como complemento quando a base do CNPJ não trouxer algum dado,
-      // sem apagar número/complemento já retornados pela Receita.
       if (data.cep) await lookupCep(data.cep, { silent: true, preserveExisting: true });
 
       if (!silent) {
         const filled = [
           fantasy || corporateName ? "nome" : null,
-          fantasy || corporateName ? "nome fantasia" : null,
           phone ? "telefone" : null,
           email ? "e-mail" : null,
           data.cep ? "CEP" : null,
@@ -333,9 +334,10 @@ export default function EstablishmentCreatePage() {
 
       return data;
     } catch (error) {
+      const message = asMessage(error?.message) || "Não foi possível consultar este CNPJ.";
       if (!silent) {
-        setError("cnpj", { type: "manual", message: error.message || "CNPJ não encontrado." });
-        await Swal.fire("CNPJ não encontrado", error.message || "Não foi possível consultar este CNPJ.", "error");
+        setError("cnpj", { type: "manual", message });
+        await Swal.fire("CNPJ não encontrado", message, "error");
       }
       return null;
     } finally {
@@ -379,7 +381,6 @@ export default function EstablishmentCreatePage() {
   const onSubmit = async (dataInput) => {
     const formData = new FormData();
     formData.append("app_id", String(appId));
-    formData.append("category", "barbershop");
 
     Object.entries(dataInput).forEach(([key, value]) => {
       if (key === "segments") return;
@@ -392,12 +393,13 @@ export default function EstablishmentCreatePage() {
 
     try {
       const { data } = await api.post("/establishment", formData);
-      await Swal.fire("Barbearia criada", data?.message || "Cadastro realizado com sucesso.", "success");
-      navigate(`/establishment/view/${data.establishment.slug}`);
+      const slug = data?.establishment?.slug;
+      await Swal.fire("Estabelecimento criado", asMessage(data?.message) || "Cadastro realizado com sucesso.", "success");
+      navigate(slug ? `/establishment/view/${slug}` : "/establishment/my");
     } catch (error) {
       await Swal.fire({
         icon: "error",
-        title: "Não foi possível criar a barbearia",
+        title: "Não foi possível criar o estabelecimento",
         text: getApiErrorMessage(error),
         confirmButtonText: "Corrigir dados",
       });
@@ -407,8 +409,8 @@ export default function EstablishmentCreatePage() {
   return (
     <div className="establishment-create-shell">
       <section className="establishment-create-header">
-        <span className="establishment-create-eyebrow">Gestão da barbearia</span>
-        <h1>Cadastrar barbearia</h1>
+        <span className="establishment-create-eyebrow">Gestão do estabelecimento</span>
+        <h1>Cadastrar estabelecimento</h1>
         <p>Comece pelo CNPJ. Quando encontrado, os dados da empresa e o endereço serão preenchidos automaticamente.</p>
       </section>
 
@@ -426,8 +428,8 @@ export default function EstablishmentCreatePage() {
           </div>
           <div className="establishment-create-preview-copy">
             <span className="establishment-create-preview-label">Prévia pública</span>
-            <h2>{establishmentName || "Nome da barbearia"}</h2>
-            <p>{description || "A descrição da sua barbearia aparecerá aqui."}</p>
+            <h2>{establishmentName || "Nome do estabelecimento"}</h2>
+            <p>{description || "A descrição do estabelecimento aparecerá aqui."}</p>
             {segments.length > 0 && (
               <div className="establishment-create-badges">
                 {segments.map((segment) => (
@@ -464,6 +466,7 @@ export default function EstablishmentCreatePage() {
               <input
                 type="text"
                 inputMode="numeric"
+                autoComplete="off"
                 placeholder="00.000.000/0000-00"
                 {...register("cnpj")}
                 onChange={handleCnpjChange}
@@ -480,24 +483,26 @@ export default function EstablishmentCreatePage() {
             </div>
           </Field>
 
-          <Field label="Nome da barbearia *" className="span-6" error={errors.name?.message}>
+          <Field label="Nome do estabelecimento *" className="span-6" error={errors.name?.message}>
             <input
               type="text"
+              autoComplete="organization"
               placeholder="Nome exibido para os clientes"
-              {...register("name", { required: "Informe o nome da barbearia." })}
+              {...register("name", { required: "Informe o nome do estabelecimento." })}
             />
           </Field>
           <Field label="Nome fantasia" className="span-6">
-            <input type="text" placeholder="Nome fantasia cadastrado no CNPJ" {...register("fantasy")} />
+            <input type="text" autoComplete="organization" placeholder="Nome fantasia cadastrado no CNPJ" {...register("fantasy")} />
           </Field>
 
-          <Field label="Telefone da barbearia" className="span-6">
-            <input type="tel" placeholder="(00) 00000-0000" {...register("phone")} />
+          <Field label="Telefone do estabelecimento" className="span-6">
+            <input type="tel" inputMode="tel" autoComplete="tel" placeholder="(00) 00000-0000" {...register("phone")} />
           </Field>
-          <Field label="E-mail da barbearia" className="span-6" error={errors.email?.message}>
+          <Field label="E-mail do estabelecimento" className="span-6" error={errors.email?.message}>
             <input
               type="email"
-              placeholder="contato@barbearia.com.br"
+              autoComplete="email"
+              placeholder="contato@empresa.com.br"
               {...register("email", {
                 pattern: { value: /^\S+@\S+\.\S+$/, message: "Informe um e-mail válido." },
               })}
@@ -505,7 +510,7 @@ export default function EstablishmentCreatePage() {
           </Field>
 
           <Field label="Descrição" className="span-12">
-            <textarea rows="4" placeholder="Conte um pouco sobre a barbearia..." {...register("description")} />
+            <textarea rows="4" placeholder="Conte um pouco sobre o estabelecimento..." {...register("description")} />
           </Field>
         </div>
 
@@ -522,6 +527,7 @@ export default function EstablishmentCreatePage() {
               <input
                 type="text"
                 inputMode="numeric"
+                autoComplete="postal-code"
                 placeholder="00000-000"
                 {...register("cep")}
                 onChange={handleCepChange}
@@ -538,14 +544,14 @@ export default function EstablishmentCreatePage() {
             </div>
           </Field>
           <Field label="Cidade" className="span-4">
-            <input type="text" {...register("city")} />
+            <input type="text" autoComplete="address-level2" {...register("city")} />
           </Field>
           <Field label="UF" className="span-4">
-            <input type="text" maxLength="2" placeholder="GO" {...register("uf")} />
+            <input type="text" autoComplete="address-level1" maxLength="2" placeholder="SP" {...register("uf")} />
           </Field>
 
           <Field label="Endereço completo" className="span-12">
-            <input type="text" placeholder="Rua, número, complemento e bairro" {...register("address")} />
+            <input type="text" autoComplete="street-address" placeholder="Rua, número, complemento e bairro" {...register("address")} />
           </Field>
 
           <Field label="Localização (Google Maps)" className="span-12">
@@ -563,7 +569,7 @@ export default function EstablishmentCreatePage() {
         <div className="establishment-create-grid">
           <Field label="Instagram" className="span-4"><input type="url" {...register("instagram_url")} /></Field>
           <Field label="Facebook" className="span-4"><input type="url" {...register("facebook_url")} /></Field>
-          <Field label="Site" className="span-4"><input type="url" {...register("website_url")} /></Field>
+          <Field label="Site" className="span-4"><input type="url" autoComplete="url" {...register("website_url")} /></Field>
           <Field label="X / Twitter" className="span-6"><input type="url" {...register("twitter_url")} /></Field>
           <Field label="YouTube" className="span-6"><input type="url" {...register("youtube_url")} /></Field>
         </div>
@@ -571,8 +577,8 @@ export default function EstablishmentCreatePage() {
         <div className="establishment-create-divider" />
 
         <div className="establishment-create-section-heading">
-          <h2>Serviços oferecidos</h2>
-          <p>Selecione os segmentos que representam a barbearia.</p>
+          <h2>Perfil de atendimento</h2>
+          <p>Selecione os segmentos que melhor representam os serviços oferecidos.</p>
         </div>
 
         <div className="establishment-create-segments">
@@ -592,12 +598,12 @@ export default function EstablishmentCreatePage() {
             </label>
           ))}
         </div>
-        <input type="hidden" {...register("segments")} value={segments.join(",")} />
+        <input type="hidden" {...register("segments")} value={segments.join(",")} readOnly />
 
         <div className="establishment-create-actions">
           <button type="button" className="establishment-create-cancel" onClick={() => navigate(-1)}>Cancelar</button>
           <button type="submit" className="establishment-create-submit" disabled={isSubmitting || cnpjLoading || cepLoading}>
-            {isSubmitting ? "Criando..." : "Criar barbearia"}
+            {isSubmitting ? "Criando..." : "Criar estabelecimento"}
           </button>
         </div>
       </form>
@@ -610,7 +616,7 @@ function Field({ label, className = "", error, children }) {
     <label className={`establishment-create-field ${className} ${error ? "has-error" : ""}`}>
       <span>{label}</span>
       {children}
-      {error && <small className="establishment-create-error">{error}</small>}
+      {error && <small className="establishment-create-error" role="alert">{error}</small>}
     </label>
   );
 }
