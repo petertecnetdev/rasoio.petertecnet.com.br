@@ -25,6 +25,37 @@ export async function findManagedEstablishmentBySlug(slug, options = {}) {
   );
 }
 
+export async function findManagedEstablishmentById(id, options = {}) {
+  if (!id) return null;
+  const establishments = await listManagedEstablishments(options);
+  return (
+    establishments.find(
+      (establishment) => Number(establishment?.id) === Number(id)
+    ) || null
+  );
+}
+
+export async function createManagedEstablishment(formData) {
+  const { data } = await api.post(`${appContextPath}/establishments`, formData);
+  return data || {};
+}
+
+export async function updateManagedEstablishment(establishmentId, formData) {
+  if (!establishmentId) throw new Error("Estabelecimento não informado.");
+  const payload = formData instanceof FormData ? formData : new FormData();
+  if (!(formData instanceof FormData)) {
+    Object.entries(formData || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) payload.append(key, value);
+    });
+  }
+  payload.set("_method", "PATCH");
+  const { data } = await api.post(
+    `${appContextPath}/establishments/${Number(establishmentId)}`,
+    payload
+  );
+  return data || {};
+}
+
 export async function listManagedItems(establishmentId, options = {}) {
   if (!establishmentId) return [];
   const { data } = await api.get(
@@ -32,6 +63,24 @@ export async function listManagedItems(establishmentId, options = {}) {
     options
   );
   return asArray(data?.data);
+}
+
+export async function createManagedItem(formData) {
+  const { data } = await api.post(`${appContextPath}/items`, formData);
+  return data || {};
+}
+
+export async function updateManagedItem(itemId, formData) {
+  if (!itemId) throw new Error("Item não informado.");
+  const payload = formData instanceof FormData ? formData : new FormData();
+  if (!(formData instanceof FormData)) {
+    Object.entries(formData || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) payload.append(key, value);
+    });
+  }
+  payload.set("_method", "PATCH");
+  const { data } = await api.post(`${appContextPath}/items/${Number(itemId)}`, payload);
+  return data || {};
 }
 
 export async function deleteManagedItem(itemId) {
