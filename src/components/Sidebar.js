@@ -1,66 +1,63 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Nav, Spinner, Badge } from "react-bootstrap";
+import { Badge, Nav, Spinner } from "react-bootstrap";
+
 import authService from "../services/AuthService";
 import { storageUrl } from "../config";
 
 const Navigation = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMenu, setLoadingMenu] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
 
   useEffect(() => {
+    let active = true;
+
     const fetchUserData = async () => {
       try {
         const userData = await authService.me();
-        setUser(userData);
-      } catch (error) {
-        console.error(error);
+        if (active) setUser(userData);
+      } catch {
+        if (active) setUser(null);
       } finally {
-        setLoading(false);
-        setLoadingMenu(false);
+        if (active) setLoading(false);
       }
     };
 
     const fetchNotifications = async () => {
       try {
         const userNotifications = await authService.getNotifications();
-        setNotifications(userNotifications);
-      } catch (error) {
-        console.error(error);
+        if (active) setNotifications(Array.isArray(userNotifications) ? userNotifications : []);
+      } catch {
+        if (active) setNotifications([]);
       } finally {
-        setLoadingNotifications(false);
+        if (active) setLoadingNotifications(false);
       }
     };
 
     fetchUserData();
     fetchNotifications();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const renderCorporateMenu = () => (
-    <>
-      <Link to="/barbershop" className="nav-link">Minhas Barbearias</Link>
-      <Link to="/appointments/manage" className="nav-link">Gerenciar Agendamentos</Link>
-      <Link to="/service/manage" className="nav-link">Gerenciar Serviços</Link>
-      <Link to="/reports" className="nav-link">Relatórios</Link>
-    </>
-  );
-
-  const renderAdminMenu = () => (
-    <>
-      <Link to="/user/list" className="nav-link">Usuários</Link>
-      <Link to="/barber/list" className="nav-link">Barbeiros</Link>
-      <Link to="/service/list" className="nav-link">Serviços</Link>
-      <Link to="/appointments/list" className="nav-link">Agendamentos</Link>
-    </>
-  );
+  const canManageEstablishments = useMemo(() => {
+    const profile = String(user?.profile?.name || "").toLowerCase();
+    return Boolean(
+      user &&
+        (profile.includes("administrador") ||
+          profile.includes("gerente") ||
+          user?.can_manage_establishments === true)
+    );
+  }, [user]);
 
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="Navegação secundária">
       <div className="sidebar-brand">
-        <Link to="/">
+        <Link to="/" aria-label="Ir para a página inicial da Rasoio">
           <img
             src="/rasoio-logo.png"
             alt="Rasoio"
@@ -72,73 +69,64 @@ const Navigation = () => {
 
       <Nav className="flex-column">
         {loadingNotifications ? (
-          <Spinner animation="border" variant="light" aria-live="polite" />
+          <Spinner animation="border" variant="light" aria-label="Carregando notificações" />
         ) : (
-          <div className="nav-item notifications">
+          <div className="nav-item notifications" aria-live="polite">
             <span>
-              <i className="fa fa-globe" aria-hidden="true"></i> 
-              {notifications.length > 0 && (
-                <Badge bg="light" text="dark">{notifications.length}</Badge>
-              )}
+              <i className="fa fa-globe" aria-hidden="true" />
+              {notifications.length > 0 && <Badge bg="light" text="dark">{notifications.length}</Badge>}
             </span>
             {notifications.length === 0 ? (
               <span>Sem notificações</span>
             ) : (
               notifications.map((notification, index) => (
-                <div key={index} className="nav-item">{notification.message}</div>
+                <div key={notification?.id || index} className="nav-item">
+                  {notification?.message || "Nova notificação"}
+                </div>
               ))
             )}
           </div>
         )}
 
-        <Link to="/services" className="nav-link">
-          <i className="fa fa-scissors" aria-hidden="true"></i> Serviços
+        <Link to="/establishments" className="nav-link">
+          <i className="fa fa-building" aria-hidden="true" /> Estabelecimentos
         </Link>
-        <Link to="/barbers" className="nav-link">
-          <i className="fa fa-user" aria-hidden="true"></i> Barbeiros
+        <Link to="/employers" className="nav-link">
+          <i className="fa fa-user" aria-hidden="true" /> Profissionais
         </Link>
-        <Link to="/appointments" className="nav-link">
-          <i className="fa fa-calendar" aria-hidden="true"></i> Agendamentos
+        <Link to="/item/services" className="nav-link">
+          <i className="fa fa-calendar-check" aria-hidden="true" /> Serviços
+        </Link>
+        <Link to="/orders/my" className="nav-link">
+          <i className="fa fa-calendar" aria-hidden="true" /> Meus agendamentos
         </Link>
 
-        {loadingMenu ? (
-          <Spinner animation="border" variant="light" size="sm" className="m-2" />
-        ) : (
+        {canManageEstablishments && (
           <>
-            {user && user.profile && user.profile.name === 'Gerente de Barbearia' && renderCorporateMenu()}
-            {user && user.profile && user.profile.name === 'Administrador' && (
-              <>
-                {renderCorporateMenu()}
-                {renderAdminMenu()}
-              </>
-            )}
+            <Link to="/establishment/my" className="nav-link">Gerenciar estabelecimentos</Link>
+            <Link to="/dashboard" className="nav-link">Visão geral</Link>
           </>
         )}
       </Nav>
 
       <div className="sidebar-footer">
         {loading ? (
-          <Spinner animation="border" variant="light" aria-live="polite" />
-        ) : (
-          <>
-            {user && (
-              <div className="profile-dropdown">
-                {user.first_name}
-                <div className="dropdown-menu">
-                  <Link to={`/user/edit`} className="dropdown-item">Gerenciar conta</Link>
-                  <Link to="/settings" className="dropdown-item">Configurações</Link>
-                  <Link to="/logout" className="dropdown-item">Sair</Link>
-                </div>
-                <img
-                  src={user && user.avatar ? `${storageUrl}/${user.avatar}` : "/rasoio-logo.png"}
-                  alt="Avatar"
-                  className="avatar m-2"
-                  style={{ maxWidth: "40px", borderRadius: "50%" }}
-                />
-              </div>
-            )}
-          </>
-        )}
+          <Spinner animation="border" variant="light" aria-label="Carregando conta" />
+        ) : user ? (
+          <div className="profile-dropdown">
+            <span>{user.first_name}</span>
+            <div className="dropdown-menu">
+              <Link to="/user/update" className="dropdown-item">Gerenciar conta</Link>
+              <Link to="/logout" className="dropdown-item">Sair</Link>
+            </div>
+            <img
+              src={user.avatar ? `${storageUrl}/${user.avatar}` : "/rasoio-logo.png"}
+              alt={`Avatar de ${user.first_name || "usuário"}`}
+              className="avatar m-2"
+              style={{ maxWidth: "40px", borderRadius: "50%" }}
+            />
+          </div>
+        ) : null}
       </div>
     </aside>
   );
