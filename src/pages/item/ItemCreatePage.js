@@ -11,8 +11,7 @@ export default function ItemCreatePage() {
   const location = useLocation();
 
   const establishmentFromState = location.state?.establishment || null;
-  const initialItemType =
-    location.state?.itemType === "product" ? "product" : "service";
+  const initialItemType = location.state?.itemType === "product" ? "product" : "service";
 
   const {
     register,
@@ -36,35 +35,30 @@ export default function ItemCreatePage() {
     handleImageChange,
     handleRemoveImage,
     submitCreate,
-  } = useItemCreate(
-    navigate,
-    reset,
-    setValue,
-    establishmentFromState
-  );
+  } = useItemCreate(navigate, reset, setValue, establishmentFromState);
 
   if (loading) return <GlobalNav />;
 
-  const est = establishmentFromState || establishment;
+  const currentEstablishment = establishmentFromState || establishment;
   const isService = watch("type") !== "product";
 
   return (
     <div className="item-root">
       <GlobalNav />
 
-      {est && (
+      {currentEstablishment && (
         <EstablishmentHero
-          logo={est.logo}
-          background={est.background}
-          title={est.fantasy || est.name}
+          logo={currentEstablishment.logo}
+          background={currentEstablishment.background}
+          title={currentEstablishment.fantasy || currentEstablishment.name}
           subtitle={isService ? "Criar novo serviço" : "Criar novo produto"}
           description={
             isService
               ? "Cadastre o serviço e informe obrigatoriamente sua duração. Esse tempo é utilizado no cálculo automático da agenda e dos horários disponíveis."
-              : "Cadastre um produto vendido pela barbearia. Produtos ficam separados dos serviços e não interferem na duração dos atendimentos."
+              : "Cadastre um produto disponível neste estabelecimento. Produtos ficam separados dos serviços e não interferem na duração dos atendimentos."
           }
-          city={est.city}
-          uf={est.uf}
+          city={currentEstablishment.city}
+          uf={currentEstablishment.uf}
           showBack
         />
       )}
