@@ -22,6 +22,15 @@ const checks = [
     forbidden: ['../services/api', '/team-members'],
   },
   {
+    file: 'src/hooks/useEmployerCreate.js',
+    forbidden: [
+      '../services/api',
+      '/user/find-for-employer',
+      'teamMembersPath',
+      'appContextPath',
+    ],
+  },
+  {
     file: 'src/pages/establishment/EstablishmentEmployersPage.jsx',
     forbidden: ['../../services/api', 'teamMembersPath'],
   },
@@ -65,8 +74,11 @@ for (const required of [
   '/v1/apps/',
   '/me/establishments',
   '/team-members',
+  '/team-members/candidates',
   '/appointments/',
   'listTeamMembers',
+  'searchTeamMemberCandidates',
+  'addTeamMember',
   'removeTeamMember',
 ]) {
   if (!managementApi.includes(required)) {
