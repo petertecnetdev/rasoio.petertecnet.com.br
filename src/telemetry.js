@@ -15,7 +15,7 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
   sessionStorage.setItem(sessionKey, sessionId)
 
   let queue = []
-  let lastPath = window.location.pathname + window.location.search
+  let lastPath = page()
   let scrollMilestones = new Set()
   let flushing = false
   let sessionEnded = false
@@ -28,8 +28,20 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
     return String(value ?? "").replace(/\s+/g, " ").trim().slice(0, limit)
   }
 
+  function safeUrl(value, relativeForSameOrigin = true) {
+    if (!value) return ""
+
+    try {
+      const url = new URL(String(value), window.location.origin)
+      if (relativeForSameOrigin && url.origin === window.location.origin) return url.pathname
+      return `${url.origin}${url.pathname}`
+    } catch {
+      return clean(String(value).split(/[?#]/, 1)[0], 500)
+    }
+  }
+
   function page() {
-    return window.location.pathname + window.location.search
+    return window.location.pathname
   }
 
   function enqueue(type, details = {}) {
@@ -70,7 +82,7 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
           "X-Peter-App": normalizedSlug,
           "X-App-Slug": normalizedSlug,
           "X-Telemetry-Schema": TELEMETRY_SCHEMA,
-          "X-Frontend-Page": window.location.href,
+          "X-Frontend-Page": safeUrl(window.location.href),
           ...(appId ? { "X-App-ID": String(appId) } : {}),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -105,12 +117,15 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
     const element = event.target?.closest?.("a,button,[role='button'],[data-track]")
     if (!element || element.closest?.("[data-telemetry-ignore]")) return
 
+    const href = element.getAttribute("href")
+    const destination = safeUrl(href)
+
     enqueue("click", {
       label: element.dataset?.track || element.getAttribute("aria-label") || element.textContent || element.name || element.id || element.tagName,
-      target: element.getAttribute("href") || element.id || element.name || element.tagName,
+      target: destination || element.id || element.name || element.tagName,
       metadata: {
         tag: element.tagName,
-        destination: element.getAttribute("href"),
+        destination,
       },
     })
   }
@@ -123,7 +138,7 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
     const searchForm = /search|busca|pesquisa/i.test(identity)
     enqueue(searchForm ? "search" : "form_submit", {
       label: identity,
-      target: form.action || page(),
+      target: safeUrl(form.action) || page(),
       metadata: { method: form.method || "GET" },
     })
   }
@@ -154,7 +169,7 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
   function onError(event) {
     enqueue("frontend_error", {
       label: event.message || "Erro JavaScript",
-      metadata: { source: event.filename, line: event.lineno, column: event.colno },
+      metadata: { source: safeUrl(event.filename, false), line: event.lineno, column: event.colno },
     })
   }
 
@@ -202,7 +217,7 @@ export function startTelemetry({ apiBaseUrl, appSlug, appId, getToken = () => lo
   enqueue("session_start", {
     label: "Sessão iniciada",
     metadata: {
-      referrer: document.referrer,
+      referrer: safeUrl(document.referrer, false),
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       viewport: `${window.innerWidth}x${window.innerHeight}`,
