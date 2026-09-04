@@ -1,7 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { formatCurrencyBr, formatDatePtBr } from "../../utils/dateTime";
+import { formatDatePtBr } from "../../utils/dateUtils";
+import { formatCurrencyBr } from "../../utils/moneyUtils";
 import "./steps.css";
 
 export default function StepConfirm({ services = [], employer, date, time, total = 0, duration = 0 }) {
