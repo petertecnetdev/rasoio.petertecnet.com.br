@@ -10,8 +10,33 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Lint, tests and build
+        env:
+          CI: "false"
+          REACT_APP_API_URL: https://api.petertecnet.com.br/api
+        run: npm run quality
+
   deploy:
     # Zero-downtime central deploy: build off-path, publish assets first, switch index last.
+    needs: quality
+    if: ${{ needs.quality.result == 'success' }}
     uses: petertecnetdev/petertecnet.com.br/.github/workflows/reusable-vps-deploy.yml@main
     with:
       deploy_path: /var/www/rasoio.petertecnet.com.br
