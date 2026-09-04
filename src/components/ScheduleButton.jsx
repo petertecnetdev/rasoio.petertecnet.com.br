@@ -20,7 +20,7 @@ export default function ScheduleButton({ service, apiBaseUrl, openSchedulePopup 
         title: "Entrar para agendar",
         html: `
           <div style="text-align:center;">
-            <img src="/images/logo.png" alt="Rasoio" style="width:120px;margin-bottom:10px;" />
+            <img src="/rasoio-logo.png" alt="Rasoio" style="width:120px;margin-bottom:10px;" />
             <input id="swal-username" class="swal2-input" placeholder="Usuário ou e-mail" />
             <input id="swal-password" type="password" class="swal2-input" placeholder="Senha" />
             <button id="swal-login-btn" class="swal2-confirm swal2-styled" 
