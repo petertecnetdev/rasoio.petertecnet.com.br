@@ -8,7 +8,7 @@ import "./EstablishmentDashboard.css";
 const FALLBACK_LOGO = "/images/logo.png";
 
 export default function EstablishmentDashboard({ establishment, navigate }) {
-  const title = establishment.fantasy || establishment.name || "Barbearia";
+  const title = establishment.fantasy || establishment.name || "Estabelecimento";
   const location = [establishment.city, establishment.uf].filter(Boolean).join(" • ");
   const logo = establishment?.images?.logo || establishment?.logo || FALLBACK_LOGO;
   const background = establishment?.images?.background || establishment?.background || null;
@@ -20,10 +20,7 @@ export default function EstablishmentDashboard({ establishment, navigate }) {
         style={background ? { backgroundImage: `linear-gradient(180deg, rgba(2,8,16,.08), rgba(2,8,16,.92)), url(${background})` } : undefined}
       >
         <span className="barbershop-status"><i /> Unidade ativa</span>
-        <Link
-          to={`/establishment/view/${establishment.slug}`}
-          className="barbershop-public-pill"
-        >
+        <Link to={`/establishment/view/${establishment.slug}`} className="barbershop-public-pill">
           Página pública ↗
         </Link>
       </div>
@@ -33,7 +30,7 @@ export default function EstablishmentDashboard({ establishment, navigate }) {
           type="button"
           className="barbershop-identity"
           onClick={() => navigate(`/dashboard?establishment=${encodeURIComponent(establishment.slug)}`)}
-          aria-label={`Abrir visão geral da ${title}`}
+          aria-label={`Abrir visão geral de ${title}`}
         >
           <span className="barbershop-logo-shell">
             <img
@@ -41,13 +38,14 @@ export default function EstablishmentDashboard({ establishment, navigate }) {
               alt=""
               className="barbershop-logo"
               onError={(event) => {
+                event.currentTarget.onerror = null;
                 event.currentTarget.src = FALLBACK_LOGO;
               }}
             />
           </span>
 
           <span className="barbershop-identity-copy">
-            <span className="barbershop-eyebrow">Sua barbearia</span>
+            <span className="barbershop-eyebrow">Seu estabelecimento</span>
             <strong className="barbershop-name">{title}</strong>
             <span className="barbershop-meta">{location || "Localização não informada"}</span>
             <span className="barbershop-slug">rasoio / {establishment.slug}</span>
