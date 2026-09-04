@@ -2,93 +2,105 @@
 import { DateTime } from "luxon";
 
 export const TZ = "America/Sao_Paulo";
+export const PT_WEEK = [
+  "domingo",
+  "segunda-feira",
+  "terça-feira",
+  "quarta-feira",
+  "quinta-feira",
+  "sexta-feira",
+  "sábado",
+];
 
 export function normalizeDateLike(value) {
   if (!value) return null;
-  if (DateTime.isDateTime(value)) return value; // já é DateTime
+  if (DateTime.isDateTime(value)) return value.setZone(TZ);
   if (value instanceof Date) return DateTime.fromJSDate(value).setZone(TZ);
+
   if (typeof value === "string") {
-    // tenta criar a partir de SQL ou ISO
-    const dt = DateTime.fromSQL(value, { zone: TZ });
-    if (dt.isValid) return dt;
-    const dtIso = DateTime.fromISO(value, { zone: TZ });
-    if (dtIso.isValid) return dtIso;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const fromIso = DateTime.fromISO(trimmed, { zone: TZ });
+    if (fromIso.isValid) return fromIso.setZone(TZ);
+
+    const fromSql = DateTime.fromSQL(trimmed, { zone: TZ });
+    if (fromSql.isValid) return fromSql.setZone(TZ);
   }
+
   return null;
 }
 
 export function toIsoDate(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
-  return d.toISODate(); // YYYY-MM-DD
+  const date = normalizeDateLike(value);
+  return date ? date.toISODate() : "";
 }
 
 export function isSameDayISO(a, b) {
   const dateA = toIsoDate(a);
   const dateB = toIsoDate(b);
-  return dateA === dateB;
+  return Boolean(dateA && dateB && dateA === dateB);
 }
 
 export function toHourMin(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
-  return d.toFormat("HH:mm");
+  const date = normalizeDateLike(value);
+  return date ? date.toFormat("HH:mm") : "";
+}
+
+export function getWeekdayIndex(value) {
+  const date = normalizeDateLike(value);
+  if (!date) return 0;
+  // Luxon uses Monday=1..Sunday=7; the public list above follows JS Sunday=0.
+  return date.weekday % 7;
 }
 
 export function weekdayPt(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
-  return d.setLocale("pt-BR").toFormat("cccc");
+  const date = normalizeDateLike(value);
+  if (!date) return "";
+  return PT_WEEK[getWeekdayIndex(date)];
 }
 
 export function shortPt(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
-  return d.toFormat("dd/MM");
+  const date = normalizeDateLike(value);
+  return date ? date.toFormat("dd/MM") : "";
 }
 
 export function startOfDayISO(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
-  return d.startOf("day").toISODate();
+  const date = normalizeDateLike(value);
+  return date ? date.startOf("day").toISODate() : "";
 }
 
-export function addDays(value, n) {
-  const d = normalizeDateLike(value);
-  if (!d) return null;
-  return d.plus({ days: n });
+export function addDays(value, amount) {
+  const date = normalizeDateLike(value);
+  return date ? date.plus({ days: amount }) : null;
 }
 
 export function fmtFriendlyDate(value) {
-  const d = normalizeDateLike(value);
-  if (!d) return "";
+  const date = normalizeDateLike(value);
+  if (!date) return "";
 
-  const now = DateTime.now().setZone(TZ).startOf("day");
-  const today = now;
-  const tomorrow = now.plus({ days: 1 });
-  const dateISO = d.startOf("day");
+  const today = DateTime.now().setZone(TZ).startOf("day");
+  const tomorrow = today.plus({ days: 1 });
+  const target = date.startOf("day");
+  const time = toHourMin(date);
 
-  const timeStr = toHourMin(d);
+  if (target.equals(today)) return `Hoje às ${time}`;
+  if (target.equals(tomorrow)) return `Amanhã às ${time}`;
 
-  if (dateISO.equals(today)) return `Hoje às ${timeStr}`;
-  if (dateISO.equals(tomorrow)) return `Amanhã às ${timeStr}`;
-
-  const diffDays = Math.floor(dateISO.diff(today, "days").days);
-
+  const diffDays = Math.floor(target.diff(today, "days").days);
   if (diffDays > 1 && diffDays < 7) {
-    return `${weekdayPt(d)} às ${timeStr}`;
+    const weekday = weekdayPt(date);
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} às ${time}`;
   }
 
-  const day = d.toFormat("dd");
-  const month = d.setLocale("pt-BR").toFormat("LLLL");
-  const year = d.year;
-  return `${day} de ${month} de ${year} às ${timeStr}`;
+  const day = date.toFormat("dd");
+  const month = date.setLocale("pt-BR").toFormat("LLLL");
+  return `${day} de ${month} de ${date.year} às ${time}`;
 }
 
-// Hora de início e término
 export function fmtTimeRange(startValue, durationMinutes) {
   const start = normalizeDateLike(startValue);
   if (!start) return "";
-  const end = start.plus({ minutes: durationMinutes });
+  const end = start.plus({ minutes: Number(durationMinutes || 0) });
   return `${toHourMin(start)} - ${toHourMin(end)}`;
 }
