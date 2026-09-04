@@ -22,7 +22,7 @@ const mapEmployer = (employer) => {
   return {
     ...employer,
     type: "employer",
-    name: employer?.name || fullName || firstName || "Barbeiro",
+    name: employer?.name || fullName || firstName || "Profissional",
     first_name: firstName,
     last_name: lastName,
     avatar,
@@ -31,7 +31,7 @@ const mapEmployer = (employer) => {
   };
 };
 
-const mapEstablishment = (establishment, fallbackAppId = 2) => {
+const mapEstablishment = (establishment, fallbackAppId = null) => {
   if (!establishment) return null;
 
   const logo =
@@ -56,8 +56,8 @@ const mapEstablishment = (establishment, fallbackAppId = 2) => {
       establishment?.entity_id ??
       establishment?.entityId ??
       null,
-    name: establishment?.name || establishment?.title || "Barbearia",
-    app_id: establishment?.app_id || fallbackAppId || 2,
+    name: establishment?.name || establishment?.title || "Estabelecimento",
+    app_id: establishment?.app_id ?? fallbackAppId ?? null,
     image: logo || background || establishment?.image || null,
     images: {
       ...(establishment?.images || {}),
@@ -84,7 +84,11 @@ const compactEmployer = (employer) => {
   if (!employer) return null;
   return {
     id: employer?.id || null,
-    establishment_id: employer?.establishment_id || employer?.establishmentId || employer?.entity_id || null,
+    establishment_id:
+      employer?.establishment_id ||
+      employer?.establishmentId ||
+      employer?.entity_id ||
+      null,
     app_id: employer?.app_id || null,
     name: employer?.name || null,
     first_name: employer?.first_name || employer?.user?.first_name || null,
@@ -108,7 +112,8 @@ const compactService = (service) => {
   return {
     id: service?.id || service?.item_id || service?.itemId || service?.service_id || null,
     item_id: service?.item_id || service?.id || null,
-    establishment_id: service?.establishment_id || service?.entity_id || service?.entityId || null,
+    establishment_id:
+      service?.establishment_id || service?.entity_id || service?.entityId || null,
     entity_id: service?.entity_id || service?.establishment_id || null,
     app_id: service?.app_id || null,
     name: service?.name || service?.title || null,
@@ -120,7 +125,7 @@ const compactService = (service) => {
   };
 };
 
-export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
+export default function useSchedulePopup(_apiBaseUrl, _token, appId = null) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -158,7 +163,7 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
         null;
 
       const resolvedAppId =
-        establishment?.app_id || employer?.app_id || service?.app_id || appId || 2;
+        establishment?.app_id || employer?.app_id || service?.app_id || appId || null;
 
       if (!entityId) {
         setWizardEstablishment(null);
@@ -181,7 +186,7 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
               employer?.establishmentName ||
               employer?.establishment?.name ||
               service?.establishment?.name ||
-              "Barbearia",
+              "Estabelecimento",
             app_id: resolvedAppId,
           },
           resolvedAppId
@@ -196,9 +201,11 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
         const itemRequest = api.get(`/item/list-by-entity/${entityId}`);
         const employerRequest = Array.isArray(filteredEmployers)
           ? Promise.resolve(null)
-          : api.get(`/employer/home/${resolvedAppId}`, {
-              params: { establishment_id: entityId },
-            });
+          : resolvedAppId
+            ? api.get(`/employer/home/${resolvedAppId}`, {
+                params: { establishment_id: entityId },
+              })
+            : Promise.resolve({ data: { employers: [] } });
 
         const [itemResponse, employerResponse] = await Promise.all([
           itemRequest,
@@ -211,7 +218,7 @@ export default function useSchedulePopup(_apiBaseUrl, _token, appId = 2) {
 
         setWizardServices(
           items
-            .filter((item) => item?.type !== "product")
+            .filter((item) => item?.type !== "product" && item?.item_type !== "product")
             .map((item) => ({
               ...item,
               type: "service",
