@@ -12,6 +12,8 @@ export const PT_WEEK = [
   "sábado",
 ];
 
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 export function normalizeDateLike(value) {
   if (!value) return null;
   if (DateTime.isDateTime(value)) return value.setZone(TZ);
@@ -29,6 +31,21 @@ export function normalizeDateLike(value) {
   }
 
   return null;
+}
+
+export function formatDatePtBr(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    const match = value.trim().match(DATE_ONLY);
+    if (match) {
+      const [, year, month, day] = match;
+      return `${day}/${month}/${year}`;
+    }
+  }
+
+  const date = normalizeDateLike(value);
+  return date ? date.setLocale("pt-BR").toFormat("dd/MM/yyyy") : "";
 }
 
 export function toIsoDate(value) {
@@ -50,7 +67,7 @@ export function toHourMin(value) {
 export function getWeekdayIndex(value) {
   const date = normalizeDateLike(value);
   if (!date) return 0;
-  // Luxon uses Monday=1..Sunday=7; the public list above follows JS Sunday=0.
+  // Luxon uses Monday=1..Sunday=7; the list above follows JS Sunday=0.
   return date.weekday % 7;
 }
 
