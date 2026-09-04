@@ -4,20 +4,23 @@ import Swal from "sweetalert2";
 
 import api from "../services/api";
 
-const resolveImageFromEstablishment = (est, type) => {
-  const files = Array.isArray(est?.files) ? est.files : [];
-  return files.find((file) => file?.type === type)?.public_url || est?.[type] || null;
+const resolveImageFromEstablishment = (establishment, type) => {
+  const files = Array.isArray(establishment?.files) ? establishment.files : [];
+  return files.find((file) => file?.type === type)?.public_url || establishment?.[type] || null;
 };
+
+const safeMessage = (value) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
 const apiErrorMessage = (error, fallback) => {
   const payload = error?.response?.data;
   if (payload?.errors && typeof payload.errors === "object") {
     const messages = Object.values(payload.errors)
       .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .map(safeMessage)
       .filter(Boolean);
     if (messages.length) return messages.join("\n");
   }
-  return payload?.message || payload?.error || error?.message || fallback;
+  return safeMessage(payload?.message) || safeMessage(payload?.error) || safeMessage(error?.message) || fallback;
 };
 
 export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
@@ -38,46 +41,46 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
         const { data } = await api.get(`/establishment/show/${id}`);
         if (!active) return;
 
-        const est = data?.establishment || data || {};
+        const establishment = data?.establishment || data || {};
         reset({
-          name: est.name || "",
-          fantasy: est.fantasy || "",
-          cnpj: est.cnpj || "",
-          phone: est.phone || "",
-          email: est.email || "",
-          description: est.description || "",
-          address: est.address || "",
-          city: est.city || "",
-          uf: est.uf || "",
-          cep: est.cep || "",
-          location: est.location || "",
-          instagram_url: est.instagram_url || "",
-          facebook_url: est.facebook_url || "",
-          twitter_url: est.twitter_url || "",
-          youtube_url: est.youtube_url || "",
-          website_url: est.website_url || "",
+          name: establishment.name || "",
+          fantasy: establishment.fantasy || "",
+          cnpj: establishment.cnpj || "",
+          phone: establishment.phone || "",
+          email: establishment.email || "",
+          description: establishment.description || "",
+          address: establishment.address || "",
+          city: establishment.city || "",
+          uf: establishment.uf || "",
+          cep: establishment.cep || "",
+          location: establishment.location || "",
+          instagram_url: establishment.instagram_url || "",
+          facebook_url: establishment.facebook_url || "",
+          twitter_url: establishment.twitter_url || "",
+          youtube_url: establishment.youtube_url || "",
+          website_url: establishment.website_url || "",
           segments: [],
         });
 
         let nextSegments = [];
-        if (Array.isArray(est.segments)) nextSegments = est.segments;
-        else if (typeof est.segments === "string" && est.segments.trim()) {
+        if (Array.isArray(establishment.segments)) nextSegments = establishment.segments;
+        else if (typeof establishment.segments === "string" && establishment.segments.trim()) {
           try {
-            const parsed = JSON.parse(est.segments);
+            const parsed = JSON.parse(establishment.segments);
             nextSegments = Array.isArray(parsed) ? parsed : [];
           } catch {
-            nextSegments = est.segments.split(",").map((value) => value.trim()).filter(Boolean);
+            nextSegments = establishment.segments.split(",").map((value) => value.trim()).filter(Boolean);
           }
         }
 
         setSegments(nextSegments);
         setValue("segments", nextSegments);
-        setLogoPreview(resolveImageFromEstablishment(est, "logo"));
-        setBackgroundPreview(resolveImageFromEstablishment(est, "background"));
-        setSlug(est.slug || "");
+        setLogoPreview(resolveImageFromEstablishment(establishment, "logo"));
+        setBackgroundPreview(resolveImageFromEstablishment(establishment, "background"));
+        setSlug(establishment.slug || "");
       } catch (error) {
         await Swal.fire(
-          "Não foi possível carregar a barbearia",
+          "Não foi possível carregar o estabelecimento",
           apiErrorMessage(error, "Verifique sua conexão e tente novamente."),
           "error"
         );
@@ -113,8 +116,8 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
           const canvas = document.createElement("canvas");
           canvas.width = width;
           canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
+          const context = canvas.getContext("2d");
+          if (!context) {
             reject(new Error("Seu navegador não conseguiu processar a imagem."));
             return;
           }
@@ -122,18 +125,18 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
           const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
           const drawWidth = img.naturalWidth * scale;
           const drawHeight = img.naturalHeight * scale;
-          ctx.drawImage(img, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+          context.drawImage(img, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
 
-          setPreview(canvas.toDataURL("image/jpeg", .9));
+          setPreview(canvas.toDataURL("image/jpeg", 0.88));
           canvas.toBlob((blob) => {
             if (!blob) {
               reject(new Error("Não foi possível converter a imagem."));
               return;
             }
             const resized = new File([blob], `${key}.jpg`, { type: "image/jpeg" });
-            setFiles((prev) => ({ ...prev, [key]: resized }));
+            setFiles((previous) => ({ ...previous, [key]: resized }));
             resolve(resized);
-          }, "image/jpeg", .9);
+          }, "image/jpeg", 0.88);
         };
         img.src = reader.result;
       };
@@ -146,7 +149,7 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
     try {
       await processAndResizeImage(file, 512, 512, setLogoPreview, "logo");
     } catch (error) {
-      await Swal.fire("Erro na logo", error.message, "error");
+      await Swal.fire("Erro na logo", safeMessage(error?.message) || "Não foi possível processar a imagem.", "error");
     } finally {
       event.target.value = "";
     }
@@ -158,7 +161,7 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
     try {
       await processAndResizeImage(file, 1920, 600, setBackgroundPreview, "background");
     } catch (error) {
-      await Swal.fire("Erro na capa", error.message, "error");
+      await Swal.fire("Erro na capa", safeMessage(error?.message) || "Não foi possível processar a imagem.", "error");
     } finally {
       event.target.value = "";
     }
@@ -188,13 +191,13 @@ export default function useEstablishmentUpdate(id, navigate, reset, setValue) {
 
     try {
       const { data } = await api.post(`/establishment/${id}`, formData);
-      await Swal.fire("Barbearia atualizada", data?.message || "Alterações salvas com sucesso.", "success");
+      await Swal.fire("Estabelecimento atualizado", safeMessage(data?.message) || "Alterações salvas com sucesso.", "success");
       navigate(`/establishment/view/${data?.establishment?.slug || slug}`);
     } catch (error) {
       await Swal.fire({
         icon: "error",
         title: "Não foi possível salvar",
-        text: apiErrorMessage(error, "Ocorreu um erro ao atualizar a barbearia."),
+        text: apiErrorMessage(error, "Ocorreu um erro ao atualizar o estabelecimento."),
         confirmButtonText: "Corrigir dados",
       });
     } finally {
