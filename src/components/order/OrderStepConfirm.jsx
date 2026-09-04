@@ -2,7 +2,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import { formatCurrencyBr, formatDatePtBr } from "../../utils/dateTime";
+import { formatDatePtBr } from "../../utils/dateUtils";
+import { formatCurrencyBr } from "../../utils/moneyUtils";
 import "./OrderStepConfirm.css";
 
 export default function OrderStepConfirm({
