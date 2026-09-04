@@ -10,6 +10,7 @@ import useAppointment from "../../hooks/useAppointment";
 import useImageUtils from "../../hooks/useImageUtils";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
 import useSelectedCity from "../../hooks/useSelectedCity";
+import { canScheduleItem } from "../../utils/schedulingCapabilities";
 
 import "../homepage.css";
 import GlobalPageHeader from "../../components/GlobalPageHeader";
@@ -17,6 +18,14 @@ import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 
 const PLACEHOLDER = "/images/logo.png";
+
+const establishmentIdOf = (entity) =>
+  entity?.establishment_id ??
+  entity?.establishmentId ??
+  entity?.entity_id ??
+  entity?.entityId ??
+  entity?.establishment?.id ??
+  null;
 
 export default function ItemServiceHomePage() {
   const { serviceItems, isLoading: isLoadingServices, error: serviceError } =
@@ -47,46 +56,32 @@ export default function ItemServiceHomePage() {
     wizardEstablishment
   );
 
-  const schedulableEstablishmentIds = useMemo(
-    () =>
-      new Set(
-        (Array.isArray(employers) ? employers : [])
-          .map((employer) =>
-            employer?.establishment_id ??
-            employer?.establishmentId ??
-            employer?.entity_id ??
-            employer?.entityId ??
-            employer?.establishment?.id ??
-            null
-          )
-          .filter((id) => id != null)
-          .map((id) => String(id))
-      ),
-    [employers]
-  );
-
   const visibleServiceItems = useMemo(
     () =>
       (Array.isArray(serviceItems) ? serviceItems : []).map((item) => {
-        const establishmentId =
-          item?.establishment_id ?? item?.entity_id ?? item?.entityId ?? item?.establishment?.id ?? null;
+        const establishmentId = establishmentIdOf(item);
+        const establishment = item?.establishment || (establishmentId != null ? { id: establishmentId } : null);
         return {
           ...item,
-          can_schedule:
-            establishmentId != null && schedulableEstablishmentIds.has(String(establishmentId)),
+          can_schedule: canScheduleItem({
+            item,
+            establishment,
+            employers: Array.isArray(employers) ? employers : [],
+            services: Array.isArray(serviceItems) ? serviceItems : [],
+          }),
         };
       }),
-    [serviceItems, schedulableEstablishmentIds]
+    [serviceItems, employers]
   );
 
   const headerMeta = useMemo(
-    () => [cityLabel, "Serviços de barbearia"].filter(Boolean),
+    () => [cityLabel, "Serviços com agendamento online"].filter(Boolean),
     [cityLabel]
   );
 
   const headerDescription = useMemo(
     () =>
-      `Escolha o serviço, veja os barbeiros disponíveis e agende seu horário.${
+      `Escolha o serviço, veja os profissionais disponíveis e agende seu horário.${
         cityLabel ? ` (${cityLabel})` : ""
       }`,
     [cityLabel]
@@ -102,7 +97,7 @@ export default function ItemServiceHomePage() {
           meta={headerMeta}
           compact
         />
-        <div className="hp-loading">Carregando…</div>
+        <div className="hp-loading" aria-live="polite">Carregando…</div>
       </div>
     );
   }
@@ -117,7 +112,7 @@ export default function ItemServiceHomePage() {
           meta={headerMeta}
           compact
         />
-        <div className="hp-loading">{serviceError}</div>
+        <div className="hp-loading" role="alert">{serviceError}</div>
       </div>
     );
   }
@@ -134,15 +129,17 @@ export default function ItemServiceHomePage() {
 
         <GlobalCarousel
           title="Serviços"
-          subtitle="Cortes, barba e outros serviços disponíveis nas barbearias"
+          subtitle="Encontre serviços disponíveis nos estabelecimentos da sua região"
           items={visibleServiceItems}
           fmtBRL={(value) => value}
           navigate={navigate}
           openSchedulePopup={async (item) => {
+            if (!item?.can_schedule) return;
+
             if (isLoadingEmployers) {
               await Swal.fire({
                 icon: "info",
-                title: "Carregando barbeiros",
+                title: "Carregando profissionais",
                 text: "Aguarde um instante para abrir os horários disponíveis.",
               });
               return;
@@ -153,14 +150,17 @@ export default function ItemServiceHomePage() {
               return;
             }
 
-            const establishmentId =
-              item.establishment_id ?? item.entity_id ?? item.entityId ?? null;
-            const filteredEmployers = employers.filter(
-              (employer) => Number(employer.establishment_id) === Number(establishmentId)
+            const establishmentId = establishmentIdOf(item);
+            const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
+              (employer) => Number(establishmentIdOf(employer)) === Number(establishmentId)
             );
 
             if (!filteredEmployers.length) return;
-            await openSchedulePopup({ service: item, filteredEmployers });
+            await openSchedulePopup({
+              service: item,
+              establishment: item?.establishment || (establishmentId != null ? { id: establishmentId } : null),
+              filteredEmployers,
+            });
           }}
           showSchedule
           showDots
