@@ -1,12 +1,26 @@
 // src/hooks/useEmployerCreate.js
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import api from "../services/api";
-import { appId, appSlug } from "../config";
+import {
+  addTeamMember,
+  findManagedEstablishmentBySlug,
+  removeTeamMember,
+  searchTeamMemberCandidates,
+} from "../services/platformManagementApi";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
-const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
-const teamMembersPath = `${appContextPath}/team-members`;
+function resolveSearchTerm(payload) {
+  if (!payload || typeof payload !== "object") return "";
+
+  return String(
+    payload.email ||
+      payload.user_name ||
+      payload.cpf ||
+      payload.phone ||
+      payload.first_name ||
+      ""
+  ).trim();
+}
 
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
@@ -34,15 +48,9 @@ export default function useEmployerCreate(slug) {
       setLoadError("");
 
       try {
-        const { data } = await api.get(`${appContextPath}/me/establishments`, {
+        const resolved = await findManagedEstablishmentBySlug(slug, {
           signal: controller.signal,
         });
-
-        const ownedEstablishments = Array.isArray(data?.data) ? data.data : [];
-        const resolved =
-          ownedEstablishments.find(
-            (candidate) => String(candidate?.slug || "") === String(slug)
-          ) || null;
 
         if (!resolved) {
           throw new Error(
@@ -81,16 +89,17 @@ export default function useEmployerCreate(slug) {
         title: "Estabelecimento indisponível",
         text: loadError || "Não foi possível identificar o estabelecimento.",
       });
-      return;
+      return [];
     }
 
-    if (!payload || Object.keys(payload).length === 0) {
+    const query = resolveSearchTerm(payload);
+    if (query.length < 2) {
       await Swal.fire({
         icon: "warning",
         title: "Informe os dados do usuário",
-        text: "Pesquise por e-mail, nome de usuário ou outro dado disponível.",
+        text: "Pesquise por nome, e-mail, CPF, telefone ou @usuário.",
       });
-      return;
+      return [];
     }
 
     try {
@@ -98,52 +107,34 @@ export default function useEmployerCreate(slug) {
       setUsers([]);
       setErrors({});
 
-      const usersResponse = await api.post("/user/find-for-employer", {
-        ...payload,
-        app_id: appId,
-        establishment_id: establishment.id,
+      const candidates = await searchTeamMemberCandidates(
+        establishment.id,
+        query
+      );
+
+      const normalized = candidates.map((candidate) => {
+        const teamMember = candidate?.team_member || null;
+
+        return {
+          ...candidate,
+          is_employer: Boolean(candidate?.is_team_member && teamMember?.id),
+          employer: teamMember,
+          establishments: teamMember ? [establishment] : [],
+        };
       });
 
-      const foundUsers = Array.isArray(usersResponse?.data?.users)
-        ? usersResponse.data.users
-        : [];
-
-      let establishmentEmployers = [];
-      try {
-        const employersResponse = await api.get(teamMembersPath, {
-          params: { establishment_id: establishment.id },
-        });
-        establishmentEmployers = Array.isArray(employersResponse?.data?.data)
-          ? employersResponse.data.data
-          : [];
-      } catch (error) {
-        if (isRequestCanceled(error)) return;
-      }
-
-      const employerByUserId = new Map(
-        establishmentEmployers.map((employer) => [
-          Number(employer?.user_id),
-          employer,
-        ])
-      );
-
-      setUsers(
-        foundUsers.map((user) => {
-          const employer = employerByUserId.get(Number(user.id)) || null;
-          return {
-            ...user,
-            is_employer: Boolean(employer),
-            employer,
-            establishments: employer ? [establishment] : [],
-          };
-        })
-      );
+      setUsers(normalized);
+      return normalized;
     } catch (error) {
       await Swal.fire({
         icon: "error",
         title: "Erro ao buscar usuário",
-        text: getApiErrorMessage(error, "Erro ao buscar usuários."),
+        text: getApiErrorMessage(
+          error,
+          "Não foi possível pesquisar candidatos para a equipe."
+        ),
       });
+      return [];
     } finally {
       setSearching(false);
     }
@@ -156,9 +147,9 @@ export default function useEmployerCreate(slug) {
       setLoading(true);
       setErrors({});
 
-      const { data } = await api.post(teamMembersPath, {
-        user_id: user.id,
-        establishment_id: establishment.id,
+      const data = await addTeamMember({
+        userId: user.id,
+        establishmentId: establishment.id,
         role,
         permissions,
       });
@@ -177,11 +168,13 @@ export default function useEmployerCreate(slug) {
 
       setUsers((prev) =>
         prev.map((candidate) =>
-          candidate.id === user.id
+          Number(candidate.id) === Number(user.id)
             ? {
                 ...candidate,
+                is_team_member: true,
                 is_employer: true,
                 is_owner: Boolean(data?.is_owner),
+                team_member: data?.employer,
                 employer: data?.employer,
                 establishments: [establishment],
               }
@@ -221,7 +214,7 @@ export default function useEmployerCreate(slug) {
     try {
       setLoading(true);
 
-      const { data } = await api.delete(`${teamMembersPath}/${employerId}`);
+      const data = await removeTeamMember(employerId);
 
       await Swal.fire({
         icon: "success",
@@ -234,7 +227,9 @@ export default function useEmployerCreate(slug) {
           Number(candidate.employer?.id) === Number(employerId)
             ? {
                 ...candidate,
+                is_team_member: false,
                 is_employer: false,
+                team_member: null,
                 employer: null,
                 establishments: [],
               }
