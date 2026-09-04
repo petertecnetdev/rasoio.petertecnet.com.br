@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Form, Button, Spinner, Row, Col, Card } from "react-bootstrap";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
@@ -6,7 +6,6 @@ import { FaCalendarAlt, FaClock, FaUser } from "react-icons/fa";
 
 const MySwal = withReactContent(Swal);
 const PLACEHOLDER = "/images/logo.png";
-const TZ = "America/Sao_Paulo";
 
 export default function AppointmentSelector({
   employers = [],
@@ -21,6 +20,7 @@ export default function AppointmentSelector({
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedTime, setSelectedTime] = useState("");
   const [loadingTimes, setLoadingTimes] = useState(false);
+  const availabilityRequestRef = useRef(0);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -48,30 +48,44 @@ export default function AppointmentSelector({
     }
   };
 
-  const fetchTimes = async () => {
-    if (!selectedEmployer || !selectedDate || !selectedServices.length) return;
+  const fetchTimes = useCallback(async () => {
+    if (!selectedEmployer || !selectedDate || !selectedServices.length) {
+      availabilityRequestRef.current += 1;
+      setAvailableTimes([]);
+      setLoadingTimes(false);
+      return;
+    }
+
+    const requestId = availabilityRequestRef.current + 1;
+    availabilityRequestRef.current = requestId;
+
     try {
       setLoadingTimes(true);
 
       const duration = totalDuration > 0 ? totalDuration : 30;
-      const payload = {
-        employer_id: selectedEmployer?.id,
-        date: toDateKey(selectedDate),
-        duration,
-      };
+      const date = toDateKey(selectedDate);
+      const times = await loadAvailableTimes(date, selectedEmployer, duration);
 
-      console.log("📤 Enviando para backend:", payload);
-      const times = await loadAvailableTimes(payload.date, selectedEmployer, payload.duration);
+      if (availabilityRequestRef.current !== requestId) return;
 
-      console.log("📥 Resposta de horários disponíveis:", times);
       setAvailableTimes(Array.isArray(times) ? times : []);
     } catch (err) {
-      console.error("❌ Erro ao carregar horários disponíveis:", err);
+      if (availabilityRequestRef.current !== requestId) return;
+
+      console.error("Erro ao carregar horários disponíveis:", err);
       setAvailableTimes([]);
     } finally {
-      setLoadingTimes(false);
+      if (availabilityRequestRef.current === requestId) {
+        setLoadingTimes(false);
+      }
     }
-  };
+  }, [
+    loadAvailableTimes,
+    selectedDate,
+    selectedEmployer,
+    selectedServices.length,
+    totalDuration,
+  ]);
 
   const handleConfirm = async () => {
     if (!selectedEmployer || !selectedDate || !selectedTime || !selectedServices.length) {
@@ -95,11 +109,13 @@ export default function AppointmentSelector({
   };
 
   useEffect(() => {
-    if (selectedEmployer && selectedDate && selectedServices.length) {
-      fetchTimes();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEmployer, selectedDate, selectedServices]);
+    setSelectedTime("");
+    fetchTimes();
+
+    return () => {
+      availabilityRequestRef.current += 1;
+    };
+  }, [fetchTimes]);
 
   return (
     <Card className="bg-dark text-light border-0 rounded-4 shadow-lg mt-4">
@@ -117,8 +133,9 @@ export default function AppointmentSelector({
             </Form.Label>
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {employers.map((e) => (
-                <div
+                <button
                   key={e.id}
+                  type="button"
                   className={`p-2 text-center rounded-3 ${
                     selectedEmployer?.id === e.id
                       ? "bg-info text-dark"
@@ -130,12 +147,13 @@ export default function AppointmentSelector({
                     border: "1px solid #00ffff44",
                     transition: "0.3s",
                   }}
+                  aria-pressed={selectedEmployer?.id === e.id}
                   onClick={() => setSelectedEmployer(e)}
                 >
                   <img
                     src={imageUrl(e.user?.avatar)}
                     onError={(ev) => (ev.target.src = PLACEHOLDER)}
-                    alt={e.user?.first_name}
+                    alt={e.user?.first_name || "Profissional"}
                     className="rounded-circle mb-2"
                     width={60}
                     height={60}
@@ -150,7 +168,7 @@ export default function AppointmentSelector({
                   >
                     {e.user?.first_name || "Profissional"}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </Form.Group>
@@ -162,39 +180,43 @@ export default function AppointmentSelector({
               Serviços
             </Form.Label>
             <div className="d-flex flex-wrap gap-2 justify-content-center">
-              {services.map((s) => (
-                <div
-                  key={s.id}
-                  className={`p-2 rounded-3 ${
-                    selectedServices.find((x) => x.id === s.id)
-                      ? "bg-info text-dark"
-                      : "bg-secondary text-light"
-                  }`}
-                  style={{
-                    cursor: "pointer",
-                    width: "150px",
-                    border: "1px solid #00ffff44",
-                    transition: "0.3s",
-                  }}
-                  onClick={() => handleServiceToggle(s)}
-                >
-                  <div
+              {services.map((s) => {
+                const selected = selectedServices.some((x) => x.id === s.id);
+
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={`p-2 rounded-3 ${
+                      selected ? "bg-info text-dark" : "bg-secondary text-light"
+                    }`}
                     style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      lineHeight: "14px",
+                      cursor: "pointer",
+                      width: "150px",
+                      border: "1px solid #00ffff44",
+                      transition: "0.3s",
                     }}
+                    aria-pressed={selected}
+                    onClick={() => handleServiceToggle(s)}
                   >
-                    {s.name}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#00ffff" }}>
-                    {fmtBRL(s.price)}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#999" }}>
-                    {s.duration || 30} min
-                  </div>
-                </div>
-              ))}
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        lineHeight: "14px",
+                      }}
+                    >
+                      {s.name}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#00ffff" }}>
+                      {fmtBRL(s.price)}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#999" }}>
+                      {s.duration || 30} min
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </Form.Group>
 
@@ -220,8 +242,9 @@ export default function AppointmentSelector({
               Horário
             </Form.Label>
             {loadingTimes ? (
-              <div className="text-center my-3">
+              <div className="text-center my-3" role="status" aria-live="polite">
                 <Spinner animation="border" variant="info" />
+                <span className="visually-hidden">Carregando horários disponíveis</span>
               </div>
             ) : (
               <Row className="g-2">
@@ -229,12 +252,14 @@ export default function AppointmentSelector({
                   availableTimes.map((t) => (
                     <Col xs={4} md={3} key={t}>
                       <Button
+                        type="button"
                         size="sm"
                         className={`w-100 ${
                           selectedTime === t
                             ? "btn-info text-dark"
                             : "btn-outline-info"
                         }`}
+                        aria-pressed={selectedTime === t}
                         onClick={() => setSelectedTime(t)}
                       >
                         {t}
@@ -243,7 +268,7 @@ export default function AppointmentSelector({
                   ))
                 ) : (
                   <Col>
-                    <div className="text-muted small text-center">
+                    <div className="text-muted small text-center" aria-live="polite">
                       {selectedEmployer && selectedDate && selectedServices.length
                         ? "Nenhum horário disponível."
                         : "Selecione profissional, serviços e data."}
@@ -262,6 +287,7 @@ export default function AppointmentSelector({
           {/* CONFIRMAR */}
           <div className="text-center">
             <Button
+              type="button"
               size="lg"
               variant="info"
               className="text-dark fw-bold px-4 py-2 rounded-pill"
