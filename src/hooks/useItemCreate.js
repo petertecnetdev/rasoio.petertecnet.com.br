@@ -1,9 +1,12 @@
 // src/hooks/useItemCreate.js
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
 import Swal from "sweetalert2";
-import { apiBaseUrl, appId } from "../config";
+import {
+  createManagedItem,
+  findManagedEstablishmentBySlug,
+} from "../services/platformManagementApi";
+import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
 
 export default function useItemCreate(
   navigate,
@@ -19,13 +22,10 @@ export default function useItemCreate(
   const [establishment, setEstablishment] = useState(null);
 
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
 
-    const setupFromEstablishment = (est) => {
-      setEstablishment(est);
-      setValue("app_id", appId);
-      setValue("entity_id", est.id);
-      setValue("entity_name", "establishment");
+    const setupFromEstablishment = (establishmentValue) => {
+      setEstablishment(establishmentValue);
       setValue("status", true);
     };
 
@@ -37,50 +37,45 @@ export default function useItemCreate(
       }
 
       if (!slug) {
-        Swal.fire({
+        setLoading(false);
+        await Swal.fire({
           icon: "error",
-          title: "Erro",
-          text: "Estabelecimento não identificado.",
-        }).then(() => navigate(-1));
+          title: "Estabelecimento não identificado",
+          text: "Não foi possível identificar o estabelecimento para cadastrar o item.",
+        });
+        navigate("/establishment/my");
         return;
       }
 
       try {
-        const token = localStorage.getItem("token");
+        const resolved = await findManagedEstablishmentBySlug(slug, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return;
 
-        const res = await axios.get(
-          `${apiBaseUrl}/establishment/view/${slug}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-
-        if (!active) return;
-
-        const est = res.data?.establishment;
-
-        if (!est?.id) {
-          throw new Error("Estabelecimento inválido");
+        if (!resolved?.id) {
+          throw new Error(
+            "Este estabelecimento não foi encontrado entre as unidades que você administra na Rasoio."
+          );
         }
 
-        setupFromEstablishment(est);
-      } catch (err) {
-        Swal.fire({
+        setupFromEstablishment(resolved);
+      } catch (error) {
+        if (isRequestCanceled(error)) return;
+        await Swal.fire({
           icon: "error",
-          title: "Erro",
-          text:
-            err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            "Erro ao identificar o estabelecimento.",
-        }).then(() => navigate(-1));
+          title: "Não foi possível abrir o cadastro",
+          text: error?.message?.startsWith("Este estabelecimento")
+            ? error.message
+            : getApiErrorMessage(error, "Erro ao identificar o estabelecimento."),
+        });
+        navigate("/establishment/my");
       } finally {
-        if (active) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     })();
 
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [slug, navigate, setValue, establishmentFromState]);
 
   useEffect(() => {
@@ -89,76 +84,66 @@ export default function useItemCreate(
     };
   }, [imagePreview]);
 
-  function handleImageChange(e) {
-    const file = e.target.files?.[0];
+  function handleImageChange(event) {
+    const file = event.target.files?.[0];
     if (!file) return;
 
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
   }
 
   function handleRemoveImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(null);
     setImagePreview(null);
     setValue("image", null);
   }
 
   async function submitCreate(data) {
+    if (!establishment?.id) {
+      await Swal.fire({
+        icon: "error",
+        title: "Estabelecimento indisponível",
+        text: "Não foi possível identificar o estabelecimento deste item.",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
-
-      const token = localStorage.getItem("token");
       const formData = new FormData();
+      formData.append("establishment_id", String(establishment.id));
 
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          formData.append(key, value);
+      Object.entries(data || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "") return;
+        if (["app_id", "entity_id", "entity_name", "image"].includes(key)) return;
+
+        if (Array.isArray(value)) {
+          value.forEach((entry) => formData.append(`${key}[]`, entry));
+          return;
         }
+
+        formData.append(key, value);
       });
 
-      if (image) {
-        formData.append("image", image);
-      }
+      if (image) formData.append("image", image);
 
-      const { data: response } = await axios.post(
-        `${apiBaseUrl}/item`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      Swal.fire({
+      const response = await createManagedItem(formData);
+      await Swal.fire({
         icon: "success",
-        title: "Sucesso",
-        text: response.message,
-      }).then(() => {
-        reset();
-        if (establishment?.slug) {
-          navigate(`/establishment/item/${establishment.slug}`);
-        } else {
-          navigate(-1);
-        }
+        title: "Item cadastrado",
+        text: response?.message || "Item cadastrado com sucesso.",
       });
-    } catch (err) {
-      if (err.response?.data?.errors) {
-        const errors = err.response.data.errors;
-        const firstKey = Object.keys(errors)[0];
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: errors[firstKey][0],
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Erro",
-          text: err.response?.data?.error || "Erro ao criar item.",
-        });
-      }
+
+      reset();
+      navigate(`/establishment/item/${establishment.slug}${data?.type === "product" ? "?type=product" : ""}`);
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Não foi possível cadastrar",
+        text: getApiErrorMessage(error, "Erro ao criar item."),
+      });
     } finally {
       setLoading(false);
     }
