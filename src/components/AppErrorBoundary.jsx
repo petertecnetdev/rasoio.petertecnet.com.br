@@ -15,6 +15,10 @@ function createErrorId() {
   return window.crypto?.randomUUID?.() || `render-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function safeFrontendPage() {
+  return window.location.pathname;
+}
+
 function reportRenderError(error, info, errorId, chunkError) {
   try {
     const token = localStorage.getItem("token");
@@ -24,7 +28,7 @@ function reportRenderError(error, info, errorId, chunkError) {
       id: errorId,
       type: "frontend_error",
       timestamp: new Date().toISOString(),
-      page: window.location.pathname + window.location.search,
+      page: safeFrontendPage(),
       label: String(error?.message || error?.name || "React render error").slice(0, 200),
       target: "AppErrorBoundary",
       metadata: {
@@ -42,7 +46,7 @@ function reportRenderError(error, info, errorId, chunkError) {
         "X-Peter-App": appSlug,
         "X-App-Slug": appSlug,
         "X-Telemetry-Schema": "2",
-        "X-Frontend-Page": window.location.href,
+        "X-Frontend-Page": safeFrontendPage(),
         "X-App-ID": String(appId),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
