@@ -9,7 +9,7 @@ export default function GlobalNavHeader({ user, onOpenMenu }) {
     <header className="gn-header">
       {/* LOGO */}
       <Link to="/" className="gn-logo">
-        <img src="/images/logo.png" alt="Rasoio" />
+        <img src="/rasoio-logo.png" alt="Rasoio" />
       </Link>
 
       {/* LINKS PÚBLICOS */}
