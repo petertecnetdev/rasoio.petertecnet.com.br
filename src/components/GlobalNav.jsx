@@ -123,7 +123,7 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
               <input
                 ref={searchRef}
                 type="search"
-                placeholder="Buscar barbearias, barbeiros e serviços"
+                placeholder="Buscar estabelecimentos, profissionais e serviços"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 aria-label="Buscar no Rasoio"
@@ -131,10 +131,10 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
             </form>
 
             <nav className="nav__links nav__links--icons" aria-label="Navegação principal">
-              <Link to="/establishments" className={`nav__link nav__iconLink ${isActive("/establishments") ? "active" : ""}`} title="Barbearias" aria-label="Barbearias">
+              <Link to="/establishments" className={`nav__link nav__iconLink ${isActive("/establishments") ? "active" : ""}`} title="Estabelecimentos" aria-label="Estabelecimentos">
                 <FaStore className="nav__icon" />
               </Link>
-              <Link to="/employers" className={`nav__link nav__iconLink ${isActive("/employers") ? "active" : ""}`} title="Barbeiros" aria-label="Barbeiros">
+              <Link to="/employers" className={`nav__link nav__iconLink ${isActive("/employers") ? "active" : ""}`} title="Profissionais" aria-label="Profissionais">
                 <FaUserFriends className="nav__icon" />
               </Link>
               <Link to="/item/services" className={`nav__link nav__iconLink ${isActive("/item/services") ? "active" : ""}`} title="Serviços" aria-label="Serviços">
@@ -194,9 +194,9 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
                         <>
                           <div className="nav__divider" />
                           <div className="nav__menuGroup">
-                            <span className="nav__menuTitle">Área do barbeiro</span>
+                            <span className="nav__menuTitle">Área profissional</span>
                             <button className="nav__userMenuItem" onClick={() => go("/employer/dashboard")} type="button">
-                              <span className="nav__menuIcon">💈</span><span className="nav__menuText">Painel do barbeiro</span><span className="nav__menuArrow">›</span>
+                              <span className="nav__menuIcon">💼</span><span className="nav__menuText">Painel profissional</span><span className="nav__menuArrow">›</span>
                             </button>
                             <button className="nav__userMenuItem" onClick={() => go("/employer/schedules")} type="button">
                               <span className="nav__menuIcon">⏱️</span><span className="nav__menuText">Disponibilidade</span><span className="nav__menuArrow">›</span>
@@ -210,12 +210,12 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
 
                       <div className="nav__divider" />
                       <div className="nav__menuGroup">
-                        <span className="nav__menuTitle">Gestão da barbearia</span>
+                        <span className="nav__menuTitle">Gestão de estabelecimentos</span>
                         <button className="nav__userMenuItem" onClick={() => go("/establishment/my")} type="button">
-                          <span className="nav__menuIcon">🏪</span><span className="nav__menuText">Minhas barbearias</span><span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">🏪</span><span className="nav__menuText">Meus estabelecimentos</span><span className="nav__menuArrow">›</span>
                         </button>
                         <button className="nav__userMenuItem" onClick={() => go("/establishment/create")} type="button">
-                          <span className="nav__menuIcon">➕</span><span className="nav__menuText">Cadastrar nova barbearia</span><span className="nav__menuArrow">›</span>
+                          <span className="nav__menuIcon">➕</span><span className="nav__menuText">Cadastrar estabelecimento</span><span className="nav__menuArrow">›</span>
                         </button>
                       </div>
 
