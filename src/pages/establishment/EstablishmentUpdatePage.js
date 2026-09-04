@@ -37,7 +37,7 @@ export default function EstablishmentUpdatePage() {
     return (
       <ProcessingIndicatorComponent
         interval={1200}
-        messages={["Carregando dados da barbearia..."]}
+        messages={["Carregando dados do estabelecimento..."]}
         gifSrc="/images/logo.gif"
       />
     );
@@ -52,8 +52,8 @@ export default function EstablishmentUpdatePage() {
 
       <main className="eup__container">
         <header className="eup__header">
-          <span className="eup__eyebrow">Gestão da barbearia</span>
-          <h1>Editar barbearia</h1>
+          <span className="eup__eyebrow">Gestão do estabelecimento</span>
+          <h1>Editar estabelecimento</h1>
           <p>Atualize os dados públicos, imagens, localização e informações de contato.</p>
         </header>
 
