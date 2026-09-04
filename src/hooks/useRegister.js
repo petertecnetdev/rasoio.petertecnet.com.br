@@ -33,21 +33,25 @@ const normalizeApiErrors = (data) => {
   return [{ field: null, label: "Erro", message: String(msg) }];
 };
 
-const buildHtmlListErrors = (items = []) => {
-  if (!items.length) return "";
-  return `
-    <div style="text-align:left; line-height:1.35;">
-      <div style="margin-bottom:8px; font-weight:800;">Verifique os campos:</div>
-      <ul style="margin:0; padding-left:18px;">
-        ${items
-          .map((it) => `<li><b>${it.label}:</b> ${it.message}</li>`)
-          .join("")}
-      </ul>
-    </div>
-  `;
+const buildTextListErrors = (items = []) => {
+  if (!items.length) return "Verifique os dados informados.";
+  return items.map((item) => `${item.label}: ${item.message}`).join("\n");
 };
 
 const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
+
+const getSafeRedirectPath = (value, fallback = "/login") => {
+  if (!value || typeof value !== "string") return fallback;
+
+  try {
+    const target = new URL(value, window.location.origin);
+    if (target.origin !== window.location.origin) return fallback;
+
+    return `${target.pathname}${target.search}${target.hash}` || fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 export default function useRegister({ redirectTo = "/login" } = {}) {
   const [form, setForm] = useState({
@@ -103,9 +107,9 @@ export default function useRegister({ redirectTo = "/login" } = {}) {
 
       // validação local
       if (form.password !== form.password_confirmation) {
-        Swal.fire({
+        await Swal.fire({
           title: "Erro",
-          html: buildHtmlListErrors([
+          text: buildTextListErrors([
             { label: "Confirmar senha", message: "As senhas não coincidem." },
           ]),
           icon: "error",
@@ -116,9 +120,9 @@ export default function useRegister({ redirectTo = "/login" } = {}) {
 
       const cpfDigits = onlyDigits(form.cpf);
       if (cpfDigits.length > 0 && cpfDigits.length !== 11) {
-        Swal.fire({
+        await Swal.fire({
           title: "Erro",
-          html: buildHtmlListErrors([
+          text: buildTextListErrors([
             { label: "CPF", message: "O CPF deve conter 11 números." },
           ]),
           icon: "error",
@@ -147,14 +151,14 @@ export default function useRegister({ redirectTo = "/login" } = {}) {
         });
 
         onSuccess?.();
-        window.location.href = redirectTo;
+        window.location.assign(getSafeRedirectPath(redirectTo));
       } catch (err) {
         const data = err?.response?.data || null;
         const list = normalizeApiErrors(data);
 
-        Swal.fire({
+        await Swal.fire({
           title: "Erro ao cadastrar",
-          html: buildHtmlListErrors(list),
+          text: buildTextListErrors(list),
           icon: "error",
           confirmButtonText: "Ok",
         });
