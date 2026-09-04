@@ -60,7 +60,7 @@ export default function SearchPage() {
     return (
       <div className="hp-wrapper">
         <GlobalPageHeader title="Busca" description="Buscando opções para você..." compact />
-        <div className="hp-loading">Carregando…</div>
+        <div className="hp-loading" aria-live="polite">Carregando…</div>
       </div>
     );
   }
@@ -74,10 +74,12 @@ export default function SearchPage() {
             ? error
             : queryText
               ? `${total} resultado${total === 1 ? "" : "s"}${cityLabel ? ` em ${cityLabel}` : ""}.`
-              : "Digite algo na busca para encontrar barbearias, barbeiros, serviços e produtos."
+              : "Digite algo na busca para encontrar estabelecimentos, profissionais, serviços e produtos."
         }
         meta={[cityLabel].filter(Boolean)}
       />
+
+      {error && <div className="hp-loading" role="alert">{error}</div>}
 
       {!error && queryText && total === 0 && (
         <div className="hp-loading">
@@ -85,36 +87,38 @@ export default function SearchPage() {
         </div>
       )}
 
-      <div className="hp-sections">
-        <GlobalCarousel
-          title="Barbearias"
-          items={results.establishments}
-          fmtBRL={(value) => value}
-          navigate={navigate}
-          showDots
-        />
-        <GlobalCarousel
-          title="Barbeiros"
-          items={results.employers}
-          fmtBRL={(value) => value}
-          navigate={navigate}
-          showDots
-        />
-        <GlobalCarousel
-          title="Serviços"
-          items={results.services}
-          fmtBRL={(value) => value}
-          navigate={navigate}
-          showDots
-        />
-        <GlobalCarousel
-          title="Produtos"
-          items={results.products}
-          fmtBRL={(value) => value}
-          navigate={navigate}
-          showDots
-        />
-      </div>
+      {!error && (
+        <div className="hp-sections">
+          <GlobalCarousel
+            title="Estabelecimentos"
+            items={results.establishments}
+            fmtBRL={(value) => value}
+            navigate={navigate}
+            showDots
+          />
+          <GlobalCarousel
+            title="Profissionais"
+            items={results.employers}
+            fmtBRL={(value) => value}
+            navigate={navigate}
+            showDots
+          />
+          <GlobalCarousel
+            title="Serviços"
+            items={results.services}
+            fmtBRL={(value) => value}
+            navigate={navigate}
+            showDots
+          />
+          <GlobalCarousel
+            title="Produtos"
+            items={results.products}
+            fmtBRL={(value) => value}
+            navigate={navigate}
+            showDots
+          />
+        </div>
+      )}
     </div>
   );
 }
