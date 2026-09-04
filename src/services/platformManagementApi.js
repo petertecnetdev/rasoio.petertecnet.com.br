@@ -122,6 +122,7 @@ export async function getAppointmentDashboard(slug, options = {}) {
 }
 
 export async function listTeamMembers(establishmentId, options = {}) {
+  if (!establishmentId) return [];
   const { data } = await api.get(`${appContextPath}/team-members`, {
     ...options,
     params: {
@@ -132,7 +133,46 @@ export async function listTeamMembers(establishmentId, options = {}) {
   return asArray(data?.data);
 }
 
+export async function searchTeamMemberCandidates(
+  establishmentId,
+  query,
+  options = {}
+) {
+  if (!establishmentId || !String(query || "").trim()) return [];
+
+  const { data } = await api.get(`${appContextPath}/team-members/candidates`, {
+    ...options,
+    params: {
+      ...(options.params || {}),
+      establishment_id: Number(establishmentId),
+      q: String(query).trim(),
+    },
+  });
+
+  return asArray(data?.data);
+}
+
+export async function addTeamMember({
+  userId,
+  establishmentId,
+  role = "profissional",
+  permissions = [],
+}) {
+  if (!userId) throw new Error("Usuário não informado.");
+  if (!establishmentId) throw new Error("Estabelecimento não informado.");
+
+  const { data } = await api.post(`${appContextPath}/team-members`, {
+    user_id: Number(userId),
+    establishment_id: Number(establishmentId),
+    role: String(role || "profissional").trim() || "profissional",
+    permissions: Array.isArray(permissions) ? permissions : [],
+  });
+
+  return data || {};
+}
+
 export async function removeTeamMember(teamMemberId) {
+  if (!teamMemberId) throw new Error("Colaborador não informado.");
   const { data } = await api.delete(
     `${appContextPath}/team-members/${Number(teamMemberId)}`
   );
