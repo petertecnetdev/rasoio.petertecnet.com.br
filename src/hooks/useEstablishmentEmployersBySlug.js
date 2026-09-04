@@ -1,29 +1,16 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
-import { appSlug } from "../config";
+import {
+  findManagedEstablishmentBySlug,
+  listTeamMembers,
+} from "../services/platformManagementApi";
 import { getApiErrorMessage, isRequestCanceled } from "../utils/apiError";
-
-const appContextPath = `/v1/apps/${encodeURIComponent(appSlug)}`;
-const teamMembersPath = `${appContextPath}/team-members`;
 
 async function requestOwnedEstablishment(slug, signal) {
   if (!slug) {
     throw new Error("Estabelecimento não informado.");
   }
 
-  const establishmentResponse = await api.get(
-    `${appContextPath}/me/establishments`,
-    { signal }
-  );
-
-  const ownedEstablishments = Array.isArray(establishmentResponse?.data?.data)
-    ? establishmentResponse.data.data
-    : [];
-
-  const establishment =
-    ownedEstablishments.find(
-      (candidate) => String(candidate?.slug || "") === String(slug)
-    ) || null;
+  const establishment = await findManagedEstablishmentBySlug(slug, { signal });
 
   if (!establishment) {
     throw new Error(
@@ -35,12 +22,11 @@ async function requestOwnedEstablishment(slug, signal) {
 }
 
 async function requestEmployers(establishmentId, signal) {
-  const response = await api.get(teamMembersPath, {
-    params: { establishment_id: establishmentId },
-    signal,
-  });
+  const members = await listTeamMembers(establishmentId, { signal });
 
-  return Array.isArray(response?.data?.data) ? response.data.data : [];
+  return Array.isArray(members)
+    ? members.filter((member) => member && typeof member === "object")
+    : [];
 }
 
 function resolveEstablishmentError(error) {
