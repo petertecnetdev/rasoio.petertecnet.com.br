@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Container, Spinner, Alert } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import OrderCreateForm from "../../components/order/OrderCreateForm";
 import useOrderCreate from "../../hooks/useOrderCreate";
-import GlobalModal from "../../components/GlobalModal";
 import api from "../../services/api";
 import { appId } from "../../config";
 
@@ -20,6 +20,23 @@ const formatDateTime = (value) => {
     minute: "2-digit",
   });
 };
+
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const showLoadingModal = () =>
+  Swal.fire({
+    title: "Confirmando pedido...",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => Swal.showLoading(),
+  });
 
 export default function OrderCreatePage() {
   const { slug: identifier } = useParams();
@@ -44,7 +61,7 @@ export default function OrderCreatePage() {
     if (!establishment) return;
 
     try {
-      GlobalModal.loading("Confirmando pedido...");
+      showLoadingModal();
 
       const res = await api.post("/order", {
         ...payload,
@@ -58,46 +75,42 @@ export default function OrderCreatePage() {
       });
 
       const order = res.data.order;
+      const apiMessage = res?.data?.message || "Pedido criado com sucesso.";
 
-      GlobalModal.close();
-
-      GlobalModal.open({
+      await Swal.fire({
         title: "Pedido criado com sucesso",
         icon: "success",
         html: `
           <div style="text-align:left">
-            <p><strong>${res.data.message}</strong></p>
+            <p><strong>${escapeHtml(apiMessage)}</strong></p>
             <hr/>
-            <p><strong>Nº do pedido:</strong> ${order.order_number}</p>
-            <p><strong>Status:</strong> ${order.status}</p>
-            <p><strong>Início:</strong> ${formatDateTime(
-              order.scheduled_start || order.order_datetime
+            <p><strong>Nº do pedido:</strong> ${escapeHtml(order?.order_number || "-")}</p>
+            <p><strong>Status:</strong> ${escapeHtml(order?.status || "-")}</p>
+            <p><strong>Início:</strong> ${escapeHtml(
+              formatDateTime(order?.scheduled_start || order?.order_datetime)
             )}</p>
-            <p><strong>Término:</strong> ${formatDateTime(
-              order.scheduled_end
+            <p><strong>Término:</strong> ${escapeHtml(
+              formatDateTime(order?.scheduled_end)
             )}</p>
           </div>
         `,
-        confirmText: "Ver pedido",
-        showCancel: false,
-        onConfirm: () => {
-          navigate(`/order/${order.id}`);
-        },
+        confirmButtonText: "Ver pedido",
       });
-    } catch (err) {
-      GlobalModal.close();
 
+      if (order?.id) {
+        navigate(`/order/${order.id}`);
+      }
+    } catch (err) {
       const message =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         "Erro ao criar pedido.";
 
-      GlobalModal.open({
+      await Swal.fire({
         title: "Erro",
         icon: "error",
-        html: `<p>${message}</p>`,
-        confirmText: "Fechar",
-        showCancel: false,
+        text: String(message),
+        confirmButtonText: "Fechar",
       });
     }
   };
