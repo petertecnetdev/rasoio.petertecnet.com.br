@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const SITE_URL = "https://rasoio.petertecnet.com.br";
-const DEFAULT_TITLE = "Rasoio | Barbearias, serviços e agendamentos";
-const DEFAULT_DESCRIPTION = "Encontre barbearias, profissionais e serviços e faça agendamentos online pela Rasoio, uma plataforma Peter Tecnet.";
+const DEFAULT_TITLE = "Rasoio | Estabelecimentos, serviços e agendamentos";
+const DEFAULT_DESCRIPTION = "Encontre estabelecimentos, profissionais e serviços e faça agendamentos online pela Rasoio, uma plataforma Peter Tecnet.";
 
 const publicRoute = (path) => {
   if (path === "/") return { title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION };
-  if (path === "/search") return { title: "Buscar barbearias e serviços | Rasoio", description: "Pesquise barbearias, profissionais, serviços e produtos disponíveis na Rasoio." };
-  if (path === "/establishments") return { title: "Barbearias e estabelecimentos | Rasoio", description: "Descubra estabelecimentos e encontre serviços disponíveis para agendamento na Rasoio." };
-  if (path.startsWith("/establishment/view/")) return { title: "Barbearia e serviços | Rasoio", description: "Veja serviços, profissionais e informações deste estabelecimento e faça seu agendamento pela Rasoio." };
+  if (path === "/search") return { title: "Buscar estabelecimentos e serviços | Rasoio", description: "Pesquise estabelecimentos, profissionais, serviços e produtos disponíveis na Rasoio." };
+  if (path === "/establishments") return { title: "Estabelecimentos | Rasoio", description: "Descubra estabelecimentos e encontre serviços disponíveis para agendamento na Rasoio." };
+  if (path.startsWith("/establishment/view/")) return { title: "Estabelecimento e serviços | Rasoio", description: "Veja serviços, profissionais e informações deste estabelecimento e faça seu agendamento pela Rasoio." };
   if (path === "/employers") return { title: "Profissionais | Rasoio", description: "Conheça profissionais disponíveis e encontre horários para atendimento na Rasoio." };
   if (path.startsWith("/employer/view/")) return { title: "Profissional | Rasoio", description: "Veja informações e serviços deste profissional na Rasoio." };
-  if (path === "/item/services") return { title: "Serviços de barbearia | Rasoio", description: "Encontre serviços publicados por estabelecimentos na Rasoio." };
+  if (path === "/item/services") return { title: "Serviços | Rasoio", description: "Encontre serviços publicados por estabelecimentos na Rasoio." };
   if (path === "/item/products") return { title: "Produtos | Rasoio", description: "Conheça produtos publicados por estabelecimentos na Rasoio." };
   if (path.startsWith("/item/view/")) return { title: "Serviço ou produto | Rasoio", description: "Veja detalhes deste serviço ou produto na Rasoio." };
   return null;
@@ -22,18 +22,26 @@ const PRIVATE_PREFIXES = ["/dashboard", "/orders", "/order/", "/user/", "/item/l
 
 function meta(selector, attrs) {
   let el = document.head.querySelector(selector);
-  if (!el) { el = document.createElement("meta"); document.head.appendChild(el); }
+  if (!el) {
+    el = document.createElement("meta");
+    document.head.appendChild(el);
+  }
   Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
 }
 
 function canonical(href) {
   let el = document.head.querySelector('link[rel="canonical"]');
-  if (!el) { el = document.createElement("link"); el.rel = "canonical"; document.head.appendChild(el); }
+  if (!el) {
+    el = document.createElement("link");
+    el.rel = "canonical";
+    document.head.appendChild(el);
+  }
   el.href = href;
 }
 
 export default function SeoManager() {
   const location = useLocation();
+
   useEffect(() => {
     const path = location.pathname.replace(/\/+$/, "") || "/";
     const route = publicRoute(path);
@@ -41,6 +49,7 @@ export default function SeoManager() {
     const title = route?.title || DEFAULT_TITLE;
     const description = route?.description || DEFAULT_DESCRIPTION;
     const url = `${SITE_URL}${path === "/" ? "/" : path}`;
+
     document.title = title;
     meta('meta[name="description"]', { name: "description", content: description });
     meta('meta[name="robots"]', { name: "robots", content: indexable ? "index, follow, max-image-preview:large" : "noindex, nofollow" });
@@ -51,5 +60,6 @@ export default function SeoManager() {
     meta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
     canonical(url);
   }, [location.pathname]);
+
   return null;
 }
