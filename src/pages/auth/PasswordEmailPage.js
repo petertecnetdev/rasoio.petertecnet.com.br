@@ -136,7 +136,6 @@ export default function PasswordEmailPage() {
     sendCode(email);
   };
 
-  // 🔒 BLOQUEIO TOTAL (padrão do projeto)
   if (loading) {
     return (
       <ProcessingIndicatorComponent
@@ -152,7 +151,6 @@ export default function PasswordEmailPage() {
 
   return (
     <div className="pep">
-      {/* efeitos de fundo */}
       <div className="pep__bg">
         <div className="pep__noise" />
         <div className="pep__orb pep__orb--a" />
@@ -162,19 +160,18 @@ export default function PasswordEmailPage() {
 
       <div className="pep__container">
         <div className="pep__layout">
-          {/* HERO */}
           <aside className="pep__hero">
             <div className="pep__heroCard">
               <div className="pep__heroTop">
                 <div className="pep__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt=""
                     className="pep__heroLogo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                      e.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
@@ -225,19 +222,18 @@ export default function PasswordEmailPage() {
             </div>
           </aside>
 
-          {/* CARD */}
           <main className="pep__main">
             <div className="pep__card">
               <header className="pep__cardHeader">
                 <div className="pep__logoWrap">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt="Rasoio"
                     className="pep__logo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                      e.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
