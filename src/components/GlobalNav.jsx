@@ -116,7 +116,7 @@ export default function GlobalNav({ loadingMenu, handleLogout }) {
         <div className="nav__bar">
           <div className="nav__left nav__left--fb">
             <Link to="/" className="nav__brand" aria-label="Ir para o Rasoio">
-              <img src="/images/logo.png" alt="Rasoio" className="nav__logo" />
+              <img src="/rasoio-logo.png" alt="Rasoio" className="nav__logo" />
             </Link>
 
             <form className="nav__search nav__search--left" onSubmit={handleSearch} role="search">
