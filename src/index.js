@@ -1,4 +1,3 @@
-import { startTelemetry } from "./telemetry";
 import { apiBaseUrl, appId, appSlug } from "./config";
 import { installGlobalImageFallbacks } from "./utils/imageFallback";
 import { installPasswordFieldEnhancer } from "./utils/passwordFieldEnhancer";
@@ -16,7 +15,6 @@ import "./styles/appointment-wizard-responsive.css";
 
 installGlobalImageFallbacks();
 installPasswordFieldEnhancer();
-startTelemetry({ apiBaseUrl, appSlug, appId });
 
 axios.defaults.headers.common["X-Peter-App"] = appSlug;
 axios.defaults.headers.common["X-App-ID"] = String(appId);
