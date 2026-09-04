@@ -23,3 +23,44 @@ jobs:
       VPS_PORT: ${{ secrets.VPS_PORT }}
       VPS_USER: ${{ secrets.VPS_USER }}
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
+  verify-collaborator-ui:
+    name: Verify collaborator UI release
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          : > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Verify deployed collaborator bundle
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          set -euo pipefail
+          port="${VPS_PORT:-22}"
+          ssh \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -o ConnectTimeout=20 \
+            -p "$port" "$VPS_USER@$VPS_HOST" \
+            'set -euo pipefail
+             cd /var/www/rasoio.petertecnet.com.br
+             test -f build/index.html
+             main_asset="$(grep -oE "static/js/main\.[A-Za-z0-9]+\.js" build/index.html | head -n 1)"
+             test -n "$main_asset"
+             test -f "build/$main_asset"
+             grep -q "establishment-team-management-v2" "build/$main_asset"
+             grep -q "Adicionar colaborador" "build/$main_asset"
+             echo "Verified deployed collaborator UI in build/$main_asset"'
