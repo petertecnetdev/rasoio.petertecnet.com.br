@@ -134,7 +134,6 @@ export default function PasswordResetPage() {
     }
   };
 
-  // 🔒 BLOQUEIO TOTAL DA UI (mantendo seu padrão)
   if (loading) {
     return (
       <ProcessingIndicatorComponent
@@ -149,7 +148,6 @@ export default function PasswordResetPage() {
 
   return (
     <div className="prp">
-      {/* efeitos de fundo */}
       <div className="prp__bg">
         <div className="prp__noise" />
         <div className="prp__orb prp__orb--a" />
@@ -159,19 +157,18 @@ export default function PasswordResetPage() {
 
       <div className="prp__container">
         <div className="prp__layout">
-          {/* HERO */}
           <aside className="prp__hero">
             <div className="prp__heroCard">
               <div className="prp__heroTop">
                 <div className="prp__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt=""
                     className="prp__heroLogo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                      e.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
@@ -239,19 +236,18 @@ export default function PasswordResetPage() {
             </div>
           </aside>
 
-          {/* CARD */}
           <main className="prp__main">
             <div className="prp__card">
               <header className="prp__cardHeader">
                 <div className="prp__logoWrap">
                   <img
-                    src="/images/logo.png"
+                    src="/rasoio-logo.png"
                     alt="Rasoio"
                     className="prp__logo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/logo.gif";
+                      e.currentTarget.src = "/rasoio-logo.png";
                     }}
                   />
                 </div>
@@ -264,125 +260,43 @@ export default function PasswordResetPage() {
 
               <section className="prp__cardBody">
                 <form className="prp__form" onSubmit={handleSubmit}>
-                  {/* EMAIL */}
                   <div className="prp__field">
                     <label className="prp__label" htmlFor="pr-email">
                       E-mail
                     </label>
 
                     <div className="prp__inputWrap">
-                      <span className="prp__icon" aria-hidden="true">
-                        ✉
-                      </span>
-
-                      <input
-                        id="pr-email"
-                        type="email"
-                        placeholder="seuemail@exemplo.com"
-                        className="prp__input"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
+                      <span className="prp__icon" aria-hidden="true">✉</span>
+                      <input id="pr-email" type="email" placeholder="seuemail@exemplo.com" className="prp__input" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
                   </div>
 
-                  {/* CODE */}
                   <div className="prp__field">
-                    <label className="prp__label" htmlFor="pr-code">
-                      Código
-                    </label>
-
+                    <label className="prp__label" htmlFor="pr-code">Código</label>
                     <div className="prp__inputWrap">
-                      <span className="prp__icon" aria-hidden="true">
-                        🔑
-                      </span>
-
-                      <input
-                        id="pr-code"
-                        type="text"
-                        placeholder="Código de redefinição"
-                        className="prp__input"
-                        value={resetCode}
-                        onChange={(e) => setResetCode(e.target.value)}
-                        required
-                      />
+                      <span className="prp__icon" aria-hidden="true">🔑</span>
+                      <input id="pr-code" type="text" placeholder="Código de redefinição" className="prp__input" value={resetCode} onChange={(e) => setResetCode(e.target.value)} required />
                     </div>
-
-                    <div className="prp__hint">
-                      Código enviado para o seu e-mail (8 caracteres).
-                    </div>
+                    <div className="prp__hint">Código enviado para o seu e-mail (8 caracteres).</div>
                   </div>
 
-                  {/* PASSWORD */}
                   <div className="prp__field">
-                    <label className="prp__label" htmlFor="pr-pass">
-                      Nova senha
-                    </label>
-
+                    <label className="prp__label" htmlFor="pr-pass">Nova senha</label>
                     <div className="prp__inputWrap prp__inputWrap--password">
-                      <span className="prp__icon" aria-hidden="true">
-                        🔒
-                      </span>
-
-                      <input
-                        id="pr-pass"
-                        type={showPass ? "text" : "password"}
-                        placeholder="Crie uma nova senha"
-                        className="prp__input"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-
-                      <button
-                        type="button"
-                        className="prp__toggle"
-                        onClick={() => setShowPass((v) => !v)}
-                        aria-label={showPass ? "Ocultar senha" : "Mostrar senha"}
-                        title={showPass ? "Ocultar senha" : "Mostrar senha"}
-                      >
-                        {showPass ? "Ocultar" : "Mostrar"}
-                      </button>
+                      <span className="prp__icon" aria-hidden="true">🔒</span>
+                      <input id="pr-pass" type={showPass ? "text" : "password"} placeholder="Crie uma nova senha" className="prp__input" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                      <button type="button" className="prp__toggle" onClick={() => setShowPass((v) => !v)} aria-label={showPass ? "Ocultar senha" : "Mostrar senha"} title={showPass ? "Ocultar senha" : "Mostrar senha"}>{showPass ? "Ocultar" : "Mostrar"}</button>
                     </div>
-
-                    <div className="prp__hint">
-                      Use: maiúscula, minúscula, número e especial.
-                    </div>
+                    <div className="prp__hint">Use: maiúscula, minúscula, número e especial.</div>
                   </div>
 
-                  {/* PASSWORD CONFIRM */}
                   <div className="prp__field">
-                    <label className="prp__label" htmlFor="pr-pass2">
-                      Confirmar senha
-                    </label>
-
+                    <label className="prp__label" htmlFor="pr-pass2">Confirmar senha</label>
                     <div className="prp__inputWrap prp__inputWrap--password">
-                      <span className="prp__icon" aria-hidden="true">
-                        ✅
-                      </span>
-
-                      <input
-                        id="pr-pass2"
-                        type={showPass2 ? "text" : "password"}
-                        placeholder="Digite novamente"
-                        className="prp__input"
-                        value={passwordConfirmation}
-                        onChange={(e) => setPasswordConfirmation(e.target.value)}
-                        required
-                      />
-
-                      <button
-                        type="button"
-                        className="prp__toggle"
-                        onClick={() => setShowPass2((v) => !v)}
-                        aria-label={showPass2 ? "Ocultar senha" : "Mostrar senha"}
-                        title={showPass2 ? "Ocultar senha" : "Mostrar senha"}
-                      >
-                        {showPass2 ? "Ocultar" : "Mostrar"}
-                      </button>
+                      <span className="prp__icon" aria-hidden="true">✅</span>
+                      <input id="pr-pass2" type={showPass2 ? "text" : "password"} placeholder="Digite novamente" className="prp__input" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} required />
+                      <button type="button" className="prp__toggle" onClick={() => setShowPass2((v) => !v)} aria-label={showPass2 ? "Ocultar senha" : "Mostrar senha"} title={showPass2 ? "Ocultar senha" : "Mostrar senha"}>{showPass2 ? "Ocultar" : "Mostrar"}</button>
                     </div>
-
                     <div className="prp__match">
                       {passwordConfirmation.length > 0 ? (
                         password === passwordConfirmation ? (
@@ -396,16 +310,7 @@ export default function PasswordResetPage() {
                     </div>
                   </div>
 
-                  {/* SUBMIT */}
-                  <GlobalButton
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    full
-                    rounded
-                    className="prp__submitBtn"
-                    disabled={!canSubmit}
-                  >
+                  <GlobalButton type="submit" variant="primary" size="lg" full rounded className="prp__submitBtn" disabled={!canSubmit}>
                     Alterar senha
                   </GlobalButton>
                 </form>
@@ -413,34 +318,12 @@ export default function PasswordResetPage() {
 
               <footer className="prp__cardFooter">
                 <div className="prp__footerLine" />
-
                 <div className="prp__footerActions">
-                  <GlobalButton
-                    variant="ghost"
-                    size="sm"
-                    rounded
-                    onClick={() => navigate("/password-email")}
-                    className="prp__footerBtn"
-                  >
-                    Pedir novo código
-                  </GlobalButton>
-
+                  <GlobalButton variant="ghost" size="sm" rounded onClick={() => navigate("/password-email")} className="prp__footerBtn">Pedir novo código</GlobalButton>
                   <span className="prp__sep">•</span>
-
-                  <GlobalButton
-                    variant="ghost"
-                    size="sm"
-                    rounded
-                    onClick={() => navigate("/login")}
-                    className="prp__footerBtn"
-                  >
-                    Voltar ao login
-                  </GlobalButton>
+                  <GlobalButton variant="ghost" size="sm" rounded onClick={() => navigate("/login")} className="prp__footerBtn">Voltar ao login</GlobalButton>
                 </div>
-
-                <small className="prp__footerText">
-                  Se não recebeu o código, tente novamente ou revise seu e-mail.
-                </small>
+                <small className="prp__footerText">Se não recebeu o código, tente novamente ou revise seu e-mail.</small>
               </footer>
             </div>
           </main>
