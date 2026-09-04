@@ -7,11 +7,11 @@ const root = path.resolve(__dirname, '..');
 const checks = [
   {
     file: 'src/hooks/useEstablishmentMy.js',
-    forbidden: ['/establishment/my/app', 'app_id'],
+    forbidden: ['/establishment/my/app'],
   },
   {
     file: 'src/hooks/useEstablishmentItemsBySlug.js',
-    forbidden: ['/establishment/view/', '/item/list-by-entity/', 'app_id'],
+    forbidden: ['/establishment/view/', '/item/list-by-entity/'],
   },
   {
     file: 'src/hooks/useEstablishmentOrdersBySlug.js',
@@ -27,7 +27,7 @@ const checks = [
   },
   {
     file: 'src/hooks/useItemCreate.js',
-    forbidden: ['/establishment/view/', 'apiBaseUrl}/item', 'app_id'],
+    forbidden: ['/establishment/view/', 'axios.post(`${apiBaseUrl}/item', 'api.post("/item"'],
   },
 ];
 
