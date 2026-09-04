@@ -13,6 +13,45 @@
   box-shadow: 0 28px 70px rgba(0,0,0,.34);
 }
 
+.team-management-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background:
+    radial-gradient(circle at 85% 10%, rgba(67, 205, 255, .12), transparent 34%),
+    linear-gradient(145deg, rgba(18, 27, 39, .98), rgba(8, 12, 18, .98));
+}
+
+.team-management-page-title {
+  margin: 5px 0 8px;
+  color: #f6fbff;
+  font-size: clamp(1.65rem, 4vw, 2.5rem);
+  line-height: 1.05;
+}
+
+.team-management-intro p,
+.team-add-header p {
+  max-width: 720px;
+  color: rgba(217, 231, 242, .62);
+}
+
+.team-management-loading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.team-management-loading h2 {
+  margin: 0 0 4px;
+  color: #f5fbff;
+  font-size: 1rem;
+}
+
+.team-management-loading p {
+  color: rgba(217, 231, 242, .56);
+}
+
 .team-management-header {
   display: flex;
   align-items: center;
@@ -38,10 +77,11 @@
   margin-top: 5px;
 }
 
-.team-management-title-row h2 {
+.team-management-title-row h2,
+.team-add-header h2 {
   margin: 0;
   color: #f5fbff;
-  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-size: clamp(1.35rem, 3vw, 1.9rem);
 }
 
 .team-management-header p {
@@ -49,6 +89,110 @@
   margin: 7px 0 0;
   color: rgba(217, 231, 242, .56);
   font-size: .86rem;
+}
+
+.team-add-panel {
+  scroll-margin-top: 92px;
+  border-color: rgba(91, 218, 255, .18);
+}
+
+.team-add-header {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.team-add-header p {
+  margin: 7px 0 0;
+  font-size: .86rem;
+}
+
+.team-add-panel .form-label {
+  color: rgba(238, 248, 255, .82);
+  font-size: .76rem;
+  font-weight: 800;
+}
+
+.team-add-panel .form-control {
+  min-height: 46px;
+  border-color: rgba(123, 221, 255, .14);
+  background: rgba(3, 8, 14, .68);
+  color: #f5fbff;
+}
+
+.team-add-panel .form-control:focus {
+  border-color: rgba(106, 221, 255, .42);
+  background: rgba(3, 8, 14, .82);
+  color: #fff;
+  box-shadow: 0 0 0 .18rem rgba(45, 190, 255, .08);
+}
+
+.team-add-panel .form-control::placeholder {
+  color: rgba(213, 231, 241, .32);
+}
+
+.team-candidate-list {
+  display: grid;
+  gap: 10px;
+}
+
+.team-candidate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 14px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  background: rgba(255,255,255,.018);
+}
+
+.team-candidate-person {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.team-candidate-person img {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border: 1px solid rgba(112, 218, 255, .18);
+  border-radius: 14px;
+  object-fit: cover;
+  background: #080d13;
+}
+
+.team-candidate-person div {
+  min-width: 0;
+}
+
+.team-candidate-person strong,
+.team-candidate-person span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-candidate-person strong {
+  color: #f5fbff;
+  font-size: .9rem;
+}
+
+.team-candidate-person span {
+  margin-top: 3px;
+  color: rgba(217, 231, 242, .48);
+  font-size: .72rem;
+}
+
+.team-candidate-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  flex-wrap: wrap;
 }
 
 .team-empty-state {
@@ -209,9 +353,15 @@
 }
 
 @media (max-width: 720px) {
-  .team-management-header {
+  .team-management-intro,
+  .team-management-header,
+  .team-candidate-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .team-candidate-actions {
+    justify-content: flex-start;
   }
 
   .team-member-actions {
