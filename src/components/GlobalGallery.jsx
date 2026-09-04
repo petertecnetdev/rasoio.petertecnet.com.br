@@ -30,7 +30,7 @@ export default function GlobalGallery({ images = [] }) {
                 src={img.public_url}
                 alt={img.type || "image"}
                 className="gg-img"
-                onError={(e) => (e.target.src = "/images/logo.png")}
+                onError={(e) => (e.target.src = "/rasoio-logo.png")}
               />
             </div>
           </Col>
@@ -44,7 +44,7 @@ export default function GlobalGallery({ images = [] }) {
               src={activeImg}
               alt="zoom"
               className="gg-modal-img"
-              onError={(e) => (e.target.src = "/images/logo.png")}
+              onError={(e) => (e.target.src = "/rasoio-logo.png")}
             />
           )}
         </Modal.Body>
