@@ -18,6 +18,14 @@ const checks = [
     forbidden: ['/rasoio/establishments/', '/rasoio/orders/'],
   },
   {
+    file: 'src/hooks/useEstablishmentEmployersBySlug.js',
+    forbidden: ['../services/api', '/team-members'],
+  },
+  {
+    file: 'src/pages/establishment/EstablishmentEmployersPage.jsx',
+    forbidden: ['../../services/api', 'teamMembersPath'],
+  },
+  {
     file: 'src/pages/DashboardPage.js',
     forbidden: ['/rasoio/establishments/', '/rasoio/orders/'],
   },
@@ -58,6 +66,8 @@ for (const required of [
   '/me/establishments',
   '/team-members',
   '/appointments/',
+  'listTeamMembers',
+  'removeTeamMember',
 ]) {
   if (!managementApi.includes(required)) {
     failures.push(`platformManagementApi.js: contrato genérico ausente (${required})`);
