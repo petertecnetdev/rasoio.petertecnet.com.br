@@ -1,69 +1,42 @@
-import React, { useEffect } from "react";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import tz from "dayjs/plugin/timezone";
+import React from "react";
+import PropTypes from "prop-types";
+
+import { formatCurrencyBr, formatDatePtBr } from "../../utils/dateTime";
 import "./steps.css";
 
-dayjs.extend(utc);
-dayjs.extend(tz);
-
-export default function StepConfirm({ services, employer, date, time, total, duration }) {
-  const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
-
- // 🕒 Força exibição exata sem alterar o dia
-// 🕒 Força exibição exata sem alterar o dia escolhido
-// 🕒 Corrige completamente o deslocamento de dia
-let formattedDate = "";
-try {
-  if (date) {
-    let localDate;
-
-    if (typeof date === "string") {
-      // 🔹 Se for string, forçamos a interpretar como data local pura
-      const [y, m, d] = date.split("-");
-      localDate = new Date(Number(y), Number(m) - 1, Number(d));
-    } else if (date instanceof Date) {
-      // 🔹 Se já for objeto Date, clonamos sem UTC
-      localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    } else {
-      localDate = new Date(date);
-    }
-
-    formattedDate = localDate.toLocaleDateString("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-} catch (err) {
-  console.error("❌ Erro ao formatar data:", err);
-}
-
-  // 🔍 Log pra confirmar o que está vindo
-  useEffect(() => {
-    console.log("🧠 [StepConfirm] Debug data render:", {
-      raw_date: date,
-      parsed_dayjs: date ? dayjs(date).format() : null,
-      formattedDate,
-      browserTimezone: dayjs.tz.guess(),
-    });
-  }, [date]);
+export default function StepConfirm({ services = [], employer, date, time, total = 0, duration = 0 }) {
+  const formattedDate = formatDatePtBr(date);
+  const professionalName =
+    employer?.user?.first_name || employer?.first_name || employer?.name || "Profissional não informado";
 
   return (
-    <div className="step-container">
-      <h4>Confirmar Agendamento</h4>
-      <p><b>Profissional:</b> {employer?.user?.first_name || "—"}</p>
+    <section className="step-container" aria-labelledby="appointment-confirm-title">
+      <h4 id="appointment-confirm-title">Confirmar Agendamento</h4>
+      <p><b>Profissional:</b> {professionalName}</p>
       <p><b>Data:</b> {formattedDate || "Data não informada"}</p>
       <p><b>Horário:</b> {time || "Horário não informado"}</p>
-      <ul>
-        {services.map((s) => (
-          <li key={s.id || s.item_id}>
-            {s.name} — {fmtBRL(s.price)}
+
+      <ul aria-label="Serviços selecionados">
+        {services.map((service) => (
+          <li key={service.id || service.item_id}>
+            {service.name} — {formatCurrencyBr(service.price)}
           </li>
         ))}
       </ul>
+
       <hr />
       <p>
-        <b>Total:</b> {fmtBRL(total)} | <b>Duração:</b> {duration} min
+        <b>Total:</b> {formatCurrencyBr(total)} | <b>Duração:</b> {duration} min
       </p>
-    </div>
+    </section>
   );
 }
+
+StepConfirm.propTypes = {
+  services: PropTypes.array,
+  employer: PropTypes.object,
+  date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  time: PropTypes.string,
+  total: PropTypes.number,
+  duration: PropTypes.number,
+};
