@@ -15,7 +15,7 @@ import GlobalPageHeader from "../components/GlobalPageHeader";
 import GlobalCarousel from "../components/GlobalCarousel";
 import AppointmentWizardModal from "../components/appointment/AppointmentWizardModal";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.png";
 
 export default function HomePage() {
   const { establishments, employers, serviceItems, productItems, isLoading, error } =
