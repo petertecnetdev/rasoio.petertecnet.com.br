@@ -3,6 +3,11 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+import {
+  canScheduleItem,
+  isSchedulableEstablishment,
+} from "../utils/schedulingCapabilities";
+
 const getFileUrlByType = (files, type) =>
   Array.isArray(files) ? files.find((f) => f?.type === type)?.public_url ?? null : null;
 
@@ -77,6 +82,13 @@ const distributeItems = (items) => {
   return result;
 };
 
+const establishmentIdOf = (entity) =>
+  entity?.establishment_id ??
+  entity?.entity_id ??
+  entity?.entityId ??
+  entity?.establishment?.id ??
+  null;
+
 export default function useHome(apiBaseUrl, appId) {
   const [establishments, setEstablishments] = useState([]);
   const [employers, setEmployers] = useState([]);
@@ -113,7 +125,8 @@ export default function useHome(apiBaseUrl, appId) {
 
       try {
         const [homeRes, estRes, empRes, itemRes] = await Promise.all([
-          axios.get(`${apiBaseUrl}/home/${appId}${query}`),
+          // Highlights/analytics enrich the home but must not take the public catalog down.
+          axios.get(`${apiBaseUrl}/home/${appId}${query}`).catch(() => ({ data: {} })),
           axios.get(`${apiBaseUrl}/establishment/home/${appId}${query}`),
           axios.get(`${apiBaseUrl}/employer/home/${appId}${query}`),
           axios.get(`${apiBaseUrl}/item/home/${appId}${query}`),
@@ -140,13 +153,12 @@ export default function useHome(apiBaseUrl, appId) {
           const firstName = emp?.user?.first_name || "";
           const lastName = emp?.user?.last_name || "";
           const fullName = `${firstName} ${lastName}`.trim();
-
           const avatar = getFileUrlByType(emp?.user?.files, "avatar");
 
           return {
             ...emp,
             type: "employer",
-            name: fullName || firstName || "Colaborador",
+            name: fullName || firstName || "Profissional",
             first_name: firstName,
             last_name: lastName,
             avatar,
@@ -155,35 +167,9 @@ export default function useHome(apiBaseUrl, appId) {
           };
         });
 
-        const schedulableEstablishmentIds = new Set(
-          mappedEmployers
-            .map((employer) =>
-              employer?.establishment_id ??
-              employer?.establishmentId ??
-              employer?.entity_id ??
-              employer?.entityId ??
-              employer?.establishment?.id ??
-              null
-            )
-            .filter((id) => id != null)
-            .map((id) => String(id))
-        );
-
-        const establishmentsWithAvailability = mappedEstablishments.map((establishment) => ({
-          ...establishment,
-          can_schedule: schedulableEstablishmentIds.has(String(establishment?.id)),
-        }));
-
         const mappedItems = (itemRes.data?.items || []).map((item) => {
           const normalizedType = normalizeItemType(item?.type, item);
-
-          const estId =
-            item?.establishment_id ??
-            item?.entity_id ??
-            item?.entityId ??
-            item?.establishment?.id ??
-            null;
-
+          const estId = establishmentIdOf(item);
           const image = getFirstFileUrl(item?.files, [
             "image",
             "photo",
@@ -199,22 +185,51 @@ export default function useHome(apiBaseUrl, appId) {
             entity_id: item?.entity_id ?? item?.entityId ?? estId ?? null,
             type: normalizedType,
             image,
-            can_schedule:
-              normalizedType === "product"
-                ? false
-                : estId != null && schedulableEstablishmentIds.has(String(estId)),
           };
         });
 
         const orderedItems = distributeItems(mappedItems);
+        const rawServices = orderedItems.filter((item) => item?.type === "service");
+        const products = orderedItems.filter((item) => item?.type === "product");
 
-        const services = orderedItems.filter((i) => i?.type === "service");
-        const products = orderedItems.filter((i) => i?.type === "product");
+        const establishmentsWithAvailability = mappedEstablishments.map((establishment) => ({
+          ...establishment,
+          can_schedule: isSchedulableEstablishment({
+            establishment,
+            employers: mappedEmployers,
+            services: rawServices,
+          }),
+        }));
+
+        const establishmentById = new Map(
+          establishmentsWithAvailability.map((establishment) => [String(establishment.id), establishment])
+        );
+
+        const employersWithAvailability = mappedEmployers.map((employer) => {
+          const establishment = establishmentById.get(String(establishmentIdOf(employer)));
+          return {
+            ...employer,
+            can_schedule: Boolean(establishment?.can_schedule),
+          };
+        });
+
+        const services = rawServices.map((item) => {
+          const establishment = establishmentById.get(String(establishmentIdOf(item)));
+          return {
+            ...item,
+            can_schedule: canScheduleItem({
+              item,
+              establishment,
+              employers: mappedEmployers,
+              services: rawServices,
+            }),
+          };
+        });
 
         setEstablishments(establishmentsWithAvailability);
-        setEmployers(mappedEmployers);
+        setEmployers(employersWithAvailability);
         setServiceItems(services);
-        setProductItems(products);
+        setProductItems(products.map((item) => ({ ...item, can_schedule: false })));
 
         setStats({
           top_establishments_views: estRes.data?.stats?.top_establishments_views || [],
@@ -236,13 +251,13 @@ export default function useHome(apiBaseUrl, appId) {
         const msg =
           typeof err?.response?.data?.message === "string"
             ? err.response.data.message
-            : "Erro ao carregar a home.";
+            : "Não foi possível carregar os estabelecimentos e serviços agora.";
 
         setError(msg);
 
         Swal.fire({
           icon: "error",
-          title: "Erro",
+          title: "Não foi possível carregar a Rasoio",
           text: msg,
         });
       } finally {
@@ -252,7 +267,7 @@ export default function useHome(apiBaseUrl, appId) {
 
     if (appId) loadHome();
     else {
-      setError("app_id não informado.");
+      setError("Contexto da aplicação não informado.");
       setIsLoading(false);
     }
 
