@@ -1,6 +1,7 @@
 import { apiBaseUrl, appId, appSlug } from "./config";
 import { installGlobalImageFallbacks } from "./utils/imageFallback";
 import { installPasswordFieldEnhancer } from "./utils/passwordFieldEnhancer";
+import { installPeterWhatsappFallback } from "./utils/peterWhatsappFallback";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import axios from "axios";
@@ -16,6 +17,7 @@ import "./styles/nexus-mobile-nav.css";
 
 installGlobalImageFallbacks();
 installPasswordFieldEnhancer();
+installPeterWhatsappFallback();
 
 axios.defaults.headers.common["X-Peter-App"] = appSlug;
 axios.defaults.headers.common["X-App-ID"] = String(appId);
