@@ -13,6 +13,7 @@ import useWhatsappLink from "../../hooks/useWhatsappLink";
 import { canScheduleItem } from "../../utils/schedulingCapabilities";
 import GlobalCarousel from "../../components/GlobalCarousel";
 import GlobalMap from "../../components/GlobalMap";
+import GlobalWhatsappButton from "../../components/GlobalWhatsappButton";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
 import ShareButton from "../../components/ShareButton";
 import "./ItemView.css";
@@ -50,6 +51,7 @@ export default function ItemViewPage() {
     wizardEstablishment
   );
   const whatsappLink = useWhatsappLink(establishment || item || null);
+  const whatsappMessage = `Olá, gostaria de saber mais informações sobre o item "${item?.name || item?.title || "selecionado"}". Você poderia me ajudar?`;
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
 
   const isProduct = useMemo(() => {
@@ -219,6 +221,7 @@ export default function ItemViewPage() {
       </main>
 
       {canSchedule && <div className="iv-mobileAction"><button type="button" onClick={handleOpenScheduleFromItem}><FaCalendarAlt /> Agendar este serviço · {price}</button></div>}
+      <GlobalWhatsappButton link={whatsappLink} message={whatsappMessage} />
       <ShareButton />
       <AppointmentWizardModal show={showWizard} onHide={() => setShowWizard(false)} employers={wizardEmployers} services={wizardServices} loadAvailableTimes={loadAvailableTimes} handleCreateAppointment={handleCreateAppointment} imageUrl={imageUrl} preselectedServiceId={preselectedServiceId} preselectedEmployer={preselectedEmployer} establishment={wizardEstablishment} />
     </>
