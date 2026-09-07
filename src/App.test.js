@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import ProcessingIndicatorComponent from './components/ProcessingIndicatorComponent';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders the branded Rasoio processing state', () => {
+  render(<ProcessingIndicatorComponent messages={['Carregando Rasoio']} gifSrc="" />);
+
+  expect(screen.getByRole('status', { name: 'Carregando Rasoio' })).toBeInTheDocument();
+  expect(screen.getByText('Rasoio')).toBeInTheDocument();
+  expect(screen.getByText('Carregando Rasoio')).toBeInTheDocument();
 });
