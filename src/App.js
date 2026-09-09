@@ -69,6 +69,7 @@ const EmployerHomePage = lazy(() => import("./pages/employer/EmployerHomePage"))
 
 const EstablishmentViewPage = lazy(() => import("./pages/establishment/EstablishmentViewPage"));
 const EstablishmentHomePage = lazy(() => import("./pages/establishment/EstablishmentHomePage"));
+const SubscriptionPlansPage = lazy(() => import("./pages/SubscriptionPlansPage"));
 
 export const AuthContext = createContext(null);
 
@@ -196,6 +197,7 @@ function AppInner() {
             <Route element={<AppLayout loadingMenu={false} />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/planos" element={<SubscriptionPlansPage />} />
 
               <Route path="/establishments" element={<EstablishmentHomePage />} />
               <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
