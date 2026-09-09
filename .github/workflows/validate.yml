@@ -6,6 +6,13 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-rasoio-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -23,8 +30,45 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Lint, tests and build
+      - name: Audit production dependencies
+        id: audit
+        continue-on-error: true
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high --json > npm-audit.json
+          audit_status=$?
+          set -e
+          node -e "const fs=require('fs');const report=JSON.parse(fs.readFileSync('npm-audit.json','utf8'));const counts=report.metadata?.vulnerabilities||{};console.log('Production dependency audit:',counts);for(const [name,vuln] of Object.entries(report.vulnerabilities||{})){if(!['high','critical'].includes(vuln.severity))continue;console.log('- '+name+': '+vuln.severity+'; direct='+Boolean(vuln.isDirect)+'; range='+(vuln.range||'n/a')+'; fix='+JSON.stringify(vuln.fixAvailable));}"
+          exit "$audit_status"
+
+      - name: Upload audit report on failure
+        if: steps.audit.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-production
+          path: npm-audit.json
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: Enforce dependency audit
+        if: steps.audit.outcome == 'failure'
+        run: exit 1
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
         env:
-          CI: "false"
+          CI: "true"
+        run: npm run test:ci
+
+      - name: Production build
+        env:
+          CI: "true"
           REACT_APP_API_URL: https://api.petertecnet.com.br/api
-        run: npm run quality
+        run: npm run build
+
+      - name: Validate build artifact
+        run: |
+          test -f build/index.html
+          test -d build/static

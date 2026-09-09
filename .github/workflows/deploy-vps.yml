@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: deploy-rasoio-production
+  cancel-in-progress: false
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -26,11 +30,27 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Lint, tests and build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
         env:
-          CI: "false"
+          CI: "true"
+        run: npm run test:ci
+
+      - name: Production build
+        env:
+          CI: "true"
           REACT_APP_API_URL: https://api.petertecnet.com.br/api
-        run: npm run quality
+        run: npm run build
+
+      - name: Validate build artifact
+        run: |
+          test -f build/index.html
+          test -d build/static
 
   deploy:
     # Zero-downtime central deploy: build off-path, publish assets first, switch index last.

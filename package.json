@@ -32,8 +32,6 @@
     "chart.js": "^4.4.4",
     "dayjs": "^1.11.19",
     "framer-motion": "^12.4.2",
-    "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.1",
     "luxon": "^3.7.2",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
@@ -46,7 +44,6 @@
     "react-image-crop": "^11.0.5",
     "react-input-mask": "^2.0.4",
     "react-router-dom": "^6.22.3",
-    "react-scripts": "^5.0.1",
     "react-webcam": "^7.2.0",
     "react-window": "^2.2.2",
     "recharts": "^2.12.7",
@@ -74,6 +71,7 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "react-scripts": "^5.0.1",
     "sass": "^1.72.0",
     "source-map-loader": "^5.0.0"
   }
