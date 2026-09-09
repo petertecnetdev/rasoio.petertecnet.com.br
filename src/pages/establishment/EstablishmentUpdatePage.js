@@ -38,7 +38,7 @@ export default function EstablishmentUpdatePage() {
       <ProcessingIndicatorComponent
         interval={1200}
         messages={["Carregando dados do estabelecimento..."]}
-        gifSrc="/images/logo.gif"
+        gifSrc="/images/logo.png"
       />
     );
   }
