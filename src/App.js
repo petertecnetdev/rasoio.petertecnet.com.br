@@ -76,7 +76,7 @@ const RouteFallback = () => (
   <ProcessingIndicatorComponent
     interval={1200}
     messages={["Carregando..."]}
-    gifSrc="/images/logo.gif"
+    gifSrc="/images/logo.png"
   />
 );
 
