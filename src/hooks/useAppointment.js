@@ -18,6 +18,16 @@ const escapeHtml = (value) => String(value ?? "")
   .replace(/"/g, "&quot;")
   .replace(/'/g, "&#039;");
 
+const getEmployerUserId = (employer) =>
+  employer?.user_id ?? employer?.user?.id ?? null;
+
+const isSameUserAsEmployer = (employer, user) => {
+  const employerUserId = getEmployerUserId(employer);
+  return employerUserId !== null
+    && user?.id !== undefined
+    && Number(employerUserId) === Number(user.id);
+};
+
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
   const getToken = useCallback(
     () => localStorage.getItem("token") || token,
@@ -138,7 +148,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
               const employers = Array.isArray(res.data) ? res.data : [];
               container.innerHTML = employers
                 .map((emp) => {
-                  const isSelf = Number(emp.id) === Number(authUser.id);
+                  const isSelf = isSameUserAsEmployer(emp, authUser);
                   return `
                     <div style="margin-bottom:8px;">
                       <input
@@ -176,7 +186,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           selectedEmployer = employer;
         }
 
-        if (Number(selectedEmployer.id) === Number(authUser.id)) {
+        if (isSameUserAsEmployer(selectedEmployer, authUser)) {
           await Swal.fire({
             background: "#0a0a0c",
             color: "#fff",
