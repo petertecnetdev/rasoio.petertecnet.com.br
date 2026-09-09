@@ -7,7 +7,6 @@ import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import OrderCreateForm from "../../components/order/OrderCreateForm";
 import useOrderCreate from "../../hooks/useOrderCreate";
-import api from "../../services/api";
 import { appId } from "../../config";
 
 const formatDateTime = (value) => {
@@ -50,6 +49,7 @@ export default function OrderCreatePage() {
     searchingClients,
     searchClients,
     fetchAvailableTimes,
+    createOrder,
     loading,
     submitting,
     apiError,
@@ -58,12 +58,12 @@ export default function OrderCreatePage() {
   const [selectedClient, setSelectedClient] = useState(null);
 
   const handleSubmit = async (payload) => {
-    if (!establishment) return;
+    if (!establishment || submitting) return;
 
     try {
       showLoadingModal();
 
-      const res = await api.post("/order", {
+      const data = await createOrder({
         ...payload,
         app_id: appId,
         entity_name: "establishment",
@@ -74,8 +74,8 @@ export default function OrderCreatePage() {
         payment_method: "cash",
       });
 
-      const order = res.data.order;
-      const apiMessage = res?.data?.message || "Pedido criado com sucesso.";
+      const order = data?.order;
+      const apiMessage = data?.message || "Pedido criado com sucesso.";
 
       await Swal.fire({
         title: "Pedido criado com sucesso",
