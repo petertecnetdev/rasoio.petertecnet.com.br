@@ -127,6 +127,24 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         let selectedTime = preselectedTime ? String(preselectedTime).slice(0, 5) : null;
 
         if (!selectedEmployer) {
+          const employerEntityId =
+            establishment?.id ??
+            selectedServices.find((service) => service?.establishment_id || service?.entity_id)?.establishment_id ??
+            selectedServices.find((service) => service?.establishment_id || service?.entity_id)?.entity_id ??
+            null;
+
+          if (!employerEntityId) {
+            await Swal.fire({
+              background: "#0a0a0c",
+              color: "#fff",
+              icon: "warning",
+              title: "Estabelecimento não identificado",
+              text: "Não foi possível identificar o estabelecimento deste serviço. Reabra o serviço e tente novamente.",
+              confirmButtonColor: "#00aaff",
+            });
+            return false;
+          }
+
           const { value: employer } = await Swal.fire({
             title: "Escolha o profissional",
             background: "#0a0a0c",
@@ -138,36 +156,53 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
             confirmButtonColor: "#00ffcc",
             cancelButtonColor: "#ff5555",
             didOpen: async () => {
-              const res = await axios.get(`${apiBaseUrl}/employer/list`, {
-                headers: { Authorization: `Bearer ${userToken}` },
-              });
-
               const container = Swal.getPopup()?.querySelector("#employers");
               if (!container) return;
 
-              const employers = Array.isArray(res.data) ? res.data : [];
-              container.innerHTML = employers
-                .map((emp) => {
-                  const isSelf = isSameUserAsEmployer(emp, authUser);
-                  return `
-                    <div style="margin-bottom:8px;">
-                      <input
-                        type="radio"
-                        name="emp"
-                        id="emp-${Number(emp.id)}"
-                        value="${Number(emp.id)}"
-                        ${isSelf ? "disabled" : ""}
-                      >
-                      <label for="emp-${Number(emp.id)}" style="${isSelf ? "color:#ff7777;font-style:italic;" : ""}">
-                        ${escapeHtml(emp.name || emp.user?.first_name || "Profissional")}
-                        ${isSelf ? " (você não pode agendar consigo mesmo)" : ""}
-                      </label>
-                    </div>
-                  `;
-                })
-                .join("");
+              try {
+                const res = await axios.get(
+                  `${apiBaseUrl}/employer/list-by-entity/${encodeURIComponent(employerEntityId)}`,
+                  { headers: { Authorization: `Bearer ${userToken}` } }
+                );
 
-              Swal.getPopup().__rasoioEmployers = employers;
+                const employers = Array.isArray(res.data?.employers)
+                  ? res.data.employers
+                  : Array.isArray(res.data)
+                    ? res.data
+                    : [];
+
+                if (!employers.length) {
+                  container.innerHTML = '<div style="padding:8px;color:#cbd5e1;">Nenhum profissional disponível neste estabelecimento.</div>';
+                  Swal.getPopup().__rasoioEmployers = [];
+                  return;
+                }
+
+                container.innerHTML = employers
+                  .map((emp) => {
+                    const isSelf = isSameUserAsEmployer(emp, authUser);
+                    return `
+                      <div style="margin-bottom:8px;">
+                        <input
+                          type="radio"
+                          name="emp"
+                          id="emp-${Number(emp.id)}"
+                          value="${Number(emp.id)}"
+                          ${isSelf ? "disabled" : ""}
+                        >
+                        <label for="emp-${Number(emp.id)}" style="${isSelf ? "color:#ff7777;font-style:italic;" : ""}">
+                          ${escapeHtml(emp.name || emp.user?.first_name || "Profissional")}
+                          ${isSelf ? " (você não pode agendar consigo mesmo)" : ""}
+                        </label>
+                      </div>
+                    `;
+                  })
+                  .join("");
+
+                Swal.getPopup().__rasoioEmployers = employers;
+              } catch {
+                container.innerHTML = '<div style="padding:8px;color:#fca5a5;">Não foi possível carregar os profissionais. Feche e tente novamente.</div>';
+                Swal.getPopup().__rasoioEmployers = [];
+              }
             },
             preConfirm: () => {
               const popup = Swal.getPopup();
