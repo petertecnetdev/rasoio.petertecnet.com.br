@@ -20,7 +20,9 @@ export default function AppointmentSelector({
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedTime, setSelectedTime] = useState("");
   const [loadingTimes, setLoadingTimes] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const availabilityRequestRef = useRef(0);
+  const submitInFlightRef = useRef(false);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -88,6 +90,8 @@ export default function AppointmentSelector({
   ]);
 
   const handleConfirm = async () => {
+    if (submitInFlightRef.current) return;
+
     if (!selectedEmployer || !selectedDate || !selectedTime || !selectedServices.length) {
       await MySwal.fire({
         background: "#0a0a0c",
@@ -100,12 +104,20 @@ export default function AppointmentSelector({
       return;
     }
 
-    await handleCreateAppointment(
-      selectedServices,
-      selectedEmployer,
-      toDateKey(selectedDate),
-      selectedTime
-    );
+    submitInFlightRef.current = true;
+    setSubmitting(true);
+
+    try {
+      await handleCreateAppointment(
+        selectedServices,
+        selectedEmployer,
+        toDateKey(selectedDate),
+        selectedTime
+      );
+    } finally {
+      submitInFlightRef.current = false;
+      setSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -125,7 +137,6 @@ export default function AppointmentSelector({
 
       <Card.Body className="p-4">
         <Form>
-          {/* PROFISSIONAL */}
           <Form.Group className="mb-4">
             <Form.Label>
               <FaUser className="me-2 text-info" />
@@ -173,7 +184,6 @@ export default function AppointmentSelector({
             </div>
           </Form.Group>
 
-          {/* SERVIÇOS */}
           <Form.Group className="mb-4">
             <Form.Label>
               <FaCalendarAlt className="me-2 text-info" />
@@ -220,7 +230,6 @@ export default function AppointmentSelector({
             </div>
           </Form.Group>
 
-          {/* DATA */}
           <Form.Group className="mb-4">
             <Form.Label>
               <FaCalendarAlt className="me-2 text-info" />
@@ -235,7 +244,6 @@ export default function AppointmentSelector({
             />
           </Form.Group>
 
-          {/* HORÁRIOS */}
           <Form.Group className="mb-4">
             <Form.Label>
               <FaClock className="me-2 text-info" />
@@ -279,12 +287,10 @@ export default function AppointmentSelector({
             )}
           </Form.Group>
 
-          {/* DURAÇÃO TOTAL */}
           <div className="text-center mb-4 text-info">
             Tempo estimado total: <strong>{totalDuration || 0} min</strong>
           </div>
 
-          {/* CONFIRMAR */}
           <div className="text-center">
             <Button
               type="button"
@@ -292,8 +298,17 @@ export default function AppointmentSelector({
               variant="info"
               className="text-dark fw-bold px-4 py-2 rounded-pill"
               onClick={handleConfirm}
+              disabled={submitting}
+              aria-busy={submitting}
             >
-              Confirmar Agendamento
+              {submitting ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Confirmando...
+                </>
+              ) : (
+                "Confirmar Agendamento"
+              )}
             </Button>
           </div>
         </Form>
