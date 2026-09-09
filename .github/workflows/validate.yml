@@ -38,16 +38,7 @@ jobs:
           npm audit --omit=dev --audit-level=high --json > npm-audit.json
           audit_status=$?
           set -e
-          node - <<'NODE'
-          const fs = require('fs');
-          const report = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
-          const counts = report.metadata?.vulnerabilities || {};
-          console.log('Production dependency audit:', counts);
-          for (const [name, vuln] of Object.entries(report.vulnerabilities || {})) {
-            if (!['high', 'critical'].includes(vuln.severity)) continue;
-            console.log(`- ${name}: ${vuln.severity}; direct=${Boolean(vuln.isDirect)}; range=${vuln.range || 'n/a'}; fix=${JSON.stringify(vuln.fixAvailable)}`);
-          }
-NODE
+          node -e "const fs=require('fs');const report=JSON.parse(fs.readFileSync('npm-audit.json','utf8'));const counts=report.metadata?.vulnerabilities||{};console.log('Production dependency audit:',counts);for(const [name,vuln] of Object.entries(report.vulnerabilities||{})){if(!['high','critical'].includes(vuln.severity))continue;console.log('- '+name+': '+vuln.severity+'; direct='+Boolean(vuln.isDirect)+'; range='+(vuln.range||'n/a')+'; fix='+JSON.stringify(vuln.fixAvailable));}"
           exit "$audit_status"
 
       - name: Upload audit report on failure
