@@ -19,20 +19,24 @@ const escapeHtml = (value) => String(value ?? "")
   .replace(/'/g, "&#039;");
 
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
-  const getToken = () => localStorage.getItem("token") || token;
-  const getUser = () => {
+  const getToken = useCallback(
+    () => localStorage.getItem("token") || token,
+    [token]
+  );
+
+  const getUser = useCallback(() => {
     try {
       return JSON.parse(localStorage.getItem("user"));
     } catch {
       return null;
     }
-  };
+  }, []);
 
-  const normalizeDateToYMD = (date) => {
+  const normalizeDateToYMD = useCallback((date) => {
     if (!date) return null;
     if (typeof date === "string") return date.slice(0, 10);
     return dayjs(date).tz(TZ).format("YYYY-MM-DD");
-  };
+  }, []);
 
   const loadAvailableTimes = useCallback(
     async (date, employer, totalDuration) => {
@@ -66,7 +70,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         return [];
       }
     },
-    [apiBaseUrl, token]
+    [apiBaseUrl, getToken, normalizeDateToYMD]
   );
 
   const handleCreateAppointment = useCallback(
@@ -345,7 +349,15 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         return false;
       }
     },
-    [apiBaseUrl, appId, establishment, loadAvailableTimes]
+    [
+      apiBaseUrl,
+      appId,
+      establishment,
+      getToken,
+      getUser,
+      loadAvailableTimes,
+      normalizeDateToYMD,
+    ]
   );
 
   return { loadAvailableTimes, handleCreateAppointment };
