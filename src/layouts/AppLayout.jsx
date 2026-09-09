@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 
 import GlobalNav from "../components/GlobalNav";
 import GlobalFooter from "../components/GlobalFooter";
+import PwaInstallButton from "../components/PwaInstallButton";
 
 import "./AppLayout.css";
 
@@ -44,6 +45,8 @@ export default function AppLayout({ loadingMenu, handleLogout }) {
       <main className="app-main">
         <Outlet />
       </main>
+
+      <PwaInstallButton />
 
       {/* ✅ ref aqui */}
       <div ref={footerRef}>
