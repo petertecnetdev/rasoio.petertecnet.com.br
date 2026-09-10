@@ -4,6 +4,7 @@ import { Col, Container, Row } from "react-bootstrap";
 import { Link, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../App";
 import { getAppointmentDashboard } from "../services/platformManagementApi";
+import { createSubscriptionIntent } from "../services/subscriptionIntent";
 import "./dashboard-v2.css";
 
 const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
@@ -170,6 +171,7 @@ LiveOperations.propTypes = {
 export default function DashboardPage() {
   const { user, isEmployer, establishments } = useContext(AuthContext);
   const [searchParams] = useSearchParams();
+  const planCode = String(searchParams.get("plan") || "").trim();
   const name =
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
     user?.name ||
@@ -184,6 +186,48 @@ export default function DashboardPage() {
     [owned, requestedSlug]
   );
   const selectedName = selected?.fantasy || selected?.name || null;
+
+  useEffect(() => {
+    if (!/^[a-z0-9_-]{1,80}$/i.test(planCode)) return;
+
+    let pending = null;
+    try {
+      pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    } catch {
+      return;
+    }
+
+    const selectedAt = pending?.selected_at ? Date.parse(pending.selected_at) : NaN;
+    const isFresh = Number.isFinite(selectedAt) && Date.now() - selectedAt <= 7 * 24 * 60 * 60 * 1000;
+    if (pending?.application !== "rasoio" || pending?.plan !== planCode || !isFresh) return;
+    if (pending?.intent_id) return;
+
+    let active = true;
+    createSubscriptionIntent({
+      planCode,
+      priceCents: pending.price_cents ?? null,
+      currency: pending.currency || "BRL",
+      source: pending.source || "subscription_plans",
+      handoff: pending.handoff || "app",
+      page: window.location.pathname,
+    }).then((intent) => {
+      if (!active || !intent?.id) return;
+      localStorage.setItem(
+        "pending_subscription_plan",
+        JSON.stringify({
+          ...pending,
+          intent_id: intent.id,
+          intent_status: intent.status,
+          price_cents: intent.price_cents ?? pending.price_cents ?? null,
+          currency: intent.currency || pending.currency || "BRL",
+        })
+      );
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [planCode]);
 
   return (
     <main className="rasoio-dashboard">
