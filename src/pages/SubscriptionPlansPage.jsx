@@ -7,6 +7,30 @@ const money = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
+const DEFAULT_SOURCE = "subscription_plans";
+const MAX_ATTRIBUTION_LENGTH = 80;
+
+const normalizeAttribution = (value, fallback = "") => {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, MAX_ATTRIBUTION_LENGTH);
+
+  return normalized || fallback;
+};
+
+const getSubscriptionAttribution = () => {
+  const params = new URLSearchParams(window.location.search);
+  const source = normalizeAttribution(params.get("source"), DEFAULT_SOURCE);
+  const referral = normalizeAttribution(params.get("ref") || params.get("referral"));
+  const campaign = normalizeAttribution(params.get("utm_campaign"));
+
+  return { source, referral, campaign };
+};
+
 export default function SubscriptionPlansPage() {
   const [catalog, setCatalog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,13 +72,16 @@ export default function SubscriptionPlansPage() {
         ? Math.round(Number(plan.price) * 100)
         : null;
     const currency = plan?.currency || "BRL";
+    const attribution = getSubscriptionAttribution();
     const pendingPlan = {
       application: "rasoio",
       plan: planCode,
       price_cents: priceCents,
       currency,
       selected_at: new Date().toISOString(),
-      source: "subscription_plans",
+      source: attribution.source,
+      referral: attribution.referral || undefined,
+      campaign: attribution.campaign || undefined,
       handoff: "app",
     };
 
@@ -67,6 +94,7 @@ export default function SubscriptionPlansPage() {
         currency,
         source: pendingPlan.source,
         handoff: pendingPlan.handoff,
+        page: window.location.pathname,
       });
 
       if (intent?.id) {
