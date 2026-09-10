@@ -24,6 +24,20 @@ const shouldRetry = (error) => {
   return status === 408 || status === 429 || status >= 500;
 };
 
+const readPendingAttribution = (planCode) => {
+  try {
+    const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    if (pending?.application !== APPLICATION || pending?.plan !== planCode) return {};
+
+    return {
+      referral: String(pending?.referral || "").trim(),
+      campaign: String(pending?.campaign || "").trim(),
+    };
+  } catch {
+    return {};
+  }
+};
+
 export function getSubscriptionIntentIdempotencyKey(planCode) {
   const key = storageKey(planCode);
   const existing = sessionStorage.getItem(key);
@@ -49,6 +63,9 @@ export async function createSubscriptionIntent({
 
   if (!token || !/^[a-z0-9_-]{1,80}$/i.test(normalizedPlanCode)) return null;
 
+  const pendingAttribution = readPendingAttribution(normalizedPlanCode);
+  const resolvedReferral = String(referral || pendingAttribution.referral || "").trim();
+  const resolvedCampaign = String(campaign || pendingAttribution.campaign || "").trim();
   const idempotencyKey = getSubscriptionIntentIdempotencyKey(normalizedPlanCode);
   const metadata = {
     client_price_cents: priceCents,
@@ -56,8 +73,8 @@ export async function createSubscriptionIntent({
     page: page || window.location.pathname,
   };
 
-  if (referral) metadata.referral = referral;
-  if (campaign) metadata.campaign = campaign;
+  if (resolvedReferral) metadata.referral = resolvedReferral;
+  if (resolvedCampaign) metadata.campaign = resolvedCampaign;
 
   const payload = {
     plan_code: normalizedPlanCode,
