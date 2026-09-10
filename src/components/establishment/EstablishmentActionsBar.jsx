@@ -42,8 +42,18 @@ const actions = [
 ];
 
 const buildPublicUrl = (slug) => {
-  if (typeof window === "undefined") return `/establishment/view/${slug}`;
-  return `${window.location.origin}/establishment/view/${encodeURIComponent(slug)}`;
+  const encodedSlug = encodeURIComponent(slug);
+  const path = `/establishment/view/${encodedSlug}`;
+  const params = new URLSearchParams({
+    source: "shared-agenda",
+    ref: slug,
+    utm_source: "rasoio",
+    utm_medium: "product_share",
+    utm_campaign: "agenda_distribution",
+  });
+
+  if (typeof window === "undefined") return `${path}?${params.toString()}`;
+  return `${window.location.origin}${path}?${params.toString()}`;
 };
 
 export default function EstablishmentActionsBar({ establishment }) {
