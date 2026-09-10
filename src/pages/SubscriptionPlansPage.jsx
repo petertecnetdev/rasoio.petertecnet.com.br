@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SubscriptionPlanService from "../services/SubscriptionPlanService";
 import {
   createSubscriptionIntent,
@@ -35,6 +35,18 @@ const getSubscriptionAttribution = () => {
   return { source, referral, campaign };
 };
 
+const getUpgradeResumePlan = () => {
+  const params = new URLSearchParams(window.location.search);
+  const plan = String(params.get("plan") || "").trim().toLowerCase();
+  const resume = params.get("resume") === "1";
+  const source = normalizeAttribution(params.get("source"));
+
+  if (!resume || source !== "upgrade_required") return "";
+  if (!/^[a-z0-9_-]{1,80}$/i.test(plan)) return "";
+
+  return plan;
+};
+
 export default function SubscriptionPlansPage() {
   const [catalog, setCatalog] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +56,7 @@ export default function SubscriptionPlansPage() {
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const autoCheckoutStartedRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -66,7 +79,7 @@ export default function SubscriptionPlansPage() {
 
   const plans = useMemo(() => catalog?.plans ?? [], [catalog]);
 
-  const choosePlan = async (plan) => {
+  const choosePlan = useCallback(async (plan) => {
     if (submittingPlan) return;
 
     const planCode = String(plan?.code || "").trim();
@@ -139,7 +152,23 @@ export default function SubscriptionPlansPage() {
 
     setCheckout({ ...paymentCheckout, planName: intent.plan_name || plan.name });
     setSubmittingPlan("");
-  };
+  }, [submittingPlan]);
+
+  useEffect(() => {
+    if (loading || checkout || submittingPlan || autoCheckoutStartedRef.current) return;
+    if (!localStorage.getItem("token")) return;
+
+    const resumePlanCode = getUpgradeResumePlan();
+    if (!resumePlanCode) return;
+
+    const resumePlan = plans.find(
+      (plan) => String(plan?.code || "").trim().toLowerCase() === resumePlanCode
+    );
+    if (!resumePlan) return;
+
+    autoCheckoutStartedRef.current = true;
+    choosePlan(resumePlan);
+  }, [checkout, choosePlan, loading, plans, submittingPlan]);
 
   const copyPix = async () => {
     const code = checkout?.payment?.pix?.qr_code;
