@@ -95,6 +95,8 @@ export default function SubscriptionPlansPage() {
         source: pendingPlan.source,
         handoff: pendingPlan.handoff,
         page: window.location.pathname,
+        referral: pendingPlan.referral,
+        campaign: pendingPlan.campaign,
       });
 
       if (intent?.id) {
