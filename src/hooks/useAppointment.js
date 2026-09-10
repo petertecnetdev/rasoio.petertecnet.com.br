@@ -28,6 +28,9 @@ const isSameUserAsEmployer = (employer, user) => {
     && Number(employerUserId) === Number(user.id);
 };
 
+const getServiceEntityId = (service) =>
+  service?.establishment_id ?? service?.entity_id ?? service?.establishment?.id ?? null;
+
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
   const getToken = useCallback(
     () => localStorage.getItem("token") || token,
@@ -122,29 +125,60 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           return false;
         }
 
+        const establishmentId = establishment?.id ? Number(establishment.id) : null;
+        const serviceEntityIds = [
+          ...new Set(
+            selectedServices
+              .map(getServiceEntityId)
+              .filter((id) => id !== null && id !== undefined)
+              .map(Number)
+              .filter(Number.isFinite)
+          ),
+        ];
+
+        if (serviceEntityIds.length > 1) {
+          await Swal.fire({
+            background: "#0a0a0c",
+            color: "#fff",
+            icon: "warning",
+            title: "Serviços incompatíveis",
+            text: "Selecione serviços do mesmo estabelecimento para criar um único agendamento.",
+            confirmButtonColor: "#00aaff",
+          });
+          return false;
+        }
+
+        const serviceEntityId = serviceEntityIds[0] ?? null;
+        if (establishmentId && serviceEntityId && establishmentId !== serviceEntityId) {
+          await Swal.fire({
+            background: "#0a0a0c",
+            color: "#fff",
+            icon: "warning",
+            title: "Estabelecimento divergente",
+            text: "O serviço selecionado não pertence ao estabelecimento atual. Reabra o serviço e tente novamente.",
+            confirmButtonColor: "#00aaff",
+          });
+          return false;
+        }
+
+        const appointmentEntityId = establishmentId ?? serviceEntityId;
+        if (!appointmentEntityId) {
+          await Swal.fire({
+            background: "#0a0a0c",
+            color: "#fff",
+            icon: "warning",
+            title: "Estabelecimento não identificado",
+            text: "Não foi possível identificar o estabelecimento deste serviço. Reabra o serviço e tente novamente.",
+            confirmButtonColor: "#00aaff",
+          });
+          return false;
+        }
+
         let selectedEmployer = preselectedEmployer;
         let selectedDate = normalizeDateToYMD(preselectedDate);
         let selectedTime = preselectedTime ? String(preselectedTime).slice(0, 5) : null;
 
         if (!selectedEmployer) {
-          const employerEntityId =
-            establishment?.id ??
-            selectedServices.find((service) => service?.establishment_id || service?.entity_id)?.establishment_id ??
-            selectedServices.find((service) => service?.establishment_id || service?.entity_id)?.entity_id ??
-            null;
-
-          if (!employerEntityId) {
-            await Swal.fire({
-              background: "#0a0a0c",
-              color: "#fff",
-              icon: "warning",
-              title: "Estabelecimento não identificado",
-              text: "Não foi possível identificar o estabelecimento deste serviço. Reabra o serviço e tente novamente.",
-              confirmButtonColor: "#00aaff",
-            });
-            return false;
-          }
-
           const { value: employer } = await Swal.fire({
             title: "Escolha o profissional",
             background: "#0a0a0c",
@@ -161,7 +195,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
 
               try {
                 const res = await axios.get(
-                  `${apiBaseUrl}/employer/list-by-entity/${encodeURIComponent(employerEntityId)}`,
+                  `${apiBaseUrl}/employer/list-by-entity/${encodeURIComponent(appointmentEntityId)}`,
                   { headers: { Authorization: `Bearer ${userToken}` } }
                 );
 
@@ -314,7 +348,6 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           selectedTime = time;
         }
 
-        // Revalida o slot imediatamente antes da gravação para reduzir conflito de concorrência.
         const freshTimes = await loadAvailableTimes(
           selectedDate,
           selectedEmployer,
@@ -342,7 +375,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           mode: "appointment",
           app_id: appId,
           entity_name: "establishment",
-          entity_id: establishment?.id,
+          entity_id: appointmentEntityId,
           items: selectedServices.map((service) => ({
             item_id: Number(service?.item_id ?? service?.id),
             quantity: 1,
