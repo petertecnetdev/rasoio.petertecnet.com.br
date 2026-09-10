@@ -2,12 +2,15 @@ import api from "./api";
 
 const APPLICATION = "rasoio";
 const SOURCE = "subscription_plans";
-const REQUEST_TIMEOUT_MS = 5000;
+const REQUEST_TIMEOUT_MS = 10000;
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 250;
 
 const storageKey = (planCode) =>
   `subscription_intent_idempotency:${APPLICATION}:${planCode}`;
+
+const checkoutStorageKey = (intentId) =>
+  `subscription_checkout_idempotency:${APPLICATION}:${intentId}`;
 
 const createKey = () => {
   if (window.crypto?.randomUUID) return window.crypto.randomUUID();
@@ -38,14 +41,17 @@ const readPendingAttribution = (planCode) => {
   }
 };
 
-export function getSubscriptionIntentIdempotencyKey(planCode) {
-  const key = storageKey(planCode);
+const getOrCreateSessionKey = (key) => {
   const existing = sessionStorage.getItem(key);
   if (existing) return existing;
 
   const created = createKey();
   sessionStorage.setItem(key, created);
   return created;
+};
+
+export function getSubscriptionIntentIdempotencyKey(planCode) {
+  return getOrCreateSessionKey(storageKey(planCode));
 }
 
 export async function createSubscriptionIntent({
@@ -103,4 +109,43 @@ export async function createSubscriptionIntent({
   }
 
   return null;
+}
+
+export async function createSubscriptionPixCheckout(intentId) {
+  const normalizedIntentId = String(intentId || "").trim();
+  if (!normalizedIntentId) return null;
+
+  const idempotencyKey = getOrCreateSessionKey(checkoutStorageKey(normalizedIntentId));
+
+  try {
+    const { data } = await api.post(
+      `/v1/apps/${APPLICATION}/subscription-intents/${encodeURIComponent(normalizedIntentId)}/checkout`,
+      { method: "pix" },
+      {
+        headers: { "Idempotency-Key": idempotencyKey },
+        timeout: REQUEST_TIMEOUT_MS,
+      }
+    );
+
+    return data || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function syncSubscriptionPayment(intentId) {
+  const normalizedIntentId = String(intentId || "").trim();
+  if (!normalizedIntentId) return null;
+
+  try {
+    const { data } = await api.post(
+      `/v1/apps/${APPLICATION}/subscription-intents/${encodeURIComponent(normalizedIntentId)}/sync`,
+      {},
+      { timeout: REQUEST_TIMEOUT_MS }
+    );
+
+    return data || null;
+  } catch (error) {
+    return error?.response?.data || null;
+  }
 }
