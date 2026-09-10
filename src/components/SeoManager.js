@@ -7,6 +7,7 @@ const DEFAULT_DESCRIPTION = "Encontre estabelecimentos, profissionais e serviço
 
 const publicRoute = (path) => {
   if (path === "/") return { title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION };
+  if (path === "/agenda-online") return { title: "Agenda online para serviços e profissionais | Rasoio", description: "Crie uma agenda online para organizar serviços, profissionais e horários e compartilhe sua página de agendamento com clientes pela Rasoio." };
   if (path === "/search") return { title: "Buscar estabelecimentos e serviços | Rasoio", description: "Pesquise estabelecimentos, profissionais, serviços e produtos disponíveis na Rasoio." };
   if (path === "/establishments") return { title: "Estabelecimentos | Rasoio", description: "Descubra estabelecimentos e encontre serviços disponíveis para agendamento na Rasoio." };
   if (path.startsWith("/establishment/view/")) return { title: "Estabelecimento e serviços | Rasoio", description: "Veja serviços, profissionais e informações deste estabelecimento e faça seu agendamento pela Rasoio." };
