@@ -14,6 +14,18 @@ const api = axios.create({
   timeout: 20000,
 });
 
+const UPGRADE_PLAN_BY_ENTITLEMENT = Object.freeze({
+  "establishments.max": "business",
+  "establishments.multiple": "business",
+  "management.advanced": "business",
+  "features.premium": "business",
+  "integration.nexus": "business",
+  "staff.management": "pro",
+  "analytics.reports": "pro",
+  "automation.rules": "pro",
+  "features.advanced": "pro",
+});
+
 function isTrustedApiRequest(config) {
   const requestUrl = String(config?.url || "");
   if (!requestUrl) return true;
@@ -40,7 +52,9 @@ function redirectUpgradeRequired(error) {
   const entitlement = String(payload?.upgrade?.entitlement || "").trim();
 
   if (error?.response?.status !== 402 || payload?.error !== "upgrade_required") return false;
-  if (entitlement !== "establishments.max") return false;
+
+  const targetPlan = UPGRADE_PLAN_BY_ENTITLEMENT[entitlement];
+  if (!targetPlan) return false;
   if (window.location.pathname === "/planos") return false;
 
   const upgradeContext = {
@@ -49,7 +63,7 @@ function redirectUpgradeRequired(error) {
     current: payload?.upgrade?.current ?? null,
     limit: payload?.upgrade?.limit ?? null,
     current_plan: payload?.upgrade?.plan_code || null,
-    target_plan: "business",
+    target_plan: targetPlan,
     captured_at: new Date().toISOString(),
   };
 
@@ -60,7 +74,7 @@ function redirectUpgradeRequired(error) {
   }
 
   const params = new URLSearchParams({
-    plan: "business",
+    plan: targetPlan,
     resume: "1",
     source: "upgrade_required",
     entitlement,
