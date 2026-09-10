@@ -1,20 +1,44 @@
 // src/pages/auth/LoginPage.js
-import React from "react";
+import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LoginFormComponent from "../../components/auth/LoginFormComponent";
 import "./LoginPage.css";
+
+const getPendingSubscriptionPath = () => {
+  try {
+    const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    const plan = String(pending?.plan || "").trim();
+    const selectedAt = pending?.selected_at ? Date.parse(pending.selected_at) : NaN;
+    const isFresh = Number.isFinite(selectedAt) && Date.now() - selectedAt <= 7 * 24 * 60 * 60 * 1000;
+
+    if (
+      pending?.application === "rasoio" &&
+      /^[a-z0-9_-]{1,80}$/i.test(plan) &&
+      isFresh
+    ) {
+      return `/dashboard?plan=${encodeURIComponent(plan)}`;
+    }
+  } catch {
+    // Ignore malformed local state and continue with the regular login flow.
+  }
+
+  return "";
+};
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromState = location?.state?.from;
+  const resumeAppointment = Boolean(location?.state?.resumeAppointment);
+  const resumeSubscription = Boolean(location?.state?.resumeSubscription);
+  const pendingSubscriptionPath = useMemo(() => getPendingSubscriptionPath(), []);
+
   const from =
     typeof fromState === "string"
       ? fromState
       : fromState?.pathname
         ? `${fromState.pathname}${fromState.search || ""}${fromState.hash || ""}`
-        : "/";
-  const resumeAppointment = Boolean(location?.state?.resumeAppointment);
+        : pendingSubscriptionPath || "/";
 
   const handleSuccess = () => {
     navigate(from, {
@@ -123,7 +147,9 @@ export default function LoginPage() {
                 <p className="lp__subtitle">
                   {resumeAppointment
                     ? "Entre para continuar seu agendamento de onde parou."
-                    : "Entre para acessar seus agendamentos e recursos de gestão."}
+                    : resumeSubscription || pendingSubscriptionPath
+                      ? "Entre para continuar com o plano que você escolheu."
+                      : "Entre para acessar seus agendamentos e recursos de gestão."}
                 </p>
               </header>
 
