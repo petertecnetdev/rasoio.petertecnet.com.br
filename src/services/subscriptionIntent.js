@@ -41,6 +41,8 @@ export async function createSubscriptionIntent({
   source = SOURCE,
   handoff = "app",
   page,
+  referral = "",
+  campaign = "",
 }) {
   const token = localStorage.getItem("token");
   const normalizedPlanCode = String(planCode || "").trim();
@@ -48,15 +50,20 @@ export async function createSubscriptionIntent({
   if (!token || !/^[a-z0-9_-]{1,80}$/i.test(normalizedPlanCode)) return null;
 
   const idempotencyKey = getSubscriptionIntentIdempotencyKey(normalizedPlanCode);
+  const metadata = {
+    client_price_cents: priceCents,
+    currency,
+    page: page || window.location.pathname,
+  };
+
+  if (referral) metadata.referral = referral;
+  if (campaign) metadata.campaign = campaign;
+
   const payload = {
     plan_code: normalizedPlanCode,
     source,
     handoff_channel: handoff,
-    metadata: {
-      client_price_cents: priceCents,
-      currency,
-      page: page || window.location.pathname,
-    },
+    metadata,
   };
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
