@@ -1,5 +1,5 @@
 // src/components/establishment/EstablishmentActionsBar.jsx
-import React from "react";
+import React, { useCallback, useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
@@ -41,11 +41,67 @@ const actions = [
   },
 ];
 
+const buildPublicUrl = (slug) => {
+  if (typeof window === "undefined") return `/establishment/view/${slug}`;
+  return `${window.location.origin}/establishment/view/${encodeURIComponent(slug)}`;
+};
+
 export default function EstablishmentActionsBar({ establishment }) {
   const name = establishment.fantasy || establishment.name || "estabelecimento";
+  const [shareFeedback, setShareFeedback] = useState("");
+
+  const handleShare = useCallback(async () => {
+    const url = buildPublicUrl(establishment.slug);
+    const shareData = {
+      title: `Agende seu horário em ${name}`,
+      text: `Escolha o serviço, profissional e horário disponível em ${name}.`,
+      url,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareFeedback("Agenda compartilhada");
+        return;
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback("Link copiado");
+        return;
+      }
+
+      window.prompt("Copie o link público da agenda:", url);
+      setShareFeedback("Link pronto para copiar");
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+
+      try {
+        await navigator.clipboard?.writeText?.(url);
+        setShareFeedback("Link copiado");
+      } catch {
+        window.prompt("Copie o link público da agenda:", url);
+        setShareFeedback("Link pronto para copiar");
+      }
+    }
+  }, [establishment.slug, name]);
 
   return (
     <nav className="barbershop-actions" aria-label={`Gerenciar ${name}`}>
+      <button
+        type="button"
+        className="barbershop-action barbershop-action-primary"
+        onClick={handleShare}
+        aria-label={`Compartilhar agenda pública de ${name}`}
+      >
+        <span className="barbershop-action-icon" aria-hidden="true">↗</span>
+        <span className="barbershop-action-copy">
+          <strong>Compartilhar agenda</strong>
+          <small>{shareFeedback || "WhatsApp e outros apps"}</small>
+        </span>
+        <span className="barbershop-action-arrow" aria-hidden="true">→</span>
+      </button>
+
       {actions.map((action) => (
         <Link key={action.key} to={action.path(establishment)} className="barbershop-action">
           <span className="barbershop-action-icon" aria-hidden="true">{action.icon}</span>
