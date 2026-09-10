@@ -55,6 +55,7 @@ export default function EstablishmentViewPage() {
   const whatsappLink = useWhatsappLink(establishment);
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
   const canSchedule = isSchedulableEstablishment({ establishment, employers, services });
+  const growthUrl = `/subscription-plans?source=public-establishment${slug ? `&ref=${encodeURIComponent(slug)}` : ""}`;
 
   const heroLogo = establishment?.images?.logo || establishment?.logo || null;
   const heroBg = establishment?.images?.background || establishment?.background || null;
@@ -215,6 +216,19 @@ export default function EstablishmentViewPage() {
             <section className="ev-block ev-location"><div className="ev-sectionHeading"><div><span>ONDE ESTAMOS</span><h2>Venha nos visitar</h2>{establishment?.address && <p>{establishment.address}{cityLabel ? ` · ${cityLabel}` : ""}</p>}</div></div><GlobalMap location={establishment?.location} address={establishment?.address} city={establishment?.city} uf={establishment?.uf} /></section>
 
             <section className="ev-finalCta"><div><span>{canSchedule ? "AGENDE ONLINE" : "AGENDA INDISPONÍVEL"}</span><h2>{canSchedule ? "Reserve seu horário em poucos cliques." : "Este estabelecimento ainda não possui agenda online disponível."}</h2>{canSchedule && <p>Escolha seus serviços, seu profissional e encontre os horários disponíveis.</p>}</div>{canSchedule && <button type="button" onClick={() => handleOpenFromEstablishment(establishment)}><FaCalendarAlt /> Agendar agora</button>}</section>
+
+            <section className="ev-block text-center" aria-label="Rasoio para estabelecimentos">
+              <div className="mx-auto" style={{ maxWidth: 720 }}>
+                <span className="ev-kicker justify-content-center">POWERED BY RASOIO</span>
+                <h2 className="mt-2">Quer oferecer uma agenda online como esta no seu negócio?</h2>
+                <p className="text-body-secondary mb-4">
+                  Organize serviços, profissionais e horários em um só lugar e permita que seus clientes agendem online.
+                </p>
+                <a className="btn btn-outline-light btn-lg" href={growthUrl}>
+                  Conhecer a Rasoio
+                </a>
+              </div>
+            </section>
 
             {Array.isArray(otherEstablishments) && otherEstablishments.length > 0 && <section className="ev-block ev-related"><GlobalCarousel title="Outros estabelecimentos" subtitle="Conheça outras opções" items={otherEstablishments} fmtBRL={(value) => value} navigate={safeNavigate} showSchedule={false} showDots /></section>}
             {Array.isArray(otherEmployers) && otherEmployers.length > 0 && <section className="ev-related"><GlobalCarousel title="Outros profissionais" subtitle="Mais profissionais para conhecer" items={otherEmployers} fmtBRL={(value) => value} navigate={navigate} openSchedulePopup={handleOpenFromEmployer} showSchedule={canSchedule} showDots /></section>}
