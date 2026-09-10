@@ -1,15 +1,43 @@
 // src/pages/auth/RegisterPage.jsx
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import RegisterFormComponent from "../../components/auth/RegisterFormComponent";
 
 import "./RegisterPage.css";
 
+const normalizePlanCode = (value) => {
+  const plan = String(value || "").trim();
+  return /^[a-z0-9_-]{1,80}$/i.test(plan) ? plan : "";
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedPlan = useMemo(() => {
+    const searchPlan = normalizePlanCode(new URLSearchParams(location.search).get("plan"));
+    if (searchPlan) return searchPlan;
+
+    try {
+      const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+      if (pending?.application !== "rasoio") return "";
+      return normalizePlanCode(pending?.plan);
+    } catch {
+      return "";
+    }
+  }, [location.search]);
 
   const handleSuccess = () => {
-    navigate("/login", { replace: true });
+    const from = selectedPlan
+      ? `/dashboard?plan=${encodeURIComponent(selectedPlan)}`
+      : "/dashboard";
+
+    navigate("/login", {
+      replace: true,
+      state: {
+        from,
+        resumeSubscription: Boolean(selectedPlan),
+      },
+    });
   };
 
   return (
@@ -135,7 +163,9 @@ export default function RegisterPage() {
 
                 <h2 className="rp__title">Criar conta</h2>
                 <p className="rp__subtitle">
-                  Cadastre-se para começar a usar a Rasoio.
+                  {selectedPlan
+                    ? "Crie sua conta para continuar com o plano escolhido."
+                    : "Cadastre-se para começar a usar a Rasoio."}
                 </p>
               </header>
 
@@ -157,7 +187,11 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     className="rp__linkPrimary"
-                    onClick={() => navigate("/login")}
+                    onClick={() => navigate("/login", {
+                      state: selectedPlan
+                        ? { from: `/dashboard?plan=${encodeURIComponent(selectedPlan)}`, resumeSubscription: true }
+                        : undefined,
+                    })}
                   >
                     Entrar
                   </button>
