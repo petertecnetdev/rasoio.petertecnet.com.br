@@ -33,6 +33,42 @@ function isTrustedApiRequest(config) {
   }
 }
 
+function redirectUpgradeRequired(error) {
+  if (typeof window === "undefined" || !isTrustedApiRequest(error?.config)) return false;
+
+  const payload = error?.response?.data;
+  const entitlement = String(payload?.upgrade?.entitlement || "").trim();
+
+  if (error?.response?.status !== 402 || payload?.error !== "upgrade_required") return false;
+  if (entitlement !== "establishments.max") return false;
+  if (window.location.pathname === "/planos") return false;
+
+  const upgradeContext = {
+    application: APP_SLUG,
+    entitlement,
+    current: payload?.upgrade?.current ?? null,
+    limit: payload?.upgrade?.limit ?? null,
+    current_plan: payload?.upgrade?.plan_code || null,
+    target_plan: "business",
+    captured_at: new Date().toISOString(),
+  };
+
+  try {
+    sessionStorage.setItem("pending_upgrade_context", JSON.stringify(upgradeContext));
+  } catch {
+    // Storage is best-effort; the redirect itself is the revenue-critical behavior.
+  }
+
+  const params = new URLSearchParams({
+    plan: "business",
+    resume: "1",
+    source: "upgrade_required",
+    entitlement,
+  });
+  window.location.assign(`/planos?${params.toString()}`);
+  return true;
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   const trustedApiRequest = isTrustedApiRequest(config);
@@ -70,6 +106,7 @@ api.interceptors.response.use(
       if (hadToken && typeof window !== "undefined") window.dispatchEvent(new Event("authChanged"));
     }
 
+    redirectUpgradeRequired(error);
     return Promise.reject(error);
   }
 );
