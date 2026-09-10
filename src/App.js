@@ -24,6 +24,7 @@ import AppLayout from "./layouts/AppLayout";
 import { getAccountContext } from "./services/platformManagementApi";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
+const AgendaOnlinePage = lazy(() => import("./pages/AgendaOnlinePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const SubscriptionPlansPage = lazy(() => import("./pages/SubscriptionPlansPage"));
@@ -197,6 +198,7 @@ function AppInner() {
           <Routes>
             <Route element={<AppLayout loadingMenu={false} />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/agenda-online" element={<AgendaOnlinePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/planos" element={<SubscriptionPlansPage />} />
 
