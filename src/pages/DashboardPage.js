@@ -7,6 +7,29 @@ import { getAppointmentDashboard } from "../services/platformManagementApi";
 import { createSubscriptionIntent } from "../services/subscriptionIntent";
 import "./dashboard-v2.css";
 
+const PENDING_SUBSCRIPTION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+const readRecoverableSubscription = () => {
+  try {
+    const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    const selectedAt = pending?.selected_at ? Date.parse(pending.selected_at) : NaN;
+    const isFresh = Number.isFinite(selectedAt) && Date.now() - selectedAt <= PENDING_SUBSCRIPTION_TTL_MS;
+
+    if (
+      pending?.application !== "rasoio" ||
+      !/^[a-z0-9_-]{1,80}$/i.test(String(pending?.plan || "")) ||
+      !pending?.intent_id ||
+      !isFresh
+    ) {
+      return null;
+    }
+
+    return pending;
+  } catch {
+    return null;
+  }
+};
+
 const OverviewCard = ({ icon, eyebrow, title, text, to, cta, accent = false }) => (
   <article className={`rasoio-overview-card${accent ? " rasoio-overview-card-accent" : ""}`}>
     <div className="rasoio-overview-icon" aria-hidden="true">{icon}</div>
@@ -172,6 +195,7 @@ export default function DashboardPage() {
   const { user, isEmployer, establishments } = useContext(AuthContext);
   const [searchParams] = useSearchParams();
   const planCode = String(searchParams.get("plan") || "").trim();
+  const [pendingPayment] = useState(readRecoverableSubscription);
   const name =
     `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
     user?.name ||
@@ -186,6 +210,9 @@ export default function DashboardPage() {
     [owned, requestedSlug]
   );
   const selectedName = selected?.fantasy || selected?.name || null;
+  const paymentRecoveryUrl = pendingPayment
+    ? `/planos?plan=${encodeURIComponent(pendingPayment.plan)}&resume=1&source=payment_recovery`
+    : null;
 
   useEffect(() => {
     if (!/^[a-z0-9_-]{1,80}$/i.test(planCode)) return;
@@ -198,7 +225,7 @@ export default function DashboardPage() {
     }
 
     const selectedAt = pending?.selected_at ? Date.parse(pending.selected_at) : NaN;
-    const isFresh = Number.isFinite(selectedAt) && Date.now() - selectedAt <= 7 * 24 * 60 * 60 * 1000;
+    const isFresh = Number.isFinite(selectedAt) && Date.now() - selectedAt <= PENDING_SUBSCRIPTION_TTL_MS;
     if (pending?.application !== "rasoio" || pending?.plan !== planCode || !isFresh) return;
     if (pending?.intent_id) return;
 
@@ -249,6 +276,18 @@ export default function DashboardPage() {
             <span>{selected ? "unidade selecionada" : owned.length === 1 ? "estabelecimento na Rasoio" : "estabelecimentos na Rasoio"}</span>
           </div>
         </header>
+
+        {pendingPayment && paymentRecoveryUrl && (
+          <section className="alert alert-warning d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 mt-3 mb-4" role="status">
+            <div>
+              <strong className="d-block">Sua assinatura ainda está aguardando pagamento.</strong>
+              <span>Continue o PIX do plano {pendingPayment.plan} sem iniciar uma nova cobrança.</span>
+            </div>
+            <Link className="btn btn-dark flex-shrink-0" to={paymentRecoveryUrl}>
+              Continuar pagamento
+            </Link>
+          </section>
+        )}
 
         {selected && <LiveOperations selected={selected} />}
 
