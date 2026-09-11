@@ -10,6 +10,28 @@ const normalizePlanCode = (value) => {
   return /^[a-z0-9_-]{1,80}$/i.test(plan) ? plan : "";
 };
 
+const getSubscriptionResumePath = (selectedPlan) => {
+  if (!selectedPlan) return "/dashboard";
+
+  const params = new URLSearchParams({
+    plan: selectedPlan,
+    resume: "1",
+    source: "signup_resume",
+  });
+
+  try {
+    const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    if (pending?.application === "rasoio" && pending?.plan === selectedPlan) {
+      if (pending.referral) params.set("ref", String(pending.referral));
+      if (pending.campaign) params.set("utm_campaign", String(pending.campaign));
+    }
+  } catch {
+    // Continue without optional attribution when local state is malformed.
+  }
+
+  return `/planos?${params.toString()}`;
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,9 +49,7 @@ export default function RegisterPage() {
   }, [location.search]);
 
   const handleSuccess = () => {
-    const from = selectedPlan
-      ? `/dashboard?plan=${encodeURIComponent(selectedPlan)}`
-      : "/dashboard";
+    const from = getSubscriptionResumePath(selectedPlan);
 
     navigate("/login", {
       replace: true,
@@ -189,7 +209,7 @@ export default function RegisterPage() {
                     className="rp__linkPrimary"
                     onClick={() => navigate("/login", {
                       state: selectedPlan
-                        ? { from: `/dashboard?plan=${encodeURIComponent(selectedPlan)}`, resumeSubscription: true }
+                        ? { from: getSubscriptionResumePath(selectedPlan), resumeSubscription: true }
                         : undefined,
                     })}
                   >
