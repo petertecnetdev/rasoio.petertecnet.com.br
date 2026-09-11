@@ -3,6 +3,7 @@
   <url><loc>https://rasoio.petertecnet.com.br/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://rasoio.petertecnet.com.br/agenda-online</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://rasoio.petertecnet.com.br/agendamento-online-barbearia/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://rasoio.petertecnet.com.br/sistema-para-barbearia/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://rasoio.petertecnet.com.br/search</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://rasoio.petertecnet.com.br/establishments</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://rasoio.petertecnet.com.br/employers</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
