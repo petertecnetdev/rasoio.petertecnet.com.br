@@ -55,7 +55,7 @@ export default function EstablishmentViewPage() {
   const whatsappLink = useWhatsappLink(establishment);
   const safeNavigate = useMemo(() => (path) => (window.location.href = path), []);
   const canSchedule = isSchedulableEstablishment({ establishment, employers, services });
-  const growthUrl = `/subscription-plans?source=powered-by-rasoio${slug ? `&ref=${encodeURIComponent(slug)}` : ""}&utm_source=public_agenda&utm_medium=product_badge&utm_campaign=powered_by_rasoio`;
+  const growthUrl = `/planos?source=powered-by-rasoio${slug ? `&ref=${encodeURIComponent(slug)}` : ""}&utm_source=public_agenda&utm_medium=product_badge&utm_campaign=powered_by_rasoio`;
 
   const heroLogo = establishment?.images?.logo || establishment?.logo || null;
   const heroBg = establishment?.images?.background || establishment?.background || null;
