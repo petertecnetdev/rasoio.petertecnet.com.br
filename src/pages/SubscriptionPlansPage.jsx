@@ -13,6 +13,7 @@ const money = new Intl.NumberFormat("pt-BR", {
 
 const DEFAULT_SOURCE = "subscription_plans";
 const MAX_ATTRIBUTION_LENGTH = 80;
+const AUTO_RESUME_SOURCES = new Set(["upgrade_required", "signup_resume"]);
 
 const normalizeAttribution = (value, fallback = "") => {
   const normalized = String(value || "")
@@ -35,13 +36,13 @@ const getSubscriptionAttribution = () => {
   return { source, referral, campaign };
 };
 
-const getUpgradeResumePlan = () => {
+const getResumePlan = () => {
   const params = new URLSearchParams(window.location.search);
   const plan = String(params.get("plan") || "").trim().toLowerCase();
   const resume = params.get("resume") === "1";
   const source = normalizeAttribution(params.get("source"));
 
-  if (!resume || source !== "upgrade_required") return "";
+  if (!resume || !AUTO_RESUME_SOURCES.has(source)) return "";
   if (!/^[a-z0-9_-]{1,80}$/i.test(plan)) return "";
 
   return plan;
@@ -89,76 +90,77 @@ export default function SubscriptionPlansPage() {
     setPaymentMessage("");
     setSubmittingPlan(planCode);
 
-    const priceCents = Number.isFinite(Number(plan?.price_cents))
-      ? Number(plan.price_cents)
-      : Number.isFinite(Number(plan?.price))
-        ? Math.round(Number(plan.price) * 100)
-        : null;
-    const currency = plan?.currency || "BRL";
-    const attribution = getSubscriptionAttribution();
-    const pendingPlan = {
-      application: "rasoio",
-      plan: planCode,
-      price_cents: priceCents,
-      currency,
-      selected_at: new Date().toISOString(),
-      source: attribution.source,
-      referral: attribution.referral || undefined,
-      campaign: attribution.campaign || undefined,
-      handoff: "app",
-    };
+    try {
+      const priceCents = Number.isFinite(Number(plan?.price_cents))
+        ? Number(plan.price_cents)
+        : Number.isFinite(Number(plan?.price))
+          ? Math.round(Number(plan.price) * 100)
+          : null;
+      const currency = plan?.currency || "BRL";
+      const attribution = getSubscriptionAttribution();
+      const pendingPlan = {
+        application: "rasoio",
+        plan: planCode,
+        price_cents: priceCents,
+        currency,
+        selected_at: new Date().toISOString(),
+        source: attribution.source,
+        referral: attribution.referral || undefined,
+        campaign: attribution.campaign || undefined,
+        handoff: "app",
+      };
 
-    localStorage.setItem("pending_subscription_plan", JSON.stringify(pendingPlan));
+      localStorage.setItem("pending_subscription_plan", JSON.stringify(pendingPlan));
 
-    if (!localStorage.getItem("token")) {
-      window.location.assign(`/register?plan=${encodeURIComponent(planCode)}`);
-      return;
-    }
+      if (!localStorage.getItem("token")) {
+        window.location.assign(`/register?plan=${encodeURIComponent(planCode)}`);
+        return;
+      }
 
-    const intent = await createSubscriptionIntent({
-      planCode,
-      priceCents,
-      currency,
-      source: pendingPlan.source,
-      handoff: pendingPlan.handoff,
-      page: window.location.pathname,
-      referral: pendingPlan.referral,
-      campaign: pendingPlan.campaign,
-    });
+      const intent = await createSubscriptionIntent({
+        planCode,
+        priceCents,
+        currency,
+        source: pendingPlan.source,
+        handoff: pendingPlan.handoff,
+        page: window.location.pathname,
+        referral: pendingPlan.referral,
+        campaign: pendingPlan.campaign,
+      });
 
-    if (!intent?.id) {
-      setError("Não foi possível iniciar a contratação agora. Tente novamente.");
+      if (!intent?.id) {
+        setError("Não foi possível iniciar a contratação agora. Tente novamente.");
+        return;
+      }
+
+      localStorage.setItem(
+        "pending_subscription_plan",
+        JSON.stringify({
+          ...pendingPlan,
+          intent_id: intent.id,
+          intent_status: intent.status,
+          price_cents: intent.price_cents ?? priceCents,
+          currency: intent.currency || currency,
+        })
+      );
+
+      const paymentCheckout = await createSubscriptionPixCheckout(intent.id);
+      if (!paymentCheckout?.payment?.pix?.qr_code) {
+        setError("Não foi possível gerar o PIX agora. Nenhuma cobrança foi confirmada; tente novamente.");
+        return;
+      }
+
+      setCheckout({ ...paymentCheckout, planName: intent.plan_name || plan.name });
+    } finally {
       setSubmittingPlan("");
-      return;
     }
-
-    localStorage.setItem(
-      "pending_subscription_plan",
-      JSON.stringify({
-        ...pendingPlan,
-        intent_id: intent.id,
-        intent_status: intent.status,
-        price_cents: intent.price_cents ?? priceCents,
-        currency: intent.currency || currency,
-      })
-    );
-
-    const paymentCheckout = await createSubscriptionPixCheckout(intent.id);
-    if (!paymentCheckout?.payment?.pix?.qr_code) {
-      setError("Não foi possível gerar o PIX agora. Nenhuma cobrança foi confirmada; tente novamente.");
-      setSubmittingPlan("");
-      return;
-    }
-
-    setCheckout({ ...paymentCheckout, planName: intent.plan_name || plan.name });
-    setSubmittingPlan("");
   }, [submittingPlan]);
 
   useEffect(() => {
     if (loading || checkout || submittingPlan || autoCheckoutStartedRef.current) return;
     if (!localStorage.getItem("token")) return;
 
-    const resumePlanCode = getUpgradeResumePlan();
+    const resumePlanCode = getResumePlan();
     if (!resumePlanCode) return;
 
     const resumePlan = plans.find(
