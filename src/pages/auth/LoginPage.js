@@ -16,7 +16,14 @@ const getPendingSubscriptionPath = () => {
       /^[a-z0-9_-]{1,80}$/i.test(plan) &&
       isFresh
     ) {
-      return `/dashboard?plan=${encodeURIComponent(plan)}`;
+      const params = new URLSearchParams({
+        plan,
+        resume: "1",
+        source: "signup_resume",
+      });
+      if (pending.referral) params.set("ref", String(pending.referral));
+      if (pending.campaign) params.set("utm_campaign", String(pending.campaign));
+      return `/planos?${params.toString()}`;
     }
   } catch {
     // Ignore malformed local state and continue with the regular login flow.
