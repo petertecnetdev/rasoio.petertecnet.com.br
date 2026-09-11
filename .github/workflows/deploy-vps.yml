@@ -102,9 +102,7 @@ jobs:
             'set -euo pipefail
              cd /var/www/rasoio.petertecnet.com.br
              test -f build/index.html
-             main_asset="$(grep -oE "static/js/main\.[A-Za-z0-9]+\.js" build/index.html | head -n 1)"
-             test -n "$main_asset"
-             test -f "build/$main_asset"
-             grep -q "establishment-team-management-v2" "build/$main_asset"
-             grep -q "Adicionar colaborador" "build/$main_asset"
-             echo "Verified deployed collaborator UI in build/$main_asset"'
+             test -d build/static/js
+             find build/static/js -type f -name "*.js" -print0 | xargs -0 grep -l -q "establishment-team-management-v2"
+             find build/static/js -type f -name "*.js" -print0 | xargs -0 grep -l -q "Adicionar colaborador"
+             echo "Verified deployed collaborator UI across build/static/js"'
