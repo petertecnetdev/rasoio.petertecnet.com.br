@@ -56,6 +56,16 @@ const buildPublicUrl = (slug) => {
   return `${window.location.origin}${path}?${params.toString()}`;
 };
 
+const buildWhatsappUrl = (name, publicUrl) => {
+  const message = [
+    `Agende seu horário em ${name}.`,
+    "Escolha o serviço, o profissional e o melhor horário disponível:",
+    publicUrl,
+  ].join("\n");
+
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+};
+
 export default function EstablishmentActionsBar({ establishment }) {
   const name = establishment.fantasy || establishment.name || "estabelecimento";
   const [shareFeedback, setShareFeedback] = useState("");
@@ -72,6 +82,17 @@ export default function EstablishmentActionsBar({ establishment }) {
       if (navigator.share) {
         await navigator.share(shareData);
         setShareFeedback("Agenda compartilhada");
+        return;
+      }
+
+      const whatsappWindow = window.open(
+        buildWhatsappUrl(name, url),
+        "_blank",
+        "noopener,noreferrer"
+      );
+
+      if (whatsappWindow) {
+        setShareFeedback("WhatsApp aberto");
         return;
       }
 
