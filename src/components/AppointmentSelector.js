@@ -3,6 +3,7 @@ import { Form, Button, Spinner, Row, Col, Card } from "react-bootstrap";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { FaCalendarAlt, FaClock, FaUser } from "react-icons/fa";
+import { toLocalDateKey } from "../utils/localDateKey";
 
 const MySwal = withReactContent(Swal);
 const PLACEHOLDER = "/images/logo.png";
@@ -24,17 +25,12 @@ export default function AppointmentSelector({
   const availabilityRequestRef = useRef(0);
   const submitInFlightRef = useRef(false);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = toLocalDateKey();
 
   const fmtBRL = (v) =>
     `R$ ${Number(v || 0)
       .toFixed(2)
       .replace(".", ",")}`;
-
-  const toDateKey = (d) => {
-    const date = new Date(d);
-    return date.toISOString().split("T")[0];
-  };
 
   const totalDuration = selectedServices.reduce(
     (sum, s) => sum + (parseInt(s.duration) || 0),
@@ -65,7 +61,7 @@ export default function AppointmentSelector({
       setLoadingTimes(true);
 
       const duration = totalDuration > 0 ? totalDuration : 30;
-      const date = toDateKey(selectedDate);
+      const date = toLocalDateKey(selectedDate);
       const times = await loadAvailableTimes(date, selectedEmployer, duration);
 
       if (availabilityRequestRef.current !== requestId) return;
@@ -111,7 +107,7 @@ export default function AppointmentSelector({
       await handleCreateAppointment(
         selectedServices,
         selectedEmployer,
-        toDateKey(selectedDate),
+        toLocalDateKey(selectedDate),
         selectedTime
       );
     } finally {
