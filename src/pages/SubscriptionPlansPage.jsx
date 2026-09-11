@@ -15,8 +15,9 @@ const money = new Intl.NumberFormat("pt-BR", {
 const DEFAULT_SOURCE = "subscription_plans";
 const MAX_ATTRIBUTION_LENGTH = 80;
 const PENDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const AUTO_PAYMENT_SYNC_INTERVAL_MS = 10000;
-const AUTO_PAYMENT_SYNC_MAX_ATTEMPTS = 18;
+const AUTO_PAYMENT_SYNC_FAST_INTERVAL_MS = 10000;
+const AUTO_PAYMENT_SYNC_SLOW_INTERVAL_MS = 30000;
+const AUTO_PAYMENT_SYNC_FAST_ATTEMPTS = 18;
 const AUTO_RESUME_SOURCES = new Set(["upgrade_required", "signup_resume", "payment_recovery"]);
 
 const normalizeAttribution = (value, fallback = "") => {
@@ -323,21 +324,48 @@ export default function SubscriptionPlansPage() {
 
     let cancelled = false;
     let attempts = 0;
+    let timeoutId = null;
 
-    const sync = async () => {
-      if (cancelled || document.hidden || attempts >= AUTO_PAYMENT_SYNC_MAX_ATTEMPTS) return;
+    const scheduleNext = () => {
+      if (cancelled) return;
+      const delay = attempts < AUTO_PAYMENT_SYNC_FAST_ATTEMPTS
+        ? AUTO_PAYMENT_SYNC_FAST_INTERVAL_MS
+        : AUTO_PAYMENT_SYNC_SLOW_INTERVAL_MS;
+      timeoutId = window.setTimeout(sync, delay);
+    };
+
+    const sync = async ({ force = false } = {}) => {
+      if (cancelled) return;
+      if (document.hidden && !force) {
+        scheduleNext();
+        return;
+      }
+
       attempts += 1;
       const activated = await checkPaymentStatus();
-      if (activated) cancelled = true;
+      if (activated) {
+        cancelled = true;
+        return;
+      }
+      scheduleNext();
+    };
+
+    const syncWhenVisible = () => {
+      if (document.hidden || cancelled) return;
+      if (timeoutId) window.clearTimeout(timeoutId);
+      sync({ force: true });
     };
 
     setPaymentMessage("A Rasoio confirmará seu PIX automaticamente assim que o pagamento for identificado.");
     sync();
-    const intervalId = window.setInterval(sync, AUTO_PAYMENT_SYNC_INTERVAL_MS);
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    window.addEventListener("focus", syncWhenVisible);
 
     return () => {
       cancelled = true;
-      window.clearInterval(intervalId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", syncWhenVisible);
+      window.removeEventListener("focus", syncWhenVisible);
     };
   }, [checkout, checkPaymentStatus]);
 
