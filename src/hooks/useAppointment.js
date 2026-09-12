@@ -1,15 +1,25 @@
 // src/hooks/useAppointment.js
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
+import { getAppointmentAcquisitionAttribution } from "../utils/appointmentAcquisitionAttribution";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
 
 const TZ = "America/Sao_Paulo";
+
+const createOrderIdempotencyKey = () => {
+  const uuid = window.crypto?.randomUUID?.();
+  if (uuid) return `rasoio-public-booking-${uuid}`;
+
+  return `rasoio-public-booking-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 14)}`;
+};
 
 const escapeHtml = (value) => String(value ?? "")
   .replace(/&/g, "&amp;")
@@ -32,6 +42,7 @@ const getServiceEntityId = (service) =>
   service?.establishment_id ?? service?.entity_id ?? service?.establishment?.id ?? null;
 
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
+  const orderIntentRef = useRef({ fingerprint: null, key: null });
   const getToken = useCallback(
     () => localStorage.getItem("token") || token,
     [token]
@@ -395,13 +406,30 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           notes: "Agendamento feito pelo aplicativo.",
         };
 
-        await axios.post(`${apiBaseUrl}/order`, payload, {
+        const attribution = getAppointmentAcquisitionAttribution();
+        const orderPayload = attribution
+          ? { ...payload, acquisition_attribution: attribution }
+          : payload;
+        const fingerprint = JSON.stringify(orderPayload);
+
+        if (orderIntentRef.current.fingerprint !== fingerprint) {
+          orderIntentRef.current = {
+            fingerprint,
+            key: createOrderIdempotencyKey(),
+          };
+        }
+
+        const idempotencyKey = orderIntentRef.current.key;
+
+        await axios.post(`${apiBaseUrl}/order`, orderPayload, {
           headers: {
             Authorization: `Bearer ${userToken}`,
             Accept: "application/json",
             "Content-Type": "application/json",
+            "Idempotency-Key": idempotencyKey,
           },
         });
+        orderIntentRef.current = { fingerprint: null, key: null };
 
         await Swal.fire({
           background: "#0a0a0c",
@@ -414,6 +442,14 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
 
         return true;
       } catch (error) {
+        const idempotencyStatus = String(
+          error?.response?.headers?.["idempotency-status"] || ""
+        ).toLowerCase();
+
+        if (error?.response && idempotencyStatus !== "processing") {
+          orderIntentRef.current = { fingerprint: null, key: null };
+        }
+
         await Swal.fire({
           background: "#0a0a0c",
           color: "#fff",
