@@ -57,6 +57,9 @@ const captureAttribution = () => {
   return attribution;
 };
 
+export const getAppointmentAcquisitionAttribution = () =>
+  captureAttribution() || readStoredAttribution();
+
 const isAppointmentOrderRequest = (input, init) => {
   const method = String(init?.method || (typeof input !== "string" ? input?.method : "") || "GET").toUpperCase();
   if (method !== "POST") return false;
@@ -92,7 +95,7 @@ export const installAppointmentAcquisitionAttribution = () => {
         return originalFetch(input, init);
       }
 
-      const attribution = captureAttribution() || readStoredAttribution();
+      const attribution = getAppointmentAcquisitionAttribution();
       if (!attribution) return originalFetch(input, init);
 
       return originalFetch(input, {
