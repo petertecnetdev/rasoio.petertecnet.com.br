@@ -17,6 +17,11 @@ function safeEstablishment(establishment) {
   };
 }
 
+function safeEmployerId(value) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 export function startOwnerActivation(establishment) {
   const safe = safeEstablishment(establishment);
   if (!safe || typeof window === "undefined") return null;
@@ -34,6 +39,29 @@ export function startOwnerActivation(establishment) {
   }
 }
 
+export function setOwnerActivationEmployer(employerId) {
+  if (typeof window === "undefined") return null;
+
+  const safeId = safeEmployerId(employerId);
+  if (!safeId) return null;
+
+  try {
+    const current = getOwnerActivation();
+    if (!current) return null;
+
+    const context = {
+      ...current,
+      employerId: safeId,
+      expiresAt: Date.now() + MAX_AGE_MS,
+    };
+
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(context));
+    return context;
+  } catch {
+    return null;
+  }
+}
+
 export function getOwnerActivation(expectedSlug = null) {
   if (typeof window === "undefined") return null;
 
@@ -43,6 +71,7 @@ export function getOwnerActivation(expectedSlug = null) {
 
     const context = JSON.parse(raw);
     const establishment = safeEstablishment(context?.establishment);
+    const employerId = safeEmployerId(context?.employerId);
     const expiresAt = Number(context?.expiresAt || 0);
 
     if (!establishment || !expiresAt || expiresAt <= Date.now()) {
@@ -52,7 +81,7 @@ export function getOwnerActivation(expectedSlug = null) {
 
     if (expectedSlug && establishment.slug !== String(expectedSlug)) return null;
 
-    return { establishment, expiresAt };
+    return { establishment, employerId, expiresAt };
   } catch {
     window.sessionStorage.removeItem(STORAGE_KEY);
     return null;
