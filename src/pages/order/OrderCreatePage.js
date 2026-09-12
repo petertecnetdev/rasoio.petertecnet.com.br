@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Container, Spinner, Alert } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -56,9 +56,12 @@ export default function OrderCreatePage() {
   } = useOrderCreate(identifier);
 
   const [selectedClient, setSelectedClient] = useState(null);
+  const submitLockRef = useRef(false);
 
   const handleSubmit = async (payload) => {
-    if (!establishment || submitting) return;
+    if (!establishment || submitting || submitLockRef.current) return;
+
+    submitLockRef.current = true;
 
     try {
       showLoadingModal();
@@ -112,6 +115,8 @@ export default function OrderCreatePage() {
         text: String(message),
         confirmButtonText: "Fechar",
       });
+    } finally {
+      submitLockRef.current = false;
     }
   };
 
