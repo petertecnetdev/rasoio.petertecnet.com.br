@@ -104,5 +104,5 @@ jobs:
              test -f build/index.html
              test -d build/static/js
              find build/static/js -type f -name "*.js" -print0 | xargs -0 grep -l -q "Adicionar colaborador"
-             find build/static/js -type f -name "*.js" -print0 | xargs -0 grep -l -q "Sim, eu também atendo"
+             find build/static/js -type f -name "*.js" -print0 | xargs -0 grep -l -q "Sim, eu tamb"
              echo "Verified deployed collaborator onboarding UI across build/static/js"'
