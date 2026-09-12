@@ -2,6 +2,15 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import api from "../services/api";
 
+const createOrderIdempotencyKey = () => {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return `rasoio-order-${uuid}`;
+
+  return `rasoio-order-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 14)}`;
+};
+
 export default function useOrderCreate(identifier) {
   const [establishment, setEstablishment] = useState(null);
   const [items, setItems] = useState([]);
@@ -15,6 +24,7 @@ export default function useOrderCreate(identifier) {
   const [apiError, setApiError] = useState(null);
 
   const abortRef = useRef(null);
+  const orderIntentRef = useRef({ fingerprint: null, key: null });
 
   const loadData = useCallback(async () => {
     if (!identifier) return;
@@ -80,10 +90,41 @@ export default function useOrderCreate(identifier) {
   }, []);
 
   const createOrder = useCallback(async (payload) => {
+    const fingerprint = JSON.stringify(payload);
+
+    if (orderIntentRef.current.fingerprint !== fingerprint) {
+      orderIntentRef.current = {
+        fingerprint,
+        key: createOrderIdempotencyKey(),
+      };
+    }
+
+    const idempotencyKey = orderIntentRef.current.key;
+
     setSubmitting(true);
     try {
-      const { data } = await api.post("/order", payload);
+      const { data } = await api.post("/order", payload, {
+        headers: {
+          "Idempotency-Key": idempotencyKey,
+        },
+      });
+
+      orderIntentRef.current = { fingerprint: null, key: null };
       return data;
+    } catch (err) {
+      const idempotencyStatus = String(
+        err?.response?.headers?.["idempotency-status"] || ""
+      ).toLowerCase();
+
+      // Sem resposta HTTP, a primeira requisição pode ter sido persistida pela API.
+      // Mantemos a mesma chave para que uma nova tentativa recupere o resultado
+      // em vez de criar outro pedido/agendamento. Erros definitivos recebem uma
+      // nova chave na próxima tentativa.
+      if (err?.response && idempotencyStatus !== "processing") {
+        orderIntentRef.current = { fingerprint: null, key: null };
+      }
+
+      throw err;
     } finally {
       setSubmitting(false);
     }
