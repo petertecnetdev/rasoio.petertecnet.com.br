@@ -393,9 +393,30 @@ export default function EstablishmentCreatePage() {
 
     try {
       const { data } = await api.post("/establishment", formData);
-      const slug = data?.establishment?.slug;
-      await Swal.fire("Estabelecimento criado", asMessage(data?.message) || "Cadastro realizado com sucesso.", "success");
-      navigate(slug ? `/establishment/view/${slug}` : "/establishment/my");
+      const establishment = data?.establishment || null;
+      const slug = establishment?.slug;
+
+      await Swal.fire({
+        icon: "success",
+        title: "Estabelecimento criado",
+        text: slug
+          ? "Agora cadastre seu primeiro serviço para começar a receber agendamentos."
+          : asMessage(data?.message) || "Cadastro realizado com sucesso.",
+        confirmButtonText: slug ? "Cadastrar primeiro serviço" : "Continuar",
+      });
+
+      if (slug) {
+        navigate(`/item/create/${slug}`, {
+          state: {
+            establishment,
+            itemType: "service",
+            onboarding: true,
+          },
+        });
+        return;
+      }
+
+      navigate("/establishment/my");
     } catch (error) {
       await Swal.fire({
         icon: "error",
