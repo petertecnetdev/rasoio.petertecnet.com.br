@@ -1,5 +1,6 @@
 // src/pages/employer/EmployerSchedulesPage.jsx
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import EmployerHero from "../../components/employer/EmployerHero";
@@ -7,6 +8,11 @@ import EmployerScheduleAddForm from "../../components/employer/EmployerScheduleA
 import useEmployerSchedules, { EMPLOYER_DAYS } from "../../hooks/useEmployerSchedules";
 
 export default function EmployerSchedulesPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isOnboarding = location.state?.onboarding === true;
+  const onboardingEstablishment = location.state?.establishment || null;
+
   const {
     employerId,
     schedulesByDay,
@@ -27,6 +33,10 @@ export default function EmployerSchedulesPage() {
     handleSaveSchedules,
     handleRemoveSchedule,
   } = useEmployerSchedules();
+
+  const hasAvailability = Object.values(schedulesByDay).some(
+    (schedules) => schedules.length > 0
+  );
 
   const confirmRemove = async (schedule) => {
     const result = await Swal.fire({
@@ -68,17 +78,48 @@ export default function EmployerSchedulesPage() {
   };
 
   const confirmSave = async () => {
+    if (isOnboarding && !hasAvailability) {
+      await Swal.fire({
+        title: "Adicione pelo menos um horário",
+        text: "Para começar a receber agendamentos, deixe pelo menos um dia com disponibilidade antes de concluir esta etapa.",
+        icon: "warning",
+        confirmButtonText: "Configurar horários",
+      });
+      return;
+    }
+
     const result = await Swal.fire({
-      title: "Salvar disponibilidade?",
-      text: "Os dias marcados como folga ficarão indisponíveis em todas as semanas. Os demais usarão os horários configurados abaixo.",
+      title: isOnboarding ? "Publicar sua disponibilidade?" : "Salvar disponibilidade?",
+      text: isOnboarding
+        ? "Ao salvar, seus horários poderão ser usados para oferecer agendamentos aos clientes."
+        : "Os dias marcados como folga ficarão indisponíveis em todas as semanas. Os demais usarão os horários configurados abaixo.",
       icon: "question",
       showCancelButton: true,
-      confirmButtonText: "Salvar",
+      confirmButtonText: isOnboarding ? "Salvar e abrir minha agenda" : "Salvar",
       cancelButtonText: "Cancelar",
       reverseButtons: true,
     });
 
-    if (result.isConfirmed) await handleSaveSchedules();
+    if (!result.isConfirmed) return;
+
+    const saved = await handleSaveSchedules();
+    if (!saved || !isOnboarding) return;
+
+    const slug = onboardingEstablishment?.slug;
+    await Swal.fire({
+      icon: "success",
+      title: "Agenda pronta para receber clientes",
+      text: slug
+        ? "Seu primeiro serviço, perfil profissional e disponibilidade estão configurados. Confira agora como o cliente verá seu estabelecimento."
+        : "Seu perfil profissional e disponibilidade estão configurados para receber agendamentos.",
+      confirmButtonText: slug ? "Ver agenda pública" : "Concluir",
+    });
+
+    if (slug) {
+      navigate(`/establishment/view/${slug}?source=onboarding-ready`, {
+        replace: true,
+      });
+    }
   };
 
   if (loading) {
@@ -102,13 +143,23 @@ export default function EmployerSchedulesPage() {
   return (
     <Container className="py-4">
       <EmployerHero
-        title="Disponibilidade"
-        subtitle="Defina sua escala semanal: dias de trabalho, folgas recorrentes e horários em que clientes podem agendar com você."
-        badge="Área do barbeiro"
+        title={isOnboarding ? "Defina quando você pode atender" : "Disponibilidade"}
+        subtitle={
+          isOnboarding
+            ? "Esta é a última etapa para deixar sua agenda pronta: escolha os dias e horários em que clientes poderão agendar com você."
+            : "Defina sua escala semanal: dias de trabalho, folgas recorrentes e horários em que clientes podem agendar com você."
+        }
+        badge={isOnboarding ? "Última etapa" : "Área do barbeiro"}
       />
 
       {apiError && <Alert variant="danger">{apiError}</Alert>}
       {actionMessage && <Alert variant="success">{actionMessage}</Alert>}
+
+      {isOnboarding && (
+        <Alert variant="success" className="mb-4">
+          <strong>Quase pronto:</strong> ao salvar pelo menos um horário de atendimento, sua agenda estará preparada para receber o primeiro agendamento.
+        </Alert>
+      )}
 
       <Alert variant="info" className="mb-4">
         <strong>Folga semanal:</strong> marque “Não trabalho neste dia” quando você não atende em determinado dia da semana. Exemplo: se sua folga é toda terça-feira, todas as terças ficarão automaticamente fora do calendário de agendamento.
@@ -204,7 +255,11 @@ export default function EmployerSchedulesPage() {
 
       <div className="d-flex justify-content-end mt-4">
         <Button size="lg" disabled={saving || deleting} onClick={confirmSave}>
-          {saving ? "Salvando..." : "Salvar disponibilidade"}
+          {saving
+            ? "Salvando..."
+            : isOnboarding
+              ? "Salvar e abrir minha agenda"
+              : "Salvar disponibilidade"}
         </Button>
       </div>
     </Container>
