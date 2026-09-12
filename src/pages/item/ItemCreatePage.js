@@ -1,18 +1,27 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import ItemCreateForm from "../../components/item/ItemCreateForm";
 import useItemCreate from "../../hooks/useItemCreate";
+import { getOwnerActivation, startOwnerActivation } from "../../utils/ownerActivation";
 
 export default function ItemCreatePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { slug } = useParams();
 
-  const establishmentFromState = location.state?.establishment || null;
+  const storedActivation = useMemo(() => getOwnerActivation(slug), [slug]);
+  const establishmentFromState = location.state?.establishment || storedActivation?.establishment || null;
   const initialItemType = location.state?.itemType === "product" ? "product" : "service";
-  const isOnboarding = location.state?.onboarding === true;
+  const isOnboarding = location.state?.onboarding === true || Boolean(storedActivation);
+
+  useEffect(() => {
+    if (location.state?.onboarding === true && location.state?.establishment) {
+      startOwnerActivation(location.state.establishment);
+    }
+  }, [location.state]);
 
   const {
     register,

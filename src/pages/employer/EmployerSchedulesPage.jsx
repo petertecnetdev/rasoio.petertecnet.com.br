@@ -1,17 +1,19 @@
 // src/pages/employer/EmployerSchedulesPage.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from "react-bootstrap";
 import Swal from "sweetalert2";
 import EmployerHero from "../../components/employer/EmployerHero";
 import EmployerScheduleAddForm from "../../components/employer/EmployerScheduleAddForm";
 import useEmployerSchedules, { EMPLOYER_DAYS } from "../../hooks/useEmployerSchedules";
+import { clearOwnerActivation, getOwnerActivation } from "../../utils/ownerActivation";
 
 export default function EmployerSchedulesPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isOnboarding = location.state?.onboarding === true;
-  const onboardingEstablishment = location.state?.establishment || null;
+  const storedActivation = useMemo(() => getOwnerActivation(), []);
+  const isOnboarding = location.state?.onboarding === true || Boolean(storedActivation);
+  const onboardingEstablishment = location.state?.establishment || storedActivation?.establishment || null;
 
   const {
     employerId,
@@ -106,6 +108,8 @@ export default function EmployerSchedulesPage() {
     if (!saved || !isOnboarding) return;
 
     const slug = onboardingEstablishment?.slug;
+    clearOwnerActivation();
+
     await Swal.fire({
       icon: "success",
       title: "Agenda pronta para receber clientes",
