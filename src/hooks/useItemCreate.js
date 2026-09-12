@@ -12,7 +12,8 @@ export default function useItemCreate(
   navigate,
   reset,
   setValue,
-  establishmentFromState = null
+  establishmentFromState = null,
+  onboarding = false
 ) {
   const { slug } = useParams();
 
@@ -130,13 +131,30 @@ export default function useItemCreate(
       if (image) formData.append("image", image);
 
       const response = await createManagedItem(formData);
+      const continueOnboarding = onboarding && data?.type !== "product";
+
       await Swal.fire({
         icon: "success",
-        title: "Item cadastrado",
-        text: response?.message || "Item cadastrado com sucesso.",
+        title: continueOnboarding ? "Primeiro serviço cadastrado" : "Item cadastrado",
+        text: continueOnboarding
+          ? "Agora adicione o primeiro profissional para deixar a agenda pronta para receber clientes."
+          : response?.message || "Item cadastrado com sucesso.",
+        confirmButtonText: continueOnboarding ? "Adicionar profissional" : "Continuar",
       });
 
       reset();
+
+      if (continueOnboarding) {
+        navigate(`/employer/create/${establishment.slug}`, {
+          state: {
+            establishment,
+            onboarding: true,
+            nextStep: "first-professional",
+          },
+        });
+        return;
+      }
+
       navigate(`/establishment/item/${establishment.slug}${data?.type === "product" ? "?type=product" : ""}`);
     } catch (error) {
       await Swal.fire({
