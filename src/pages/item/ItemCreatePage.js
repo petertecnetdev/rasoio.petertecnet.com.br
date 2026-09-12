@@ -12,6 +12,7 @@ export default function ItemCreatePage() {
 
   const establishmentFromState = location.state?.establishment || null;
   const initialItemType = location.state?.itemType === "product" ? "product" : "service";
+  const isOnboarding = location.state?.onboarding === true;
 
   const {
     register,
@@ -35,7 +36,13 @@ export default function ItemCreatePage() {
     handleImageChange,
     handleRemoveImage,
     submitCreate,
-  } = useItemCreate(navigate, reset, setValue, establishmentFromState);
+  } = useItemCreate(
+    navigate,
+    reset,
+    setValue,
+    establishmentFromState,
+    isOnboarding
+  );
 
   if (loading) return <GlobalNav />;
 
