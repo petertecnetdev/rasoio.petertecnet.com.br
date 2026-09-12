@@ -23,6 +23,45 @@ function resolveSearchTerm(payload) {
   ).trim();
 }
 
+function isStaffUpgradeRequired(error) {
+  const payload = error?.response?.data;
+
+  return (
+    Number(error?.response?.status) === 402 &&
+    payload?.error === "upgrade_required" &&
+    payload?.upgrade?.entitlement === "staff.management"
+  );
+}
+
+async function offerStaffUpgrade(error) {
+  if (!isStaffUpgradeRequired(error)) return false;
+
+  const result = await Swal.fire({
+    icon: "info",
+    title: "Sua equipe está crescendo",
+    text:
+      error?.response?.data?.message ||
+      "Seu plano atual não inclui profissionais adicionais. Faça upgrade para adicionar sua equipe e continuar configurando a agenda.",
+    confirmButtonText: "Ver planos e fazer upgrade",
+    cancelButtonText: "Agora não",
+    showCancelButton: true,
+    reverseButtons: true,
+  });
+
+  if (result.isConfirmed) {
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+    const params = new URLSearchParams({
+      source: "upgrade_required",
+      feature: "staff-management",
+      return_to: returnTo,
+    });
+
+    window.location.assign(`/planos?${params.toString()}`);
+  }
+
+  return true;
+}
+
 export default function useEmployerCreate(slug) {
   const [establishment, setEstablishment] = useState(null);
   const [users, setUsers] = useState([]);
@@ -186,6 +225,9 @@ export default function useEmployerCreate(slug) {
       return data;
     } catch (error) {
       setErrors(error?.response?.data?.errors || {});
+      const upgradeHandled = await offerStaffUpgrade(error);
+      if (upgradeHandled) return null;
+
       await Swal.fire({
         icon: "error",
         title: "Não foi possível adicionar",
@@ -225,6 +267,9 @@ export default function useEmployerCreate(slug) {
       return data;
     } catch (error) {
       setErrors(error?.response?.data?.errors || {});
+      const upgradeHandled = await offerStaffUpgrade(error);
+      if (upgradeHandled) return null;
+
       await Swal.fire({
         icon: "error",
         title: "Não foi possível convidar",
