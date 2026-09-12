@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import dayjs from "dayjs";
@@ -8,6 +8,7 @@ import tz from "dayjs/plugin/timezone";
 import { apiBaseUrl } from "../../config";
 import api from "../../services/api";
 import useImageUtils from "../../hooks/useImageUtils";
+import { getAppointmentAcquisitionAttribution } from "../../utils/appointmentAcquisitionAttribution";
 import GlobalDateCarousel from "../GlobalDateCarousel";
 import GlobalModal from "../GlobalModal";
 import GlobalButton from "../GlobalButton";
@@ -21,6 +22,15 @@ dayjs.extend(tz);
 const MySwal = withReactContent(Swal);
 const TZ = "America/Sao_Paulo";
 const DAYS_TO_CHECK = 14;
+
+const createOrderIdempotencyKey = () => {
+  const uuid = window.crypto?.randomUUID?.();
+  if (uuid) return `rasoio-public-wizard-${uuid}`;
+
+  return `rasoio-public-wizard-${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 14)}`;
+};
 
 const buildInitialsSvg = (name = "?") => {
   const parts = String(name || "?").trim().split(" ").filter(Boolean);
@@ -72,6 +82,7 @@ export default function AppointmentWizardModal({
   preselectedEmployer = null,
   establishment = null,
 }) {
+  const orderIntentRef = useRef({ fingerprint: null, key: null });
   const { imageUrl: imgUrl } = useImageUtils();
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -179,6 +190,7 @@ export default function AppointmentWizardModal({
     setSelectedTime(null);
     setLoading(false);
     setLoadingDates(false);
+    orderIntentRef.current = { fingerprint: null, key: null };
 
     let storedUser = null;
     try { storedUser = JSON.parse(localStorage.getItem("user") || "null"); } catch { storedUser = null; }
@@ -295,14 +307,38 @@ export default function AppointmentWizardModal({
         attendant_id: resolvedEmployer?.id || null,
       };
 
+      const attribution = getAppointmentAcquisitionAttribution();
+      const orderPayload = attribution
+        ? { ...payload, acquisition_attribution: attribution }
+        : payload;
+      const fingerprint = JSON.stringify(orderPayload);
+
+      if (orderIntentRef.current.fingerprint !== fingerprint) {
+        orderIntentRef.current = {
+          fingerprint,
+          key: createOrderIdempotencyKey(),
+        };
+      }
+
       const token = localStorage.getItem("token");
       const response = await fetch(`${apiBaseUrl}/order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json; charset=utf-8", Authorization: token ? `Bearer ${token}` : "" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          Authorization: token ? `Bearer ${token}` : "",
+          "Idempotency-Key": orderIntentRef.current.key,
+        },
+        body: JSON.stringify(orderPayload),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw data;
+      const idempotencyStatus = String(response.headers.get("Idempotency-Status") || "").toLowerCase();
+      if (!response.ok) {
+        if (idempotencyStatus !== "processing" && response.status < 500) {
+          orderIntentRef.current = { fingerprint: null, key: null };
+        }
+        throw data;
+      }
+      orderIntentRef.current = { fingerprint: null, key: null };
 
       const orderId = pickApiOrderId(data);
       const html = `<div class="awm-swal"><div class="awm-swal__msg">${escapeHtml(pickApiSuccessMessage(data))}</div><div class="awm-swal__title">Resumo do agendamento</div><ul class="awm-swal__list">${resolvedEstablishment?.name ? `<li><b>Estabelecimento</b>: ${escapeHtml(resolvedEstablishment.name)}</li>` : ""}${resolvedEmployer?.name ? `<li><b>Profissional</b>: ${escapeHtml(resolvedEmployer.name)}</li>` : ""}<li><b>Data</b>: ${escapeHtml(dayjs(dateBase).format("DD/MM/YYYY"))}</li><li><b>Horário</b>: ${escapeHtml(selectedTime)}</li>${orderId ? `<li><b>Código</b>: ${escapeHtml(orderId)}</li>` : ""}<li><b>Total</b>: ${escapeHtml(fmtBRL(totalValue))}</li><li><b>Duração</b>: ${escapeHtml(totalDuration)} min</li></ul></div>`;
