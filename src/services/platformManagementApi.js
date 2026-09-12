@@ -171,6 +171,28 @@ export async function addTeamMember({
   return data || {};
 }
 
+export async function inviteTeamMember({
+  firstName,
+  email,
+  establishmentId,
+  role = "profissional",
+  permissions = [],
+}) {
+  if (!String(firstName || "").trim()) throw new Error("Nome não informado.");
+  if (!String(email || "").trim()) throw new Error("E-mail não informado.");
+  if (!establishmentId) throw new Error("Estabelecimento não informado.");
+
+  const { data } = await api.post(`${appContextPath}/team-members/invitations`, {
+    first_name: String(firstName).trim(),
+    email: String(email).trim().toLowerCase(),
+    establishment_id: Number(establishmentId),
+    role: String(role || "profissional").trim() || "profissional",
+    permissions: Array.isArray(permissions) ? permissions : [],
+  });
+
+  return data || {};
+}
+
 export async function removeTeamMember(teamMemberId) {
   if (!teamMemberId) throw new Error("Colaborador não informado.");
   const { data } = await api.delete(
