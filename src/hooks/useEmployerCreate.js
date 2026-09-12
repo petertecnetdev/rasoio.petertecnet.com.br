@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import {
   addTeamMember,
   findManagedEstablishmentBySlug,
+  inviteTeamMember,
   removeTeamMember,
   searchTeamMemberCandidates,
 } from "../services/platformManagementApi";
@@ -196,6 +197,48 @@ export default function useEmployerCreate(slug) {
     }
   };
 
+  const inviteEmployer = async ({ firstName, email }) => {
+    if (!establishment) return null;
+
+    try {
+      setLoading(true);
+      setErrors({});
+
+      const data = await inviteTeamMember({
+        firstName,
+        email,
+        establishmentId: establishment.id,
+        role,
+        permissions,
+      });
+
+      await Swal.fire({
+        icon: "success",
+        title: data?.invited ? "Convite enviado" : "Profissional adicionado",
+        text:
+          data?.message ||
+          (data?.invited
+            ? "A conta foi preparada e o profissional recebeu por e-mail o código para confirmar o acesso."
+            : "O profissional já possuía uma conta Peter Tecnet e foi vinculado à equipe."),
+      });
+
+      return data;
+    } catch (error) {
+      setErrors(error?.response?.data?.errors || {});
+      await Swal.fire({
+        icon: "error",
+        title: "Não foi possível convidar",
+        text: getApiErrorMessage(
+          error,
+          "Não foi possível convidar este profissional para a equipe."
+        ),
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const detachEmployer = async (employerId) => {
     if (!establishment || !employerId) return null;
 
@@ -264,6 +307,7 @@ export default function useEmployerCreate(slug) {
     setPermissions,
     searchUsers,
     createEmployer,
+    inviteEmployer,
     detachEmployer,
   };
 }

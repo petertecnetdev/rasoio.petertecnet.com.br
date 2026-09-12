@@ -47,6 +47,7 @@ export default function EmployerCreatePage() {
     setRole,
     searchUsers,
     createEmployer,
+    inviteEmployer,
     detachEmployer,
   } = useEmployerCreate(slug);
 
@@ -75,6 +76,15 @@ export default function EmployerCreatePage() {
     }
   };
 
+  const inviteAndContinue = async (invite) => {
+    const result = await inviteEmployer(invite);
+    const employerId = result?.employer?.id;
+
+    if (isOnboarding && employerId) {
+      continueToAvailability(employerId);
+    }
+  };
+
   const heroData = useMemo(() => {
     const subtitle =
       establishment?.city && establishment?.uf
@@ -92,8 +102,8 @@ export default function EmployerCreatePage() {
         null,
       title: isOnboarding ? "Quem vai atender os primeiros clientes?" : "Adicionar colaborador",
       description: isOnboarding
-        ? "Se você também realiza atendimentos, ative seu próprio perfil profissional agora e configure seus horários. Você também pode adicionar outra pessoa da equipe."
-        : "Busque um usuário e vincule-o à equipe deste estabelecimento.",
+        ? "Se você também realiza atendimentos, ative seu próprio perfil profissional agora e configure seus horários. Você também pode adicionar ou convidar outra pessoa da equipe."
+        : "Busque uma conta existente ou convide um novo profissional por e-mail.",
       subtitle,
       metrics: [],
     };
@@ -180,6 +190,7 @@ export default function EmployerCreatePage() {
               setRole={setRole}
               establishmentId={establishment.id}
               onAssociate={associateAndContinue}
+              onInvite={inviteAndContinue}
               onDetach={async (employerId) => {
                 await detachEmployer(employerId);
               }}
