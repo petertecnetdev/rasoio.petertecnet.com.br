@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { FaCalendarAlt, FaMapMarkerAlt, FaWhatsapp, FaStar, FaStore, FaUsers } from "react-icons/fa";
 
@@ -23,7 +23,9 @@ const PLACEHOLDER = "/images/logo.png";
 export default function EstablishmentViewPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const token = localStorage.getItem("token");
+  const resumeAppointmentHandledRef = useRef(false);
   const {
     establishment,
     metrics,
@@ -81,8 +83,23 @@ export default function EstablishmentViewPage() {
     image: heroLogo || heroBg || undefined,
   });
 
+  const requireSchedulingAuth = useCallback(() => {
+    if (localStorage.getItem("token")) return true;
+
+    const returnPath = `${location.pathname}${location.search || ""}${location.hash || ""}`;
+    navigate("/login", {
+      state: {
+        from: returnPath,
+        resumeAppointment: true,
+      },
+    });
+    return false;
+  }, [location.hash, location.pathname, location.search, navigate]);
+
   const handleOpenFromEstablishment = useCallback(
     async (est) => {
+      if (!requireSchedulingAuth()) return;
+
       try {
         const estId = est?.id ?? establishment?.id ?? null;
         const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
@@ -95,12 +112,12 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [openSchedulePopup, employers, establishment, canSchedule]
+    [requireSchedulingAuth, openSchedulePopup, employers, establishment, canSchedule]
   );
 
   const handleOpenFromEmployer = useCallback(
     (employer) => {
-      if (!canSchedule) return;
+      if (!canSchedule || !requireSchedulingAuth()) return;
       try {
         openSchedulePopup({ employer, establishment: establishment || employer?.establishment || null });
       } catch (error) {
@@ -108,12 +125,12 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [openSchedulePopup, establishment, canSchedule]
+    [requireSchedulingAuth, openSchedulePopup, establishment, canSchedule]
   );
 
   const handleOpenFromService = useCallback(
     (item) => {
-      if (!canSchedule) return;
+      if (!canSchedule || !requireSchedulingAuth()) return;
       try {
         const estId = item?.establishment_id || item?.entity_id || item?.entityId || establishment?.id || null;
         const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
@@ -126,8 +143,50 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [openSchedulePopup, employers, establishment, canSchedule]
+    [requireSchedulingAuth, openSchedulePopup, employers, establishment, canSchedule]
   );
+
+  useEffect(() => {
+    if (
+      resumeAppointmentHandledRef.current ||
+      !location.state?.resumeAppointment ||
+      !localStorage.getItem("token") ||
+      isLoading ||
+      !establishment ||
+      !canSchedule
+    ) {
+      return;
+    }
+
+    const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
+      (employer) => Number(employer?.establishment_id) === Number(establishment.id)
+    );
+    if (!filteredEmployers.length) return;
+
+    resumeAppointmentHandledRef.current = true;
+    navigate(`${location.pathname}${location.search || ""}${location.hash || ""}`, {
+      replace: true,
+      state: null,
+    });
+
+    Promise.resolve(
+      openSchedulePopup({ establishment, filteredEmployers })
+    ).catch((error) => {
+      console.error(error);
+      Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível retomar o agendamento agora." });
+    });
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+    openSchedulePopup,
+    employers,
+    establishment,
+    canSchedule,
+    isLoading,
+  ]);
 
   if (isLoading) return <div className="ev-state">Carregando estabelecimento…</div>;
   if (!establishment) return <div className="ev-state">Este estabelecimento não está disponível.</div>;
