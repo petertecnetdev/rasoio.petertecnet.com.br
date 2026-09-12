@@ -6,6 +6,16 @@ const SOURCE = "subscription_plans";
 const REQUEST_TIMEOUT_MS = 10000;
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 250;
+const TERMINAL_PAYMENT_STATUSES = new Set([
+  "cancelled",
+  "canceled",
+  "expired",
+  "failed",
+  "rejected",
+  "refunded",
+  "charged_back",
+  "chargeback",
+]);
 
 const storageKey = (planCode) =>
   `subscription_intent_idempotency:${APPLICATION}:${planCode}`;
@@ -39,6 +49,58 @@ const trackRevenue = (type, metadata = {}) => {
       ...metadata,
     },
   });
+};
+
+const normalizeStatus = (value) => String(value || "").trim().toLowerCase();
+
+const terminalPaymentStatus = (data) => {
+  const candidates = [
+    data?.payment?.status,
+    data?.intent?.status,
+    data?.subscription?.status,
+    data?.status,
+  ].map(normalizeStatus).filter(Boolean);
+
+  return candidates.find((status) => TERMINAL_PAYMENT_STATUSES.has(status)) || "";
+};
+
+const recoverFromTerminalPayment = (intentId, status) => {
+  let pending = null;
+
+  try {
+    pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+  } catch {
+    pending = null;
+  }
+
+  const planCode = String(pending?.plan || "").trim().toLowerCase();
+  const validPlanCode = /^[a-z0-9_-]{1,80}$/i.test(planCode);
+  const referral = String(pending?.referral || "").trim();
+  const campaign = String(pending?.campaign || "").trim();
+
+  sessionStorage.removeItem(checkoutStorageKey(intentId));
+  if (validPlanCode) sessionStorage.removeItem(storageKey(planCode));
+  localStorage.removeItem("pending_subscription_plan");
+
+  trackRevenue("subscription_payment_recovery_started", {
+    method: "pix",
+    terminal_status: status,
+    plan: validPlanCode ? planCode : undefined,
+    referral: referral || undefined,
+    campaign: campaign || undefined,
+  });
+
+  if (validPlanCode) {
+    const params = new URLSearchParams({
+      plan: planCode,
+      resume: "1",
+      source: "payment_recovery",
+    });
+    if (referral) params.set("ref", referral.slice(0, 80));
+    if (campaign) params.set("utm_campaign", campaign.slice(0, 80));
+
+    window.location.assign(`/planos?${params.toString()}`);
+  }
 };
 
 const readPendingAttribution = (planCode) => {
@@ -264,6 +326,12 @@ export async function syncSubscriptionPayment(intentId) {
         subscription_status: subscriptionStatus,
         entitlement_status: entitlementStatus,
       });
+      return data || null;
+    }
+
+    const terminalStatus = terminalPaymentStatus(data);
+    if (terminalStatus) {
+      recoverFromTerminalPayment(normalizedIntentId, terminalStatus);
     }
 
     return data || null;
