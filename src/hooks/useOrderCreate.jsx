@@ -1,6 +1,7 @@
 // src/hooks/useOrderCreate.js
 import { useEffect, useState, useCallback, useRef } from "react";
 import api from "../services/api";
+import { getAppointmentAcquisitionAttribution } from "../utils/appointmentAcquisitionAttribution";
 
 const createOrderIdempotencyKey = () => {
   const uuid = window.crypto?.randomUUID?.();
@@ -90,7 +91,14 @@ export default function useOrderCreate(identifier) {
   }, []);
 
   const createOrder = useCallback(async (payload) => {
-    const fingerprint = JSON.stringify(payload);
+    const attribution =
+      payload?.mode === "appointment" && !payload?.acquisition_attribution
+        ? getAppointmentAcquisitionAttribution()
+        : null;
+    const orderPayload = attribution
+      ? { ...payload, acquisition_attribution: attribution }
+      : payload;
+    const fingerprint = JSON.stringify(orderPayload);
 
     if (orderIntentRef.current.fingerprint !== fingerprint) {
       orderIntentRef.current = {
@@ -103,7 +111,7 @@ export default function useOrderCreate(identifier) {
 
     setSubmitting(true);
     try {
-      const { data } = await api.post("/order", payload, {
+      const { data } = await api.post("/order", orderPayload, {
         headers: {
           "Idempotency-Key": idempotencyKey,
         },
