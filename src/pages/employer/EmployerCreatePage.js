@@ -9,6 +9,7 @@ import GlobalButton from "../../components/GlobalButton";
 import EmployerCreateForm from "../../components/employer/EmployerCreateForm";
 import useImageUtils from "../../hooks/useImageUtils";
 import useEmployerCreate from "../../hooks/useEmployerCreate";
+import { getOwnerActivation } from "../../utils/ownerActivation";
 import "./EmployerCreatePage.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -27,7 +28,8 @@ export default function EmployerCreatePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
-  const isOnboarding = location.state?.onboarding === true;
+  const storedActivation = useMemo(() => getOwnerActivation(slug), [slug]);
+  const isOnboarding = location.state?.onboarding === true || Boolean(storedActivation);
   const currentUser = useMemo(() => getStoredUser(), []);
 
   const {
