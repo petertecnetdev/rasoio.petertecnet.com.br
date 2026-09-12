@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import authService from "../../services/AuthService";
@@ -8,11 +8,39 @@ import LoadingComponent from "../../components/LoadingComponent";
 
 import "./EmailVerifyPage.css";
 
+const OWNER_ONBOARDING_KEY = "rasoio_pending_owner_onboarding";
+const OWNER_ONBOARDING_MAX_AGE = 24 * 60 * 60 * 1000;
+
+const getPendingOwnerOnboardingPath = () => {
+  try {
+    const pending = JSON.parse(localStorage.getItem(OWNER_ONBOARDING_KEY) || "null");
+    const path = String(pending?.path || "");
+    const createdAt = pending?.created_at ? Date.parse(pending.created_at) : NaN;
+    const isFresh = Number.isFinite(createdAt) && Date.now() - createdAt <= OWNER_ONBOARDING_MAX_AGE;
+    const isSafePath = path === "/establishment/create" || path.startsWith("/establishment/create?");
+
+    if (isFresh && isSafePath) return path;
+  } catch {
+    // Invalid local state falls back to the regular post-verification destination.
+  }
+
+  return "";
+};
+
+const clearPendingOwnerOnboarding = () => {
+  try {
+    localStorage.removeItem(OWNER_ONBOARDING_KEY);
+  } catch {
+    // Storage cleanup is best-effort only.
+  }
+};
+
 const EmailVerifyPage = () => {
   const [verificationCode, setVerificationCode] = useState("");
   const [loadingVerify, setLoadingVerify] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
   const [redirect, setRedirect] = useState(false);
+  const postVerificationPath = useMemo(() => getPendingOwnerOnboardingPath() || "/dashboard", []);
 
   const handleVerifyEmail = async (e) => {
     e.preventDefault();
@@ -23,7 +51,9 @@ const EmailVerifyPage = () => {
         Swal.fire({
           icon: "success",
           title: "Sucesso",
-          text: "Email verificado com sucesso. Redirecionando...",
+          text: postVerificationPath.startsWith("/establishment/create")
+            ? "Email verificado. Vamos configurar seu estabelecimento."
+            : "Email verificado com sucesso. Redirecionando...",
           customClass: {
             popup: "custom-swal",
             title: "custom-swal-title",
@@ -31,6 +61,7 @@ const EmailVerifyPage = () => {
           },
         });
         setTimeout(() => {
+          clearPendingOwnerOnboarding();
           setRedirect(true);
         }, 1500);
       } else {
@@ -141,7 +172,7 @@ const EmailVerifyPage = () => {
   };
 
   if (redirect) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to={postVerificationPath} replace />;
   }
 
   return (

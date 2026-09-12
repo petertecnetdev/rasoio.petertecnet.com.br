@@ -5,6 +5,16 @@ import RegisterFormComponent from "../../components/auth/RegisterFormComponent";
 
 import "./RegisterPage.css";
 
+const OWNER_ONBOARDING_KEY = "rasoio_pending_owner_onboarding";
+const ATTRIBUTION_KEYS = [
+  "ref",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+];
+
 const normalizePlanCode = (value) => {
   const plan = String(value || "").trim();
   return /^[a-z0-9_-]{1,80}$/i.test(plan) ? plan : "";
@@ -32,6 +42,34 @@ const getSubscriptionResumePath = (selectedPlan) => {
   return `/planos?${params.toString()}`;
 };
 
+const getOwnerOnboardingPath = (search = "") => {
+  const source = new URLSearchParams(search);
+  const params = new URLSearchParams({
+    source: String(source.get("source") || "signup_onboarding").slice(0, 120),
+  });
+
+  ATTRIBUTION_KEYS.forEach((key) => {
+    const value = String(source.get(key) || "").trim();
+    if (value) params.set(key, value.slice(0, 180));
+  });
+
+  return `/establishment/create?${params.toString()}`;
+};
+
+const persistOwnerOnboarding = (path) => {
+  try {
+    localStorage.setItem(
+      OWNER_ONBOARDING_KEY,
+      JSON.stringify({
+        path,
+        created_at: new Date().toISOString(),
+      })
+    );
+  } catch {
+    // Route state still preserves the activation destination when storage is unavailable.
+  }
+};
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,15 +85,44 @@ export default function RegisterPage() {
       return "";
     }
   }, [location.search]);
+  const ownerOnboardingPath = useMemo(
+    () => getOwnerOnboardingPath(location.search),
+    [location.search]
+  );
+
+  const continueToLogin = () => {
+    if (selectedPlan) {
+      navigate("/login", {
+        state: {
+          from: getSubscriptionResumePath(selectedPlan),
+          resumeSubscription: true,
+        },
+      });
+      return;
+    }
+
+    persistOwnerOnboarding(ownerOnboardingPath);
+    navigate("/login", {
+      state: {
+        from: ownerOnboardingPath,
+        resumeOwnerOnboarding: true,
+      },
+    });
+  };
 
   const handleSuccess = () => {
-    const from = getSubscriptionResumePath(selectedPlan);
+    const from = selectedPlan
+      ? getSubscriptionResumePath(selectedPlan)
+      : ownerOnboardingPath;
+
+    if (!selectedPlan) persistOwnerOnboarding(from);
 
     navigate("/login", {
       replace: true,
       state: {
         from,
         resumeSubscription: Boolean(selectedPlan),
+        resumeOwnerOnboarding: !selectedPlan,
       },
     });
   };
@@ -207,11 +274,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     className="rp__linkPrimary"
-                    onClick={() => navigate("/login", {
-                      state: selectedPlan
-                        ? { from: getSubscriptionResumePath(selectedPlan), resumeSubscription: true }
-                        : undefined,
-                    })}
+                    onClick={continueToLogin}
                   >
                     Entrar
                   </button>
