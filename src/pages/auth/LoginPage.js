@@ -32,12 +32,27 @@ const getPendingSubscriptionPath = () => {
   return "";
 };
 
+const normalizeBookingIntent = (value) => {
+  const type = String(value?.type || "").trim().toLowerCase();
+  if (type === "establishment") return { type };
+  if (!["service", "employer"].includes(type)) return null;
+
+  const id = Number(value?.id);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+
+  return { type, id };
+};
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fromState = location?.state?.from;
   const resumeAppointment = Boolean(location?.state?.resumeAppointment);
   const resumeSubscription = Boolean(location?.state?.resumeSubscription);
+  const bookingIntent = useMemo(
+    () => normalizeBookingIntent(location?.state?.bookingIntent),
+    [location?.state?.bookingIntent]
+  );
   const pendingSubscriptionPath = useMemo(() => getPendingSubscriptionPath(), []);
 
   const from =
@@ -50,7 +65,12 @@ export default function LoginPage() {
   const handleSuccess = () => {
     navigate(from, {
       replace: true,
-      state: resumeAppointment ? { resumeAppointment: true } : undefined,
+      state: resumeAppointment
+        ? {
+            resumeAppointment: true,
+            ...(bookingIntent ? { bookingIntent } : {}),
+          }
+        : undefined,
     });
   };
 
