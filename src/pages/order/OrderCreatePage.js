@@ -98,7 +98,7 @@ export default function OrderCreatePage() {
       });
 
       if (order?.id) {
-        navigate(`/order/${order.id}`);
+        navigate(`/order/view/${order.id}`);
       }
     } catch (err) {
       const message =
