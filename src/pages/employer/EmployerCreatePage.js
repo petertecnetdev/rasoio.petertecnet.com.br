@@ -9,7 +9,10 @@ import GlobalButton from "../../components/GlobalButton";
 import EmployerCreateForm from "../../components/employer/EmployerCreateForm";
 import useImageUtils from "../../hooks/useImageUtils";
 import useEmployerCreate from "../../hooks/useEmployerCreate";
-import { getOwnerActivation } from "../../utils/ownerActivation";
+import {
+  getOwnerActivation,
+  setOwnerActivationEmployer,
+} from "../../utils/ownerActivation";
 import "./EmployerCreatePage.css";
 
 const PLACEHOLDER = "/images/logo.png";
@@ -47,11 +50,16 @@ export default function EmployerCreatePage() {
     detachEmployer,
   } = useEmployerCreate(slug);
 
-  const continueToAvailability = () => {
+  const continueToAvailability = (employerId) => {
+    const targetEmployerId = Number(employerId);
+    if (!Number.isInteger(targetEmployerId) || targetEmployerId <= 0) return;
+
+    setOwnerActivationEmployer(targetEmployerId);
     navigate("/employer/schedules", {
       state: {
         onboarding: true,
         establishment,
+        employerId: targetEmployerId,
         nextStep: "availability",
       },
     });
@@ -61,11 +69,9 @@ export default function EmployerCreatePage() {
     const result = await createEmployer(user);
     if (!result) return;
 
-    if (
-      isOnboarding &&
-      Number(user?.id) === Number(currentUser?.id)
-    ) {
-      continueToAvailability();
+    const employerId = result?.employer?.id || result?.id || user?.employer?.id;
+    if (isOnboarding && employerId) {
+      continueToAvailability(employerId);
     }
   };
 
