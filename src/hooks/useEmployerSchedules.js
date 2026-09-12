@@ -38,7 +38,7 @@ const getSchedulesArray = (data) => {
   return [];
 };
 
-export default function useEmployerSchedules() {
+export default function useEmployerSchedules(preferredEmployerId = null) {
   const mountedRef = useRef(true);
   const [employerId, setEmployerId] = useState(null);
   const [schedules, setSchedules] = useState([]);
@@ -52,6 +52,15 @@ export default function useEmployerSchedules() {
   const [actionMessage, setActionMessage] = useState(null);
 
   const loadEmployer = useCallback(async () => {
+    const targetEmployerId = Number(preferredEmployerId);
+    if (Number.isInteger(targetEmployerId) && targetEmployerId > 0) {
+      if (mountedRef.current) {
+        setEmployerId(targetEmployerId);
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       setLoading(true);
       setApiError(null);
@@ -66,7 +75,7 @@ export default function useEmployerSchedules() {
     } finally {
       if (mountedRef.current) setLoading(false);
     }
-  }, []);
+  }, [preferredEmployerId]);
 
   const loadSchedules = useCallback(
     async (id) => {
