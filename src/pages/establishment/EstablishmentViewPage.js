@@ -83,7 +83,7 @@ export default function EstablishmentViewPage() {
     image: heroLogo || heroBg || undefined,
   });
 
-  const requireSchedulingAuth = useCallback(() => {
+  const requireSchedulingAuth = useCallback((bookingIntent = null) => {
     if (localStorage.getItem("token")) return true;
 
     const returnPath = `${location.pathname}${location.search || ""}${location.hash || ""}`;
@@ -91,6 +91,7 @@ export default function EstablishmentViewPage() {
       state: {
         from: returnPath,
         resumeAppointment: true,
+        bookingIntent,
       },
     });
     return false;
@@ -98,7 +99,7 @@ export default function EstablishmentViewPage() {
 
   const handleOpenFromEstablishment = useCallback(
     async (est) => {
-      if (!requireSchedulingAuth()) return;
+      if (!requireSchedulingAuth({ type: "establishment" })) return;
 
       try {
         const estId = est?.id ?? establishment?.id ?? null;
@@ -117,7 +118,7 @@ export default function EstablishmentViewPage() {
 
   const handleOpenFromEmployer = useCallback(
     (employer) => {
-      if (!canSchedule || !requireSchedulingAuth()) return;
+      if (!canSchedule || !requireSchedulingAuth({ type: "employer", id: employer?.id ?? null })) return;
       try {
         openSchedulePopup({ employer, establishment: establishment || employer?.establishment || null });
       } catch (error) {
@@ -130,7 +131,7 @@ export default function EstablishmentViewPage() {
 
   const handleOpenFromService = useCallback(
     (item) => {
-      if (!canSchedule || !requireSchedulingAuth()) return;
+      if (!canSchedule || !requireSchedulingAuth({ type: "service", id: item?.id ?? null })) return;
       try {
         const estId = item?.establishment_id || item?.entity_id || item?.entityId || establishment?.id || null;
         const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
@@ -163,15 +164,27 @@ export default function EstablishmentViewPage() {
     );
     if (!filteredEmployers.length) return;
 
+    const bookingIntent = location.state?.bookingIntent || null;
+    const intendedEmployer = bookingIntent?.type === "employer"
+      ? filteredEmployers.find((employer) => Number(employer?.id) === Number(bookingIntent.id))
+      : null;
+    const intendedService = bookingIntent?.type === "service"
+      ? (Array.isArray(services) ? services : []).find((service) => Number(service?.id) === Number(bookingIntent.id))
+      : null;
+
     resumeAppointmentHandledRef.current = true;
     navigate(`${location.pathname}${location.search || ""}${location.hash || ""}`, {
       replace: true,
       state: null,
     });
 
-    Promise.resolve(
-      openSchedulePopup({ establishment, filteredEmployers })
-    ).catch((error) => {
+    const resumePayload = intendedEmployer
+      ? { employer: intendedEmployer, establishment: establishment || intendedEmployer?.establishment || null }
+      : intendedService
+        ? { service: intendedService, filteredEmployers, establishment }
+        : { establishment, filteredEmployers };
+
+    Promise.resolve(openSchedulePopup(resumePayload)).catch((error) => {
       console.error(error);
       Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível retomar o agendamento agora." });
     });
@@ -183,6 +196,7 @@ export default function EstablishmentViewPage() {
     navigate,
     openSchedulePopup,
     employers,
+    services,
     establishment,
     canSchedule,
     isLoading,
