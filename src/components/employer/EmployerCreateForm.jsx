@@ -1,5 +1,5 @@
 // src/components/employer/EmployerCreateForm.jsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Alert, Badge, Card, Col, Form, Row } from "react-bootstrap";
 import GlobalButton from "../GlobalButton";
 import GlobalCard from "../GlobalCard";
@@ -29,6 +29,10 @@ function parseSearchInput(value) {
   return { first_name: v };
 }
 
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
 export default function EmployerCreateForm({
   users,
   role,
@@ -37,16 +41,32 @@ export default function EmployerCreateForm({
   errors,
   onSearch,
   onAssociate,
+  onInvite,
   onDetach,
   setRole,
 }) {
   const [query, setQuery] = useState("");
   const [searched, setSearched] = useState(false);
+  const [inviteName, setInviteName] = useState("");
+  const canInvite = useMemo(
+    () => searched && !searching && users.length === 0 && isEmail(query),
+    [query, searched, searching, users.length]
+  );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSearched(true);
     await onSearch(parseSearchInput(query));
+  };
+
+  const handleInvite = async (event) => {
+    event.preventDefault();
+    if (!canInvite || !inviteName.trim() || loading) return;
+
+    await onInvite({
+      firstName: inviteName.trim(),
+      email: query.trim().toLowerCase(),
+    });
   };
 
   return (
@@ -63,11 +83,12 @@ export default function EmployerCreateForm({
                   onChange={(event) => {
                     setQuery(event.target.value);
                     setSearched(false);
+                    setInviteName("");
                   }}
                   autoComplete="off"
                 />
                 <Form.Text className="text-muted">
-                  Pesquise uma conta Peter Tecnet e vincule-a somente a este estabelecimento.
+                  Pesquise uma conta Peter Tecnet. Se o profissional ainda não tiver cadastro, pesquise pelo e-mail para convidá-lo sem interromper a configuração da agenda.
                 </Form.Text>
               </Form.Group>
             </Col>
@@ -100,12 +121,53 @@ export default function EmployerCreateForm({
         </Form>
       </Card>
 
-      {searched && !searching && users.length === 0 && (
+      {searched && !searching && users.length === 0 && !canInvite && (
         <Alert variant="info" className="mb-4">
           <Alert.Heading>Nenhum usuário encontrado</Alert.Heading>
           <p className="mb-0">
-            Confira o nome, e-mail, CPF, telefone ou @usuário. O colaborador precisa possuir uma conta Peter Tecnet para ser vinculado ao estabelecimento.
+            Confira o nome, CPF, telefone ou @usuário. Para adicionar alguém que ainda não possui conta Peter Tecnet, pesquise pelo e-mail profissional.
           </p>
+        </Alert>
+      )}
+
+      {canInvite && (
+        <Alert variant="info" className="mb-4">
+          <Alert.Heading>Este profissional ainda não tem conta?</Alert.Heading>
+          <p>
+            Convide <strong>{query.trim().toLowerCase()}</strong>. A Rasoio prepara o vínculo com este estabelecimento, envia o código de acesso por e-mail e você já pode configurar os horários para começar a receber agendamentos.
+          </p>
+          <Form onSubmit={handleInvite}>
+            <Row className="gy-2 align-items-end">
+              <Col md={8}>
+                <Form.Group controlId="collaborator-invite-name">
+                  <Form.Label>Nome do profissional</Form.Label>
+                  <Form.Control
+                    value={inviteName}
+                    onChange={(event) => setInviteName(event.target.value)}
+                    placeholder="Ex.: Maria Silva"
+                    maxLength={100}
+                    isInvalid={Boolean(errors?.first_name)}
+                    autoComplete="name"
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    {Array.isArray(errors?.first_name)
+                      ? errors.first_name[0]
+                      : errors?.first_name}
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <GlobalButton
+                  type="submit"
+                  variant="success"
+                  className="w-100"
+                  disabled={loading || !inviteName.trim() || !role.trim()}
+                >
+                  {loading ? "Enviando convite..." : "Convidar e continuar"}
+                </GlobalButton>
+              </Col>
+            </Row>
+          </Form>
         </Alert>
       )}
 
