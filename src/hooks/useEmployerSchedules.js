@@ -223,7 +223,7 @@ export default function useEmployerSchedules() {
   }, []);
 
   const handleSaveSchedules = useCallback(async () => {
-    if (!employerId) return;
+    if (!employerId) return false;
 
     try {
       setSaving(true);
@@ -243,8 +243,10 @@ export default function useEmployerSchedules() {
 
       await loadSchedules(employerId);
       setActionMessage("Disponibilidade semanal salva com sucesso.");
+      return true;
     } catch (error) {
       setApiError(error?.response?.data?.message || error?.response?.data?.error || "Erro ao salvar horários.");
+      return false;
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,6 @@
 // src/pages/employer/EmployerCreatePage.jsx
 import React, { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Alert, Container, Row, Col, Spinner } from "react-bootstrap";
 
 import GlobalNav from "../../components/GlobalNav";
@@ -13,10 +13,22 @@ import "./EmployerCreatePage.css";
 
 const PLACEHOLDER = "/images/logo.png";
 
+function getStoredUser() {
+  try {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function EmployerCreatePage() {
   const { slug } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { imageUrl, handleImgError } = useImageUtils(PLACEHOLDER);
+  const isOnboarding = location.state?.onboarding === true;
+  const currentUser = useMemo(() => getStoredUser(), []);
 
   const {
     establishment,
@@ -33,6 +45,28 @@ export default function EmployerCreatePage() {
     detachEmployer,
   } = useEmployerCreate(slug);
 
+  const continueToAvailability = () => {
+    navigate("/employer/schedules", {
+      state: {
+        onboarding: true,
+        establishment,
+        nextStep: "availability",
+      },
+    });
+  };
+
+  const associateAndContinue = async (user) => {
+    const result = await createEmployer(user);
+    if (!result) return;
+
+    if (
+      isOnboarding &&
+      Number(user?.id) === Number(currentUser?.id)
+    ) {
+      continueToAvailability();
+    }
+  };
+
   const heroData = useMemo(() => {
     const subtitle =
       establishment?.city && establishment?.uf
@@ -48,12 +82,14 @@ export default function EmployerCreatePage() {
         establishment?.images?.background ||
         establishment?.background ||
         null,
-      title: "Adicionar colaborador",
-      description: "Busque um usuário e vincule-o à equipe deste estabelecimento.",
+      title: isOnboarding ? "Quem vai atender os primeiros clientes?" : "Adicionar colaborador",
+      description: isOnboarding
+        ? "Se você também realiza atendimentos, ative seu próprio perfil profissional agora e configure seus horários. Você também pode adicionar outra pessoa da equipe."
+        : "Busque um usuário e vincule-o à equipe deste estabelecimento.",
       subtitle,
       metrics: [],
     };
-  }, [establishment]);
+  }, [establishment, isOnboarding]);
 
   if (initialLoading) {
     return (
@@ -108,6 +144,22 @@ export default function EmployerCreatePage() {
       <Container className="py-4">
         <Row className="justify-content-center">
           <Col md={10}>
+            {isOnboarding && currentUser?.id && (
+              <Alert variant="info" className="mb-4">
+                <Alert.Heading className="h5">Você também atende clientes?</Alert.Heading>
+                <p>
+                  Ative seu próprio perfil profissional para configurar a disponibilidade agora e deixar a agenda pronta para receber o primeiro agendamento.
+                </p>
+                <GlobalButton
+                  variant="primary"
+                  disabled={loading}
+                  onClick={() => associateAndContinue(currentUser)}
+                >
+                  {loading ? "Ativando..." : "Sim, eu também atendo"}
+                </GlobalButton>
+              </Alert>
+            )}
+
             <EmployerCreateForm
               users={users}
               role={role}
@@ -119,9 +171,7 @@ export default function EmployerCreatePage() {
               onSearch={searchUsers}
               setRole={setRole}
               establishmentId={establishment.id}
-              onAssociate={async (user) => {
-                await createEmployer(user);
-              }}
+              onAssociate={associateAndContinue}
               onDetach={async (employerId) => {
                 await detachEmployer(employerId);
               }}
