@@ -8,6 +8,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import axios from "axios";
 import App from "./App";
+import GlobalImageInputEnhancer from "./components/GlobalImageInputEnhancer";
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import PeterTecnetSignature from "./components/PeterTecnetSignature";
 import PeterAccountGateway from "./components/PeterAccountGateway";
@@ -34,6 +35,7 @@ root.render(
       <AppErrorBoundary>
         <App />
         <PeterTecnetSignature />
+        <GlobalImageInputEnhancer />
       </AppErrorBoundary>
     </PeterAccountGateway>
   </React.StrictMode>
