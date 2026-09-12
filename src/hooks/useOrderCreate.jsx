@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import api from "../services/api";
 
 const createOrderIdempotencyKey = () => {
-  const uuid = globalThis.crypto?.randomUUID?.();
+  const uuid = window.crypto?.randomUUID?.();
   if (uuid) return `rasoio-order-${uuid}`;
 
   return `rasoio-order-${Date.now().toString(36)}-${Math.random()
