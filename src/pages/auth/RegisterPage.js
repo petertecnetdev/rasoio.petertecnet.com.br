@@ -6,6 +6,7 @@ import RegisterFormComponent from "../../components/auth/RegisterFormComponent";
 import "./RegisterPage.css";
 
 const OWNER_ONBOARDING_KEY = "rasoio_pending_owner_onboarding";
+const MAX_RETURN_TO_LENGTH = 1000;
 const ATTRIBUTION_KEYS = [
   "ref",
   "utm_source",
@@ -20,25 +21,47 @@ const normalizePlanCode = (value) => {
   return /^[a-z0-9_-]{1,80}$/i.test(plan) ? plan : "";
 };
 
-const getSubscriptionResumePath = (selectedPlan) => {
+const safeReturnTo = (value) => {
+  const candidate = String(value || "").trim();
+  if (!candidate || candidate.length > MAX_RETURN_TO_LENGTH) return "";
+  if (!candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return "";
+  if ([...candidate].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  })) return "";
+
+  try {
+    const target = new URL(candidate, window.location.origin);
+    if (target.origin !== window.location.origin || target.pathname === "/planos") return "";
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "";
+  }
+};
+
+const getSubscriptionResumePath = (selectedPlan, search = "") => {
   if (!selectedPlan) return "/dashboard";
 
+  const source = new URLSearchParams(search);
   const params = new URLSearchParams({
     plan: selectedPlan,
     resume: "1",
     source: "signup_resume",
   });
+  let returnTo = safeReturnTo(source.get("return_to"));
 
   try {
     const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
     if (pending?.application === "rasoio" && pending?.plan === selectedPlan) {
       if (pending.referral) params.set("ref", String(pending.referral));
       if (pending.campaign) params.set("utm_campaign", String(pending.campaign));
+      if (!returnTo) returnTo = safeReturnTo(pending.return_to);
     }
   } catch {
     // Continue without optional attribution when local state is malformed.
   }
 
+  if (returnTo) params.set("return_to", returnTo);
   return `/planos?${params.toString()}`;
 };
 
@@ -94,7 +117,7 @@ export default function RegisterPage() {
     if (selectedPlan) {
       navigate("/login", {
         state: {
-          from: getSubscriptionResumePath(selectedPlan),
+          from: getSubscriptionResumePath(selectedPlan, location.search),
           resumeSubscription: true,
         },
       });
@@ -112,7 +135,7 @@ export default function RegisterPage() {
 
   const handleSuccess = () => {
     const from = selectedPlan
-      ? getSubscriptionResumePath(selectedPlan)
+      ? getSubscriptionResumePath(selectedPlan, location.search)
       : ownerOnboardingPath;
 
     if (!selectedPlan) persistOwnerOnboarding(from);

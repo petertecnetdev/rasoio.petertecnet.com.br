@@ -81,6 +81,8 @@ const pendingFromIntent = (intent) => {
   const plan = String(intent?.plan_code || "").trim().toLowerCase();
   if (!intent?.id || intent?.application !== "rasoio" || !/^[a-z0-9_-]{1,80}$/i.test(plan)) return null;
 
+  const returnTo = safeReturnTo(intent.metadata?.return_to);
+
   return {
     application: "rasoio",
     plan,
@@ -92,6 +94,7 @@ const pendingFromIntent = (intent) => {
     handoff: intent.handoff_channel || "app",
     referral: String(intent.metadata?.referral || "").trim(),
     campaign: String(intent.metadata?.campaign || "").trim(),
+    return_to: returnTo || undefined,
     selected_at: intent.created_at || new Date().toISOString(),
   };
 };
@@ -208,6 +211,9 @@ export default function SubscriptionPlansPage() {
       const currency = plan?.currency || "BRL";
       const attribution = getSubscriptionAttribution();
       const existingPending = readPendingSubscription();
+      const currentParams = new URLSearchParams(window.location.search);
+      const returnTo = safeReturnTo(currentParams.get("return_to"))
+        || safeReturnTo(existingPending?.return_to);
       const reusableIntentId = existingPending?.plan === planCode && existingPending?.intent_id
         ? String(existingPending.intent_id)
         : "";
@@ -224,6 +230,7 @@ export default function SubscriptionPlansPage() {
           : attribution.source,
         referral: existingPending?.referral || attribution.referral || undefined,
         campaign: existingPending?.campaign || attribution.campaign || undefined,
+        return_to: returnTo || undefined,
         handoff: "app",
         ...(reusableIntentId
           ? {
@@ -236,7 +243,9 @@ export default function SubscriptionPlansPage() {
       localStorage.setItem("pending_subscription_plan", JSON.stringify(pendingPlan));
 
       if (!localStorage.getItem("token")) {
-        window.location.assign(`/register?plan=${encodeURIComponent(planCode)}`);
+        const registerParams = new URLSearchParams({ plan: planCode });
+        if (returnTo) registerParams.set("return_to", returnTo);
+        window.location.assign(`/register?${registerParams.toString()}`);
         return;
       }
 
