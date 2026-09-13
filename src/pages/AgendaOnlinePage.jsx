@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import usePublicEntitySeo from "../hooks/usePublicEntitySeo";
 
 const segments = [
   "Barbearias",
@@ -20,7 +21,16 @@ const benefits = [
   "Estrutura preparada para crescer com equipe, gestão e recursos premium",
 ];
 
+const SEO_DESCRIPTION =
+  "Agenda online para barbearias, salões, estética e profissionais autônomos. Publique serviços, profissionais e horários e receba agendamentos pela Rasoio.";
+
 export default function AgendaOnlinePage() {
+  usePublicEntitySeo({
+    title: "Agenda online para barbearias, salões e profissionais",
+    description: SEO_DESCRIPTION,
+    canonicalPath: "/agenda-online",
+  });
+
   return (
     <main>
       <section className="container py-5 py-lg-6">
