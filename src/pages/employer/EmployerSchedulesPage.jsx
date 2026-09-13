@@ -38,6 +38,18 @@ const copyText = async (value) => {
   }
 };
 
+const sharePublicAgenda = async ({ title, text, url }) => {
+  if (typeof navigator.share !== "function") return "unsupported";
+
+  try {
+    await navigator.share({ title, text, url });
+    return "shared";
+  } catch (error) {
+    if (error?.name === "AbortError") return "cancelled";
+    return "failed";
+  }
+};
+
 export default function EmployerSchedulesPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -140,6 +152,7 @@ export default function EmployerSchedulesPage() {
 
     const slug = onboardingEstablishment?.slug;
     const establishmentId = onboardingEstablishment?.id;
+    const establishmentName = onboardingEstablishment?.name || "seu estabelecimento";
     clearOwnerActivation();
 
     trackTelemetryEvent("rasoio_owner_activation_completed", {
@@ -163,20 +176,23 @@ export default function EmployerSchedulesPage() {
 
     const publicPath = `/establishment/view/${encodeURIComponent(slug)}?source=onboarding-ready&utm_source=owner_onboarding&utm_medium=share&utm_campaign=first_bookings`;
     const publicUrl = `${window.location.origin}${publicPath}`;
+    const canNativeShare = typeof navigator.share === "function";
 
     const distribution = await Swal.fire({
       icon: "success",
       title: "Agenda pronta. Agora traga o primeiro cliente.",
-      text: "Copie o link público e envie no WhatsApp, Instagram ou para seus clientes. Eles já poderão escolher serviço, profissional e horário online.",
-      showDenyButton: true,
-      confirmButtonText: "Copiar link da agenda",
-      denyButtonText: "Ver agenda pública",
+      text: canNativeShare
+        ? "Compartilhe sua agenda agora pelo WhatsApp ou pelo aplicativo que preferir. Seus clientes já poderão escolher serviço, profissional e horário online."
+        : "Copie o link público e envie no WhatsApp, Instagram ou para seus clientes. Eles já poderão escolher serviço, profissional e horário online.",
+      showDenyButton: canNativeShare,
+      showCancelButton: true,
+      confirmButtonText: canNativeShare ? "Compartilhar agenda" : "Copiar link da agenda",
+      denyButtonText: canNativeShare ? "Copiar link" : undefined,
+      cancelButtonText: "Ver agenda pública",
       allowOutsideClick: false,
     });
 
-    if (distribution.isConfirmed) {
-      const copied = await copyText(publicUrl);
-
+    const trackCopyResult = (copied, source) => {
       trackTelemetryEvent(
         copied ? "rasoio_owner_public_agenda_link_copied" : "rasoio_owner_public_agenda_copy_failed",
         {
@@ -184,9 +200,15 @@ export default function EmployerSchedulesPage() {
           metadata: {
             establishment_id: establishmentId || undefined,
             employer_id: employerId || undefined,
+            source,
           },
         }
       );
+    };
+
+    const copyAgendaLink = async (source) => {
+      const copied = await copyText(publicUrl);
+      trackCopyResult(copied, source);
 
       await Swal.fire({
         icon: copied ? "success" : "info",
@@ -196,7 +218,39 @@ export default function EmployerSchedulesPage() {
           : publicUrl,
         confirmButtonText: "Ver minha agenda pública",
       });
+    };
+
+    if (distribution.isConfirmed && canNativeShare) {
+      const shareStatus = await sharePublicAgenda({
+        title: `Agende seu horário em ${establishmentName}`,
+        text: `Escolha seu serviço, profissional e horário na agenda online de ${establishmentName}.`,
+        url: publicUrl,
+      });
+
+      trackTelemetryEvent("rasoio_owner_public_agenda_share_result", {
+        label: "Resultado do compartilhamento da agenda pública",
+        metadata: {
+          establishment_id: establishmentId || undefined,
+          employer_id: employerId || undefined,
+          status: shareStatus,
+        },
+      });
+
+      if (shareStatus === "shared") {
+        await Swal.fire({
+          icon: "success",
+          title: "Agenda compartilhada",
+          text: "Seu link já está circulando. Quanto antes seus clientes abrirem, mais rápido você pode receber o primeiro agendamento.",
+          confirmButtonText: "Ver minha agenda pública",
+        });
+      } else if (shareStatus === "failed") {
+        await copyAgendaLink("native_share_fallback");
+      }
+    } else if (distribution.isConfirmed) {
+      await copyAgendaLink("primary_action");
     } else if (distribution.isDenied) {
+      await copyAgendaLink("secondary_action");
+    } else if (distribution.isDismissed) {
       trackTelemetryEvent("rasoio_owner_public_agenda_view_requested", {
         label: "Ver agenda pública após ativação",
         metadata: {
