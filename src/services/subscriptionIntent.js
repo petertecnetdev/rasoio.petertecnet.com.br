@@ -77,6 +77,22 @@ const returnToFromLocation = () => {
   return safeReturnTo(params.get("return_to"));
 };
 
+const restoreReturnToFromIntent = (intent) => {
+  if (returnToFromLocation()) return "url";
+
+  const returnTo = safeReturnTo(intent?.metadata?.return_to);
+  if (!returnTo) return "";
+
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("return_to", returnTo);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    return "intent_metadata";
+  } catch {
+    return "";
+  }
+};
+
 const getRecoveryReturnTo = (pending = null) =>
   returnToFromLocation() || safeReturnTo(pending?.return_to);
 
@@ -192,11 +208,14 @@ export async function getRecoverableSubscriptionIntent() {
 
       const intent = data?.data || null;
       if (intent) {
+        const returnToSource = restoreReturnToFromIntent(intent);
         trackRevenue("subscription_intent_recovered", {
           plan: intent.plan_code,
           status: intent.status,
           source: intent.source,
           price_cents: intent.price_cents,
+          return_to_preserved: Boolean(returnToSource),
+          return_to_source: returnToSource || undefined,
           attempt,
         });
       }
