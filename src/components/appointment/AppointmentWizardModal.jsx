@@ -88,6 +88,8 @@ export default function AppointmentWizardModal({
   const navigate = useNavigate();
   const location = useLocation();
   const orderIntentRef = useRef({ fingerprint: null, key: null });
+  const deferredSlotRestoreRef = useRef(null);
+  const restoringDeferredDateRef = useRef(false);
   const { imageUrl: imgUrl } = useImageUtils();
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState([]);
@@ -195,6 +197,8 @@ export default function AppointmentWizardModal({
     setSelectedTime(null);
     setLoading(false);
     setLoadingDates(false);
+    deferredSlotRestoreRef.current = null;
+    restoringDeferredDateRef.current = false;
     orderIntentRef.current = { fingerprint: null, key: null };
 
     let storedUser = null;
@@ -226,6 +230,11 @@ export default function AppointmentWizardModal({
             if (restoredEmployer) {
               setSelectedEmployer(restoredEmployer);
               if (!preselectedEmployer) setStep(2);
+            }
+            const draftDate = String(draft?.date || "").slice(0, 10);
+            const draftTime = String(draft?.time || "").trim();
+            if (draftDate && draftTime) {
+              deferredSlotRestoreRef.current = { date: draftDate, time: draftTime };
             }
             sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
           }
@@ -264,7 +273,90 @@ export default function AppointmentWizardModal({
   ]);
 
   useEffect(() => {
+    if (!show || !localStorage.getItem("token")) return undefined;
+    const pendingSlot = deferredSlotRestoreRef.current;
+    if (!pendingSlot || !resolvedEmployer?.id || !selectedServices.length || totalDuration <= 0) return undefined;
+
+    deferredSlotRestoreRef.current = null;
+    let active = true;
+
+    const restoreSlot = async () => {
+      setLoading(true);
+      try {
+        const date = String(pendingSlot.date || "").slice(0, 10);
+        const time = String(pendingSlot.time || "").trim();
+        const today = dayjs().tz(TZ).startOf("day");
+        const requestedDay = dayjs.tz(date, "YYYY-MM-DD", TZ).startOf("day");
+
+        if (!date || !time || !requestedDay.isValid() || requestedDay.isBefore(today)) {
+          if (!active) return;
+          setStep(dateStep);
+          await showResultModal({
+            type: "warning",
+            title: "Escolha uma nova data",
+            text: "A data escolhida antes do login não está mais disponível.",
+          });
+          return;
+        }
+
+        const times = await loadAvailableTimes(date, resolvedEmployer, totalDuration);
+        if (!active) return;
+        const safeTimes = Array.isArray(times) ? times : [];
+
+        restoringDeferredDateRef.current = true;
+        setSelectedDate(date);
+        setAvailableDates((current) => current.includes(date) ? current : [date, ...current]);
+        setAvailableTimes(safeTimes);
+
+        if (safeTimes.includes(time)) {
+          setSelectedTime(time);
+          setStep(finalStep);
+          return;
+        }
+
+        setSelectedTime(null);
+        setStep(timeStep);
+        await showResultModal({
+          type: "warning",
+          title: "Horário acabou de ficar indisponível",
+          text: safeTimes.length
+            ? "Seu serviço e profissional foram mantidos. Escolha outro horário disponível para continuar."
+            : "Seu serviço e profissional foram mantidos, mas não há mais horários nessa data. Volte e escolha outra data.",
+        });
+      } catch (error) {
+        if (!active) return;
+        console.error("Erro ao restaurar horário após autenticação:", error);
+        setStep(dateStep);
+        await showResultModal({
+          type: "warning",
+          title: "Confirme seu horário",
+          text: "Não foi possível confirmar automaticamente o horário escolhido antes do login. Escolha uma data para continuar.",
+        });
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    restoreSlot();
+    return () => { active = false; };
+  }, [
+    show,
+    resolvedEmployer,
+    selectedServices.length,
+    totalDuration,
+    loadAvailableTimes,
+    dateStep,
+    timeStep,
+    finalStep,
+    showResultModal,
+  ]);
+
+  useEffect(() => {
     if (!show) return;
+    if (restoringDeferredDateRef.current) {
+      restoringDeferredDateRef.current = false;
+      return;
+    }
     setSelectedTime(null);
     setAvailableTimes([]);
   }, [selectedDate, show]);
@@ -412,6 +504,8 @@ export default function AppointmentWizardModal({
       serviceIds: selectedServices
         .map((service) => service?.id || service?.item_id)
         .filter(Boolean),
+      date: selectedDate ? String(selectedDate).slice(0, 10) : null,
+      time: selectedTime || null,
     };
 
     try {
@@ -438,6 +532,8 @@ export default function AppointmentWizardModal({
     navigate,
     resolvedEstablishment?.id,
     selectedServices,
+    selectedDate,
+    selectedTime,
   ]);
 
   const handleNext = async () => {
