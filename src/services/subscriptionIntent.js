@@ -6,6 +6,7 @@ const SOURCE = "subscription_plans";
 const REQUEST_TIMEOUT_MS = 10000;
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 250;
+const MAX_RETURN_TO_LENGTH = 1000;
 const TERMINAL_PAYMENT_STATUSES = new Set([
   "cancelled",
   "canceled",
@@ -53,6 +54,29 @@ const trackRevenue = (type, metadata = {}) => {
 
 const normalizeStatus = (value) => String(value || "").trim().toLowerCase();
 
+const safeReturnTo = (value) => {
+  const candidate = String(value || "").trim();
+  if (!candidate || candidate.length > MAX_RETURN_TO_LENGTH) return "";
+  if (!candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return "";
+  if ([...candidate].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  })) return "";
+
+  try {
+    const target = new URL(candidate, window.location.origin);
+    if (target.origin !== window.location.origin || target.pathname === "/planos") return "";
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "";
+  }
+};
+
+const getRecoveryReturnTo = () => {
+  const params = new URLSearchParams(window.location.search);
+  return safeReturnTo(params.get("return_to"));
+};
+
 const terminalPaymentStatus = (data) => {
   const candidates = [
     data?.payment?.status,
@@ -77,6 +101,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
   const validPlanCode = /^[a-z0-9_-]{1,80}$/i.test(planCode);
   const referral = String(pending?.referral || "").trim();
   const campaign = String(pending?.campaign || "").trim();
+  const returnTo = getRecoveryReturnTo();
 
   sessionStorage.removeItem(checkoutStorageKey(intentId));
   if (validPlanCode) sessionStorage.removeItem(storageKey(planCode));
@@ -88,6 +113,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
     plan: validPlanCode ? planCode : undefined,
     referral: referral || undefined,
     campaign: campaign || undefined,
+    return_to_preserved: Boolean(returnTo),
   });
 
   if (validPlanCode) {
@@ -98,6 +124,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
     });
     if (referral) params.set("ref", referral.slice(0, 80));
     if (campaign) params.set("utm_campaign", campaign.slice(0, 80));
+    if (returnTo) params.set("return_to", returnTo);
 
     window.location.assign(`/planos?${params.toString()}`);
   }
