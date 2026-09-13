@@ -83,24 +83,8 @@ export default function EstablishmentViewPage() {
     image: heroLogo || heroBg || undefined,
   });
 
-  const requireSchedulingAuth = useCallback((bookingIntent = null) => {
-    if (localStorage.getItem("token")) return true;
-
-    const returnPath = `${location.pathname}${location.search || ""}${location.hash || ""}`;
-    navigate("/login", {
-      state: {
-        from: returnPath,
-        resumeAppointment: true,
-        bookingIntent,
-      },
-    });
-    return false;
-  }, [location.hash, location.pathname, location.search, navigate]);
-
   const handleOpenFromEstablishment = useCallback(
     async (est) => {
-      if (!requireSchedulingAuth({ type: "establishment" })) return;
-
       try {
         const estId = est?.id ?? establishment?.id ?? null;
         const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
@@ -113,12 +97,12 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [requireSchedulingAuth, openSchedulePopup, employers, establishment, canSchedule]
+    [openSchedulePopup, employers, establishment, canSchedule]
   );
 
   const handleOpenFromEmployer = useCallback(
     (employer) => {
-      if (!canSchedule || !requireSchedulingAuth({ type: "employer", id: employer?.id ?? null })) return;
+      if (!canSchedule) return;
       try {
         openSchedulePopup({ employer, establishment: establishment || employer?.establishment || null });
       } catch (error) {
@@ -126,12 +110,12 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [requireSchedulingAuth, openSchedulePopup, establishment, canSchedule]
+    [openSchedulePopup, establishment, canSchedule]
   );
 
   const handleOpenFromService = useCallback(
     (item) => {
-      if (!canSchedule || !requireSchedulingAuth({ type: "service", id: item?.id ?? null })) return;
+      if (!canSchedule) return;
       try {
         const estId = item?.establishment_id || item?.entity_id || item?.entityId || establishment?.id || null;
         const filteredEmployers = (Array.isArray(employers) ? employers : []).filter(
@@ -144,7 +128,7 @@ export default function EstablishmentViewPage() {
         Swal.fire({ icon: "error", title: "Erro", text: "Não foi possível abrir o agendamento agora." });
       }
     },
-    [requireSchedulingAuth, openSchedulePopup, employers, establishment, canSchedule]
+    [openSchedulePopup, employers, establishment, canSchedule]
   );
 
   useEffect(() => {
