@@ -6,7 +6,37 @@ import Swal from "sweetalert2";
 import EmployerHero from "../../components/employer/EmployerHero";
 import EmployerScheduleAddForm from "../../components/employer/EmployerScheduleAddForm";
 import useEmployerSchedules, { EMPLOYER_DAYS } from "../../hooks/useEmployerSchedules";
+import { trackTelemetryEvent } from "../../telemetry";
 import { clearOwnerActivation, getOwnerActivation } from "../../utils/ownerActivation";
+
+const copyText = async (value) => {
+  if (!value) return false;
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Browsers, PWAs and WebViews may deny clipboard access; use the legacy fallback below.
+  }
+
+  try {
+    const field = document.createElement("textarea");
+    field.value = value;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.focus();
+    field.select();
+    const copied = typeof document.execCommand === "function" && document.execCommand("copy");
+    document.body.removeChild(field);
+    return Boolean(copied);
+  } catch {
+    return false;
+  }
+};
 
 export default function EmployerSchedulesPage() {
   const location = useLocation();
@@ -109,22 +139,74 @@ export default function EmployerSchedulesPage() {
     if (!saved || !isOnboarding) return;
 
     const slug = onboardingEstablishment?.slug;
+    const establishmentId = onboardingEstablishment?.id;
     clearOwnerActivation();
 
-    await Swal.fire({
-      icon: "success",
-      title: "Agenda pronta para receber clientes",
-      text: slug
-        ? "O primeiro serviço, profissional e disponibilidade estão configurados. Confira agora como o cliente verá seu estabelecimento."
-        : "O perfil profissional e a disponibilidade estão configurados para receber agendamentos.",
-      confirmButtonText: slug ? "Ver agenda pública" : "Concluir",
+    trackTelemetryEvent("rasoio_owner_activation_completed", {
+      label: "Agenda pronta para receber clientes",
+      metadata: {
+        establishment_id: establishmentId || undefined,
+        employer_id: employerId || undefined,
+        has_public_agenda: Boolean(slug),
+      },
     });
 
-    if (slug) {
-      navigate(`/establishment/view/${slug}?source=onboarding-ready`, {
-        replace: true,
+    if (!slug) {
+      await Swal.fire({
+        icon: "success",
+        title: "Agenda pronta para receber clientes",
+        text: "O perfil profissional e a disponibilidade estão configurados para receber agendamentos.",
+        confirmButtonText: "Concluir",
+      });
+      return;
+    }
+
+    const publicPath = `/establishment/view/${encodeURIComponent(slug)}?source=onboarding-ready&utm_source=owner_onboarding&utm_medium=share&utm_campaign=first_bookings`;
+    const publicUrl = `${window.location.origin}${publicPath}`;
+
+    const distribution = await Swal.fire({
+      icon: "success",
+      title: "Agenda pronta. Agora traga o primeiro cliente.",
+      text: "Copie o link público e envie no WhatsApp, Instagram ou para seus clientes. Eles já poderão escolher serviço, profissional e horário online.",
+      showDenyButton: true,
+      confirmButtonText: "Copiar link da agenda",
+      denyButtonText: "Ver agenda pública",
+      allowOutsideClick: false,
+    });
+
+    if (distribution.isConfirmed) {
+      const copied = await copyText(publicUrl);
+
+      trackTelemetryEvent(
+        copied ? "rasoio_owner_public_agenda_link_copied" : "rasoio_owner_public_agenda_copy_failed",
+        {
+          label: copied ? "Link público da agenda copiado" : "Falha ao copiar link público da agenda",
+          metadata: {
+            establishment_id: establishmentId || undefined,
+            employer_id: employerId || undefined,
+          },
+        }
+      );
+
+      await Swal.fire({
+        icon: copied ? "success" : "info",
+        title: copied ? "Link copiado" : "Copie o link abaixo",
+        text: copied
+          ? "Envie agora para seus clientes e comece a receber agendamentos."
+          : publicUrl,
+        confirmButtonText: "Ver minha agenda pública",
+      });
+    } else if (distribution.isDenied) {
+      trackTelemetryEvent("rasoio_owner_public_agenda_view_requested", {
+        label: "Ver agenda pública após ativação",
+        metadata: {
+          establishment_id: establishmentId || undefined,
+          employer_id: employerId || undefined,
+        },
       });
     }
+
+    navigate(publicPath, { replace: true });
   };
 
   if (loading) {
