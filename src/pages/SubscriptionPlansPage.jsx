@@ -37,7 +37,10 @@ const safeReturnTo = (value) => {
   const candidate = String(value || "").trim();
   if (!candidate || candidate.length > MAX_RETURN_TO_LENGTH) return "";
   if (!candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return "";
-  if (/[\u0000-\u001f\u007f]/.test(candidate)) return "";
+  if ([...candidate].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  })) return "";
 
   try {
     const target = new URL(candidate, window.location.origin);
