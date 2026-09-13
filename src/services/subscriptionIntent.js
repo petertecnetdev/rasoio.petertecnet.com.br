@@ -7,6 +7,7 @@ const REQUEST_TIMEOUT_MS = 10000;
 const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 250;
 const MAX_RETURN_TO_LENGTH = 1000;
+const RECOVERED_RETURN_TO_KEY = `subscription_recovery_return_to:${APPLICATION}`;
 const TERMINAL_PAYMENT_STATUSES = new Set([
   "cancelled",
   "canceled",
@@ -72,15 +73,48 @@ const safeReturnTo = (value) => {
   }
 };
 
+const readRecoveredReturnTo = () => {
+  try {
+    return safeReturnTo(sessionStorage.getItem(RECOVERED_RETURN_TO_KEY));
+  } catch {
+    return "";
+  }
+};
+
+const persistRecoveredReturnTo = (value) => {
+  const safe = safeReturnTo(value);
+  if (!safe) return "";
+
+  try {
+    sessionStorage.setItem(RECOVERED_RETURN_TO_KEY, safe);
+  } catch {
+    // The current URL still carries the context when session storage is unavailable.
+  }
+
+  return safe;
+};
+
+const clearRecoveredReturnTo = () => {
+  try {
+    sessionStorage.removeItem(RECOVERED_RETURN_TO_KEY);
+  } catch {
+    // Nothing else is required when session storage is unavailable.
+  }
+};
+
 const returnToFromLocation = () => {
   const params = new URLSearchParams(window.location.search);
   return safeReturnTo(params.get("return_to"));
 };
 
 const restoreReturnToFromIntent = (intent) => {
-  if (returnToFromLocation()) return "url";
+  const currentReturnTo = returnToFromLocation();
+  if (currentReturnTo) {
+    persistRecoveredReturnTo(currentReturnTo);
+    return "url";
+  }
 
-  const returnTo = safeReturnTo(intent?.metadata?.return_to);
+  const returnTo = persistRecoveredReturnTo(intent?.metadata?.return_to);
   if (!returnTo) return "";
 
   try {
@@ -89,16 +123,18 @@ const restoreReturnToFromIntent = (intent) => {
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
     return "intent_metadata";
   } catch {
-    return "";
+    return "session_recovery";
   }
 };
 
 const getRecoveryReturnTo = (pending = null) =>
-  returnToFromLocation() || safeReturnTo(pending?.return_to);
+  returnToFromLocation() || safeReturnTo(pending?.return_to) || readRecoveredReturnTo();
 
 const persistPendingReturnTo = (planCode, returnTo) => {
   const safe = safeReturnTo(returnTo);
   if (!safe) return;
+
+  persistRecoveredReturnTo(safe);
 
   try {
     const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
@@ -138,6 +174,13 @@ const recoverFromTerminalPayment = (intentId, status) => {
   const referral = String(pending?.referral || "").trim();
   const campaign = String(pending?.campaign || "").trim();
   const returnTo = getRecoveryReturnTo(pending);
+  const returnToSource = returnTo
+    ? (returnToFromLocation()
+      ? "url"
+      : safeReturnTo(pending?.return_to)
+        ? "pending_subscription"
+        : "recovered_session")
+    : undefined;
 
   sessionStorage.removeItem(checkoutStorageKey(intentId));
   if (validPlanCode) sessionStorage.removeItem(storageKey(planCode));
@@ -150,7 +193,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
     referral: referral || undefined,
     campaign: campaign || undefined,
     return_to_preserved: Boolean(returnTo),
-    return_to_source: returnTo ? (returnToFromLocation() ? "url" : "pending_subscription") : undefined,
+    return_to_source: returnToSource,
   });
 
   if (validPlanCode) {
@@ -175,10 +218,10 @@ const readPendingAttribution = (planCode) => {
     return {
       referral: String(pending?.referral || "").trim(),
       campaign: String(pending?.campaign || "").trim(),
-      returnTo: safeReturnTo(pending?.return_to),
+      returnTo: safeReturnTo(pending?.return_to) || readRecoveredReturnTo(),
     };
   } catch {
-    return {};
+    return { returnTo: readRecoveredReturnTo() };
   }
 };
 
@@ -395,6 +438,7 @@ export async function syncSubscriptionPayment(intentId) {
     const subscriptionStatus = data?.subscription?.status || "";
     const entitlementStatus = data?.entitlement?.status || "";
     if (subscriptionStatus === "active" && entitlementStatus === "active") {
+      clearRecoveredReturnTo();
       trackRevenue("subscription_activated", {
         method: "pix",
         subscription_status: subscriptionStatus,
