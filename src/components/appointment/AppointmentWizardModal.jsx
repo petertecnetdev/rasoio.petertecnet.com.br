@@ -7,7 +7,6 @@ import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
 
 import { apiBaseUrl } from "../../config";
-import api from "../../services/api";
 import useImageUtils from "../../hooks/useImageUtils";
 import { getAppointmentAcquisitionAttribution } from "../../utils/appointmentAcquisitionAttribution";
 import GlobalDateCarousel from "../GlobalDateCarousel";
@@ -100,18 +99,13 @@ export default function AppointmentWizardModal({
   const [selectedTime, setSelectedTime] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [customerCpf, setCustomerCpf] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [requiresCpf, setRequiresCpf] = useState(true);
-  const [requiresPhone, setRequiresPhone] = useState(true);
 
   const hasPreselectedEmployer = !!preselectedEmployer;
   const finalStep = hasPreselectedEmployer ? 4 : 5;
   const dateStep = hasPreselectedEmployer ? 2 : 3;
   const timeStep = dateStep + 1;
   const resolvedEmployer = selectedEmployer || preselectedEmployer || null;
-  const busy = loading || loadingDates || loadingProfile;
+  const busy = loading || loadingDates;
 
   const resolvedEstablishment = useMemo(
     () => establishment || preselectedEmployer?.establishment || resolvedEmployer?.establishment || null,
@@ -167,20 +161,8 @@ export default function AppointmentWizardModal({
     return resolveImage(resolvedEstablishment, resolvedEstablishment?.name || "Estabelecimento");
   }, [resolvedEstablishment, resolveImage]);
 
-  const applyContactData = useCallback((user) => {
-    const profile = user?.profile || {};
-    const cpf = String(profile?.cpf || user?.cpf || "").trim();
-    const phone = String(profile?.phone || user?.phone || "").trim();
-    setCustomerCpf(cpf);
-    setCustomerPhone(phone);
-    setRequiresCpf(!cpf);
-    setRequiresPhone(!phone);
-  }, []);
-
   useEffect(() => {
     if (!show) return undefined;
-    let active = true;
-
     setStep(1);
     const serviceId = preselectedServiceId || preselectedService?.id || preselectedService?.item_id || null;
     if (serviceId && services.length) {
@@ -200,10 +182,6 @@ export default function AppointmentWizardModal({
     deferredSlotRestoreRef.current = null;
     restoringDeferredDateRef.current = false;
     orderIntentRef.current = { fingerprint: null, key: null };
-
-    let storedUser = null;
-    try { storedUser = JSON.parse(localStorage.getItem("user") || "null"); } catch { storedUser = null; }
-    applyContactData(storedUser || {});
 
     const token = localStorage.getItem("token");
     if (token) {
@@ -244,23 +222,7 @@ export default function AppointmentWizardModal({
       } catch {
         sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
       }
-
-      setLoadingProfile(true);
-      api.get("/auth/me")
-        .then(({ data }) => {
-          if (!active) return;
-          const freshUser = data?.user || null;
-          if (!freshUser) return;
-          applyContactData(freshUser);
-          localStorage.setItem("user", JSON.stringify({ ...(storedUser || {}), ...freshUser }));
-        })
-        .catch(() => {})
-        .finally(() => { if (active) setLoadingProfile(false); });
-    } else {
-      setLoadingProfile(false);
     }
-
-    return () => { active = false; };
   }, [
     show,
     preselectedService,
@@ -269,7 +231,6 @@ export default function AppointmentWizardModal({
     services,
     employers,
     resolvedEstablishment?.id,
-    applyContactData,
   ]);
 
   useEffect(() => {
@@ -404,14 +365,6 @@ export default function AppointmentWizardModal({
   }, []);
 
   const submitAppointment = async () => {
-    const missing = [];
-    if (!String(customerCpf || "").trim()) missing.push("CPF");
-    if (!String(customerPhone || "").trim()) missing.push("telefone");
-    if (missing.length) {
-      await showResultModal({ type: "warning", title: "Complete seus dados", text: `Informe ${missing.join(" e ")} para continuar.` });
-      return;
-    }
-
     setLoading(true);
     try {
       const dateBase = String(selectedDate).slice(0, 10);
@@ -435,8 +388,6 @@ export default function AppointmentWizardModal({
         items: selectedServices.map((service) => ({ item_id: service.id || service.item_id, quantity: 1 })),
         client_id: parsed?.id || null,
         customer_name: `${parsed?.first_name || ""} ${parsed?.last_name || ""}`.trim() || "Cliente App",
-        customer_phone: String(customerPhone).trim(),
-        customer_cpf: String(customerCpf).trim(),
         origin: "App",
         fulfillment: "dine-in",
         payment_status: "pending",
@@ -589,7 +540,7 @@ export default function AppointmentWizardModal({
 
   return (
     <GlobalModal show={show} onHide={handleSafeHide} size="xl" backdrop="static" title="Agendamento" subtitle={resolvedEstablishment?.name || "Selecione serviços e horário"} logoSrc={establishmentLogoSrc} footer={footer} className="awm-modal awm-modal--fullscreen" dialogClassName="awm-modal__dialog" contentClassName="awm-modal__content">
-      {busy && <ProcessingIndicatorComponent messages={loadingProfile ? ["Verificando seus dados...", "Preparando o agendamento..."] : loadingDates ? ["Verificando os dias disponíveis...", "Consultando a agenda do profissional...", "Encontrando horários livres..."] : ["Processando seu agendamento...", "Verificando disponibilidade...", "Registrando pedido..."]} interval={1100} gifSrc="/images/logo.mp4" />}
+      {busy && <ProcessingIndicatorComponent messages={loadingDates ? ["Verificando os dias disponíveis...", "Consultando a agenda do profissional...", "Encontrando horários livres..."] : ["Processando seu agendamento...", "Verificando disponibilidade...", "Registrando pedido..."]} interval={1100} gifSrc="/images/logo.mp4" />}
 
       <div className="awm__root">
         {(resolvedEstablishment || resolvedEmployer || selectedServices.length > 0) && <div className="awm__summary">
@@ -609,13 +560,7 @@ export default function AppointmentWizardModal({
 
         {step === finalStep && <div className="awm__final">
           <p className="awm__totals"><b>Total:</b> {fmtBRL(totalValue)} | <b>Duração:</b> {totalDuration} min</p>
-          {(requiresCpf || requiresPhone) ? <>
-            <p className="awm__totals">Complete somente os dados que ainda não estão cadastrados na sua conta.</p>
-            <div className="awm__inputs-grid">
-              {requiresCpf && <input value={customerCpf} onChange={(event) => setCustomerCpf(event.target.value)} placeholder="CPF" className="awm__input" inputMode="numeric" autoComplete="off" />}
-              {requiresPhone && <input value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} placeholder="Telefone" className="awm__input" inputMode="tel" autoComplete="tel" />}
-            </div>
-          </> : <p className="awm__totals">Seus dados de contato já estão cadastrados. Revise o total acima e confirme o agendamento.</p>}
+          <p className="awm__totals">Revise o serviço, profissional, data e horário. Nenhum dado adicional é obrigatório para confirmar.</p>
         </div>}
       </div>
     </GlobalModal>
