@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import dayjs from "dayjs";
@@ -22,6 +23,8 @@ dayjs.extend(tz);
 const MySwal = withReactContent(Swal);
 const TZ = "America/Sao_Paulo";
 const DAYS_TO_CHECK = 14;
+const DEFERRED_BOOKING_KEY = "rasoio_deferred_booking";
+const DEFERRED_BOOKING_TTL = 30 * 60 * 1000;
 
 const createOrderIdempotencyKey = () => {
   const uuid = window.crypto?.randomUUID?.();
@@ -82,6 +85,8 @@ export default function AppointmentWizardModal({
   preselectedEmployer = null,
   establishment = null,
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const orderIntentRef = useRef({ fingerprint: null, key: null });
   const { imageUrl: imgUrl } = useImageUtils();
   const [step, setStep] = useState(1);
@@ -198,6 +203,39 @@ export default function AppointmentWizardModal({
 
     const token = localStorage.getItem("token");
     if (token) {
+      try {
+        const rawDraft = sessionStorage.getItem(DEFERRED_BOOKING_KEY);
+        const draft = rawDraft ? JSON.parse(rawDraft) : null;
+        const isFresh = draft?.createdAt && Date.now() - Number(draft.createdAt) <= DEFERRED_BOOKING_TTL;
+        const sameEstablishment = !draft?.establishmentId
+          || Number(draft.establishmentId) === Number(resolvedEstablishment?.id);
+
+        if (isFresh && sameEstablishment) {
+          const serviceIds = Array.isArray(draft.serviceIds) ? draft.serviceIds : [];
+          const restoredServices = services.filter((service) =>
+            serviceIds.some((id) => Number(id) === Number(service.id || service.item_id))
+          );
+          const restoredEmployer = employers.find((employer) =>
+            Number(employer.id) === Number(draft.employerId)
+          ) || null;
+          const servicesReady = serviceIds.length === 0 || restoredServices.length === serviceIds.length;
+          const employerReady = !draft.employerId || Boolean(restoredEmployer);
+
+          if (servicesReady && employerReady) {
+            if (restoredServices.length) setSelectedServices(restoredServices);
+            if (restoredEmployer) {
+              setSelectedEmployer(restoredEmployer);
+              if (!preselectedEmployer) setStep(2);
+            }
+            sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+          }
+        } else if (rawDraft) {
+          sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+        }
+      } catch {
+        sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+      }
+
       setLoadingProfile(true);
       api.get("/auth/me")
         .then(({ data }) => {
@@ -214,7 +252,16 @@ export default function AppointmentWizardModal({
     }
 
     return () => { active = false; };
-  }, [show, preselectedService, preselectedServiceId, preselectedEmployer, services, applyContactData]);
+  }, [
+    show,
+    preselectedService,
+    preselectedServiceId,
+    preselectedEmployer,
+    services,
+    employers,
+    resolvedEstablishment?.id,
+    applyContactData,
+  ]);
 
   useEffect(() => {
     if (!show) return;
@@ -355,11 +402,50 @@ export default function AppointmentWizardModal({
     }
   };
 
+  const deferUntilAuthenticated = useCallback((employer) => {
+    if (localStorage.getItem("token")) return false;
+
+    const draft = {
+      createdAt: Date.now(),
+      establishmentId: resolvedEstablishment?.id || null,
+      employerId: employer?.id || null,
+      serviceIds: selectedServices
+        .map((service) => service?.id || service?.item_id)
+        .filter(Boolean),
+    };
+
+    try {
+      sessionStorage.setItem(DEFERRED_BOOKING_KEY, JSON.stringify(draft));
+    } catch {
+      // Navigation still proceeds; the customer can reselect if storage is unavailable.
+    }
+
+    navigate("/login", {
+      state: {
+        from: {
+          pathname: location.pathname,
+          search: location.search,
+          hash: location.hash,
+        },
+        resumeAppointment: true,
+      },
+    });
+    return true;
+  }, [
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    resolvedEstablishment?.id,
+    selectedServices,
+  ]);
+
   const handleNext = async () => {
     if (busy) return;
     if (step === 1) {
       if (!selectedServices.length) return;
       if (hasPreselectedEmployer) {
+        if (deferUntilAuthenticated(resolvedEmployer)) return;
         setLoading(true);
         try { await prepareAvailableDates(resolvedEmployer); setStep(dateStep); } finally { setLoading(false); }
       } else setStep(2);
@@ -367,6 +453,7 @@ export default function AppointmentWizardModal({
     }
     if (!hasPreselectedEmployer && step === 2) {
       if (!selectedEmployer) return;
+      if (deferUntilAuthenticated(selectedEmployer)) return;
       setLoading(true);
       try { await prepareAvailableDates(selectedEmployer); setStep(dateStep); } finally { setLoading(false); }
       return;
