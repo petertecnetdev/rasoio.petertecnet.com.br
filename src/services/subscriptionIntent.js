@@ -72,9 +72,29 @@ const safeReturnTo = (value) => {
   }
 };
 
-const getRecoveryReturnTo = () => {
+const returnToFromLocation = () => {
   const params = new URLSearchParams(window.location.search);
   return safeReturnTo(params.get("return_to"));
+};
+
+const getRecoveryReturnTo = (pending = null) =>
+  returnToFromLocation() || safeReturnTo(pending?.return_to);
+
+const persistPendingReturnTo = (planCode, returnTo) => {
+  const safe = safeReturnTo(returnTo);
+  if (!safe) return;
+
+  try {
+    const pending = JSON.parse(localStorage.getItem("pending_subscription_plan") || "null");
+    if (pending?.application !== APPLICATION || pending?.plan !== planCode) return;
+
+    localStorage.setItem(
+      "pending_subscription_plan",
+      JSON.stringify({ ...pending, return_to: safe })
+    );
+  } catch {
+    // Recovery still works from the current URL when storage is unavailable.
+  }
 };
 
 const terminalPaymentStatus = (data) => {
@@ -101,7 +121,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
   const validPlanCode = /^[a-z0-9_-]{1,80}$/i.test(planCode);
   const referral = String(pending?.referral || "").trim();
   const campaign = String(pending?.campaign || "").trim();
-  const returnTo = getRecoveryReturnTo();
+  const returnTo = getRecoveryReturnTo(pending);
 
   sessionStorage.removeItem(checkoutStorageKey(intentId));
   if (validPlanCode) sessionStorage.removeItem(storageKey(planCode));
@@ -114,6 +134,7 @@ const recoverFromTerminalPayment = (intentId, status) => {
     referral: referral || undefined,
     campaign: campaign || undefined,
     return_to_preserved: Boolean(returnTo),
+    return_to_source: returnTo ? (returnToFromLocation() ? "url" : "pending_subscription") : undefined,
   });
 
   if (validPlanCode) {
@@ -138,6 +159,7 @@ const readPendingAttribution = (planCode) => {
     return {
       referral: String(pending?.referral || "").trim(),
       campaign: String(pending?.campaign || "").trim(),
+      returnTo: safeReturnTo(pending?.return_to),
     };
   } catch {
     return {};
@@ -215,6 +237,7 @@ export async function createSubscriptionIntent({
   const pendingAttribution = readPendingAttribution(normalizedPlanCode);
   const resolvedReferral = String(referral || pendingAttribution.referral || "").trim();
   const resolvedCampaign = String(campaign || pendingAttribution.campaign || "").trim();
+  const resolvedReturnTo = returnToFromLocation() || pendingAttribution.returnTo || "";
   const idempotencyKey = getSubscriptionIntentIdempotencyKey(normalizedPlanCode);
   const metadata = {
     client_price_cents: priceCents,
@@ -224,6 +247,10 @@ export async function createSubscriptionIntent({
 
   if (resolvedReferral) metadata.referral = resolvedReferral;
   if (resolvedCampaign) metadata.campaign = resolvedCampaign;
+  if (resolvedReturnTo) {
+    metadata.return_to = resolvedReturnTo;
+    persistPendingReturnTo(normalizedPlanCode, resolvedReturnTo);
+  }
 
   const payload = {
     plan_code: normalizedPlanCode,
@@ -253,6 +280,7 @@ export async function createSubscriptionIntent({
           currency: intent.currency || currency,
           referral: resolvedReferral || undefined,
           campaign: resolvedCampaign || undefined,
+          return_to_preserved: Boolean(resolvedReturnTo),
           attempt,
         });
       } else {
