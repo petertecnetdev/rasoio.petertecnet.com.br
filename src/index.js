@@ -4,6 +4,7 @@ import { installGlobalImageFallbacks } from "./utils/imageFallback";
 import { installPasswordFieldEnhancer } from "./utils/passwordFieldEnhancer";
 import { installPeterWhatsappFallback } from "./utils/peterWhatsappFallback";
 import { installAppointmentAcquisitionAttribution } from "./utils/appointmentAcquisitionAttribution";
+import { installAppointmentFunnelTelemetry } from "./appointmentFunnelTelemetry";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import axios from "axios";
@@ -23,6 +24,7 @@ installPasswordFieldEnhancer();
 installPeterWhatsappFallback();
 installAppointmentAcquisitionAttribution();
 startTelemetry({ apiBaseUrl, appSlug, appId });
+installAppointmentFunnelTelemetry();
 
 axios.defaults.headers.common["X-Peter-App"] = appSlug;
 axios.defaults.headers.common["X-App-ID"] = String(appId);
