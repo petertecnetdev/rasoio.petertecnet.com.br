@@ -14,6 +14,7 @@ const money = new Intl.NumberFormat("pt-BR", {
 
 const DEFAULT_SOURCE = "subscription_plans";
 const MAX_ATTRIBUTION_LENGTH = 80;
+const MAX_RETURN_TO_LENGTH = 1000;
 const PENDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const AUTO_PAYMENT_SYNC_FAST_INTERVAL_MS = 10000;
 const AUTO_PAYMENT_SYNC_SLOW_INTERVAL_MS = 30000;
@@ -30,6 +31,35 @@ const normalizeAttribution = (value, fallback = "") => {
     .slice(0, MAX_ATTRIBUTION_LENGTH);
 
   return normalized || fallback;
+};
+
+const safeReturnTo = (value) => {
+  const candidate = String(value || "").trim();
+  if (!candidate || candidate.length > MAX_RETURN_TO_LENGTH) return "";
+  if (!candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return "";
+  if ([...candidate].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  })) return "";
+
+  try {
+    const target = new URL(candidate, window.location.origin);
+    if (target.origin !== window.location.origin) return "";
+    if (target.pathname === "/planos") return "";
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return "";
+  }
+};
+
+const getPostSubscriptionDestination = () => {
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = safeReturnTo(params.get("return_to"));
+  if (!returnTo) return "/dashboard?subscription=active";
+
+  const target = new URL(returnTo, window.location.origin);
+  target.searchParams.set("subscription", "active");
+  return `${target.pathname}${target.search}${target.hash}`;
 };
 
 const readPendingSubscription = () => {
@@ -337,7 +367,7 @@ export default function SubscriptionPlansPage() {
       if (active) {
         localStorage.removeItem("pending_subscription_plan");
         setPaymentMessage("Pagamento confirmado. Seu plano está ativo.");
-        window.location.assign("/dashboard?subscription=active");
+        window.location.assign(getPostSubscriptionDestination());
         return true;
       }
 
