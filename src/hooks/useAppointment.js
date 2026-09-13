@@ -65,14 +65,13 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
   const loadAvailableTimes = useCallback(
     async (date, employer, totalDuration) => {
       try {
-        const userToken = getToken();
-        if (!userToken || !employer?.id || !date) return [];
+        if (!appId || !employer?.id || !date) return [];
 
         const dateYMD = normalizeDateToYMD(date);
         if (!dateYMD) return [];
 
         const res = await axios.post(
-          `${apiBaseUrl}/employer/available-times`,
+          `${apiBaseUrl}/v1/apps/${encodeURIComponent(appId)}/public-availability/times`,
           {
             employer_id: employer.id,
             date: dateYMD,
@@ -80,7 +79,6 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           },
           {
             headers: {
-              Authorization: `Bearer ${userToken}`,
               Accept: "application/json",
               "Content-Type": "application/json",
             },
@@ -94,7 +92,7 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
         return [];
       }
     },
-    [apiBaseUrl, getToken, normalizeDateToYMD]
+    [apiBaseUrl, appId, normalizeDateToYMD]
   );
 
   const handleCreateAppointment = useCallback(

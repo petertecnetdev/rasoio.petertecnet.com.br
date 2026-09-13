@@ -445,7 +445,6 @@ export default function AppointmentWizardModal({
     if (step === 1) {
       if (!selectedServices.length) return;
       if (hasPreselectedEmployer) {
-        if (deferUntilAuthenticated(resolvedEmployer)) return;
         setLoading(true);
         try { await prepareAvailableDates(resolvedEmployer); setStep(dateStep); } finally { setLoading(false); }
       } else setStep(2);
@@ -453,7 +452,6 @@ export default function AppointmentWizardModal({
     }
     if (!hasPreselectedEmployer && step === 2) {
       if (!selectedEmployer) return;
-      if (deferUntilAuthenticated(selectedEmployer)) return;
       setLoading(true);
       try { await prepareAvailableDates(selectedEmployer); setStep(dateStep); } finally { setLoading(false); }
       return;
@@ -477,6 +475,7 @@ export default function AppointmentWizardModal({
     }
     if (step === timeStep) {
       if (!selectedTime) return;
+      if (deferUntilAuthenticated(resolvedEmployer)) return;
       setStep(finalStep);
       return;
     }
