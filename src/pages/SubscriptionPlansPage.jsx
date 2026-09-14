@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SubscriptionPlanService from "../services/SubscriptionPlanService";
+import { safeLocalStorage as localStorage } from "../utils/safeStorage";
 import {
   createSubscriptionIntent,
   createSubscriptionPixCheckout,
