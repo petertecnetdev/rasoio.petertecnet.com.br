@@ -5,6 +5,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { apiBaseUrl } from "../config";
+import { safeLocalStorage as localStorage } from "../utils/safeStorage";
 
 const GoogleLoginButton = ({ onSuccess }) => (
   <GoogleLogin
