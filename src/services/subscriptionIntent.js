@@ -8,6 +8,7 @@ const MAX_ATTEMPTS = 2;
 const RETRY_DELAY_MS = 250;
 const MAX_RETURN_TO_LENGTH = 1000;
 const RECOVERED_RETURN_TO_KEY = `subscription_recovery_return_to:${APPLICATION}`;
+const inMemoryIdempotencyKeys = new Map();
 const TERMINAL_PAYMENT_STATUSES = new Set([
   "cancelled",
   "canceled",
@@ -160,6 +161,24 @@ const terminalPaymentStatus = (data) => {
   return candidates.find((status) => TERMINAL_PAYMENT_STATUSES.has(status)) || "";
 };
 
+const removeSessionKey = (key) => {
+  inMemoryIdempotencyKeys.delete(key);
+
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // In-memory cleanup is enough when browser storage is blocked.
+  }
+};
+
+const removePendingSubscription = () => {
+  try {
+    localStorage.removeItem("pending_subscription_plan");
+  } catch {
+    // Recovery can continue from intent metadata/current URL when storage is blocked.
+  }
+};
+
 const recoverFromTerminalPayment = (intentId, status) => {
   let pending = null;
 
@@ -182,9 +201,9 @@ const recoverFromTerminalPayment = (intentId, status) => {
         : "recovered_session")
     : undefined;
 
-  sessionStorage.removeItem(checkoutStorageKey(intentId));
-  if (validPlanCode) sessionStorage.removeItem(storageKey(planCode));
-  localStorage.removeItem("pending_subscription_plan");
+  removeSessionKey(checkoutStorageKey(intentId));
+  if (validPlanCode) removeSessionKey(storageKey(planCode));
+  removePendingSubscription();
 
   trackRevenue("subscription_payment_recovery_started", {
     method: "pix",
@@ -226,11 +245,28 @@ const readPendingAttribution = (planCode) => {
 };
 
 const getOrCreateSessionKey = (key) => {
-  const existing = sessionStorage.getItem(key);
-  if (existing) return existing;
+  const inMemoryKey = inMemoryIdempotencyKeys.get(key);
+  if (inMemoryKey) return inMemoryKey;
+
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) {
+      inMemoryIdempotencyKeys.set(key, existing);
+      return existing;
+    }
+  } catch {
+    // Continue with an in-memory key when sessionStorage is blocked/unavailable.
+  }
 
   const created = createKey();
-  sessionStorage.setItem(key, created);
+  inMemoryIdempotencyKeys.set(key, created);
+
+  try {
+    sessionStorage.setItem(key, created);
+  } catch {
+    // The in-memory copy still keeps retries idempotent for the current page lifecycle.
+  }
+
   return created;
 };
 
