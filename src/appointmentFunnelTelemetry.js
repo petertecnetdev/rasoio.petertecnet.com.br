@@ -1,4 +1,5 @@
 import { trackTelemetryEvent } from "./telemetry";
+import { getAppointmentAcquisitionAttribution } from "./utils/appointmentAcquisitionAttribution";
 
 const INSTALL_FLAG = "__rasoioAppointmentFunnelTelemetryInstalled";
 const WIZARD_SELECTOR = ".awm-modal";
@@ -37,6 +38,20 @@ const isAppointmentOrderRequest = (input, init) => {
   }
 };
 
+const acquisitionMetadata = () => {
+  const attribution = getAppointmentAcquisitionAttribution();
+  if (!attribution) return {};
+
+  return {
+    acquisition_source: attribution.acquisition_source || undefined,
+    utm_source: attribution.utm_source || undefined,
+    utm_medium: attribution.utm_medium || undefined,
+    utm_campaign: attribution.utm_campaign || undefined,
+    utm_content: attribution.utm_content || undefined,
+    utm_term: attribution.utm_term || undefined,
+  };
+};
+
 const appointmentMetadata = (payload, extra = {}) => ({
   establishment_id: payload?.entity_id || undefined,
   attendant_id: payload?.attendant_id || undefined,
@@ -53,7 +68,13 @@ export function installAppointmentFunnelTelemetry() {
   let slotStepSeen = false;
   let dateStepSeen = false;
 
-  const emit = (type, details = {}) => trackTelemetryEvent(type, details);
+  const emit = (type, details = {}) => trackTelemetryEvent(type, {
+    ...details,
+    metadata: {
+      ...acquisitionMetadata(),
+      ...(details.metadata || {}),
+    },
+  });
 
   const resetWizardState = () => {
     wizardOpen = false;
