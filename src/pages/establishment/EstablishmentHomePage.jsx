@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiBaseUrl, appId } from "../../config";
+import { safeLocalStorage as localStorage } from "../../utils/safeStorage";
 
 import useEstablishmentHome from "../../hooks/useEstablishmentHome";
 import useEmployerHome from "../../hooks/useEmployerHome";
