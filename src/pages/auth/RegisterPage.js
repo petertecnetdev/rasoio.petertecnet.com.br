@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RegisterFormComponent from "../../components/auth/RegisterFormComponent";
+import { safeLocalStorage as localStorage } from "../../utils/safeStorage";
 
 import "./RegisterPage.css";
 
