@@ -1,6 +1,7 @@
 import React from "react";
 import { FaShareAlt } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { trackTelemetryEvent } from "../telemetry";
 import "./ShareButton.css";
 
 const copyTextFallback = (value) => {
@@ -16,6 +17,31 @@ const copyTextFallback = (value) => {
   document.body.removeChild(textarea);
 
   if (!copied) throw new Error("copy_failed");
+};
+
+const trackShareResult = ({ source, reference, method, result }) => {
+  trackTelemetryEvent("rasoio_public_agenda_share_result", {
+    label: "Compartilhamento da agenda pública",
+    target: "public_agenda",
+    metadata: {
+      source: source || "organic_share",
+      reference: reference || undefined,
+      method,
+      result,
+    },
+  });
+};
+
+const openWhatsAppShare = ({ text, shareUrl }) => {
+  const message = [text, shareUrl].filter(Boolean).join("\n");
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const anchor = document.createElement("a");
+  anchor.href = whatsappUrl;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
 };
 
 export default function ShareButton({
@@ -43,11 +69,25 @@ export default function ShareButton({
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url: shareUrl });
+        trackShareResult({ source, reference, method: "native", result: "shared" });
         return;
       } catch (err) {
-        if (err?.name === "AbortError") return;
+        if (err?.name === "AbortError") {
+          trackShareResult({ source, reference, method: "native", result: "cancelled" });
+          return;
+        }
+        trackShareResult({ source, reference, method: "native", result: "failed" });
         console.warn("Falha no compartilhamento nativo:", err);
       }
+    }
+
+    try {
+      openWhatsAppShare({ text, shareUrl });
+      trackShareResult({ source, reference, method: "whatsapp", result: "opened" });
+      return;
+    } catch (error) {
+      trackShareResult({ source, reference, method: "whatsapp", result: "failed" });
+      console.warn("Falha ao abrir compartilhamento pelo WhatsApp:", error);
     }
 
     try {
@@ -57,6 +97,7 @@ export default function ShareButton({
         copyTextFallback(shareUrl);
       }
 
+      trackShareResult({ source, reference, method: "clipboard", result: "copied" });
       Swal.fire({
         icon: "success",
         title: "Link da agenda copiado!",
@@ -65,10 +106,11 @@ export default function ShareButton({
         showConfirmButton: false,
       });
     } catch {
+      trackShareResult({ source, reference, method: "clipboard", result: "failed" });
       Swal.fire({
         icon: "error",
         title: "Erro",
-        text: "Não foi possível copiar o link da agenda.",
+        text: "Não foi possível compartilhar nem copiar o link da agenda.",
       });
     }
   };
