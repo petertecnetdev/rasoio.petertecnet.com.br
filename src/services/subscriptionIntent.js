@@ -464,32 +464,53 @@ export async function syncSubscriptionPayment(intentId) {
   const normalizedIntentId = String(intentId || "").trim();
   if (!normalizedIntentId) return null;
 
-  try {
-    const { data } = await api.post(
-      `/v1/apps/${APPLICATION}/subscription-intents/${encodeURIComponent(normalizedIntentId)}/sync`,
-      {},
-      { timeout: REQUEST_TIMEOUT_MS }
-    );
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const { data } = await api.post(
+        `/v1/apps/${APPLICATION}/subscription-intents/${encodeURIComponent(normalizedIntentId)}/sync`,
+        {},
+        { timeout: REQUEST_TIMEOUT_MS }
+      );
 
-    const subscriptionStatus = data?.subscription?.status || "";
-    const entitlementStatus = data?.entitlement?.status || "";
-    if (subscriptionStatus === "active" && entitlementStatus === "active") {
-      clearRecoveredReturnTo();
-      trackRevenue("subscription_activated", {
-        method: "pix",
-        subscription_status: subscriptionStatus,
-        entitlement_status: entitlementStatus,
-      });
+      const subscriptionStatus = data?.subscription?.status || "";
+      const entitlementStatus = data?.entitlement?.status || "";
+      if (subscriptionStatus === "active" && entitlementStatus === "active") {
+        clearRecoveredReturnTo();
+        trackRevenue("subscription_activated", {
+          method: "pix",
+          subscription_status: subscriptionStatus,
+          entitlement_status: entitlementStatus,
+          attempt,
+        });
+        return data || null;
+      }
+
+      const terminalStatus = terminalPaymentStatus(data);
+      if (terminalStatus) {
+        recoverFromTerminalPayment(normalizedIntentId, terminalStatus);
+      }
+
       return data || null;
-    }
+    } catch (error) {
+      const lastAttempt = attempt >= MAX_ATTEMPTS;
+      if (lastAttempt || !shouldRetry(error)) {
+        trackRevenue("subscription_sync_failed", {
+          method: "pix",
+          http_status: httpStatus(error),
+          retryable: shouldRetry(error),
+          attempt,
+        });
+        return error?.response?.data || null;
+      }
 
-    const terminalStatus = terminalPaymentStatus(data);
-    if (terminalStatus) {
-      recoverFromTerminalPayment(normalizedIntentId, terminalStatus);
+      trackRevenue("subscription_sync_retry", {
+        method: "pix",
+        http_status: httpStatus(error),
+        attempt,
+      });
+      await wait(RETRY_DELAY_MS * attempt);
     }
-
-    return data || null;
-  } catch (error) {
-    return error?.response?.data || null;
   }
+
+  return null;
 }
