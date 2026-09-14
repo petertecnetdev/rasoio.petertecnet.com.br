@@ -22,6 +22,7 @@ import SeoManager from "./components/SeoManager";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
 import { getAccountContext } from "./services/platformManagementApi";
+import { safeLocalStorage as localStorage } from "./utils/safeStorage";
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const AgendaOnlinePage = lazy(() => import("./pages/AgendaOnlinePage"));

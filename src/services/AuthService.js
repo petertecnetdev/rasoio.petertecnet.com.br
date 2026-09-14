@@ -1,5 +1,6 @@
 import axios from "axios";
 import { apiBaseUrl } from "../config";
+import { safeLocalStorage as localStorage } from "../utils/safeStorage";
 
 const apiServiceUrl = "auth";
 
