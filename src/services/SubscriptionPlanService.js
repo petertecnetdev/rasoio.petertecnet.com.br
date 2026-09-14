@@ -4,6 +4,8 @@ import { apiV1BaseUrl } from "../config";
 const REQUEST_TIMEOUT_MS = 8000;
 const MAX_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 250;
+const CATALOG_CACHE_KEY = "rasoio_subscription_plans_catalog";
+const CATALOG_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const wait = (milliseconds) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -15,6 +17,35 @@ const shouldRetry = (error) => {
   return status === 408 || status === 429 || status >= 500;
 };
 
+const isValidCatalog = (catalog) =>
+  Boolean(catalog && Array.isArray(catalog.plans) && catalog.plans.length > 0);
+
+const writeCatalogCache = (catalog) => {
+  if (!isValidCatalog(catalog)) return;
+
+  try {
+    localStorage.setItem(
+      CATALOG_CACHE_KEY,
+      JSON.stringify({ cached_at: Date.now(), catalog })
+    );
+  } catch {
+    // A blocked/full browser storage must never break the subscription funnel.
+  }
+};
+
+const readFreshCatalogCache = () => {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CATALOG_CACHE_KEY) || "null");
+    const cachedAt = Number(cached?.cached_at || 0);
+    const fresh = cachedAt > 0 && Date.now() - cachedAt <= CATALOG_CACHE_TTL_MS;
+
+    if (!fresh || !isValidCatalog(cached?.catalog)) return null;
+    return cached.catalog;
+  } catch {
+    return null;
+  }
+};
+
 const SubscriptionPlanService = {
   async list() {
     let lastError = null;
@@ -24,13 +55,21 @@ const SubscriptionPlanService = {
         const { data } = await axios.get(`${apiV1BaseUrl}/subscription-plans`, {
           timeout: REQUEST_TIMEOUT_MS,
         });
-        return data?.data ?? data;
+        const catalog = data?.data ?? data;
+        writeCatalogCache(catalog);
+        return catalog;
       } catch (error) {
         lastError = error;
         const lastAttempt = attempt >= MAX_ATTEMPTS;
 
-        if (lastAttempt || !shouldRetry(error)) throw error;
-        await wait(RETRY_BASE_DELAY_MS * attempt);
+        if (!shouldRetry(error)) throw error;
+        if (!lastAttempt) {
+          await wait(RETRY_BASE_DELAY_MS * attempt);
+          continue;
+        }
+
+        const cachedCatalog = readFreshCatalogCache();
+        if (cachedCatalog) return cachedCatalog;
       }
     }
 
