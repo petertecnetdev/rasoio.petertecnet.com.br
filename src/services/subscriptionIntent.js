@@ -74,6 +74,15 @@ const safeReturnTo = (value) => {
   }
 };
 
+const postSubscriptionDestination = (returnTo = "") => {
+  const safe = safeReturnTo(returnTo);
+  if (!safe) return "/dashboard?subscription=active";
+
+  const target = new URL(safe, window.location.origin);
+  target.searchParams.set("subscription", "active");
+  return `${target.pathname}${target.search}${target.hash}`;
+};
+
 const readRecoveredReturnTo = () => {
   try {
     return safeReturnTo(sessionStorage.getItem(RECOVERED_RETURN_TO_KEY));
@@ -288,6 +297,10 @@ export async function getRecoverableSubscriptionIntent() {
       const intent = data?.data || null;
       if (intent) {
         const returnToSource = restoreReturnToFromIntent(intent);
+        const recoveredReturnTo = returnToFromLocation()
+          || safeReturnTo(intent?.metadata?.return_to)
+          || readRecoveredReturnTo();
+
         trackRevenue("subscription_intent_recovered", {
           plan: intent.plan_code,
           status: intent.status,
@@ -296,6 +309,29 @@ export async function getRecoverableSubscriptionIntent() {
           return_to_preserved: Boolean(returnToSource),
           return_to_source: returnToSource || undefined,
           attempt,
+        });
+
+        const synced = await syncSubscriptionPayment(intent.id);
+        const subscriptionActive = synced?.subscription?.status === "active";
+        const entitlementActive = synced?.entitlement?.status === "active";
+
+        if (subscriptionActive && entitlementActive) {
+          removePendingSubscription();
+          trackRevenue("subscription_recovered_activation_completed", {
+            method: "pix",
+            plan: intent.plan_code,
+            recovery_scope: "remote_identity",
+            return_to_preserved: Boolean(recoveredReturnTo),
+          });
+          window.location.assign(postSubscriptionDestination(recoveredReturnTo));
+          return null;
+        }
+
+        trackRevenue("subscription_recovered_intent_resumable", {
+          method: "pix",
+          plan: intent.plan_code,
+          status: synced?.intent?.status || synced?.payment?.status || intent.status,
+          recovery_scope: "remote_identity",
         });
       }
 
