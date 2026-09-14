@@ -1,4 +1,4 @@
-import { startTelemetry } from "./telemetry";
+import { startTelemetrySafely } from "./utils/startTelemetrySafely";
 import { apiBaseUrl, appId, appSlug } from "./config";
 import { installGlobalImageFallbacks } from "./utils/imageFallback";
 import { installPasswordFieldEnhancer } from "./utils/passwordFieldEnhancer";
@@ -23,7 +23,7 @@ installGlobalImageFallbacks();
 installPasswordFieldEnhancer();
 installPeterWhatsappFallback();
 installAppointmentAcquisitionAttribution();
-startTelemetry({ apiBaseUrl, appSlug, appId });
+startTelemetrySafely({ apiBaseUrl, appSlug, appId });
 installAppointmentFunnelTelemetry();
 
 axios.defaults.headers.common["X-Peter-App"] = appSlug;
