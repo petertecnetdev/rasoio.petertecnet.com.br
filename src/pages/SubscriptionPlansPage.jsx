@@ -165,12 +165,33 @@ export default function SubscriptionPlansPage() {
     }
 
     const localPending = readPendingSubscription();
+    let active = true;
+
     if (localPending?.intent_id) {
-      setRecoveryReady(true);
-      return undefined;
+      syncSubscriptionPayment(localPending.intent_id)
+        .then((status) => {
+          if (!active) return;
+
+          const subscriptionActive = status?.subscription?.status === "active";
+          const entitlementActive = status?.entitlement?.status === "active";
+          if (subscriptionActive && entitlementActive) {
+            localStorage.removeItem("pending_subscription_plan");
+            setPaymentMessage("Pagamento confirmado. Seu plano está ativo.");
+            window.location.assign(getPostSubscriptionDestination());
+            return;
+          }
+
+          setRecoveryReady(true);
+        })
+        .catch(() => {
+          if (active) setRecoveryReady(true);
+        });
+
+      return () => {
+        active = false;
+      };
     }
 
-    let active = true;
     getRecoverableSubscriptionIntent()
       .then((intent) => {
         if (!active) return;
