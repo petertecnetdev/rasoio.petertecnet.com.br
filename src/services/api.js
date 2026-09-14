@@ -26,6 +26,25 @@ const UPGRADE_PLAN_BY_ENTITLEMENT = Object.freeze({
   "features.advanced": "pro",
 });
 
+function safeLocalStorageGet(key) {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return null;
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageRemove(key) {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return false;
+    window.localStorage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function isTrustedApiRequest(config) {
   const requestUrl = String(config?.url || "");
   if (!requestUrl) return true;
@@ -84,7 +103,7 @@ function redirectUpgradeRequired(error) {
 }
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = safeLocalStorageGet("token");
   const trustedApiRequest = isTrustedApiRequest(config);
 
   config.headers = config.headers || {};
@@ -115,8 +134,8 @@ api.interceptors.response.use(
     const isAuthAttempt = url.includes("/auth/login") || url.includes("/auth/google");
 
     if (error?.response?.status === 401 && !isAuthAttempt && isTrustedApiRequest(error?.config)) {
-      const hadToken = Boolean(localStorage.getItem("token"));
-      localStorage.removeItem("token");
+      const hadToken = Boolean(safeLocalStorageGet("token"));
+      safeLocalStorageRemove("token");
       if (hadToken && typeof window !== "undefined") window.dispatchEvent(new Event("authChanged"));
     }
 
@@ -125,5 +144,5 @@ api.interceptors.response.use(
   }
 );
 
-export { isTrustedApiRequest };
+export { isTrustedApiRequest, safeLocalStorageGet, safeLocalStorageRemove };
 export default api;
