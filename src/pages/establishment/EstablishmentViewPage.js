@@ -11,6 +11,7 @@ import usePublicEntitySeo from "../../hooks/usePublicEntitySeo";
 import useSchedulePopup from "../../hooks/useSchedulePopup";
 import useWhatsappLink from "../../hooks/useWhatsappLink";
 import { isSchedulableEstablishment } from "../../utils/schedulingCapabilities";
+import { safeLocalStorage as localStorage } from "../../utils/safeStorage";
 
 import GlobalCarousel from "../../components/GlobalCarousel";
 import AppointmentWizardModal from "../../components/appointment/AppointmentWizardModal";
@@ -135,7 +136,7 @@ export default function EstablishmentViewPage() {
     if (
       resumeAppointmentHandledRef.current ||
       !location.state?.resumeAppointment ||
-      !localStorage.getItem("token") ||
+      !token ||
       isLoading ||
       !establishment ||
       !canSchedule
@@ -184,6 +185,7 @@ export default function EstablishmentViewPage() {
     establishment,
     canSchedule,
     isLoading,
+    token,
   ]);
 
   if (isLoading) return <div className="ev-state">Carregando estabelecimento…</div>;
