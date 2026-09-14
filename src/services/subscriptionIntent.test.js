@@ -2,7 +2,9 @@ import api from "./api";
 import {
   createSubscriptionPixCheckout,
   getSubscriptionIntentIdempotencyKey,
+  syncSubscriptionPayment,
 } from "./subscriptionIntent";
+import { trackTelemetryEvent } from "../telemetry";
 
 jest.mock("./api", () => ({
   __esModule: true,
@@ -61,6 +63,57 @@ describe("subscription billing storage resilience", () => {
     expect(api.post).toHaveBeenCalledTimes(2);
     expect(api.post.mock.calls[0][2].headers["Idempotency-Key"]).toBe(
       api.post.mock.calls[1][2].headers["Idempotency-Key"]
+    );
+  });
+
+  test("retries a transient payment sync failure and returns an active entitlement", async () => {
+    api.post
+      .mockRejectedValueOnce({ response: { status: 503 } })
+      .mockResolvedValueOnce({
+        data: {
+          payment: { status: "approved" },
+          subscription: { status: "active" },
+          entitlement: { status: "active" },
+        },
+      });
+
+    const result = await syncSubscriptionPayment("intent-paid-test");
+
+    expect(api.post).toHaveBeenCalledTimes(2);
+    expect(result?.subscription?.status).toBe("active");
+    expect(result?.entitlement?.status).toBe("active");
+    expect(trackTelemetryEvent).toHaveBeenCalledWith(
+      "subscription_sync_retry",
+      expect.objectContaining({
+        metadata: expect.objectContaining({ attempt: 1, http_status: 503 }),
+      })
+    );
+    expect(trackTelemetryEvent).toHaveBeenCalledWith(
+      "subscription_activated",
+      expect.objectContaining({
+        metadata: expect.objectContaining({ attempt: 2 }),
+      })
+    );
+  });
+
+  test("does not retry a definitive payment sync client error", async () => {
+    api.post.mockRejectedValueOnce({
+      response: { status: 422, data: { message: "invalid intent" } },
+    });
+
+    const result = await syncSubscriptionPayment("intent-invalid-test");
+
+    expect(api.post).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ message: "invalid intent" });
+    expect(trackTelemetryEvent).toHaveBeenCalledWith(
+      "subscription_sync_failed",
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          attempt: 1,
+          http_status: 422,
+          retryable: false,
+        }),
+      })
     );
   });
 });
