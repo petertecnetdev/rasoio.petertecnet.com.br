@@ -10,7 +10,14 @@ const createSafeStorage = (browserStorageName, fallbackStorage, cleanupComment) 
 
     try {
       const value = window[browserStorageName].getItem(normalizedKey);
-      return value ?? (fallbackStorage.has(normalizedKey) ? fallbackStorage.get(normalizedKey) : null);
+      if (value !== null) {
+        // Mirror successful reads so a later browser-storage failure in the same
+        // lifecycle cannot erase authentication or an in-progress conversion.
+        fallbackStorage.set(normalizedKey, value);
+        return value;
+      }
+
+      return fallbackStorage.has(normalizedKey) ? fallbackStorage.get(normalizedKey) : null;
     } catch {
       return fallbackStorage.has(normalizedKey) ? fallbackStorage.get(normalizedKey) : null;
     }
