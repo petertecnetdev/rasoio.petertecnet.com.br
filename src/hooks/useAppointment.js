@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import tz from "dayjs/plugin/timezone";
 import { getAppointmentAcquisitionAttribution } from "../utils/appointmentAcquisitionAttribution";
+import { safeLocalStorage } from "../utils/safeStorage";
 
 dayjs.extend(utc);
 dayjs.extend(tz);
@@ -44,13 +45,13 @@ const getServiceEntityId = (service) =>
 export default function useAppointment(apiBaseUrl, appId, token, establishment) {
   const orderIntentRef = useRef({ fingerprint: null, key: null });
   const getToken = useCallback(
-    () => localStorage.getItem("token") || token,
+    () => safeLocalStorage.getItem("token") || token,
     [token]
   );
 
   const getUser = useCallback(() => {
     try {
-      return JSON.parse(localStorage.getItem("user"));
+      return JSON.parse(safeLocalStorage.getItem("user"));
     } catch {
       return null;
     }
