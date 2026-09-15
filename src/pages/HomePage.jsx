@@ -123,6 +123,19 @@ export default function HomePage() {
     [employers, openSchedulePopup, showScheduleError]
   );
 
+  const handleCreateBusiness = useCallback(() => {
+    if (token) {
+      navigate("/establishment/create");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      source: "owner_home",
+      return_to: "/establishment/create",
+    });
+    navigate(`/register?${params.toString()}`);
+  }, [navigate, token]);
+
   if (isLoading) {
     return (
       <div className="hp-wrapper">
@@ -162,6 +175,27 @@ export default function HomePage() {
           description={headerDescription}
           meta={headerMeta}
         />
+
+        <section className="container py-3" aria-label="Cadastre seu negócio na Rasoio">
+          <div className="card border-primary-subtle shadow-sm">
+            <div className="card-body d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3 p-4">
+              <div>
+                <span className="badge text-bg-primary mb-2">Para negócios e profissionais</span>
+                <h2 className="h4 fw-bold mb-2">Transforme visitas em agendamentos</h2>
+                <p className="text-body-secondary mb-0">
+                  Crie sua página pública e sua agenda online para começar a receber agendamentos pela Rasoio.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg flex-shrink-0"
+                onClick={handleCreateBusiness}
+              >
+                Criar minha agenda
+              </button>
+            </div>
+          </div>
+        </section>
 
         <div className="hp-sections">
           <GlobalCarousel
