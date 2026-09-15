@@ -7,6 +7,7 @@ const MAX_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 250;
 const CATALOG_CACHE_KEY = "rasoio_subscription_plans_catalog";
 const CATALOG_CACHE_TTL_MS = 10 * 60 * 1000;
+const CATALOG_STALE_IF_ERROR_TTL_MS = 24 * 60 * 60 * 1000;
 
 const wait = (milliseconds) =>
   new Promise((resolve) => window.setTimeout(resolve, milliseconds));
@@ -30,13 +31,13 @@ const writeCatalogCache = (catalog) => {
   );
 };
 
-const readFreshCatalogCache = () => {
+const readCatalogCache = (maxAgeMs = CATALOG_CACHE_TTL_MS) => {
   try {
     const cached = JSON.parse(localStorage.getItem(CATALOG_CACHE_KEY) || "null");
     const cachedAt = Number(cached?.cached_at || 0);
-    const fresh = cachedAt > 0 && Date.now() - cachedAt <= CATALOG_CACHE_TTL_MS;
+    const usable = cachedAt > 0 && Date.now() - cachedAt <= maxAgeMs;
 
-    if (!fresh || !isValidCatalog(cached?.catalog)) return null;
+    if (!usable || !isValidCatalog(cached?.catalog)) return null;
     return cached.catalog;
   } catch {
     return null;
@@ -65,7 +66,10 @@ const SubscriptionPlanService = {
           continue;
         }
 
-        const cachedCatalog = readFreshCatalogCache();
+        // Keep the purchase path available during temporary API incidents. The
+        // backend remains authoritative when the subscription intent is created,
+        // so a recently stale display catalog cannot grant an invalid entitlement.
+        const cachedCatalog = readCatalogCache(CATALOG_STALE_IF_ERROR_TTL_MS);
         if (cachedCatalog) return cachedCatalog;
       }
     }
