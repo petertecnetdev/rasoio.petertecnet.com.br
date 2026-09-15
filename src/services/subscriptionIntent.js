@@ -1,6 +1,9 @@
 import api from "./api";
 import { trackTelemetryEvent } from "../telemetry";
-import { safeLocalStorage as localStorage } from "../utils/safeStorage";
+import {
+  safeLocalStorage as localStorage,
+  safeSessionStorage as sessionStorage,
+} from "../utils/safeStorage";
 
 const APPLICATION = "rasoio";
 const SOURCE = "subscription_plans";
