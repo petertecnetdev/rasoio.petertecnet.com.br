@@ -1,5 +1,6 @@
 import { trackTelemetryEvent } from "./telemetry";
 import { getAppointmentAcquisitionAttribution } from "./utils/appointmentAcquisitionAttribution";
+import { safeLocalStorage as localStorage } from "./utils/safeStorage";
 
 const INSTALL_FLAG = "__rasoioAppointmentFunnelTelemetryInstalled";
 const WIZARD_SELECTOR = ".awm-modal";
