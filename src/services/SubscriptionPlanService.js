@@ -1,5 +1,6 @@
 import axios from "axios";
 import { apiV1BaseUrl } from "../config";
+import { safeLocalStorage as localStorage } from "../utils/safeStorage";
 
 const REQUEST_TIMEOUT_MS = 8000;
 const MAX_ATTEMPTS = 3;
@@ -23,14 +24,10 @@ const isValidCatalog = (catalog) =>
 const writeCatalogCache = (catalog) => {
   if (!isValidCatalog(catalog)) return;
 
-  try {
-    localStorage.setItem(
-      CATALOG_CACHE_KEY,
-      JSON.stringify({ cached_at: Date.now(), catalog })
-    );
-  } catch {
-    // A blocked/full browser storage must never break the subscription funnel.
-  }
+  localStorage.setItem(
+    CATALOG_CACHE_KEY,
+    JSON.stringify({ cached_at: Date.now(), catalog })
+  );
 };
 
 const readFreshCatalogCache = () => {
