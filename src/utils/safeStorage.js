@@ -1,16 +1,18 @@
 const memoryStorage = new Map();
+const memorySessionStorage = new Map();
 
 const normalizeKey = (key) => String(key);
 const normalizeValue = (value) => String(value);
 
-export const safeLocalStorage = {
+const createSafeStorage = (browserStorageName, fallbackStorage, cleanupComment) => ({
   getItem(key) {
     const normalizedKey = normalizeKey(key);
 
     try {
-      return window.localStorage.getItem(normalizedKey);
+      const value = window[browserStorageName].getItem(normalizedKey);
+      return value ?? (fallbackStorage.has(normalizedKey) ? fallbackStorage.get(normalizedKey) : null);
     } catch {
-      return memoryStorage.has(normalizedKey) ? memoryStorage.get(normalizedKey) : null;
+      return fallbackStorage.has(normalizedKey) ? fallbackStorage.get(normalizedKey) : null;
     }
   },
 
@@ -18,24 +20,28 @@ export const safeLocalStorage = {
     const normalizedKey = normalizeKey(key);
     const normalizedValue = normalizeValue(value);
 
-    memoryStorage.set(normalizedKey, normalizedValue);
+    fallbackStorage.set(normalizedKey, normalizedValue);
 
     try {
-      window.localStorage.setItem(normalizedKey, normalizedValue);
+      window[browserStorageName].setItem(normalizedKey, normalizedValue);
     } catch {
       // Some browsers, PWAs and WebViews can deny storage access. The in-memory
-      // fallback keeps the current purchase flow alive without weakening auth.
+      // fallback keeps the current conversion flow alive without weakening auth.
     }
   },
 
   removeItem(key) {
     const normalizedKey = normalizeKey(key);
-    memoryStorage.delete(normalizedKey);
+    fallbackStorage.delete(normalizedKey);
 
     try {
-      window.localStorage.removeItem(normalizedKey);
+      window[browserStorageName].removeItem(normalizedKey);
     } catch {
-      // Best-effort cleanup: storage failures must never block paid activation.
+      // Best-effort cleanup: storage failures must never block a conversion flow.
+      void cleanupComment;
     }
   },
-};
+});
+
+export const safeLocalStorage = createSafeStorage("localStorage", memoryStorage, "paid activation");
+export const safeSessionStorage = createSafeStorage("sessionStorage", memorySessionStorage, "deferred booking");
