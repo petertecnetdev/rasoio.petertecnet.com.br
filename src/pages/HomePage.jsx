@@ -9,6 +9,7 @@ import useAppointment from "../hooks/useAppointment";
 import useImageUtils from "../hooks/useImageUtils";
 import useSchedulePopup from "../hooks/useSchedulePopup";
 import useSelectedCity from "../hooks/useSelectedCity";
+import { safeLocalStorage as localStorage } from "../utils/safeStorage";
 
 import "./homepage.css";
 import GlobalPageHeader from "../components/GlobalPageHeader";
