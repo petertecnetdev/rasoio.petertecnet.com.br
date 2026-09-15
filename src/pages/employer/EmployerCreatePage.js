@@ -13,13 +13,14 @@ import {
   getOwnerActivation,
   setOwnerActivationEmployer,
 } from "../../utils/ownerActivation";
+import { safeLocalStorage } from "../../utils/safeStorage";
 import "./EmployerCreatePage.css";
 
 const PLACEHOLDER = "/images/logo.png";
 
 function getStoredUser() {
   try {
-    const stored = localStorage.getItem("user");
+    const stored = safeLocalStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   } catch {
     return null;
