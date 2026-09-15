@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LoginFormComponent from "../../components/auth/LoginFormComponent";
+import { safeLocalStorage as localStorage } from "../../utils/safeStorage";
 import "./LoginPage.css";
 
 const getPendingSubscriptionPath = () => {
