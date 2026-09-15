@@ -9,6 +9,7 @@ import tz from "dayjs/plugin/timezone";
 import { apiBaseUrl } from "../../config";
 import useImageUtils from "../../hooks/useImageUtils";
 import { getAppointmentAcquisitionAttribution } from "../../utils/appointmentAcquisitionAttribution";
+import { safeLocalStorage, safeSessionStorage } from "../../utils/safeStorage";
 import GlobalDateCarousel from "../GlobalDateCarousel";
 import GlobalModal from "../GlobalModal";
 import GlobalButton from "../GlobalButton";
@@ -183,10 +184,10 @@ export default function AppointmentWizardModal({
     restoringDeferredDateRef.current = false;
     orderIntentRef.current = { fingerprint: null, key: null };
 
-    const token = localStorage.getItem("token");
+    const token = safeLocalStorage.getItem("token");
     if (token) {
       try {
-        const rawDraft = sessionStorage.getItem(DEFERRED_BOOKING_KEY);
+        const rawDraft = safeSessionStorage.getItem(DEFERRED_BOOKING_KEY);
         const draft = rawDraft ? JSON.parse(rawDraft) : null;
         const isFresh = draft?.createdAt && Date.now() - Number(draft.createdAt) <= DEFERRED_BOOKING_TTL;
         const sameEstablishment = !draft?.establishmentId
@@ -214,13 +215,13 @@ export default function AppointmentWizardModal({
             if (draftDate && draftTime) {
               deferredSlotRestoreRef.current = { date: draftDate, time: draftTime };
             }
-            sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+            safeSessionStorage.removeItem(DEFERRED_BOOKING_KEY);
           }
         } else if (rawDraft) {
-          sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+          safeSessionStorage.removeItem(DEFERRED_BOOKING_KEY);
         }
       } catch {
-        sessionStorage.removeItem(DEFERRED_BOOKING_KEY);
+        safeSessionStorage.removeItem(DEFERRED_BOOKING_KEY);
       }
     }
   }, [
@@ -234,7 +235,7 @@ export default function AppointmentWizardModal({
   ]);
 
   useEffect(() => {
-    if (!show || !localStorage.getItem("token")) return undefined;
+    if (!show || !safeLocalStorage.getItem("token")) return undefined;
     const pendingSlot = deferredSlotRestoreRef.current;
     if (!pendingSlot || !resolvedEmployer?.id || !selectedServices.length || totalDuration <= 0) return undefined;
 
@@ -379,7 +380,7 @@ export default function AppointmentWizardModal({
 
       const datetimeSP = dayjs.tz(`${dateBase} ${selectedTime}`, "YYYY-MM-DD HH:mm", TZ);
       let parsed = null;
-      try { parsed = JSON.parse(localStorage.getItem("user") || "null"); } catch { parsed = null; }
+      try { parsed = JSON.parse(safeLocalStorage.getItem("user") || "null"); } catch { parsed = null; }
       const payload = {
         mode: "appointment",
         app_id: resolvedEstablishment?.app_id || 2,
@@ -410,7 +411,7 @@ export default function AppointmentWizardModal({
         };
       }
 
-      const token = localStorage.getItem("token");
+      const token = safeLocalStorage.getItem("token");
       const response = await fetch(`${apiBaseUrl}/order`, {
         method: "POST",
         headers: {
@@ -446,7 +447,7 @@ export default function AppointmentWizardModal({
   };
 
   const deferUntilAuthenticated = useCallback((employer) => {
-    if (localStorage.getItem("token")) return false;
+    if (safeLocalStorage.getItem("token")) return false;
 
     const draft = {
       createdAt: Date.now(),
@@ -459,11 +460,7 @@ export default function AppointmentWizardModal({
       time: selectedTime || null,
     };
 
-    try {
-      sessionStorage.setItem(DEFERRED_BOOKING_KEY, JSON.stringify(draft));
-    } catch {
-      // Navigation still proceeds; the customer can reselect if storage is unavailable.
-    }
+    safeSessionStorage.setItem(DEFERRED_BOOKING_KEY, JSON.stringify(draft));
 
     navigate("/login", {
       state: {
