@@ -1,3 +1,5 @@
+import { safeSessionStorage } from "./safeStorage";
+
 const STORAGE_KEY = "rasoio_owner_activation_v1";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -38,11 +40,7 @@ function persistContext(context) {
   memoryContext = context;
 
   if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(context));
-  } catch {
-    // Keep the activation flow alive in memory when storage is unavailable.
-  }
+  safeSessionStorage.setItem(STORAGE_KEY, JSON.stringify(context));
 }
 
 export function startOwnerActivation(establishment) {
@@ -80,10 +78,10 @@ export function getOwnerActivation(expectedSlug = null) {
 
   if (typeof window !== "undefined") {
     try {
-      const raw = window.sessionStorage.getItem(STORAGE_KEY);
+      const raw = safeSessionStorage.getItem(STORAGE_KEY);
       if (raw) context = normalizeContext(JSON.parse(raw));
     } catch {
-      // Fall back to the in-memory activation context below.
+      // Fall back to the in-memory activation context below when persisted data is malformed.
     }
   }
 
@@ -105,9 +103,5 @@ export function clearOwnerActivation() {
   memoryContext = null;
 
   if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // The activation flow still works without persistence when storage is blocked.
-  }
+  safeSessionStorage.removeItem(STORAGE_KEY);
 }
