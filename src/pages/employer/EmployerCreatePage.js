@@ -56,7 +56,9 @@ export default function EmployerCreatePage() {
     const targetEmployerId = Number(employerId);
     if (!Number.isInteger(targetEmployerId) || targetEmployerId <= 0) return;
 
-    setOwnerActivationEmployer(targetEmployerId);
+    const activation = setOwnerActivationEmployer(targetEmployerId, slug);
+    if (!activation) return;
+
     navigate("/employer/schedules", {
       state: {
         onboarding: true,
