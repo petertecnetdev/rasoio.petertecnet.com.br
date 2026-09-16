@@ -12,6 +12,7 @@ import useEmployerCreate from "../../hooks/useEmployerCreate";
 import {
   getOwnerActivation,
   setOwnerActivationEmployer,
+  startOwnerActivation,
 } from "../../utils/ownerActivation";
 import { safeLocalStorage } from "../../utils/safeStorage";
 import "./EmployerCreatePage.css";
@@ -56,8 +57,10 @@ export default function EmployerCreatePage() {
     const targetEmployerId = Number(employerId);
     if (!Number.isInteger(targetEmployerId) || targetEmployerId <= 0) return;
 
-    const activation = setOwnerActivationEmployer(targetEmployerId, slug);
-    if (!activation) return;
+    if (!getOwnerActivation(slug) && establishment) {
+      startOwnerActivation(establishment);
+    }
+    setOwnerActivationEmployer(targetEmployerId, slug);
 
     navigate("/employer/schedules", {
       state: {
