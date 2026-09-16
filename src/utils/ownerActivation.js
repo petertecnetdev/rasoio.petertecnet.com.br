@@ -56,11 +56,11 @@ export function startOwnerActivation(establishment) {
   return context;
 }
 
-export function setOwnerActivationEmployer(employerId) {
+export function setOwnerActivationEmployer(employerId, expectedSlug = null) {
   const safeId = safeEmployerId(employerId);
   if (!safeId) return null;
 
-  const current = getOwnerActivation();
+  const current = getOwnerActivation(expectedSlug);
   if (!current) return null;
 
   const context = {
