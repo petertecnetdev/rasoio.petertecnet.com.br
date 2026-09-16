@@ -1,24 +1,11 @@
 // src/App.js
-import React, {
-  Suspense,
-  createContext,
-  lazy,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import {
-  BrowserRouter as Router,
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
+import React, { Suspense, createContext, lazy, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import ProcessingIndicatorComponent from "./components/ProcessingIndicatorComponent";
 import SeoManager from "./components/SeoManager";
+import ProtectedRouteRedirect from "./components/auth/ProtectedRouteRedirect";
 import { LoadingContext, LoadingProvider } from "./contexts/LoadingContext";
 import AppLayout from "./layouts/AppLayout";
 import { getAccountContext } from "./services/platformManagementApi";
@@ -29,7 +16,6 @@ const AgendaOnlinePage = lazy(() => import("./pages/AgendaOnlinePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const SubscriptionPlansPage = lazy(() => import("./pages/SubscriptionPlansPage"));
-
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const EmailVerifyPage = lazy(() => import("./pages/auth/EmailVerifyPage"));
@@ -39,23 +25,19 @@ const PasswordResetPage = lazy(() => import("./pages/auth/PasswordResetPage"));
 const PasswordPage = lazy(() => import("./pages/auth/PasswordPage"));
 const InvitePage = lazy(() => import("./pages/auth/InvitePage"));
 const InviteCompletePage = lazy(() => import("./pages/auth/InviteCompletePage"));
-
 const OrderListPage = lazy(() => import("./pages/order/OrderListPage"));
 const OrderCreatePage = lazy(() => import("./pages/order/OrderCreatePage"));
 const OrderViewPage = lazy(() => import("./pages/order/OrderViewPage"));
 const OrderEditPage = lazy(() => import("./pages/order/OrderEditPage"));
 const OrderMyPage = lazy(() => import("./pages/order/OrderMyPage"));
-
 const UserViewPage = lazy(() => import("./pages/user/UserViewPage"));
 const UserUpdatePage = lazy(() => import("./pages/user/UserUpdatePage"));
-
 const ItemListPage = lazy(() => import("./pages/item/ItemListPage"));
 const ItemCreatePage = lazy(() => import("./pages/item/ItemCreatePage"));
 const ItemUpdatePage = lazy(() => import("./pages/item/ItemUpdatePage"));
 const ItemViewPage = lazy(() => import("./pages/item/ItemViewPage"));
 const ItemServiceHomePage = lazy(() => import("./pages/item/ItemServiceHomePage"));
 const ItemProductHomePage = lazy(() => import("./pages/item/ItemProductHomePage"));
-
 const EmployerListPage = lazy(() => import("./pages/employer/EmployerListPage"));
 const EmployerCreatePage = lazy(() => import("./pages/employer/EmployerCreatePage"));
 const EmployerUpdatePage = lazy(() => import("./pages/employer/EmployerUpdatePage"));
@@ -64,7 +46,6 @@ const EmployerMePage = lazy(() => import("./pages/employer/EmployerMePage"));
 const EmployerSchedulesPage = lazy(() => import("./pages/employer/EmployerSchedulesPage"));
 const EmployerOrdersPage = lazy(() => import("./pages/employer/EmployerOrdersPage"));
 const EmployerHomePage = lazy(() => import("./pages/employer/EmployerHomePage"));
-
 const EstablishmentCreatePage = lazy(() => import("./pages/establishment/EstablishmentCreatePage"));
 const EstablishmentUpdatePage = lazy(() => import("./pages/establishment/EstablishmentUpdatePage"));
 const EstablishmentOrderPage = lazy(() => import("./pages/establishment/EstablishmentOrderPage"));
@@ -76,13 +57,7 @@ const EstablishmentHomePage = lazy(() => import("./pages/establishment/Establish
 
 export const AuthContext = createContext(null);
 
-const RouteFallback = () => (
-  <ProcessingIndicatorComponent
-    interval={1200}
-    messages={["Carregando..."]}
-    gifSrc="/images/logo.png"
-  />
-);
+const RouteFallback = () => <ProcessingIndicatorComponent interval={1200} messages={["Carregando..."]} gifSrc="/images/logo.png" />;
 
 function AppInner() {
   const { isLoading } = useContext(LoadingContext);
@@ -95,104 +70,47 @@ function AppInner() {
   const clearSession = useCallback(() => {
     localStorage.removeItem("user");
     localStorage.removeItem("employer");
-    setUser(null);
-    setEmployer(null);
-    setIsEmployer(false);
-    setEstablishments([]);
+    setUser(null); setEmployer(null); setIsEmployer(false); setEstablishments([]);
   }, []);
 
   const syncAuth = useCallback(async () => {
     const token = localStorage.getItem("token");
-
-    if (!token) {
-      clearSession();
-      setInitialLoading(false);
-      return;
-    }
-
+    if (!token) { clearSession(); setInitialLoading(false); return; }
     try {
       const context = await getAccountContext();
       const nextUser = context?.user ?? null;
       const nextEmployer = context?.employer ?? null;
-      const appEstablishments = Array.isArray(context?.establishments)
-        ? context.establishments
-        : [];
-
-      if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser));
-      else localStorage.removeItem("user");
-
-      if (nextEmployer) localStorage.setItem("employer", JSON.stringify(nextEmployer));
-      else localStorage.removeItem("employer");
-
-      setUser(nextUser);
-      setEmployer(nextEmployer);
-      setIsEmployer(Boolean(context?.is_employer));
-      setEstablishments(appEstablishments);
+      const appEstablishments = Array.isArray(context?.establishments) ? context.establishments : [];
+      if (nextUser) localStorage.setItem("user", JSON.stringify(nextUser)); else localStorage.removeItem("user");
+      if (nextEmployer) localStorage.setItem("employer", JSON.stringify(nextEmployer)); else localStorage.removeItem("employer");
+      setUser(nextUser); setEmployer(nextEmployer); setIsEmployer(Boolean(context?.is_employer)); setEstablishments(appEstablishments);
     } catch (error) {
-      if ([401, 403].includes(error?.response?.status)) {
-        localStorage.removeItem("token");
-        clearSession();
-      }
-    } finally {
-      setInitialLoading(false);
-    }
+      if ([401, 403].includes(error?.response?.status)) { localStorage.removeItem("token"); clearSession(); }
+    } finally { setInitialLoading(false); }
   }, [clearSession]);
 
   useEffect(() => {
     syncAuth();
-
-    const handleAuthChanged = () => {
-      syncAuth();
-    };
-
-    const handleStorage = (event) => {
-      if (event.key === "token") handleAuthChanged();
-    };
-
+    const handleAuthChanged = () => syncAuth();
+    const handleStorage = (event) => { if (event.key === "token") handleAuthChanged(); };
     window.addEventListener("authChanged", handleAuthChanged);
     window.addEventListener("storage", handleStorage);
-
-    return () => {
-      window.removeEventListener("authChanged", handleAuthChanged);
-      window.removeEventListener("storage", handleStorage);
-    };
+    return () => { window.removeEventListener("authChanged", handleAuthChanged); window.removeEventListener("storage", handleStorage); };
   }, [syncAuth]);
 
-  const authValue = useMemo(
-    () => ({
-      user,
-      setUser,
-      employer,
-      setEmployer,
-      isEmployer,
-      setIsEmployer,
-      establishments,
-      setEstablishments,
-      refreshAuth: syncAuth,
-    }),
-    [user, employer, isEmployer, establishments, syncAuth]
-  );
-
+  const authValue = useMemo(() => ({ user, setUser, employer, setEmployer, isEmployer, setIsEmployer, establishments, setEstablishments, refreshAuth: syncAuth }), [user, employer, isEmployer, establishments, syncAuth]);
   if (initialLoading) return <RouteFallback />;
 
-  const protectedRoute = (element) => {
-    if (!user) return <Navigate to="/login" replace />;
-    if (!user.email_verified_at) return <Navigate to="/email-verify" replace />;
-    return element;
-  };
-
+  const protectedRoute = (element) => <ProtectedRouteRedirect user={user}>{element}</ProtectedRouteRedirect>;
   const emailVerifiedRoute = (element) => {
     if (!user) return <Navigate to="/login" replace />;
     return user.email_verified_at ? <Navigate to="/" replace /> : element;
   };
-
-  const restrictedRoute = (element) =>
-    user ? <Navigate to="/" replace /> : element;
+  const restrictedRoute = (element) => user ? <Navigate to="/" replace /> : element;
 
   return (
     <AuthContext.Provider value={authValue}>
       {isLoading && <RouteFallback />}
-
       <Router>
         <SeoManager />
         <Suspense fallback={<RouteFallback />}>
@@ -202,16 +120,13 @@ function AppInner() {
               <Route path="/agenda-online" element={<AgendaOnlinePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/planos" element={<SubscriptionPlansPage />} />
-
               <Route path="/establishments" element={<EstablishmentHomePage />} />
               <Route path="/establishment/view/:slug" element={<EstablishmentViewPage />} />
               <Route path="/employers" element={<EmployerHomePage />} />
               <Route path="/employer/view/:user_name" element={<EmployerViewPage />} />
-
               <Route path="/item/services" element={<ItemServiceHomePage />} />
               <Route path="/item/products" element={<ItemProductHomePage />} />
               <Route path="/item/view/:slug" element={<ItemViewPage />} />
-
               <Route path="/register" element={restrictedRoute(<RegisterPage />)} />
               <Route path="/login" element={restrictedRoute(<LoginPage />)} />
               <Route path="/password-email" element={restrictedRoute(<PasswordEmailPage />)} />
@@ -221,21 +136,17 @@ function AppInner() {
               <Route path="/logout" element={<LogoutPage />} />
               <Route path="/invite" element={<InvitePage />} />
               <Route path="/invite-complete" element={<InviteCompletePage />} />
-
               <Route path="/dashboard" element={protectedRoute(<DashboardPage />)} />
               <Route path="/orders/my" element={protectedRoute(<OrderMyPage />)} />
               <Route path="/order/view/:id" element={protectedRoute(<OrderViewPage />)} />
               <Route path="/order/list/:slug" element={protectedRoute(<OrderListPage />)} />
               <Route path="/order/create/:slug" element={protectedRoute(<OrderCreatePage />)} />
               <Route path="/order/edit/:entityId/:id" element={protectedRoute(<OrderEditPage />)} />
-
               <Route path="/user/update" element={protectedRoute(<UserUpdatePage />)} />
               <Route path="/user/:userName" element={protectedRoute(<UserViewPage />)} />
-
               <Route path="/item/list/:slug" element={protectedRoute(<ItemListPage />)} />
               <Route path="/item/create/:slug" element={protectedRoute(<ItemCreatePage />)} />
               <Route path="/item/update/:id" element={protectedRoute(<ItemUpdatePage />)} />
-
               <Route path="/employer/list/:slug" element={protectedRoute(<EmployerListPage />)} />
               <Route path="/employer/create/:slug" element={protectedRoute(<EmployerCreatePage />)} />
               <Route path="/employer/update/:id" element={protectedRoute(<EmployerUpdatePage />)} />
@@ -243,14 +154,12 @@ function AppInner() {
               <Route path="/employer/dashboard" element={protectedRoute(<EmployerMePage />)} />
               <Route path="/employer/schedules" element={protectedRoute(<EmployerSchedulesPage />)} />
               <Route path="/employer/orders" element={protectedRoute(<EmployerOrdersPage />)} />
-
               <Route path="/establishment/create" element={protectedRoute(<EstablishmentCreatePage />)} />
               <Route path="/establishment/update/:id" element={protectedRoute(<EstablishmentUpdatePage />)} />
               <Route path="/establishment/my" element={protectedRoute(<EstablishmentMyPage />)} />
               <Route path="/establishment/orders/:slug" element={protectedRoute(<EstablishmentOrderPage />)} />
               <Route path="/establishment/item/:slug" element={protectedRoute(<EstablishmentItemPage />)} />
               <Route path="/establishment/employers/:slug" element={protectedRoute(<EstablishmentEmployersPage />)} />
-
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
@@ -261,14 +170,5 @@ function AppInner() {
 }
 
 export default function App() {
-  return (
-    <LoadingProvider>
-      <GoogleOAuthProvider
-        clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}
-        locale="pt-BR"
-      >
-        <AppInner />
-      </GoogleOAuthProvider>
-    </LoadingProvider>
-  );
+  return <LoadingProvider><GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""} locale="pt-BR"><AppInner /></GoogleOAuthProvider></LoadingProvider>;
 }
