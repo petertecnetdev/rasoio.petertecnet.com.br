@@ -29,7 +29,7 @@ export default function AppointmentSelector({
 
   const today = toLocalDateKey();
   const fmtBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
-  const totalDuration = selectedServices.reduce((sum, s) => sum + (parseInt(s.duration) || 0), 0);
+  const totalDuration = selectedServices.reduce((sum, s) => sum + (parseInt(s.duration, 10) || 30), 0);
 
   const handleServiceToggle = (service) => {
     const exists = selectedServices.find((s) => s.id === service.id);
