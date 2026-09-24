@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import useLogin from "../../hooks/useLogin";
+import ProcessingIndicatorComponent from "../ProcessingIndicatorComponent";
 import "./LoginFormComponent.css";
 
 export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
@@ -60,7 +61,14 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="login-form-component" noValidate>
+    <Form onSubmit={handleSubmit} className="login-form-component" noValidate aria-busy={loading}>
+      {loading && (
+        <ProcessingIndicatorComponent
+          blocking={false}
+          messages={["Validando seu acesso…"]}
+        />
+      )}
+
       <div className="lfg">
         <div className="lfg__field">
           <label className="lfg__label" htmlFor="login-username">
@@ -111,14 +119,7 @@ export default function LoginFormComponent({ onSuccess, onLoadingChange }) {
         </div>
 
         <Button type="submit" className="lfg__submit" disabled={!canSubmit || loading}>
-          {loading ? (
-            <span className="lfg__loading">
-              <span className="lfg__spinner" aria-hidden="true" />
-              Entrando...
-            </span>
-          ) : (
-            "Entrar"
-          )}
+          {loading ? "Entrando…" : "Entrar"}
         </Button>
 
         <div className="lfg__divider"><span>ou</span></div>
