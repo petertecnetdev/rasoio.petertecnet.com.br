@@ -1,9 +1,10 @@
 // src/components/auth/InviteFormComponent.jsx
 import React, { useState } from "react";
-import { Form, Button, Spinner } from "react-bootstrap";
-import axios from "axios";
+import { Form, Button } from "react-bootstrap";
 import Swal from "sweetalert2";
-import { apiBaseUrl, appId } from "../../config";
+import { appId } from "../../config";
+import api from "../../services/api";
+import ProcessingIndicatorComponent from "../ProcessingIndicatorComponent";
 import "./InviteFormComponent.css";
 
 export default function InviteFormComponent({ redirectTo }) {
@@ -23,10 +24,11 @@ export default function InviteFormComponent({ redirectTo }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     try {
-      await axios.post(`${apiBaseUrl}/invite`, form);
+      await api.post("/invite", form);
 
       await Swal.fire({
         title: "Convite enviado!",
@@ -48,7 +50,15 @@ export default function InviteFormComponent({ redirectTo }) {
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="invite-form-component">
+    <Form onSubmit={handleSubmit} className="invite-form-component" aria-busy={loading}>
+      {loading && (
+        <ProcessingIndicatorComponent
+          visible
+          overlay={false}
+          label="Enviando convite..."
+        />
+      )}
+
       <Form.Group className="mb-3" controlId="inviteFirstName">
         <Form.Label>Nome</Form.Label>
         <Form.Control
@@ -58,6 +68,7 @@ export default function InviteFormComponent({ redirectTo }) {
           onChange={handleChange}
           placeholder="Nome do usuário"
           required
+          disabled={loading}
         />
       </Form.Group>
 
@@ -70,6 +81,7 @@ export default function InviteFormComponent({ redirectTo }) {
           onChange={handleChange}
           placeholder="email@exemplo.com"
           required
+          disabled={loading}
         />
       </Form.Group>
 
@@ -79,21 +91,7 @@ export default function InviteFormComponent({ redirectTo }) {
         className="w-100 mt-2"
         disabled={loading}
       >
-        {loading ? (
-          <>
-            <Spinner
-              as="span"
-              animation="border"
-              size="sm"
-              role="status"
-              aria-hidden="true"
-              className="me-2"
-            />
-            Enviando...
-          </>
-        ) : (
-          "Enviar convite"
-        )}
+        {loading ? "Enviando..." : "Enviar convite"}
       </Button>
     </Form>
   );
