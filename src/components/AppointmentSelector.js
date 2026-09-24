@@ -20,6 +20,7 @@ export default function AppointmentSelector({
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [availabilityError, setAvailabilityError] = useState(false);
   const [selectedTime, setSelectedTime] = useState("");
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -39,6 +40,7 @@ export default function AppointmentSelector({
     if (!selectedEmployer || !selectedDate || !selectedServices.length) {
       availabilityRequestRef.current += 1;
       setAvailableTimes([]);
+      setAvailabilityError(false);
       setLoadingTimes(false);
       return;
     }
@@ -47,6 +49,7 @@ export default function AppointmentSelector({
     availabilityRequestRef.current = requestId;
 
     try {
+      setAvailabilityError(false);
       setLoadingTimes(true);
       const duration = totalDuration > 0 ? totalDuration : 30;
       const date = toLocalDateKey(selectedDate);
@@ -57,6 +60,7 @@ export default function AppointmentSelector({
       if (availabilityRequestRef.current !== requestId) return;
       console.error("Erro ao carregar horários disponíveis:", err);
       setAvailableTimes([]);
+      setAvailabilityError(true);
     } finally {
       if (availabilityRequestRef.current === requestId) setLoadingTimes(false);
     }
@@ -137,6 +141,11 @@ export default function AppointmentSelector({
             <Form.Label><FaClock className="me-2 text-info" />Horário</Form.Label>
             {loadingTimes ? (
               <ProcessingIndicatorComponent blocking={false} messages={["Consultando horários disponíveis…"]} />
+            ) : availabilityError ? (
+              <div className="text-center" role="alert">
+                <div className="text-warning small mb-2">Não foi possível consultar os horários agora.</div>
+                <Button type="button" size="sm" variant="outline-info" onClick={fetchTimes}>Tentar novamente</Button>
+              </div>
             ) : (
               <Row className="g-2">
                 {availableTimes.length > 0 ? availableTimes.map((t) => (
