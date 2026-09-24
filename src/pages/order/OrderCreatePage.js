@@ -1,11 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Container, Spinner, Alert } from "react-bootstrap";
+import { Container, Alert } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 import GlobalNav from "../../components/GlobalNav";
 import EstablishmentHero from "../../components/establishment/EstablishmentHero";
 import OrderCreateForm from "../../components/order/OrderCreateForm";
+import ProcessingIndicatorComponent from "../../components/ProcessingIndicatorComponent";
 import useOrderCreate from "../../hooks/useOrderCreate";
 import { appId } from "../../config";
 
@@ -126,9 +127,13 @@ export default function OrderCreatePage() {
 
       <Container className="mt-4">
         {loading && (
-          <div className="text-center py-5">
-            <Spinner animation="border" />
-          </div>
+          <ProcessingIndicatorComponent
+            messages={[
+              "Carregando estabelecimento…",
+              "Organizando serviços e profissionais…",
+              "Preparando horários disponíveis…",
+            ]}
+          />
         )}
 
         {apiError && <Alert variant="danger">{apiError}</Alert>}
