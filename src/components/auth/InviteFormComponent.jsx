@@ -53,9 +53,8 @@ export default function InviteFormComponent({ redirectTo }) {
     <Form onSubmit={handleSubmit} className="invite-form-component" aria-busy={loading}>
       {loading && (
         <ProcessingIndicatorComponent
-          visible
-          overlay={false}
-          label="Enviando convite..."
+          blocking={false}
+          messages={["Enviando convite…"]}
         />
       )}
 
