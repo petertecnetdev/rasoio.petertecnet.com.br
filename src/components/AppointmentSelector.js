@@ -9,13 +9,7 @@ import ProcessingIndicatorComponent from "./ProcessingIndicatorComponent";
 const MySwal = withReactContent(Swal);
 const PLACEHOLDER = "/images/logo.png";
 
-export default function AppointmentSelector({
-  employers = [],
-  services = [],
-  loadAvailableTimes,
-  handleCreateAppointment,
-  imageUrl,
-}) {
+export default function AppointmentSelector({ employers = [], services = [], loadAvailableTimes, handleCreateAppointment, imageUrl }) {
   const [selectedEmployer, setSelectedEmployer] = useState(null);
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
@@ -32,6 +26,7 @@ export default function AppointmentSelector({
   const totalDuration = selectedServices.reduce((sum, s) => sum + (parseInt(s.duration, 10) || 30), 0);
 
   const handleServiceToggle = (service) => {
+    if (submitting) return;
     const exists = selectedServices.find((s) => s.id === service.id);
     setSelectedServices(exists ? selectedServices.filter((s) => s.id !== service.id) : [...selectedServices, service]);
   };
@@ -44,10 +39,8 @@ export default function AppointmentSelector({
       setLoadingTimes(false);
       return;
     }
-
     const requestId = availabilityRequestRef.current + 1;
     availabilityRequestRef.current = requestId;
-
     try {
       setAvailabilityError(false);
       setLoadingTimes(true);
@@ -69,21 +62,19 @@ export default function AppointmentSelector({
   const handleConfirm = async () => {
     if (submitInFlightRef.current) return;
     if (!selectedEmployer || !selectedDate || !selectedTime || !selectedServices.length) {
-      await MySwal.fire({
-        background: "#0a0a0c",
-        color: "#fff",
-        icon: "warning",
-        title: "Dados incompletos",
-        text: "Selecione profissional, serviços, data e horário.",
-        confirmButtonColor: "#00ffff",
-      });
+      await MySwal.fire({ background: "#0a0a0c", color: "#fff", icon: "warning", title: "Dados incompletos", text: "Selecione profissional, serviços, data e horário.", confirmButtonColor: "#00ffff" });
       return;
     }
-
+    const appointment = {
+      services: [...selectedServices],
+      employer: selectedEmployer,
+      date: toLocalDateKey(selectedDate),
+      time: selectedTime,
+    };
     submitInFlightRef.current = true;
     setSubmitting(true);
     try {
-      await handleCreateAppointment(selectedServices, selectedEmployer, toLocalDateKey(selectedDate), selectedTime);
+      await handleCreateAppointment(appointment.services, appointment.employer, appointment.date, appointment.time);
     } finally {
       submitInFlightRef.current = false;
       setSubmitting(false);
@@ -98,75 +89,44 @@ export default function AppointmentSelector({
 
   return (
     <Card className="bg-dark text-light border-0 rounded-4 shadow-lg mt-4" aria-busy={loadingTimes || submitting}>
-      <Card.Header className="bg-black text-center py-3 border-0">
-        <strong className="text-uppercase">Agendar Atendimento</strong>
-      </Card.Header>
-
+      <Card.Header className="bg-black text-center py-3 border-0"><strong className="text-uppercase">Agendar Atendimento</strong></Card.Header>
       <Card.Body className="p-4">
         <Form>
           <Form.Group className="mb-4">
             <Form.Label><FaUser className="me-2 text-info" />Profissional</Form.Label>
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {employers.map((e) => (
-                <button key={e.id} type="button" className={`p-2 text-center rounded-3 ${selectedEmployer?.id === e.id ? "bg-info text-dark" : "bg-secondary text-light"}`} style={{ cursor: "pointer", width: "110px", border: "1px solid #00ffff44", transition: "0.3s" }} aria-pressed={selectedEmployer?.id === e.id} onClick={() => setSelectedEmployer(e)}>
+                <button key={e.id} type="button" disabled={submitting} className={`p-2 text-center rounded-3 ${selectedEmployer?.id === e.id ? "bg-info text-dark" : "bg-secondary text-light"}`} style={{ cursor: submitting ? "not-allowed" : "pointer", width: "110px", border: "1px solid #00ffff44", transition: "0.3s" }} aria-pressed={selectedEmployer?.id === e.id} onClick={() => !submitting && setSelectedEmployer(e)}>
                   <img src={imageUrl(e.user?.avatar)} onError={(ev) => (ev.target.src = PLACEHOLDER)} alt={e.user?.first_name || "Profissional"} className="rounded-circle mb-2" width={60} height={60} style={{ objectFit: "cover" }} />
                   <div style={{ fontSize: "13px", fontWeight: "600", lineHeight: "14px" }}>{e.user?.first_name || "Profissional"}</div>
                 </button>
               ))}
             </div>
           </Form.Group>
-
           <Form.Group className="mb-4">
             <Form.Label><FaCalendarAlt className="me-2 text-info" />Serviços</Form.Label>
             <div className="d-flex flex-wrap gap-2 justify-content-center">
               {services.map((s) => {
                 const selected = selectedServices.some((x) => x.id === s.id);
-                return (
-                  <button key={s.id} type="button" className={`p-2 rounded-3 ${selected ? "bg-info text-dark" : "bg-secondary text-light"}`} style={{ cursor: "pointer", width: "150px", border: "1px solid #00ffff44", transition: "0.3s" }} aria-pressed={selected} onClick={() => handleServiceToggle(s)}>
-                    <div style={{ fontSize: "13px", fontWeight: "600", lineHeight: "14px" }}>{s.name}</div>
-                    <div style={{ fontSize: "12px", color: "#00ffff" }}>{fmtBRL(s.price)}</div>
-                    <div style={{ fontSize: "11px", color: "#999" }}>{s.duration || 30} min</div>
-                  </button>
-                );
+                return <button key={s.id} type="button" disabled={submitting} className={`p-2 rounded-3 ${selected ? "bg-info text-dark" : "bg-secondary text-light"}`} style={{ cursor: submitting ? "not-allowed" : "pointer", width: "150px", border: "1px solid #00ffff44", transition: "0.3s" }} aria-pressed={selected} onClick={() => handleServiceToggle(s)}><div style={{ fontSize: "13px", fontWeight: "600", lineHeight: "14px" }}>{s.name}</div><div style={{ fontSize: "12px", color: "#00ffff" }}>{fmtBRL(s.price)}</div><div style={{ fontSize: "11px", color: "#999" }}>{s.duration || 30} min</div></button>;
               })}
             </div>
           </Form.Group>
-
           <Form.Group className="mb-4">
             <Form.Label><FaCalendarAlt className="me-2 text-info" />Data</Form.Label>
-            <Form.Control type="date" value={selectedDate} min={today} onChange={(e) => setSelectedDate(e.target.value)} className="bg-black text-light border-0" />
+            <Form.Control type="date" value={selectedDate} min={today} disabled={submitting} onChange={(e) => setSelectedDate(e.target.value)} className="bg-black text-light border-0" />
           </Form.Group>
-
           <Form.Group className="mb-4">
             <Form.Label><FaClock className="me-2 text-info" />Horário</Form.Label>
-            {loadingTimes ? (
-              <ProcessingIndicatorComponent blocking={false} messages={["Consultando horários disponíveis…"]} />
-            ) : availabilityError ? (
-              <div className="text-center" role="alert">
-                <div className="text-warning small mb-2">Não foi possível consultar os horários agora.</div>
-                <Button type="button" size="sm" variant="outline-info" onClick={fetchTimes}>Tentar novamente</Button>
-              </div>
+            {loadingTimes ? <ProcessingIndicatorComponent blocking={false} messages={["Consultando horários disponíveis…"]} /> : availabilityError ? (
+              <div className="text-center" role="alert"><div className="text-warning small mb-2">Não foi possível consultar os horários agora.</div><Button type="button" size="sm" variant="outline-info" disabled={submitting} onClick={fetchTimes}>Tentar novamente</Button></div>
             ) : (
-              <Row className="g-2">
-                {availableTimes.length > 0 ? availableTimes.map((t) => (
-                  <Col xs={4} md={3} key={t}>
-                    <Button type="button" size="sm" className={`w-100 ${selectedTime === t ? "btn-info text-dark" : "btn-outline-info"}`} aria-pressed={selectedTime === t} onClick={() => setSelectedTime(t)}>{t}</Button>
-                  </Col>
-                )) : (
-                  <Col><div className="text-muted small text-center" aria-live="polite">{selectedEmployer && selectedDate && selectedServices.length ? "Nenhum horário disponível." : "Selecione profissional, serviços e data."}</div></Col>
-                )}
-              </Row>
+              <Row className="g-2">{availableTimes.length > 0 ? availableTimes.map((t) => <Col xs={4} md={3} key={t}><Button type="button" size="sm" disabled={submitting} className={`w-100 ${selectedTime === t ? "btn-info text-dark" : "btn-outline-info"}`} aria-pressed={selectedTime === t} onClick={() => !submitting && setSelectedTime(t)}>{t}</Button></Col>) : <Col><div className="text-muted small text-center" aria-live="polite">{selectedEmployer && selectedDate && selectedServices.length ? "Nenhum horário disponível." : "Selecione profissional, serviços e data."}</div></Col>}</Row>
             )}
           </Form.Group>
-
           <div className="text-center mb-4 text-info">Tempo estimado total: <strong>{totalDuration || 0} min</strong></div>
-
           {submitting && <ProcessingIndicatorComponent blocking={false} messages={["Confirmando seu agendamento…"]} />}
-          <div className="text-center">
-            <Button type="button" size="lg" variant="info" className="text-dark fw-bold px-4 py-2 rounded-pill" onClick={handleConfirm} disabled={submitting} aria-busy={submitting}>
-              {submitting ? "Confirmando…" : "Confirmar Agendamento"}
-            </Button>
-          </div>
+          <div className="text-center"><Button type="button" size="lg" variant="info" className="text-dark fw-bold px-4 py-2 rounded-pill" onClick={handleConfirm} disabled={submitting} aria-busy={submitting}>{submitting ? "Confirmando…" : "Confirmar Agendamento"}</Button></div>
         </Form>
       </Card.Body>
     </Card>
