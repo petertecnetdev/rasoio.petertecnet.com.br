@@ -167,13 +167,13 @@ export default function RegisterPage() {
               <div className="rp__heroTop">
                 <div className="rp__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt=""
                     className="rp__heroLogo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>
@@ -261,13 +261,13 @@ export default function RegisterPage() {
               <header className="rp__cardHeader">
                 <div className="rp__logoWrap">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt="Rasoio"
                     className="rp__logo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>

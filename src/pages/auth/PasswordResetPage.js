@@ -162,13 +162,13 @@ export default function PasswordResetPage() {
               <div className="prp__heroTop">
                 <div className="prp__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt=""
                     className="prp__heroLogo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>
@@ -241,13 +241,13 @@ export default function PasswordResetPage() {
               <header className="prp__cardHeader">
                 <div className="prp__logoWrap">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt="Rasoio"
                     className="prp__logo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>

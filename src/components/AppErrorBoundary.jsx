@@ -128,7 +128,7 @@ export default class AppErrorBoundary extends React.Component {
         >
           <section style={{ width: "min(520px, 100%)", textAlign: "center" }}>
             <img
-              src="/rasoio-logo.png"
+              src="/rasoio-logo.webp"
               alt="Rasoio"
               width="88"
               height="88"

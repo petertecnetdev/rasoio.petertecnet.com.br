@@ -3,7 +3,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { storageUrl } from "../../config";
 
-const PLACEHOLDER = "/rasoio-logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function GlobalImage({ path, alt, className, style }) {
   const src = path ? `${storageUrl}/${path}` : PLACEHOLDER;

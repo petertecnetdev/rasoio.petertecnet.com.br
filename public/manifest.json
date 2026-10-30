@@ -4,21 +4,23 @@
   "name": "Rasoio",
   "icons": [
     {
-      "src": "rasoio-logo.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "/rasoio-logo.webp",
+      "type": "image/webp",
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "rasoio-logo.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/rasoio-logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
     }
   ],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "theme_color": "#141414",
-  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "background_color": "#000000",
   "prefer_related_applications": false,
   "related_applications": [
     {

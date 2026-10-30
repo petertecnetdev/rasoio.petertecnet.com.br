@@ -5,6 +5,7 @@
   "description": "Rasoio - gestão, descoberta e agendamento para estabelecimentos, profissionais e clientes.",
   "homepage": "/",
   "scripts": {
+    "prestart": "node scripts/generate-brand-icons.js",
     "start": "react-scripts start",
     "build": "node scripts/build.js",
     "test:ci": "react-scripts test --watchAll=false --runInBand",

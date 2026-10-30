@@ -91,13 +91,13 @@ export default function LoginPage() {
               <div className="lp__heroTop">
                 <div className="lp__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt=""
                     className="lp__heroLogo"
                     draggable={false}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
-                      event.currentTarget.src = "/rasoio-logo.png";
+                      event.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>
@@ -161,13 +161,13 @@ export default function LoginPage() {
               <header className="lp__cardHeader">
                 <div className="lp__logoWrap">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt="Rasoio"
                     className="lp__logo"
                     draggable={false}
                     onError={(event) => {
                       event.currentTarget.onerror = null;
-                      event.currentTarget.src = "/rasoio-logo.png";
+                      event.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>

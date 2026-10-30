@@ -15,7 +15,7 @@ import {
 import GlobalButton from "./GlobalButton";
 import "./GlobalHero.css";
 
-const PLACEHOLDER = "/rasoio-logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function GlobalHero({
   entity = "generic",

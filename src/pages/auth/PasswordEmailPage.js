@@ -165,13 +165,13 @@ export default function PasswordEmailPage() {
               <div className="pep__heroTop">
                 <div className="pep__heroLogoWrap" aria-hidden="true">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt=""
                     className="pep__heroLogo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>
@@ -227,13 +227,13 @@ export default function PasswordEmailPage() {
               <header className="pep__cardHeader">
                 <div className="pep__logoWrap">
                   <img
-                    src="/rasoio-logo.png"
+                    src="/rasoio-logo.webp"
                     alt="Rasoio"
                     className="pep__logo"
                     draggable={false}
                     onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/rasoio-logo.png";
+                      e.currentTarget.src = "/rasoio-logo.webp";
                     }}
                   />
                 </div>

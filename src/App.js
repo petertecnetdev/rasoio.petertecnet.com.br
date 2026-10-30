@@ -57,7 +57,7 @@ const EstablishmentHomePage = lazy(() => import("./pages/establishment/Establish
 
 export const AuthContext = createContext(null);
 
-const RouteFallback = () => <ProcessingIndicatorComponent interval={1200} messages={["Carregando..."]} gifSrc="/images/logo.png" />;
+const RouteFallback = () => <ProcessingIndicatorComponent interval={1200} messages={["Carregando..."]} gifSrc="/rasoio-logo.webp" />;
 
 function AppInner() {
   const { isLoading } = useContext(LoadingContext);
