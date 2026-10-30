@@ -63,7 +63,7 @@ test("permite escolher serviço e concluir o agendamento com profissional e data
   });
 
   expect(serviceButton.getAttribute("aria-pressed")).toBe("true");
-  expect(loadAvailableTimes).toHaveBeenCalledWith("2026-10-29", employer, 30);
+  expect(loadAvailableTimes).toHaveBeenCalledWith("2026-10-30", employer, 30);
   const timeButton = document.querySelector(".swl-time");
   expect(timeButton.textContent).toBe("09:00");
 
@@ -73,7 +73,7 @@ test("permite escolher serviço e concluir o agendamento com profissional e data
   expect(handleCreateAppointment).toHaveBeenCalledWith(
     [expect.objectContaining({ id: 4 })],
     employer,
-    "2026-10-29",
+    "2026-10-30",
     "09:00"
   );
 });
@@ -102,4 +102,45 @@ test("não interpreta nomes e horários vindos da API como HTML", async () => {
   expect(popup.querySelector("svg")).toBeNull();
   expect(popup.querySelector("img[src='x']")).toBeNull();
   expect(popup.querySelector(".swl-time").getAttribute("onclick")).toBeNull();
+});
+
+test("não mostra horários de uma consulta antiga após remover o serviço", async () => {
+  let resolveTimes;
+  const loadAvailableTimes = jest.fn(() => new Promise((resolve) => {
+    resolveTimes = resolve;
+  }));
+  const { ref } = mountPopup({ loadAvailableTimes });
+
+  await act(async () => {
+    await ref.current.open({ employer, date: "2026-10-30" });
+  });
+
+  const serviceButton = document.querySelector(".swl-service");
+  fireEvent.click(serviceButton);
+  expect(loadAvailableTimes).toHaveBeenCalledTimes(1);
+  fireEvent.click(serviceButton);
+
+  await act(async () => {
+    resolveTimes(["09:00"]);
+  });
+
+  expect(serviceButton.getAttribute("aria-pressed")).toBe("false");
+  expect(document.querySelector(".swl-time")).toBeNull();
+});
+
+test("apresenta erro de disponibilidade sem oferecer horário inventado", async () => {
+  const loadAvailableTimes = jest.fn().mockRejectedValue(new Error("Falha de rede"));
+  const { ref } = mountPopup({ loadAvailableTimes });
+
+  await act(async () => {
+    await ref.current.open({
+      employer,
+      service,
+      date: "2026-10-30",
+    });
+  });
+
+  expect(document.querySelector("#swl-times").textContent)
+    .toContain("Não foi possível consultar horários");
+  expect(document.querySelector(".swl-time")).toBeNull();
 });
