@@ -4,15 +4,17 @@ import useAppointment from "./useAppointment";
 
 jest.mock("axios");
 
-const usePublicBooking = () => renderHook(() =>
-  useAppointment("https://api.example.test/api", 2, null, { id: 10 })
-);
+function useBookingUnderTest() {
+  return useAppointment("https://api.example.test/api", 2, null, { id: 10 });
+}
+
+const renderPublicBooking = () => renderHook(useBookingUnderTest);
 
 afterEach(() => jest.clearAllMocks());
 
 test("retorna horários confirmados pela API para o dia civil solicitado", async () => {
   axios.post.mockResolvedValue({ data: { available_times: ["09:00", "10:30"] } });
-  const { result } = usePublicBooking();
+  const { result } = renderPublicBooking();
 
   await expect(result.current.loadAvailableTimes("2026-10-30", { id: 7 }, 60))
     .resolves.toEqual(["09:00", "10:30"]);
@@ -25,7 +27,7 @@ test("retorna horários confirmados pela API para o dia civil solicitado", async
 });
 
 test("distingue agenda vazia de falha de rede", async () => {
-  const { result } = usePublicBooking();
+  const { result } = renderPublicBooking();
 
   axios.post.mockResolvedValueOnce({ data: { available_times: [] } });
   await expect(result.current.loadAvailableTimes("2026-10-30", { id: 7 }, 30))
@@ -37,7 +39,7 @@ test("distingue agenda vazia de falha de rede", async () => {
 });
 
 test("não consulta disponibilidade sem profissional ou aplicação", async () => {
-  const { result } = usePublicBooking();
+  const { result } = renderPublicBooking();
   await expect(result.current.loadAvailableTimes("2026-10-30", null, 30))
     .resolves.toEqual([]);
   expect(axios.post).not.toHaveBeenCalled();
