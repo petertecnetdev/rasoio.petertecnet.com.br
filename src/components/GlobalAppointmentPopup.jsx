@@ -25,7 +25,7 @@ const GlobalAppointmentPopup = forwardRef(
 
     const toDateKey = (value) => {
       // Input date é um dia civil, não um instante UTC: preserva 30/10 em SP.
-      if (typeof value === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+      if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return value;
       }
       const date = value instanceof Date ? value : new Date(value);
