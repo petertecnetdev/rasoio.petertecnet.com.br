@@ -90,7 +90,9 @@ export default function useAppointment(apiBaseUrl, appId, token, establishment) 
           ? res.data.available_times
           : [];
       } catch {
-        return [];
+        // Erro de rede/API não significa agenda lotada: a interface deve
+        // permitir tentar novamente sem descartar a intenção do cliente.
+        throw new Error("Não foi possível consultar horários. Verifique sua conexão e tente novamente.");
       }
     },
     [apiBaseUrl, appId, normalizeDateToYMD]
