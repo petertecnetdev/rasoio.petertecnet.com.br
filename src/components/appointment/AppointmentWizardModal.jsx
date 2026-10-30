@@ -340,17 +340,31 @@ export default function AppointmentWizardModal({
     try {
       const today = dayjs().tz(TZ).startOf("day");
       const dates = Array.from({ length: DAYS_TO_CHECK }, (_, index) => today.add(index, "day").format("YYYY-MM-DD"));
-      const checks = await Promise.all(dates.map(async (date) => {
-        const times = await loadAvailableTimes(date, employer, totalDuration);
-        return Array.isArray(times) && times.length > 0 ? date : null;
-      }));
-      const valid = checks.filter(Boolean);
+      const checks = await Promise.allSettled(
+        dates.map((date) => loadAvailableTimes(date, employer, totalDuration))
+      );
+      const valid = checks.flatMap((result, index) =>
+        result.status === "fulfilled" && Array.isArray(result.value) && result.value.length
+          ? [dates[index]]
+          : []
+      );
+      const failures = checks.filter((result) => result.status === "rejected").length;
       setAvailableDates(valid);
-      return valid;
+      if (failures) {
+        await showResultModal({
+          type: "warning",
+          title: "Consulta de agenda incompleta",
+          text: valid.length
+            ? "Algumas datas não puderam ser verificadas. Você pode escolher um dos horários confirmados."
+            : "Não foi possível confirmar os horários. Verifique sua conexão e tente novamente.",
+        });
+      }
+      // Não apresentar uma agenda vazia como se estivesse lotada quando a API falhou.
+      return failures && !valid.length ? null : valid;
     } finally {
       setLoadingDates(false);
     }
-  }, [loadAvailableTimes, selectedServices.length, totalDuration]);
+  }, [loadAvailableTimes, selectedServices.length, totalDuration, showResultModal]);
 
   const handleServiceToggle = useCallback((service) => {
     const id = service.id || service.item_id;
@@ -490,14 +504,14 @@ export default function AppointmentWizardModal({
       if (!selectedServices.length) return;
       if (hasPreselectedEmployer) {
         setLoading(true);
-        try { await prepareAvailableDates(resolvedEmployer); setStep(dateStep); } finally { setLoading(false); }
+        try { const dates = await prepareAvailableDates(resolvedEmployer); if (dates !== null) setStep(dateStep); } finally { setLoading(false); }
       } else setStep(2);
       return;
     }
     if (!hasPreselectedEmployer && step === 2) {
       if (!selectedEmployer) return;
       setLoading(true);
-      try { await prepareAvailableDates(selectedEmployer); setStep(dateStep); } finally { setLoading(false); }
+      try { const dates = await prepareAvailableDates(selectedEmployer); if (dates !== null) setStep(dateStep); } finally { setLoading(false); }
       return;
     }
     if (step === dateStep) {
@@ -514,6 +528,12 @@ export default function AppointmentWizardModal({
           return;
         }
         setAvailableTimes(safeTimes); setSelectedTime(null); setStep(timeStep);
+      } catch {
+        await showResultModal({
+          type: "error",
+          title: "Não foi possível consultar horários",
+          text: "A disponibilidade não pôde ser confirmada. Tente novamente sem perder sua seleção.",
+        });
       } finally { setLoading(false); }
       return;
     }
@@ -537,7 +557,7 @@ export default function AppointmentWizardModal({
 
   return (
     <GlobalModal show={show} onHide={handleSafeHide} size="xl" backdrop="static" title="Agendamento" subtitle={resolvedEstablishment?.name || "Selecione serviços e horário"} logoSrc={establishmentLogoSrc} footer={footer} className="awm-modal awm-modal--fullscreen" dialogClassName="awm-modal__dialog" contentClassName="awm-modal__content">
-      {busy && <ProcessingIndicatorComponent messages={loadingDates ? ["Verificando os dias disponíveis...", "Consultando a agenda do profissional...", "Encontrando horários livres..."] : ["Processando seu agendamento...", "Verificando disponibilidade...", "Registrando pedido..."]} interval={1100} gifSrc="/images/logo.mp4" />}
+      {busy && <ProcessingIndicatorComponent messages={loadingDates ? ["Verificando os dias disponíveis...", "Consultando a agenda do profissional...", "Encontrando horários livres..."] : ["Processando seu agendamento...", "Verificando disponibilidade...", "Registrando pedido..."]} interval={1100} gifSrc="/rasoio-logo.webp" />}
 
       <div className="awm__root">
         {(resolvedEstablishment || resolvedEmployer || selectedServices.length > 0) && <div className="awm__summary">
