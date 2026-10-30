@@ -23,7 +23,7 @@ import {
 import { getApiErrorMessage } from "../../utils/apiError";
 import "./EstablishmentEmployersPage.css";
 
-const FALLBACK_AVATAR = "/images/logo.png";
+const FALLBACK_AVATAR = "/rasoio-logo.webp";
 
 function candidateName(candidate) {
   const fullName = `${candidate?.first_name || ""} ${candidate?.last_name || ""}`.trim();

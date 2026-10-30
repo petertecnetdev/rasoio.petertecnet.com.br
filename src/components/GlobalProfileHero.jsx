@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 import "./GlobalProfileHero.css";
 
-const DEFAULT_PLACEHOLDER = "/images/logo.png";
+const DEFAULT_PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function GlobalProfileHero({
   title,

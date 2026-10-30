@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import EstablishmentActionsBar from "./EstablishmentActionsBar";
 import "./EstablishmentDashboard.css";
 
-const FALLBACK_LOGO = "/images/logo.png";
+const FALLBACK_LOGO = "/rasoio-logo.webp";
 
 export default function EstablishmentDashboard({ establishment, navigate }) {
   const title = establishment.fantasy || establishment.name || "Estabelecimento";

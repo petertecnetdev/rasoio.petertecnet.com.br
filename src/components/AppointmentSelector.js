@@ -7,7 +7,7 @@ import { toLocalDateKey } from "../utils/localDateKey";
 import ProcessingIndicatorComponent from "./ProcessingIndicatorComponent";
 
 const MySwal = withReactContent(Swal);
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function AppointmentSelector({ employers = [], services = [], loadAvailableTimes, handleCreateAppointment, imageUrl }) {
   const [selectedEmployer, setSelectedEmployer] = useState(null);

@@ -10,7 +10,7 @@ import EstablishmentTodaySnapshot from "./EstablishmentTodaySnapshot";
 export default function EstablishmentMyCard({ establishment, metrics }) {
   const handleLogoError = (e) => {
     e.target.onerror = null;
-    e.target.src = "/images/logo.png";
+    e.target.src = "/rasoio-logo.webp";
   };
 
   return (

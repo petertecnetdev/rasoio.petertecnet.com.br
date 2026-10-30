@@ -18,7 +18,7 @@ import AppointmentWizardModal from "../../components/appointment/AppointmentWiza
 import ShareButton from "../../components/ShareButton";
 import "./ItemView.css";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function ItemViewPage() {
   const { slug } = useParams();

@@ -17,7 +17,7 @@ import {
 import { safeLocalStorage } from "../../utils/safeStorage";
 import "./EmployerCreatePage.css";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 function getStoredUser() {
   try {

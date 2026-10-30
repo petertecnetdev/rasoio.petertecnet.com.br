@@ -19,7 +19,7 @@ import ShareButton from "../../components/ShareButton";
 import GlobalMap from "../../components/GlobalMap";
 import "./EstablishmentView.css";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function EstablishmentViewPage() {
   const { slug } = useParams();

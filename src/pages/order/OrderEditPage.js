@@ -424,7 +424,7 @@ export default function OrderEditPage() {
               alt={`${estName} logo`}
               className="order-create__logo"
               onError={(e) => {
-                e.currentTarget.src = "/images/logo.png";
+                e.currentTarget.src = "/rasoio-logo.webp";
               }}
             />
           )}

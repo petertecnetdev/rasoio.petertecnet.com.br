@@ -288,7 +288,7 @@ export default function OrderWizardModal({
                   <img
                     src={imageUrl(e.user?.avatar)}
                     onError={(ev) =>
-                      (ev.currentTarget.src = "/images/logo.png")
+                      (ev.currentTarget.src = "/rasoio-logo.webp")
                     }
                     alt={e.user?.first_name}
                   />

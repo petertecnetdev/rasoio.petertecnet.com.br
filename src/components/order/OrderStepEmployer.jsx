@@ -29,7 +29,7 @@ export default function OrderStepEmployer({
                   alt={e.user?.first_name}
                   className="order-step-avatar"
                   onError={(ev) =>
-                    (ev.currentTarget.src = "/images/logo.png")
+                    (ev.currentTarget.src = "/rasoio-logo.webp")
                   }
                 />
 

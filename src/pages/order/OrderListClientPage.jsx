@@ -11,8 +11,8 @@ import { i18nOrder } from "../../utils/i18nOrder";
 import * as dateUtils from "../../utils/dateUtils";
 import "./OrderListPage.css";
 
-const PLACEHOLDER = "/images/logo.png";
-const AVATAR_PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
+const AVATAR_PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function OrderListClientPage() {
   const navigate = useNavigate();

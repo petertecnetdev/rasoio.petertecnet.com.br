@@ -9,8 +9,8 @@ import useOrderListBySlug from "../../hooks/useOrderListBySlug";
 import useImageUtils from "../../hooks/useImageUtils";
 import "./OrderListPage.css";
 
-const PLACEHOLDER = "/images/logo.png";
-const AVATAR_PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
+const AVATAR_PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function OrderListPage() {
   const { slug } = useParams();

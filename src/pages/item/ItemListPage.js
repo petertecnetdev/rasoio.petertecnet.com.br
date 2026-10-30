@@ -13,7 +13,7 @@ import useItemListBySlug from "../../hooks/useItemListBySlug";
 import useImageUtils from "../../hooks/useImageUtils";
 import { apiBaseUrl } from "../../config";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function ItemListPage() {
   const { slug } = useParams();

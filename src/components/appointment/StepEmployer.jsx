@@ -53,9 +53,9 @@ export default function StepEmployer({
               onClick={() => handleSelect(e)}
             >
               <img
-                src={e.image || "/images/logo.png"}
+                src={e.image || "/rasoio-logo.webp"}
                 onError={(ev) =>
-                  (ev.target.src = "/images/logo.png")
+                  (ev.target.src = "/rasoio-logo.webp")
                 }
                 alt={e.user?.first_name}
                 className="step-avatar"

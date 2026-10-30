@@ -8,7 +8,7 @@ import useEmployerMe from "../../hooks/useEmployerMe";
 import useImageUtils from "../../hooks/useImageUtils";
 import "./EmployerMePage.css";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function EmployerMePage() {
   const navigate = useNavigate();

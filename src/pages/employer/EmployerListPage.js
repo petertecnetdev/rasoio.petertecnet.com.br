@@ -6,7 +6,7 @@ import EmployerHero from "../../components/employer/EmployerHero";
 import useEmployerMe from "../../hooks/useEmployerMe";
 import useImageUtils from "../../hooks/useImageUtils";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 export default function EmployerMePage() {
   const { employer, isLoading, apiError } = useEmployerMe();

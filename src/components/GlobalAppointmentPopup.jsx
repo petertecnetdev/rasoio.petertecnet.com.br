@@ -87,7 +87,7 @@ const GlobalAppointmentPopup = forwardRef(
                   .map(
                     (e) => `
                   <div class="swl-emp" data-id="${e.id}">
-                    <img src="${imageUrl(e.user?.avatar)}" onerror="this.src='/images/logo.png'"
+                    <img src="${imageUrl(e.user?.avatar)}" onerror="this.src='/rasoio-logo.webp'"
                       style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:4px;"/>
                     <div style="font-size:13px;">${e.user?.first_name || "Profissional"}</div>
                   </div>`
@@ -100,7 +100,7 @@ const GlobalAppointmentPopup = forwardRef(
               <div>Profissional selecionado</div>
               <div class="swl-emps">
                 <div class="swl-emp active" style="pointer-events:none;">
-                  <img src="${imageUrl(selectedEmployer.user?.avatar)}" onerror="this.src='/images/logo.png'"
+                  <img src="${imageUrl(selectedEmployer.user?.avatar)}" onerror="this.src='/rasoio-logo.webp'"
                     style="width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:6px;"/>
                   <div style="font-size:14px;">${selectedEmployer.user?.first_name || "Profissional"}</div>
                 </div>

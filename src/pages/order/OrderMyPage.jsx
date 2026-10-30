@@ -24,7 +24,7 @@ import useOrdersMy from "../../hooks/useOrderMy";
 import useImageUtils from "../../hooks/useImageUtils";
 import "./OrderMyPage.css";
 
-const PLACEHOLDER = "/images/logo.png";
+const PLACEHOLDER = "/rasoio-logo.webp";
 
 const safeText = (value) =>
   typeof value === "string" ? value : value == null ? "" : String(value);
