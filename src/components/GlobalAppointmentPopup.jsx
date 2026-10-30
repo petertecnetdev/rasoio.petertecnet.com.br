@@ -136,11 +136,11 @@ const GlobalAppointmentPopup = forwardRef(
                       ? "active"
                       : ""
                   }" data-id="${escapeHtml(s.id || s.item_id)}" aria-pressed="${Boolean(selectedServices.find((ss) => String(ss.id) === String(s.id || s.item_id)))}">
-                    <div style="font-weight:600;font-size:13px;">${escapeHtml(s.name)}</div>
-                    <div style="font-size:12px;color:#00aaff;">R$ ${Number(s.price)
+                    <span style="display:block;font-weight:600;font-size:13px;">${escapeHtml(s.name)}</span>
+                    <span style="display:block;font-size:12px;color:#00aaff;">R$ ${Number(s.price)
                       .toFixed(2)
-                      .replace(".", ",")}</div>
-                    <div style="font-size:11px;color:#999;">${escapeHtml(s.duration || 30)}min</div>
+                      .replace(".", ",")}</span>
+                    <span style="display:block;font-size:11px;color:#999;">${escapeHtml(s.duration || 30)}min</span>
                   </button>`
                   )
                   .join("")}
