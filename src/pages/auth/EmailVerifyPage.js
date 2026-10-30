@@ -185,7 +185,7 @@ const EmailVerifyPage = () => {
               <p className="section-title text-center">Verificar Email</p>
               <Card.Body className="card-body">
                 <div className="logo-container text-center">
-                  <img src="/rasoio-logo.png" alt="Rasoio" className="logo-image" />
+                  <img src="/rasoio-logo.webp" alt="Rasoio" className="logo-image" />
                 </div>
                 <Card.Title className="card-title text-center">Verificar Email</Card.Title>
                 <p className="footer-text text-center">

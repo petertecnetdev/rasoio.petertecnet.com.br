@@ -22,12 +22,12 @@ export default function InviteCompletePage() {
             <div className="ic-card__header">
               <div className="ic-logo-wrapper">
                 <img
-                  src="/rasoio-logo.png"
+                  src="/rasoio-logo.webp"
                   alt="Rasoio"
                   className="ic-logo"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/rasoio-logo.png";
+                    e.currentTarget.src = "/rasoio-logo.webp";
                   }}
                 />
               </div>

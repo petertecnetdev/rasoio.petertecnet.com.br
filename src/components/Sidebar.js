@@ -59,7 +59,7 @@ const Navigation = () => {
       <div className="sidebar-brand">
         <Link to="/" aria-label="Ir para a página inicial da Rasoio">
           <img
-            src="/rasoio-logo.png"
+            src="/rasoio-logo.webp"
             alt="Rasoio"
             className="rounded-circle"
             style={{ width: "60px", height: "60px" }}
@@ -120,7 +120,7 @@ const Navigation = () => {
               <Link to="/logout" className="dropdown-item">Sair</Link>
             </div>
             <img
-              src={user.avatar ? `${storageUrl}/${user.avatar}` : "/rasoio-logo.png"}
+              src={user.avatar ? `${storageUrl}/${user.avatar}` : "/rasoio-logo.webp"}
               alt={`Avatar de ${user.first_name || "usuário"}`}
               className="avatar m-2"
               style={{ maxWidth: "40px", borderRadius: "50%" }}

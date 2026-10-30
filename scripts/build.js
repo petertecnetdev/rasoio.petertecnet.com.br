@@ -1,6 +1,7 @@
 'use strict';
 const { spawnSync } = require('child_process');
 require('./generate-brand-icons');
+require('./check-brand-assets');
 require('./check-establishment-management-contract');
 require('./check-product-positioning-contract');
 require('react-scripts/scripts/build');
