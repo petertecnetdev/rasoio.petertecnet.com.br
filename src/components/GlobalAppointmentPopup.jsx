@@ -3,6 +3,15 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
 const MySwal = withReactContent(Swal);
+
+// Os dados de profissionais, serviços e horários vêm da API e nunca devem
+// ser interpretados como HTML dentro dos templates do SweetAlert.
+const escapeHtml = (value) => String(value ?? "")
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#39;");
 const TZ = "America/Sao_Paulo";
 
 const GlobalAppointmentPopup = forwardRef(
@@ -50,7 +59,7 @@ const GlobalAppointmentPopup = forwardRef(
       await MySwal.fire({
         width: "900px",
         background: "#0a0a0c",
-        title: `<div style="font-size:20px;font-weight:700;color:#fff;">${title}</div>`,
+        title: `<div style="font-size:20px;font-weight:700;color:#fff;">${escapeHtml(title)}</div>`,
         html: `
           <style>
             .swl-container{color:#fff;text-align:center;max-height:85vh;overflow-y:auto;padding:10px}
@@ -86,10 +95,10 @@ const GlobalAppointmentPopup = forwardRef(
                 ${employers
                   .map(
                     (e) => `
-                  <div class="swl-emp" data-id="${e.id}">
-                    <img src="${imageUrl(e.user?.avatar)}" onerror="this.src='/rasoio-logo.webp'"
+                  <div class="swl-emp" data-id="${escapeHtml(e.id)}">
+                    <img src="${escapeHtml(imageUrl(e.user?.avatar))}" onerror="this.src='/rasoio-logo.webp'"
                       style="width:60px;height:60px;border-radius:50%;object-fit:cover;margin-bottom:4px;"/>
-                    <div style="font-size:13px;">${e.user?.first_name || "Profissional"}</div>
+                    <div style="font-size:13px;">${escapeHtml(e.user?.first_name || "Profissional")}</div>
                   </div>`
                   )
                   .join("")}
@@ -100,9 +109,9 @@ const GlobalAppointmentPopup = forwardRef(
               <div>Profissional selecionado</div>
               <div class="swl-emps">
                 <div class="swl-emp active" style="pointer-events:none;">
-                  <img src="${imageUrl(selectedEmployer.user?.avatar)}" onerror="this.src='/rasoio-logo.webp'"
+                  <img src="${escapeHtml(imageUrl(selectedEmployer.user?.avatar))}" onerror="this.src='/rasoio-logo.webp'"
                     style="width:70px;height:70px;border-radius:50%;object-fit:cover;margin-bottom:6px;"/>
-                  <div style="font-size:14px;">${selectedEmployer.user?.first_name || "Profissional"}</div>
+                  <div style="font-size:14px;">${escapeHtml(selectedEmployer.user?.first_name || "Profissional")}</div>
                 </div>
               </div>
             </div>`
@@ -114,19 +123,19 @@ const GlobalAppointmentPopup = forwardRef(
                 ${services
                   .map(
                     (s) => `
-                  <div class="swl-service ${
+                  <button type="button" class="swl-service ${
                     selectedServices.find(
-                      (ss) => ss.id === (s.id || s.item_id)
+                      (ss) => String(ss.id) === String(s.id || s.item_id)
                     )
                       ? "active"
                       : ""
-                  }" data-id="${s.id || s.item_id}">
-                    <div style="font-weight:600;font-size:13px;">${s.name}</div>
+                  }" data-id="${escapeHtml(s.id || s.item_id)}" aria-pressed="${Boolean(selectedServices.find((ss) => String(ss.id) === String(s.id || s.item_id)))}">
+                    <div style="font-weight:600;font-size:13px;">${escapeHtml(s.name)}</div>
                     <div style="font-size:12px;color:#00aaff;">R$ ${Number(s.price)
                       .toFixed(2)
                       .replace(".", ",")}</div>
-                    <div style="font-size:11px;color:#999;">${s.duration || 30}min</div>
-                  </div>`
+                    <div style="font-size:11px;color:#999;">${escapeHtml(s.duration || 30)}min</div>
+                  </button>`
                   )
                   .join("")}
               </div>
@@ -158,6 +167,7 @@ const GlobalAppointmentPopup = forwardRef(
           const empWrap = root.querySelector("#swl-emps");
           const daysWrap = root.querySelector("#swl-days");
           const timesDiv = root.querySelector("#swl-times");
+          const servicesWrap = root.querySelector("#swl-services");
 
           if (empWrap && !isEmployerMode) {
             empWrap.querySelectorAll(".swl-emp").forEach((btn) => {
@@ -170,6 +180,30 @@ const GlobalAppointmentPopup = forwardRef(
                 selectedEmployer = employers.find((e) => e.id === id) || null;
                 if (selectedEmployer && selectedDateKey && selectedServices.length) {
                   await renderTimes(timesDiv, selectedEmployer, selectedDateKey, selectedServices);
+                }
+              });
+            });
+          }
+
+          if (servicesWrap) {
+            servicesWrap.querySelectorAll(".swl-service").forEach((button) => {
+              button.addEventListener("click", async () => {
+                const id = button.getAttribute("data-id");
+                const service = services.find((item) => String(item.id || item.item_id) === id);
+                if (!service) return;
+
+                const wasSelected = selectedServices.some((item) => String(item.id) === id);
+                selectedServices = wasSelected
+                  ? selectedServices.filter((item) => String(item.id) !== id)
+                  : [...selectedServices, { ...service, id: service.id || service.item_id }];
+
+                button.classList.toggle("active", !wasSelected);
+                button.setAttribute("aria-pressed", String(!wasSelected));
+
+                if (selectedEmployer && selectedDateKey && selectedServices.length) {
+                  await renderTimes(timesDiv, selectedEmployer, selectedDateKey, selectedServices);
+                } else {
+                  timesDiv.replaceChildren();
                 }
               });
             });
@@ -188,6 +222,10 @@ const GlobalAppointmentPopup = forwardRef(
               });
             });
           }
+
+          if (selectedEmployer && selectedDateKey && selectedServices.length) {
+            await renderTimes(timesDiv, selectedEmployer, selectedDateKey, selectedServices);
+          }
         },
       });
     };
@@ -202,7 +240,7 @@ const GlobalAppointmentPopup = forwardRef(
       timesDiv.innerHTML = times.length
         ? times
             .map(
-              (t) => `<button class="swl-time" data-time="${t}">${t}</button>`
+              (t) => `<button type="button" class="swl-time" data-time="${escapeHtml(t)}">${escapeHtml(t)}</button>`
             )
             .join("")
         : '<div class="text-muted small">Nenhum horário disponível.</div>';
