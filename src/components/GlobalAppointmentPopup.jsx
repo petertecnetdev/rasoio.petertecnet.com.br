@@ -1,4 +1,5 @@
-import React, { forwardRef, useImperativeHandle } from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import { DateTime } from "luxon";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 
@@ -16,12 +17,22 @@ const TZ = "America/Sao_Paulo";
 
 const GlobalAppointmentPopup = forwardRef(
   ({ employers = [], services = [], loadAvailableTimes, handleCreateAppointment, imageUrl }, ref) => {
+    const availabilitySequence = useRef(0);
+
     useImperativeHandle(ref, () => ({
       open: (options = {}) => openPopup(options),
     }));
 
-    const toDateKey = (d) =>
-      new Date(d).toLocaleDateString("en-CA", { timeZone: TZ });
+    const toDateKey = (value) => {
+      // Input date é um dia civil, não um instante UTC: preserva 30/10 em SP.
+      if (typeof value === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+        return value;
+      }
+      const date = value instanceof Date ? value : new Date(value);
+      return Number.isNaN(date.getTime())
+        ? null
+        : DateTime.fromJSDate(date).setZone(TZ).toISODate();
+    };
 
     const openPopup = async (options = {}) => {
       const isEmployerMode = !!options.employer;
@@ -29,19 +40,14 @@ const GlobalAppointmentPopup = forwardRef(
       let selectedServices = options.service
         ? [{ ...options.service, id: options.service.id || options.service.item_id }]
         : [];
-      let selectedDateKey = options.date ? toDateKey(new Date(options.date)) : null;
+      let selectedDateKey = options.date ? toDateKey(options.date) : null;
 
-      const now = new Date();
+      const today = DateTime.now().setZone(TZ).startOf("day");
       const days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(now);
-        d.setDate(now.getDate() + i);
+        const day = today.plus({ days: i }).setLocale("pt-BR");
         return {
-          key: toDateKey(d),
-          label: d.toLocaleDateString("pt-BR", {
-            weekday: "short",
-            day: "2-digit",
-            month: "2-digit",
-          }),
+          key: day.toISODate(),
+          label: day.toFormat("ccc dd/MM"),
         };
       });
 
@@ -203,6 +209,7 @@ const GlobalAppointmentPopup = forwardRef(
                 if (selectedEmployer && selectedDateKey && selectedServices.length) {
                   await renderTimes(timesDiv, selectedEmployer, selectedDateKey, selectedServices);
                 } else {
+                  availabilitySequence.current += 1;
                   timesDiv.replaceChildren();
                 }
               });
@@ -231,14 +238,25 @@ const GlobalAppointmentPopup = forwardRef(
     };
 
     const renderTimes = async (timesDiv, selectedEmployer, selectedDateKey, selectedServices) => {
+      const requestId = ++availabilitySequence.current;
       timesDiv.innerHTML = '<div class="text-muted small">Carregando horários...</div>';
       const duration = selectedServices.reduce(
         (sum, s) => sum + (parseInt(s.duration) || 30),
         0
       );
-      const times = await loadAvailableTimes(selectedDateKey, selectedEmployer, duration);
-      timesDiv.innerHTML = times.length
-        ? times
+      let times;
+      try {
+        times = await loadAvailableTimes(selectedDateKey, selectedEmployer, duration);
+      } catch {
+        if (requestId === availabilitySequence.current && timesDiv.isConnected) {
+          timesDiv.textContent = "Não foi possível consultar horários. Tente novamente.";
+        }
+        return;
+      }
+      if (requestId !== availabilitySequence.current || !timesDiv.isConnected) return;
+      const safeTimes = Array.isArray(times) ? times : [];
+      timesDiv.innerHTML = safeTimes.length
+        ? safeTimes
             .map(
               (t) => `<button type="button" class="swl-time" data-time="${escapeHtml(t)}">${escapeHtml(t)}</button>`
             )
